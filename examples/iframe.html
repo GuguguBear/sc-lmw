@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Guest page -- iframe embed example</title>
+<style>
+  /* Absichtlich "stoerendes" Gast-CSS, um Kollisionen sichtbar zu machen: allgemeine Tag-Regeln,
+     ein anderes Box-Modell, eine grosse Serifenschrift. Wenn die Karte sauber gekapselt ist,
+     bleibt sie davon vollkommen unberuehrt.
+     Deliberately "disruptive" guest CSS, to surface any collisions: generic tag rules, a
+     different box model, a large serif font. If the map is properly encapsulated, none of this
+     touches it at all. */
+  * { box-sizing: content-box; }
+  body { font: 20px/1.6 Georgia, "Times New Roman", serif; background: #f0e6d2; color: #2a1a00; margin: 40px; }
+  h1 { font-size: 2.4rem; text-decoration: underline; }
+  button, input { font-size: 1.3rem; padding: 10px; border: 4px solid purple; }
+  a { color: green; }
+  .box { border: 5px dashed red; padding: 20px; margin: 20px 0; }
+</style>
+</head>
+<body>
+  <h1>My Star Citizen Org -- Guest Page</h1>
+  <p>This is an ordinary page from some other website, with its own loud styles
+     (serif font, purple borders, content-box sizing everywhere). Below is the
+     Live Map embedded the simplest way: an &lt;iframe&gt;.</p>
+
+  <input placeholder="a normal input on the guest page, unrelated to the map">
+  <button type="button">A normal button on the guest page</button>
+
+  <div class="box">
+    <h2>The map (iframe, fixed height box)</h2>
+    <iframe src="../index.html" style="width:100%;height:640px;border:0;display:block" allow="fullscreen" title="SC LMW Live Map"></iframe>
+  </div>
+
+  <p>Everything above and below this box is the guest page's own content and
+     styling. It should look exactly as loud and mismatched as intended, with
+     no bleed from the map's dark theme into the rest of the page.</p>
+</body>
+</html>

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Guest page -- direct embed example</title>
+<style>
+  /* Dasselbe absichtlich "stoerende" Gast-CSS wie in iframe.html -- siehe dort.
+     The same deliberately "disruptive" guest CSS as in iframe.html -- see there. */
+  * { box-sizing: content-box; }
+  body { font: 20px/1.6 Georgia, "Times New Roman", serif; background: #f0e6d2; color: #2a1a00; margin: 40px; }
+  h1 { font-size: 2.4rem; text-decoration: underline; }
+  button, input { font-size: 1.3rem; padding: 10px; border: 4px solid purple; }
+  a { color: green; }
+  .box { border: 5px dashed red; padding: 20px; margin: 20px 0; height: 640px; }
+  /* Ein Gast-Stil, der genau die Namen trifft, die die Karte NICHT global verwenden darf --
+     wenn die Karte sauber unter .sc-lmw gekapselt ist, bleibt sie davon unberuehrt.
+     A guest style that deliberately hits the exact names the map must NOT use globally --
+     if the map is properly scoped under .sc-lmw, this leaves it untouched. */
+  .st-top, .st-canvas, .btn { outline: 6px solid orange !important; }
+</style>
+</head>
+<body>
+  <h1>My Star Citizen Org -- Guest Page (direct embed)</h1>
+  <p>Same loud guest page as the iframe example, but this time the map is embedded
+     directly into this page's own DOM -- no iframe. Two lines: a container div,
+     and one script tag with data attributes.</p>
+
+  <input placeholder="a normal input on the guest page, unrelated to the map">
+  <button type="button">A normal button on the guest page</button>
+
+  <div class="box">
+    <div id="sc-lmw" style="width:100%;height:100%"></div>
+  </div>
+
+  <p>Everything above and below the box is the guest page's own content. The
+     orange outline rule above deliberately targets .st-top/.st-canvas/.btn --
+     if SC LMW's CSS is properly scoped under .sc-lmw, none of the map's own
+     elements should turn orange (the guest page has no elements with those
+     classes of its own, so nothing here should show an outline).</p>
+
+  <script src="../js/sc-lmw.js" data-players-url="../players.example.json" data-base="../"></script>
+</body>
+</html>

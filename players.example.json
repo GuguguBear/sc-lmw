@@ -1,0 +1,62 @@
+{
+  "players": [
+    {
+      "id": "demo-1",
+      "name": "Pilot Alpha",
+      "online": true,
+      "last_seen": "2026-09-28T09:58:00Z",
+      "code": "RR_HUR_Lorville",
+      "location": "Lorville",
+      "system": "Stanton",
+      "ship": "Aegis Avenger Titan",
+      "travel": null
+    },
+    {
+      "id": "demo-2",
+      "name": "Pilot Bravo",
+      "online": true,
+      "last_seen": "2026-09-28T09:59:10Z",
+      "code": "RR_HUR_Lorville",
+      "location": "Lorville",
+      "system": "Stanton",
+      "ship": "Drake Cutlass Black",
+      "travel": null
+    },
+    {
+      "id": "demo-3",
+      "name": "Pilot Charlie",
+      "online": false,
+      "last_seen": "2026-09-27T21:14:30Z",
+      "code": "RR_CRU_Orison",
+      "location": "Orison",
+      "system": "Stanton",
+      "ship": "RSI Constellation Andromeda",
+      "travel": null
+    },
+    {
+      "id": "demo-4",
+      "name": "Pilot Delta",
+      "online": true,
+      "last_seen": "2026-09-28T10:01:45Z",
+      "code": "RR_MIC_NB_Outpost_Kudre_Ore",
+      "location": "Kudre Ore",
+      "system": "Stanton",
+      "ship": "MISC Prospector",
+      "travel": {
+        "to_raw": "RR_ARC_Area18",
+        "to": "Area18"
+      }
+    },
+    {
+      "id": "demo-5",
+      "name": "Pilot Echo",
+      "online": false,
+      "last_seen": "2026-09-26T18:40:00Z",
+      "code": "",
+      "location": "",
+      "system": "Pyro",
+      "ship": null,
+      "travel": null
+    }
+  ]
+}

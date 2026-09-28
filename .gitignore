@@ -1,0 +1,19 @@
+# Built game data (fetched by scripts/build-all.py, never committed: derived from
+# copyrighted Star Citizen data files, must be rebuilt locally by each user).
+/data/
+
+# Local cache: cloned scunpacked-data repo, downloaded translation INI, etc.
+/.cache/
+
+# Playwright test screenshots.
+/.test/
+
+# Editor/OS noise.
+.DS_Store
+*.swp
+__pycache__/
+*.pyc
+
+# Local secrets, should never exist in this repo but just in case.
+.env
+*.local

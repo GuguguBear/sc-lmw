@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SC LMW – Star Citizen LiveMap Wiki</title>
+<meta name="description" content="Unofficial, standalone 3D star map for Star Citizen (Stanton, Pyro, Nyx): search, live UEX prices, live FleetYards 3D ship models, optional player positions.">
+<link rel="stylesheet" href="./css/starmap.css">
+<style>
+  /* Minimal page shell: the map itself fills <body> (see SCLMW.mount() below and
+     .sc-lmw.st-standalone in starmap.css). This just holds the loading state and the
+     mandatory fan-project notice. */
+  html,body{margin:0;height:100%;font-family:"Inter",system-ui,sans-serif}
+  #loading{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:#94a2c2;background:#070a12}
+  #loading .spin{width:34px;height:34px;border-radius:50%;border:3px solid rgba(120,165,230,.25);border-top-color:#37e1ff;animation:spin 1s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  #loading.gone{display:none}
+  #fanNotice{position:fixed;left:0;right:0;bottom:0;z-index:80;text-align:center;font-size:.72rem;line-height:1.4;color:rgba(238,242,251,.55);background:rgba(4,7,13,.72);padding:5px 10px 6px;pointer-events:none}
+  #fanNotice a{color:inherit;text-decoration:underline;pointer-events:auto}
+  noscript{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:24px;text-align:center;background:#070a12;color:#eef2fb;font-family:system-ui,sans-serif}
+</style>
+</head>
+<body>
+
+<noscript>This map needs JavaScript to run. / Diese Karte braucht JavaScript.</noscript>
+
+<div id="loading">
+  <div class="spin" role="status" aria-label="Loading"></div>
+  <div>Loading star map… / Sternenkarte lädt…</div>
+</div>
+
+<!-- Mandatory, always-visible fan-project notice (see README.md / CREDITS.md). Sits above the
+     map's own UI (z-index 80 > .st-exui's 60) but never blocks clicks (pointer-events:none on
+     the bar itself, only the credits link is clickable). -->
+<div id="fanNotice">
+  SC LMW 0.9 · Unofficial fan project. Not endorsed by, sponsored by, or affiliated with Cloud
+  Imperium Games or Roberts Space Industries. Star Citizen® is a trademark of Cloud Imperium
+  Rights LLC. · <a href="./CREDITS.md" target="_blank" rel="noopener">Credits &amp; licenses</a>
+</div>
+
+<!-- config.js first: everything else reads window.LIVEMAP_CONFIG at call time, not load time. -->
+<script src="./config.js"></script>
+<script src="./js/holo.js"></script>
+<script src="./js/starmap.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function(){
+    function hideLoading(){ var l=document.getElementById('loading'); if(l) l.classList.add('gone'); }
+    try{
+      var cfg=window.LIVEMAP_CONFIG||{};
+      // Eigenstaendige Seite: mount() auf <body> selbst, mit standalone:true (siehe
+      // .sc-lmw.st-standalone in css/starmap.css) fuer echtes Vollbild. Fuer den Einbau in eine
+      // fremde Seite siehe docs/AI_INTEGRATION.md -- dort haengt SCLMW.mount() an einem kleinen
+      // <div>, nicht an <body>.
+      window.SCLMW.mount(document.body, {
+        base: './',
+        standalone: true,
+        playersUrl: cfg.PLAYERS_URL,
+        playersHeaders: cfg.PLAYERS_HEADERS,
+        pollMs: cfg.PLAYERS_POLL_MS
+      });
+      // mount() baut die UI synchron; die 3D-Szene selbst kommt nach, sobald stLoad() (siehe
+      // js/starmap.js) fertig ist. Eine kurze feste Verzoegerung reicht, um von der Seiten-eigenen
+      // Ladeanzeige auf die "lädt…"-Zustaende der Karte selbst zu uebergeben.
+      // mount() builds the UI synchronously; the 3D scene itself streams in once stLoad() (see
+      // js/starmap.js) resolves. A short fixed delay is enough to hand off from the page's own
+      // spinner to the map's own "loading…" states.
+      setTimeout(hideLoading, 300);
+    }catch(e){
+      hideLoading();
+      var l=document.getElementById('loading');
+      document.body.insertAdjacentHTML('beforeend',
+        '<div style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;' +
+        'padding:24px;text-align:center;background:#070a12;color:#ff6f8b;font-family:system-ui,sans-serif">' +
+        'Failed to start the map / Karte konnte nicht gestartet werden: ' +
+        String((e&&e.message)||e).replace(/[<>&]/g,function(c){return {'<':'&lt;','>':'&gt;','&':'&amp;'}[c];}) +
+        '</div>');
+      if (window.console && console.error) console.error('initLiveMap failed:', e);
+    }
+  });
+</script>
+</body>
+</html>
