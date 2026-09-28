@@ -1,289 +1,142 @@
 # SC LMW – Star Citizen LiveMap Wiki
 
-**Version 0.9.0**
+**Version 0.9.0** · AGPL-3.0 · [Deutsche Version](README.de.md)
 
-*(English below / Deutsch weiter unten)*
+**Your whole 'verse on one screen.** A free, open-source 3D map of Star Citizen: every system, planet, moon, station and jump point, a search that knows where to find every ore, item, ship, commodity, blueprint and mission, live trade prices, holographic 3D ships, and your own org's pilots flying around on it in real time.
 
-> **Unofficial fan project. Not endorsed by, sponsored by, or affiliated with
-> Cloud Imperium Games or Roberts Space Industries. Star Citizen® is a
-> trademark of Cloud Imperium Rights LLC.**
-> The same notice is shown inside the app itself (footer).
+Drop it into your org website with one line of HTML, or hand the included prompt to an AI and let it do the wiring for you.
 
-## Screenshots
+> **Unofficial fan project.** Not endorsed by, sponsored by, or affiliated with Cloud Imperium Games or Roberts Space Industries. Star Citizen® is a trademark of Cloud Imperium Rights LLC. The same notice is shown inside the app.
 
-| System overview | Planet view |
+| Stanton, Pyro and Nyx in one view | Down to the planet |
 |---|---|
 | ![System overview: Stanton, Pyro and Nyx with jump routes](docs/img/01-system-overview.png) | ![Planet view: Hurston with Lorville and a player group marker](docs/img/02-planet-view.png) |
 
-| Search & live UEX prices | Player group |
+| Search anything, see live prices | Your pilots, grouped by location |
 |---|---|
-| ![Search results and a live UEX commodity price list at a terminal](docs/img/03-search-prices.png) | ![Player list showing five fictional demo players and a group marker](docs/img/04-player-group.png) |
+| ![Search results and a live UEX commodity price list at a terminal](docs/img/03-search-prices.png) | ![Player list with fictional demo players and a group marker](docs/img/04-player-group.png) |
 
-*(All screenshots show the fictional demo players from `players.example.json` — no real names.)*
-
-## English
-
-A standalone, static, login-free 3D map of the Star Citizen universe
-(Stanton, Pyro, Nyx): systems, planets, moons, stations, jump points, full
-search across locations/ores/items/ships/commodities/blueprints/missions,
-live commodity prices from the UEX Corp API, and live 3D ship models from
-FleetYards. Runs entirely in the browser — the only "backend" is a single
-JSON file (or your own small endpoint) with your community's player
-positions, which is entirely optional.
-
-This is an open-source extraction of the Live Map feature originally built
-for a private Star Citizen organization site. Everything specific to that
-site — its domain, its members-only login system, Discord ids, member
-profiles, community "place knowledge" notes, a report-to-our-server button —
-has been removed. See [`CREDITS.md`](CREDITS.md) for full attribution and
-licenses of everything this project builds on.
-
-### Features
-
-- Full 3D star map: Stanton, Pyro, Nyx — planets, moons, stations, jump points.
-- Search across locations, ores, items, ships, commodities, blueprints (with recipes), missions.
-- Live commodity/item prices straight from the UEX Corp API, no key needed.
-- Live 3D ship models ("Holo") straight from FleetYards, with credit.
-- Optional player positions from a URL you control, with automatic grouping
-  when two or more players share a location.
-- DE/EN toggle for in-game text.
-- No login, no build step for the frontend, no server beyond a static file host.
-
-### Quick start
-
-```sh
-# 1. Build the game data locally (clones scunpacked-data, fetches UEX/FleetYards
-#    reference lists, writes ./data/*.json — nothing here is committed to git):
-python3 scripts/build-all.py
-
-# 2. Serve the project (any static file server works):
-python3 -m http.server 8000
-
-# 3. Open it:
-#    http://localhost:8000/
-```
-
-No build step is needed for the frontend itself — it's plain HTML/CSS/JS,
-three.js is vendored under `vendor/three/`.
-
-### Embedding this in another website
-
-SC LMW is built to drop into an existing site two ways, both fully scoped
-under a `.sc-lmw` root (own CSS variables, own `window.SCLMW` global, sized
-to its container via `ResizeObserver`, no styling of `body`/`html`):
-
-**(a) iframe — the simplest way, one line:**
-
-```html
-<iframe src="https://your-host/live-map/index.html" style="width:100%;height:640px;border:0" allow="fullscreen"></iframe>
-```
-
-**(b) Directly in the page — a container and one script tag:**
-
-```html
-<div id="sc-lmw"></div>
-<script src="https://your-host/live-map/js/sc-lmw.js" data-players-url="https://your-host/live-map/players.example.json"></script>
-```
-
-Working, tested examples of both (against a deliberately "hostile" guest
-page with its own generic CSS) live in [`examples/iframe.html`](examples/iframe.html)
-and [`examples/embed.html`](examples/embed.html). For the full step-by-step —
-including sample backend snippets for your own players endpoint (Node/Express,
-Python/Flask, PHP), CORS notes, and the AGPL obligations that apply once you
-modify the code — see [`docs/AI_INTEGRATION.md`](docs/AI_INTEGRATION.md). It's
-written as a ready-to-paste prompt for an AI coding assistant, so you can hand
-the whole integration off to one.
-
-### Showing players on the map
-
-Out of the box, the map shows five fictional demo players from
-`players.example.json`, so you can see it work with zero setup. To show your
-own community's real players, point `PLAYERS_URL` in `config.js` (or
-`data-players-url` on the `sc-lmw.js` script tag) at your own small
-backend/bot that returns the same JSON shape. The full format is documented
-in [`docs/PLAYERS_API.md`](docs/PLAYERS_API.md) — in short: id, name,
-online/offline, last seen, an in-game location code, system, ship, and an
-optional travel destination. Two or more players at the same location are
-shown as a group automatically.
-
-### Project layout
-
-```
-index.html              standalone entry point, wires config/css/js together
-config.js                the only file most forks need to edit (PLAYERS_URL, ...)
-players.example.json     5 fictional demo players (see docs/PLAYERS_API.md)
-js/starmap.js            the 3D map engine, search, categories, UEX prices, blueprints, missions
-js/holo.js               FleetYards 3D ship models ("Holo")
-js/sc-lmw.js             one-script-tag loader for embedding into another site
-css/starmap.css          map-specific styles, all scoped under .sc-lmw
-vendor/three/            three.js r128 + GLTFLoader/OrbitControls/DRACOLoader (MIT), vendored
-data/                    built game data (git-ignored, run scripts/build-all.py)
-scripts/                 data build pipeline (Python)
-examples/                working iframe.html + embed.html examples, with a hostile guest CSS test
-docs/PLAYERS_API.md      the players-JSON contract, in full
-docs/AI_INTEGRATION.md   copy-paste prompt for an AI to integrate this into your site
-LICENSE                  AGPL-3.0
-CREDITS.md               attribution for every data source and library
-package.json / VERSION  project name ("sc-lmw") and version (0.9.0), no build tooling needed
-```
-
-### Data sources used at runtime (not shipped)
-
-- `api.uexcorp.space` — commodity/item prices, fetched live from the browser.
-- `fleetyards.net` — ship specs and 3D models, fetched live from the browser.
-- Your own `PLAYERS_URL` — optional, for showing real players.
-
-### Building the game data yourself
-
-`scripts/build-all.py` clones the community `scunpacked-data` export of Star
-Citizen's game files into `.cache/`, then runs the individual build scripts
-that turn it into the JSON files under `data/`. It needs network access to
-GitHub, UEX and FleetYards. It intentionally does **not** download or store
-any images from the RSI star map — systems are shown without that image.
-An optional German in-game text translation can be fetched with
-`python3 scripts/build-all.py --with-de` (CC BY-NC-SA, see
-`scripts/README_DE_INI.md`).
-
-### Contributing / show us what you build
-
-This is meant to be forked, adapted and improved. If you build something
-with it — your own community map, a new feature, a bugfix — we'd love to
-hear about it: please open an issue on this project's GitHub page (see
-GitHub Issues) and tell us. No pressure, just curious.
-
-### License
-
-AGPL-3.0, see [`LICENSE`](LICENSE). This means: if you run a modified version
-of this on a server that other people use, you must offer them the modified
-source code too. See [`CREDITS.md`](CREDITS.md) for the licenses of the
-third-party code and data this project depends on (three.js is MIT; game
-data comes from community projects under their own terms).
+*All screenshots use the fictional demo pilots from `players.example.json`.*
 
 ---
 
-## Deutsch
+## What you can do with it
 
-Eine eigenständige, statische, loginfreie 3D-Karte des Star-Citizen-Universums
-(Stanton, Pyro, Nyx): Systeme, Planeten, Monde, Stationen, Sprungpunkte,
-komplette Suche über Orte/Erze/Items/Schiffe/Waren/Blueprints/Missionen,
-Live-Warenpreise von der UEX-Corp-API und Live-3D-Schiffsmodelle von
-FleetYards. Läuft komplett im Browser — das einzige "Backend" ist eine
-einzelne JSON-Datei (oder dein eigener kleiner Endpunkt) mit den
-Spielerpositionen deiner Community, und das ist vollkommen optional.
+- **Run your org like a fleet command.** See who is online and where they are: Levski, Orison, a Pyro rest stop or halfway through a quantum jump. Five pilots at the same station collapse into one clean marker ("Levski · 5 pilots, 2 online"); tap it for the list.
+- **Find anything in seconds.** Type "Quantanium", "Arrow", "Laranite", "P4-AR" or "Lorville" and the map flies you there. The search covers locations, ores, items, ships, commodities, blueprints and missions.
+- **Plan trade runs.** Open any terminal and see live buy and sell prices from UEX, straight from the source, no API key needed.
+- **Hunt blueprints.** Every blueprint in the game data with its full crafting recipe (parts, resources, minimum quality), and which missions reward it.
+- **Scout missions.** See which mission types are offered where and by whom, and which blueprints they can reward.
+- **Go mining.** Find which planets, moons and belts carry the ore you are after.
+- **Show off the fleet.** Rotating holographic 3D models of the ships, loaded live from FleetYards, with specs, prices and where to buy or rent.
+- **Put it on stream.** It runs in any browser source, so it works as an overlay or info screen for streams and org meetings.
+- **Make it yours.** Plain HTML, CSS and JavaScript. No framework and no build step for the frontend, easy to restyle and extend.
 
-Dies ist eine Open-Source-Auskopplung der Live-Map-Funktion, die
-ursprünglich für die private Website einer Star-Citizen-Organisation gebaut
-wurde. Alles, was speziell zu dieser Website gehörte — ihre Domain, ihr
-eigenes Mitglieder-Login, Discord-IDs, Mitgliederprofile, das
-Community-„Orts-Wissen", ein Melde-Knopf an unseren Server — wurde entfernt.
-Vollständige Quellenangaben und Lizenzen aller Bausteine stehen in
-[`CREDITS.md`](CREDITS.md).
+## Install in 3 steps
 
-### Funktionen
-
-- Volle 3D-Sternenkarte: Stanton, Pyro, Nyx — Planeten, Monde, Stationen, Sprungpunkte.
-- Suche über Orte, Erze, Items, Schiffe, Waren, Blueprints (mit Rezept), Missionen.
-- Live-Waren-/Item-Preise direkt von der UEX-Corp-API, kein Schlüssel nötig.
-- Live-3D-Schiffsmodelle ("Holo") direkt von FleetYards, mit Quellenangabe.
-- Optionale Spielerpositionen aus einer selbst bestimmten URL, automatische
-  Gruppierung ab zwei Spielern am selben Ort.
-- DE/EN-Umschaltung für Spieltexte.
-- Kein Login, kein Build-Schritt fürs Frontend, kein Server außer einem
-  statischen Datei-Host.
-
-### Schnellstart
+You need Python 3 (to build the game data once) and any static web server.
 
 ```sh
-# 1. Spieldaten einmal lokal bauen (klont scunpacked-data, holt UEX-/FleetYards-
-#    Referenzlisten, schreibt ./data/*.json -- nichts davon kommt ins Git):
+# 1. Get the code
+git clone https://github.com/nico-gordon-gilles/sc-lmw.git
+cd sc-lmw
+
+# 2. Build the game data (downloads the community game-data export and reference lists,
+#    writes ./data/*.json; this takes a few minutes and needs internet access)
 python3 scripts/build-all.py
 
-# 2. Projekt ausliefern (jeder statische Webserver reicht):
+# 3. Serve it and open http://localhost:8000/
 python3 -m http.server 8000
-
-# 3. Öffnen:
-#    http://localhost:8000/
 ```
 
-Das Frontend selbst braucht keinen Build-Schritt, es ist reines HTML/CSS/JS,
-three.js liegt fertig unter `vendor/three/`.
+That's it. You will see the map with five fictional demo pilots. Re-run step 2 after a game patch to refresh the data.
 
-### Einbau in eine andere Website
+Optional: `python3 scripts/build-all.py --with-de` adds the German in-game texts (community translation, CC BY-NC-SA, see `scripts/README_DE_INI.md`).
 
-SC LMW ist so gebaut, dass es auf zwei Wegen in eine bestehende Seite passt,
-beides vollständig unter einer Wurzelklasse `.sc-lmw` gekapselt (eigene
-CSS-Variablen, ein einziges globales `window.SCLMW`, Größe folgt per
-`ResizeObserver` dem eigenen Container, kein Zugriff auf `body`/`html`):
+## Put it on your website
 
-**(a) iframe — der einfachste Weg, eine Zeile:**
+**Option A: iframe (simplest, one line).** Upload the folder to your web host, then:
 
 ```html
-<iframe src="https://dein-server/live-map/index.html" style="width:100%;height:640px;border:0" allow="fullscreen"></iframe>
+<iframe src="https://your-site.example/sc-lmw/index.html"
+        style="width:100%;height:640px;border:0" allow="fullscreen"></iframe>
 ```
 
-**(b) Direkt in die Seite — ein Container und ein Script-Tag:**
+**Option B: directly in your page.** A container and one script tag:
 
 ```html
-<div id="sc-lmw"></div>
-<script src="https://dein-server/live-map/js/sc-lmw.js" data-players-url="https://dein-server/live-map/players.example.json"></script>
+<div id="sc-lmw" style="height:640px"></div>
+<script src="https://your-site.example/sc-lmw/js/sc-lmw.js"
+        data-base="https://your-site.example/sc-lmw/"
+        data-players-url="https://your-site.example/api/players"></script>
 ```
 
-Funktionierende, getestete Beispiele beider Wege (gegen eine absichtlich
-"feindliche" Gastseite mit eigenem, generischem CSS) liegen in
-[`examples/iframe.html`](examples/iframe.html) und
-[`examples/embed.html`](examples/embed.html). Die vollständige
-Schritt-für-Schritt-Anleitung — inklusive Beispiel-Backends für deinen
-eigenen Spieler-Endpunkt (Node/Express, Python/Flask, PHP), CORS-Hinweisen
-und den AGPL-Pflichten, die bei eigenen Änderungen greifen — steht in
-[`docs/AI_INTEGRATION.md`](docs/AI_INTEGRATION.md). Sie ist als fertiger,
-einfügbarer Prompt für eine KI geschrieben, du kannst den ganzen Einbau also
-auch an eine KI abgeben.
+The map stays inside its box. It never styles your `body`, fonts or layout, uses one global name (`window.SCLMW`), scales with its container and works from any domain or sub-folder. Both ways are tested against a deliberately "hostile" guest page: see [`examples/iframe.html`](examples/iframe.html) and [`examples/embed.html`](examples/embed.html).
 
-### Spieler auf der Karte zeigen
+## Show your own pilots
 
-Ohne jede Einrichtung zeigt die Karte fünf erfundene Demo-Spieler aus
-`players.example.json`, damit man sofort sieht, dass sie funktioniert. Für
-echte Spieler deiner eigenen Community trägst du in `config.js` (oder als
-`data-players-url` am `sc-lmw.js`-Script-Tag) deinen eigenen kleinen
-Server/Bot ein, der dieselbe JSON-Form liefert. Das vollständige Format
-steht in [`docs/PLAYERS_API.md`](docs/PLAYERS_API.md): kurz gesagt ID, Name,
-online/offline, zuletzt gesehen, ein Ortscode aus dem Spiel, System, Schiff
-und optional ein Reiseziel. Zwei oder mehr Spieler am selben Ort werden
-automatisch als Gruppe gezeigt.
+Point `PLAYERS_URL` in `config.js` (or `data-players-url` on the script tag) at a small endpoint of yours that returns JSON like this:
 
-### Projektaufbau
+```json
+{
+  "players": [
+    { "id": "pilot-1", "name": "Pilot Alpha", "online": true,
+      "last_seen": "2026-09-28T09:58:00Z",
+      "code": "Nyx_Levski", "location": "Levski", "system": "Nyx",
+      "ship": "Drake Cutlass Black" }
+  ]
+}
+```
 
-Siehe Baum oben (englischer Abschnitt) — die Struktur ist sprachneutral.
+`code` is the location code Star Citizen writes into its `Game.log`. The map resolves it to the right station, city, outpost or rest stop by itself. Where that data comes from is up to you: a Discord bot, a companion app your members run, or a form on your site. The full contract, including travel destinations, the optional `when` field, refresh interval (`PLAYERS_POLL_MS`) and custom headers, is in [`docs/PLAYERS_API.md`](docs/PLAYERS_API.md).
 
-### Zur Laufzeit genutzte Datenquellen (nicht mitgeliefert)
+## Let an AI build it into your site
 
-- `api.uexcorp.space` — Waren-/Item-Preise, direkt aus dem Browser geladen.
-- `fleetyards.net` — Schiffsdaten und 3D-Modelle, direkt aus dem Browser geladen.
-- Dein eigener `PLAYERS_URL` — optional, für echte Spieler.
+[`docs/AI_INTEGRATION.md`](docs/AI_INTEGRATION.md) contains a complete, copy-paste prompt (English and German) for Claude, ChatGPT or any coding assistant. It explains your setup to the AI: copying the files, building the data, choosing iframe or direct embed, creating a players endpoint (with ready examples for Node/Express, Python/Flask and PHP), CORS, keeping the fan-project notice visible, and your AGPL obligations. Paste it, add one line about your own site, and the AI can do the rest without asking back.
 
-### Spieldaten selbst bauen
+Short version to get started:
 
-`scripts/build-all.py` klont den community-gepflegten `scunpacked-data`-Export
-der Star-Citizen-Spieldateien nach `.cache/` und ruft danach die einzelnen
-Bau-Skripte auf, die daraus die JSON-Dateien unter `data/` machen. Dafür
-braucht es Netzzugriff auf GitHub, UEX und FleetYards. Es lädt **absichtlich
-keine** Bilder von der RSI-Sternenkarte herunter — Systeme werden ohne dieses
-Bild dargestellt. Eine optionale deutsche Übersetzung der Spieltexte lässt
-sich mit `python3 scripts/build-all.py --with-de` dazuholen (CC BY-NC-SA,
-siehe `scripts/README_DE_INI.md`).
+```text
+I want to add SC LMW (https://github.com/nico-gordon-gilles/sc-lmw), an open-source
+Star Citizen 3D map, to my website. Read its README.md, docs/AI_INTEGRATION.md and
+docs/PLAYERS_API.md, then: build the data with scripts/build-all.py, embed the map
+(iframe or the sc-lmw.js script tag), and create a players endpoint in my backend that
+returns the JSON format from PLAYERS_API.md. Keep the "unofficial fan project" notice
+visible. My site is: <describe your stack and where the map should appear>.
+```
 
-### Mitmachen / zeig uns, was du daraus machst
+## Where the data comes from
 
-Das Projekt ist zum Forken, Anpassen und Weiterbauen gedacht. Wenn du damit
-etwas baust, egal ob eigene Community-Karte, neues Feature oder Bugfix, freuen
-wir uns über ein Issue auf der GitHub-Seite dieses Projekts (siehe GitHub
-Issues). Ganz ohne Druck, nur aus Neugier.
+| What | Source | How |
+|---|---|---|
+| Locations, ores, items, blueprints, missions | community `scunpacked-data` export of the game files | built locally by `scripts/`, **not shipped** in this repo |
+| Trade prices | [UEX Corp](https://uexcorp.space) API | fetched live in the browser |
+| Ship specs and 3D models | [FleetYards](https://fleetyards.net) | fetched live in the browser, credited in the app |
+| 3D engine | [three.js](https://threejs.org) r128 (MIT) | included under `vendor/three/` |
+| Your pilots | your own `PLAYERS_URL` | optional |
 
-### Lizenz
+Game data and images are not redistributed here. Every user builds them from the original sources. RSI star-map images are intentionally not downloaded. Full attribution: [`CREDITS.md`](CREDITS.md).
 
-AGPL-3.0, siehe [`LICENSE`](LICENSE). Das heißt: läuft eine veränderte
-Version davon auf einem Server, den andere Leute benutzen, muss ihnen auch
-der veränderte Quellcode angeboten werden. Die Lizenzen der Bausteine, auf
-denen dieses Projekt aufbaut, stehen in [`CREDITS.md`](CREDITS.md) (three.js
-ist MIT, Spieldaten stammen aus Community-Projekten unter deren eigenen
-Bedingungen).
+## Project layout
+
+```
+index.html              standalone page
+config.js               the one file most people edit (PLAYERS_URL, ...)
+players.example.json    five fictional demo pilots
+js/starmap.js           map engine: 3D scene, search, categories, prices, blueprints, missions
+js/holo.js              FleetYards 3D ship models
+js/sc-lmw.js            one-script-tag loader for embedding
+css/starmap.css         styles, all scoped under .sc-lmw
+vendor/three/           three.js r128 + loaders (MIT)
+scripts/                data build pipeline (Python)
+examples/               iframe and direct-embed examples
+docs/                   players API, AI integration prompt, screenshots
+```
+
+## Show us what you build
+
+Fork it, restyle it, add features, run it for your org. If you build something with it, we would love to see it: open an issue on this repository and tell us. No obligation, just curiosity.
+
+## License
+
+**AGPL-3.0** (see [`LICENSE`](LICENSE)). You may use, change and share it freely. If you run a **modified** version on a server that other people use, you must make your modified source code available to them as well. Third-party code and data keep their own licenses, see [`CREDITS.md`](CREDITS.md).
