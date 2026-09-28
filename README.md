@@ -73,6 +73,16 @@ Optional: `python3 scripts/build-all.py --with-de` adds the German in-game texts
 
 The map stays inside its box. It never styles your `body`, fonts or layout, uses one global name (`window.SCLMW`), scales with its container and works from any domain or sub-folder. Both ways are tested against a deliberately "hostile" guest page: see [`examples/iframe.html`](examples/iframe.html) and [`examples/embed.html`](examples/embed.html).
 
+## Interface language (German/English)
+
+The whole interface — buttons, panels, search, legend, error messages, time phrases, number format — is bilingual, German and English. It auto-detects the visitor's browser language (`de*` → German, else English), and there's a small language switch in the map itself (globe icon) that changes it live, no reload, remembered per visitor in their own browser. You can also set it explicitly:
+
+- `LANG` in `config.js`: `'auto'` (default), `'de'`, or `'en'`.
+- `data-lang="de"` on the `sc-lmw.js` script tag (direct-embed method).
+- `mount(el, { lang: 'de' })` if you call `SCLMW.mount()` yourself.
+
+This is a **separate** setting from the small "DE"/"EN" button that was already in the map before: that older button only translates in-game text (mission types, amenity names, the German community description) and is untouched by this. The interface language never changes game/location/ship/item names — those stay exactly as the game names them, in whichever language your data build used.
+
 ## Show your own pilots
 
 Point `PLAYERS_URL` in `config.js` (or `data-players-url` on the script tag) at a small endpoint of yours that returns JSON like this:
@@ -125,6 +135,7 @@ config.js               the one file most people edit (PLAYERS_URL, ...)
 players.example.json    five fictional demo pilots
 js/starmap.js           map engine: 3D scene, search, categories, prices, blueprints, missions
 js/holo.js              FleetYards 3D ship models
+js/i18n.js              interface language (German/English), see "Interface language" above
 js/sc-lmw.js            one-script-tag loader for embedding
 css/starmap.css         styles, all scoped under .sc-lmw
 vendor/three/           three.js r128 + loaders (MIT)

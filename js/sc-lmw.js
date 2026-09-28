@@ -15,6 +15,8 @@
  *   data-players-url    siehe/see docs/PLAYERS_API.md (Default: <base>players.example.json)
  *   data-players-headers JSON-Objekt als String, z.B. '{"Authorization":"Bearer xyz"}' / JSON object as a string
  *   data-poll-ms        Abfrage-Intervall in ms / poll interval in ms (Default: 30000)
+ *   data-lang           Oberflaechensprache 'auto'|'de'|'en' / UI language 'auto'|'de'|'en'
+ *                        (Default: config.js LANG, sonst/otherwise 'auto' -- siehe js/i18n.js)
  *
  * See CREDITS.md / LICENSE. Unofficial fan project, not affiliated with CIG/RSI.
  */
@@ -53,6 +55,7 @@
   var targetSel = attr('data-target', '#sc-lmw');
   var playersUrl = attr('data-players-url', null);
   var pollMsRaw = attr('data-poll-ms', null);
+  var lang = attr('data-lang', null);
   var headersRaw = attr('data-players-headers', null);
   var playersHeaders = null;
   if(headersRaw){
@@ -69,6 +72,7 @@
     }
     window.SCLMW.mount(el, {
       base: base,
+      lang: lang || undefined,
       playersUrl: playersUrl || undefined,
       playersHeaders: playersHeaders || undefined,
       pollMs: pollMsRaw!=null ? parseInt(pollMsRaw,10) : undefined
@@ -76,11 +80,12 @@
   }
 
   loadCss(base+'css/starmap.css');
-  // holo.js zuerst (definiert window.SCLMW.xyz), dann starmap.js (definiert
-  // window.SCLMW.mount/unmount und ruft holo.js' Funktionen auf).
-  // holo.js first (defines window.SCLMW.xyz), then starmap.js (defines
-  // window.SCLMW.mount/unmount and calls holo.js' functions).
-  loadScript(base+'js/holo.js')
+  // js/i18n.js zuerst (definiert window.SCLMW.i18n), dann holo.js (definiert window.SCLMW.xyz),
+  // dann starmap.js (definiert window.SCLMW.mount/unmount und ruft beide auf).
+  // js/i18n.js first (defines window.SCLMW.i18n), then holo.js (defines window.SCLMW.xyz), then
+  // starmap.js (defines window.SCLMW.mount/unmount and calls both).
+  loadScript(base+'js/i18n.js')
+    .then(function(){ return loadScript(base+'js/holo.js'); })
     .then(function(){ return loadScript(base+'js/starmap.js'); })
     .then(function(){
       if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', boot);

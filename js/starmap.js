@@ -38,6 +38,15 @@ function rootW(){ return (ROOT&&ROOT.clientWidth)||window.innerWidth||999; }
 // SC is holo.js' namespace (see js/holo.js): fleetShip/holoMount/loadThree/... live there, not
 // as separate window.xyz names -- "one global name" covers both files together.
 const SC=window.SCLMW=window.SCLMW||{};
+// Oberflaechen-Sprache (js/i18n.js, EIGENSTAENDIG von ST_LANG unten -- das bleibt die alte
+// Spieltexte-Umschaltung). t()/tn() sind kurze Aufrufe fuer den ganzen Rest dieser Datei.
+// UI language (js/i18n.js, SEPARATE from ST_LANG below -- that stays the old game-text toggle).
+// t()/tn() are short calls used throughout the rest of this file.
+// _t/tn statt "t": "t" ist in dieser Datei ueberall als lokaler Variablenname belegt
+// (Kurven-Parameter, Zeit, Tests...) -- ein globales "t" wuerde davon ueberdeckt.
+// _t/tn instead of "t": "t" is used everywhere in this file as a local variable name
+// (curve parameter, time, tests...) -- a global "t" would get shadowed by those.
+const _t=(k,v)=>(SC.i18n?SC.i18n.t(k,v):k), tn=(n,o)=>(SC.i18n?SC.i18n.num(n,o):String(n));
 
 // Galaxie: alle drei Systeme in einem Raum, Lage aus der RSI-Sternenkarte (1 Lichtjahr = ST_K Einheiten).
 // Ebene "sys": 1 Einheit = 1 Mio km, Planeten und alles am Stern an der echten Position.
@@ -50,6 +59,11 @@ const ST_KIND={
   halo:{c:'#9c8b76',l:'Asteroidengürtel'}, comm:{c:'#8a9ab8',l:'Comm-Array'}, poi:{c:'#f0f0f0',l:'Ort von Interesse'},
   asteroid:{c:'#8a8070',l:'Einzel-Asteroid'}, belt:{c:'#b8ad9c',l:'Asteroidengürtel (Ort)'}, player:{c:'#4dff9a',l:'Spieler'}
 };
+// ST_KIND.l ist der interne (deutsche) Schluessel, NIE direkt anzeigen -- kindLabel() uebersetzt
+// ihn live in die aktuelle Oberflaechensprache (siehe kind.* in js/i18n.js).
+// ST_KIND.l is the internal (German) key, NEVER shown directly -- kindLabel() translates it live
+// into the current UI language (see kind.* in js/i18n.js).
+function kindLabel(k){ return ST_KIND[k]?_t('kind.'+k):k; }
 const ST_K=8, ST_PULL=0.35;
 const ST_IRREG={Delamar:2.7};   // Koerper, die als Asteroid statt Kugel gezeichnet werden (Wert = Form-Saat)
 let ST_SYS='stanton';
@@ -67,7 +81,7 @@ const ST_LOOK={Hurston:['#8a6146',0],Crusader:['#d9c088',1],ArcCorp:['#b8483a',0
   Delamar:['#5a544c',0],'Nyx I':['#6a7a8a',0],'Nyx II':['#8aa0b0',0],'Nyx III':['#b0c8d8',0]};
 const ST_PRIO={player:2,belt:2,star:3,planet:3,gateway:2,moon:2,city:2,station:2,reststop:2,jump:2,wikelo:2,lagrange:1,poi:1,outpost:1,miningbase:0,comm:0,asteroid:0};
 let ST_DATA=null, ST_HID=false, ST_PAUSE=false; const ST_VIS={};
-let ST_LANG='de'; try{ ST_LANG=localStorage.getItem('livemap_lang')||'de'; }catch(e){}
+let ST_LANG=(window.LIVEMAP_CONFIG&&window.LIVEMAP_CONFIG.DEFAULT_LANG)||'de'; try{ ST_LANG=localStorage.getItem('livemap_lang')||ST_LANG; }catch(e){}
 const ST_AM_DE={'Buy Armor':'Rüstung kaufen','Buy Clothing':'Kleidung kaufen','Buy Ship Items and Weapons':'Schiffsteile & -waffen','Buy Weapons':'Waffen kaufen',
   'Buy and Rent Vehicles':'Fahrzeuge kaufen & mieten','Rent Vehicles':'Fahrzeuge mieten','Clinic':'Klinik','Hospital':'Krankenhaus','Docking':'Andocken',
   'Commodity Trading - Freight Elevator':'Warenhandel (Frachtaufzug)','Commodity Trading - Loading Dock':'Warenhandel (Ladedock)','Food Court':'Essen & Trinken',
@@ -85,10 +99,10 @@ async function stLoad(){ if(ST_DATA) return ST_DATA;
   objects.forEach(o=>{ by[o.id]=o; }); objects.forEach(o=>{ if(o.p&&by[o.p]) (kids[o.p]=kids[o.p]||[]).push(o); });
   ST_DATA={d:{objects,mining,nofix,version:parts[0].version},by,kids,sys,gal,get star(){ return (sys[ST_SYS]||sys.stanton).star; }}; return ST_DATA; }
 const stSysName=o=>(ST_DATA&&o&&ST_DATA.sys[o.sy]||{}).n||'';
-function stMineLabel(k){ if(k==='HPP_AaronHalo') return 'Aaron Halo'; if(k==='AsteroidCluster_Medium_Yield') return 'Asteroiden-Cluster (mittlere Ausbeute)'; if(k==='AsteroidCluster_Low_Yield') return 'Asteroiden-Cluster (geringe Ausbeute)'; if(k==='HPP_Lagrange_Occupied') return 'Lagrange-Feld (besetzt)'; if(k==='HPP_Stanton2c_Belt') return 'Yela-Asteroidengürtel';
-  let m=k.match(/^HPP_Lagrange_(\w+)$/); if(m) return 'Lagrange-Feld Typ '+m[1]; if(/^HPP_(Stanton|Pyro)\d/.test(k)) return 'Oberfläche'; if(k==='HPP_Pyro_DeepSpaceAsteroids') return 'Tiefraum-Asteroiden'; if(k==='HPP_Pyro_AkiroCluster') return 'Akiro Cluster';
-  if(k==='HPP_Nyx_KeegerBelt') return 'Keeger Belt'; if(k==='HPP_Nyx_GlaciemRing') return 'Glaciem Ring'; m=k.match(/^HPP_Pyro_(Cool|Warm)0?(\d+)$/); if(m) return 'Lagrange-Feld ('+(m[1]==='Cool'?'kalt':'warm')+' '+m[2]+')';
-  m=k.match(/^Loot_Caves_(Occupied|Unoccupied)_(Rock|Sand|Acidic)/); if(m) return 'Höhle ('+({Rock:'Fels',Sand:'Sand',Acidic:'Säure'}[m[2]])+(m[1]==='Occupied'?', bewohnt':'')+')';
+function stMineLabel(k){ if(k==='HPP_AaronHalo') return 'Aaron Halo'; if(k==='AsteroidCluster_Medium_Yield') return _t('mine.asteroid_cluster_medium'); if(k==='AsteroidCluster_Low_Yield') return _t('mine.asteroid_cluster_low'); if(k==='HPP_Lagrange_Occupied') return _t('mine.lagrange_occupied'); if(k==='HPP_Stanton2c_Belt') return _t('mine.yela_belt');
+  let m=k.match(/^HPP_Lagrange_(\w+)$/); if(m) return _t('mine.lagrange_type',{type:m[1]}); if(/^HPP_(Stanton|Pyro)\d/.test(k)) return _t('mine.surface'); if(k==='HPP_Pyro_DeepSpaceAsteroids') return _t('mine.deep_space_asteroids'); if(k==='HPP_Pyro_AkiroCluster') return 'Akiro Cluster';
+  if(k==='HPP_Nyx_KeegerBelt') return 'Keeger Belt'; if(k==='HPP_Nyx_GlaciemRing') return 'Glaciem Ring'; m=k.match(/^HPP_Pyro_(Cool|Warm)0?(\d+)$/); if(m) return _t('mine.lagrange_temp',{temp:_t(m[1]==='Cool'?'mine.cold':'mine.warm'),n:m[2]});
+  m=k.match(/^Loot_Caves_(Occupied|Unoccupied)_(Rock|Sand|Acidic)/); if(m) return _t('mine.cave',{material:_t({Rock:'mine.rock',Sand:'mine.sand',Acidic:'mine.acidic'}[m[2]]),occ:m[1]==='Occupied'?_t('mine.occupied_suffix'):''});
   return k.replace(/_/g,' '); }
 const ST_TY_DE={'Mercenary':'Söldner','Hauling - Planetary':'Fracht (Planet)','Delivery':'Lieferung','Hauling':'Fracht','Bounty Hunter':'Kopfgeldjagd',
   'Priority':'Priorität','Investigation':'Ermittlung','Ship Mining':'Schiffs-Mining','Salvage':'Bergung','Refueling':'Betankung','Courier':'Kurier',
@@ -102,7 +116,7 @@ let ST_BPS=null;
 async function stBps(){ if(ST_BPS) return ST_BPS; try{ ST_BPS=await fetch(pathOf('data/blueprints.json'),{cache:'no-cache'}).then(r=>{ if(!r.ok) throw new Error(r.status); return r.json(); }); }catch(e){ return {bps:{}}; } return ST_BPS; }
 async function stMis(){ if(ST_MIS) return ST_MIS; try{ const d=await fetch(pathOf('data/missions.json'),{cache:'no-cache'}).then(r=>{ if(!r.ok) throw new Error(r.status); return r.json(); }); const byLoc={};
   d.groups.forEach((g,i)=>g.locs.forEach(id=>(byLoc[id]=byLoc[id]||[]).push(i))); ST_MIS={d,byLoc}; return ST_MIS; }catch(e){ return {d:{groups:[],bps:{},lsets:[]},byLoc:{},failed:1}; } }
-function stMisRow(g,i){ return '<details class="st-dep"><summary><b>'+esc(stTy(g.ty))+'</b>'+(g.il?'<em class="t-ill">illegal</em>':'')+'<span title="Auftragsvarianten">'+g.n+'×</span></summary><div class="st-mis-b"><div class="sc-lmw-muted">'+esc(g.g)+(g.bp?' · 🧩 '+g.bp.length+' Blueprints':'')+'</div>'+(g.t.length?g.t.map(t=>'<div>· '+esc(t)+'</div>').join(''):'')+'</div></details>'; }
+function stMisRow(g,i){ return '<details class="st-dep"><summary><b>'+esc(stTy(g.ty))+'</b>'+(g.il?'<em class="t-ill">illegal</em>':'')+'<span title="'+esc(_t('tooltip.mission_variants'))+'">'+g.n+'×</span></summary><div class="st-mis-b"><div class="sc-lmw-muted">'+esc(g.g)+(g.bp?' · 🧩 '+g.bp.length+' Blueprints':'')+'</div>'+(g.t.length?g.t.map(t=>'<div>· '+esc(t)+'</div>').join(''):'')+'</div></details>'; }
 // ---- SPIELER: Position/Status kommen aus einer externen, konfigurierbaren Quelle (window.LIVEMAP_CONFIG.PLAYERS_URL). Siehe docs/PLAYERS_API.md. ----
 let ST_PL=null, ST_PL_ERR='', ST_PL_ON=true, ST_PL_OFF=true, ST_PL_SIG='';
 async function stLoadPlayers(){ try{ const cfg=window.LIVEMAP_CONFIG||{};
@@ -165,26 +179,26 @@ function stFuzzyLoc(D,code,sy,body){ const rom={1:'i',2:'ii',3:'iii',4:'iv',5:'v
   return best; }
 // Ort gilt als frisch, wenn die letzte Ortsmeldung juenger als 15 Minuten ist (online heisst nur: das Tool laeuft)
 function stLocFresh(p){ const t=Date.parse(String(p.when||p.last_seen||'').replace(' ','T')); return !!t&&Date.now()-t<15*60000; }   // 'when' optional (Zeit der letzten Ortsmeldung), sonst last_seen
-function stAgo(ts){ const t=Date.parse(String(ts||'').replace(' ','T')); if(!t) return 'unbekannt'; const m=Math.max(0,Math.round((Date.now()-t)/60000));
-  return m<2?'gerade eben':m<60?'vor '+m+' Min.':m<1440?'vor '+Math.round(m/60)+' Std.':'vor '+Math.round(m/1440)+' Tagen'; }
-function stPlayerObj(p){ const o=stPlayerLoc(p); if(!o) return null; return {id:'pl-'+p.id,n:p.name||p.player||'Spieler',k:'player',sy:o.sy,p:o.id,x:o.x,y:o.y,z:o.z,pl:p,loc:o,on:!!p.online}; }
+function stAgo(ts){ const d=Date.parse(String(ts||'').replace(' ','T')); if(!d) return _t('location.unknown'); const m=Math.max(0,Math.round((Date.now()-d)/60000));
+  return m<2?_t('time.just_now'):m<60?_t('time.ago_min',{n:m}):m<1440?_t('time.ago_hour',{n:Math.round(m/60)}):_t('time.ago_day',{n:Math.round(m/1440)}); }
+function stPlayerObj(p){ const o=stPlayerLoc(p); if(!o) return null; return {id:'pl-'+p.id,n:p.name||p.player||_t('entity.player'),k:'player',sy:o.sy,p:o.id,x:o.x,y:o.y,z:o.z,pl:p,loc:o,on:!!p.online}; }
 function stOpenGroup(g){ const L=g.grp, nOn=L.filter(x=>x.on).length;
-  const body=stCard(nOn?'#4dff9a':'#8a93a6',(g.loc&&g.loc.n)||'Mehrere Spieler',L.length+' Spieler hier'+(nOn?', '+nOn+' online':''));
-  body.innerHTML=L.map((x,i)=>{ const p=x.pl; return '<div class="st-pr" data-gi="'+i+'" style="cursor:pointer"><div><b>'+(x.on?'<span style="color:#4dff9a">●</span> ':'<span class="sc-lmw-muted">○</span> ')+esc(x.n)+'</b><span>'+esc([p.location||(x.loc&&x.loc.n)||'',x.on?'online':'zuletzt '+stAgo(p.last_seen||p.when),p.ship||''].filter(Boolean).join(' · '))+'</span></div><em>Profil →</em></div>'; }).join('');
+  const body=stCard(nOn?'#4dff9a':'#8a93a6',(g.loc&&g.loc.n)||_t('player.multiple'),nOn?_t('player.here_count_online',{n:L.length,on:nOn}):_t('player.here_count',{n:L.length}));
+  body.innerHTML=L.map((x,i)=>{ const p=x.pl; return '<div class="st-pr" data-gi="'+i+'" style="cursor:pointer"><div><b>'+(x.on?'<span style="color:#4dff9a">●</span> ':'<span class="sc-lmw-muted">○</span> ')+esc(x.n)+'</b><span>'+esc([p.location||(x.loc&&x.loc.n)||'',x.on?_t('status.online'):_t('status.offline_last',{time:stAgo(p.last_seen||p.when)}),p.ship||''].filter(Boolean).join(' · '))+'</span></div><em>'+_t('action.profile')+'</em></div>'; }).join('');
   body.querySelectorAll('[data-gi]').forEach(r=>r.onclick=()=>stOpenPlayer(L[+r.getAttribute('data-gi')].pl)); }
 async function stOpenPlayer(p){ const o=stPlayerLoc(p), sysn=o?stSysName(o):(p.system||'');
-  const body=stCard(p.online?'#4dff9a':'#8a93a6',p.name||'Spieler',(p.online?'online':'offline · zuletzt '+stAgo(p.last_seen||p.when))+(sysn?' · '+sysn:''));
+  const body=stCard(p.online?'#4dff9a':'#8a93a6',p.name||_t('entity.player'),(p.online?_t('status.online'):_t('status.offline_last',{time:stAgo(p.last_seen||p.when)}))+(sysn?' · '+sysn:''));
   const C=await uexCatalog(), sh=p.ship?C.ships.find(s=>s.n===p.ship):null, b=o?stBodyOf(o):null;
-  let h='<div class="st-pl-top"><div class="st-pl-st'+(p.online?' on':'')+'">'+(p.online?'● online':'○ offline, '+esc(stAgo(p.last_seen||p.when)))+'</div></div>';
-  if(p.travel){ const dl=stDestLoc(p.travel); h+='<div class="st-jump">✈ Quantum-Sprung '+(p.travel.from?'von <b>'+esc(p.travel.from)+'</b> ':'')+'nach <b>'+esc(p.travel.to)+'</b> '+(p.travel.at?'<em>'+esc(stAgo(p.travel.at))+'</em>':'')+(dl?'<button class="sc-lmw-btn sm primary" id="'+ID('stPlDest')+'" data-to="'+dl.id+'">Ziel zeigen →</button>':'')+'</div>'; }
-  h+='<div class="st-slbl">📍 '+(p.online&&stLocFresh(p)?'Gerade hier':p.online?'Letzte Ortsmeldung '+esc(stAgo(p.when)):'Zuletzt gesehen')+'</div><div class="st-pr"'+(o?' data-oid="'+o.id+'"':'')+'><div><b>'+esc(p.location||(o&&o.n)||'unbekannt')+'</b><span>'+esc([b&&b!==o&&b.k!=='star'?b.n:'',sysn].filter(Boolean).join(' · '))+'</span></div>'+(o?'<em>Hinfliegen →</em>':'')+'</div>';
-  if(p.ship) h+='<div class="st-slbl">🚀 Schiff</div><div id="'+ID('stPlShipV')+'">'+(sh&&stShipImg(sh)?'<img class="st-shipimg" src="'+esc(stShipImg(sh))+'" alt="" onerror="this.remove()">':'')+'</div>'+'<div style="font-size:.88rem">'+esc(p.ship)+'</div>';
+  let h='<div class="st-pl-top"><div class="st-pl-st'+(p.online?' on':'')+'">'+(p.online?_t('status.online_dot'):_t('status.offline_dot',{time:esc(stAgo(p.last_seen||p.when))}))+'</div></div>';
+  if(p.travel){ const dl=stDestLoc(p.travel); h+='<div class="st-jump">'+(p.travel.from?_t('travel.jump_from_to',{from:'<b>'+esc(p.travel.from)+'</b>',to:'<b>'+esc(p.travel.to)+'</b>'}):_t('travel.jump_to',{to:'<b>'+esc(p.travel.to)+'</b>'}))+' '+(p.travel.at?'<em>'+esc(stAgo(p.travel.at))+'</em>':'')+(dl?'<button class="sc-lmw-btn sm primary" id="'+ID('stPlDest')+'" data-to="'+dl.id+'">'+_t('action.show_destination')+'</button>':'')+'</div>'; }
+  h+='<div class="st-slbl">📍 '+(p.online&&stLocFresh(p)?_t('location.here_now'):p.online?_t('location.last_report',{time:esc(stAgo(p.when))}):_t('location.last_seen'))+'</div><div class="st-pr"'+(o?' data-oid="'+o.id+'"':'')+'><div><b>'+esc(p.location||(o&&o.n)||_t('location.unknown'))+'</b><span>'+esc([b&&b!==o&&b.k!=='star'?b.n:'',sysn].filter(Boolean).join(' · '))+'</span></div>'+(o?'<em>'+_t('action.fly_to')+'</em>':'')+'</div>';
+  if(p.ship) h+='<div class="st-slbl">🚀 '+_t('label.ship')+'</div><div id="'+ID('stPlShipV')+'">'+(sh&&stShipImg(sh)?'<img class="st-shipimg" src="'+esc(stShipImg(sh))+'" alt="" onerror="this.remove()">':'')+'</div>'+'<div style="font-size:.88rem">'+esc(p.ship)+'</div>';
   body.innerHTML=h; stWirePrices(body);
   // 3D-Holo des Schiffs, wenn FleetYards eins liefert (Groessen-Check in modelUrl), sonst bleibt das Bild
   if(p.ship&&SC.fleetShip) SC.fleetShip(sh?sh.n:p.ship).then(fy=>{ const v=$('stPlShipV'); if(!fy||!v) return null; return SC.modelUrl(fy,true).then(url=>{ if(!url) return; const im=v.querySelector('img'); v.innerHTML='<div class="holo-box sm" data-holo="'+esc(url)+'" data-fallback="'+esc(im?im.getAttribute('src'):'')+'"></div>'; SC.holoMount(v); }); });
   const pd=$('stPlDest'); if(pd) pd.onclick=()=>{ const t=ST_DATA.by[pd.getAttribute('data-to')]; if(t){ window.__stCtl.flyTo(t); } };
 }
-const ST_WK_TABS=[['ship','Schiffe'],['Armor','Rüstung'],['Personal Weapons','Waffen'],['other','Sonstiges'],['favor','Favor bekommen']];
+const ST_WK_TABS=[['ship','wikelo.tab.ship'],['Armor','wikelo.tab.armor'],['Personal Weapons','wikelo.tab.weapons'],['other','wikelo.tab.other'],['favor','wikelo.tab.favor']];
 function stWkCat(w){ if(w.rw.some(r=>r[0]==='Wikelo Favor')) return 'favor'; if(w.k==='ship') return 'ship'; return (w.cat==='Armor'||w.cat==='Personal Weapons')?w.cat:'other'; }
 async function stWikeloHTML(box){ const M=await stMis(), W=(M.d.wikelo||[]), C=await uexCatalog(); if(!box||!ROOT.contains(box)) return;
   if(!W.length){ box.innerHTML=''; return; }
@@ -192,12 +206,12 @@ async function stWikeloHTML(box){ const M=await stMis(), W=(M.d.wikelo||[]), C=a
   const row=w=>{ const sh=w.k==='ship'?shipOf(w.t):null, im=sh&&stShipImg(sh), fav=stWkCat(w)==='favor';
     const ttl=fav?w.cost.map(c=>c[0]).join(' + ')+' → '+(w.rw.find(r=>r[0]==='Wikelo Favor')||[,1])[1]+'× Wikelo Favor':w.t;
     return '<details class="st-dep st-wk"><summary>'+(im?'<img src="'+esc(im)+'" alt="" onerror="this.remove()">':'')+'<b>'+esc(ttl)+'</b><span title="Wikelo-Ruf">+'+w.rep+'</span></summary><div class="st-mis-b">'+
-      '<div class="st-wk-h">Du bekommst</div>'+w.rw.map(r=>'<div>· '+esc(r[0])+(r[1]>1?' ×'+r[1]:'')+'</div>').join('')+
-      '<div class="st-wk-h">Du gibst ab</div>'+(w.cost.length?w.cost.map(c=>'<div>· '+esc(c[0])+(c[1]?(c[2]==='scu'?' · '+c[1]+' SCU':' ×'+c[1]):'')+'</div>').join(''):'<div class="sc-lmw-muted">nichts angegeben</div>')+
-      (w.pre.length?'<div class="st-wk-h">Voraussetzung</div>'+w.pre.map(p=>'<div>· '+esc(p)+'</div>').join(''):'')+'</div></details>'; };
-  const draw=t=>{ const L=W.filter(w=>stWkCat(w)===t); box.querySelector('.st-wk-list').innerHTML=(t==='favor'?'<p class="st-mnote" style="margin:0 0 8px">Wikelo Favor bekommst du bei Wikelo selbst, im Tausch gegen diese Dinge:</p>':'')+(L.map(row).join('')||'<p class="sc-lmw-muted" style="font-size:.8rem">Nichts in dieser Kategorie.</p>');
-    box.querySelectorAll('[data-wkt]').forEach(b=>b.classList.toggle('on',b.getAttribute('data-wkt')===t)); };
-  box.innerHTML='<div class="st-slbl">🛸 Wikelo-Tauschhandel <span class="st-cnt">'+W.length+' Angebote</span></div><div class="st-wk-tabs">'+ST_WK_TABS.map(t=>'<button data-wkt="'+t[0]+'">'+t[1]+' <span>'+W.filter(w=>stWkCat(w)===t[0]).length+'</span></button>').join('')+'</div><div class="st-wk-list"></div>';
+      '<div class="st-wk-h">'+_t('wikelo.you_get')+'</div>'+w.rw.map(r=>'<div>· '+esc(r[0])+(r[1]>1?' ×'+r[1]:'')+'</div>').join('')+
+      '<div class="st-wk-h">'+_t('wikelo.you_give')+'</div>'+(w.cost.length?w.cost.map(c=>'<div>· '+esc(c[0])+(c[1]?(c[2]==='scu'?' · '+c[1]+' SCU':' ×'+c[1]):'')+'</div>').join(''):'<div class="sc-lmw-muted">'+_t('wikelo.nothing_specified')+'</div>')+
+      (w.pre.length?'<div class="st-wk-h">'+_t('label.requirement')+'</div>'+w.pre.map(p=>'<div>· '+esc(p)+'</div>').join(''):'')+'</div></details>'; };
+  const draw=tab=>{ const L=W.filter(w=>stWkCat(w)===tab); box.querySelector('.st-wk-list').innerHTML=(tab==='favor'?'<p class="st-mnote" style="margin:0 0 8px">'+_t('wikelo.favor_note')+'</p>':'')+(L.map(row).join('')||'<p class="sc-lmw-muted" style="font-size:.8rem">'+_t('common.nothing_in_category')+'</p>');
+    box.querySelectorAll('[data-wkt]').forEach(b=>b.classList.toggle('on',b.getAttribute('data-wkt')===tab)); };
+  box.innerHTML='<div class="st-slbl">'+_t('wikelo.title')+' <span class="st-cnt">'+_t('wikelo.offers',{n:W.length})+'</span></div><div class="st-wk-tabs">'+ST_WK_TABS.map(tb=>'<button data-wkt="'+tb[0]+'">'+_t(tb[1])+' <span>'+W.filter(w=>stWkCat(w)===tb[0]).length+'</span></button>').join('')+'</div><div class="st-wk-list"></div>';
   box.querySelectorAll('[data-wkt]').forEach(b=>b.onclick=()=>draw(b.getAttribute('data-wkt'))); draw('ship'); }
 // Was es an einem Ort zu kaufen gibt (alle Nicht-Waren-Terminals, live von UEX)
 async function stShopHTML(o,box){ const C=await uexCatalog(); const byI={}; C.items.forEach(x=>{ if(x.k!=='c') byI[x.i]=x; }); const shipI={}; C.ships.forEach(s=>{ shipI[s.i]=s; });
@@ -206,14 +220,14 @@ async function stShopHTML(o,box){ const C=await uexCatalog(); const byI={}; C.it
   if(!box||!ROOT.contains(box)) return;
   // gleiche Items/Schiffe an mehreren Terminals: einmal, guenstigster Preis, Terminals zusammen
   const mm={}; [].concat(...lists).filter(x=>x.price>0&&(x.item||x.ship)).forEach(x=>{ const k=(x.ship?'s':'i')+((x.ship||x.item).i||(x.ship||x.item).n); const y=mm[k];
-    if(!y) mm[k]=Object.assign({},x,{terms:[x.term]}); else { if(x.price<y.price) y.price=x.price; if(y.terms.indexOf(x.term)<0) y.terms.push(x.term); y.term=y.terms.length>1?y.terms.length+' Terminals':y.terms[0]; } });
-  const all=Object.values(mm); if(!all.length){ box.innerHTML='<p class="sc-lmw-muted" style="font-size:.82rem">UEX meldet hier keine Items oder Schiffe.</p>'; return; }
+    if(!y) mm[k]=Object.assign({},x,{terms:[x.term]}); else { if(x.price<y.price) y.price=x.price; if(y.terms.indexOf(x.term)<0) y.terms.push(x.term); y.term=y.terms.length>1?_t('count.terminals',{n:y.terms.length}):y.terms[0]; } });
+  const all=Object.values(mm); if(!all.length){ box.innerHTML='<p class="sc-lmw-muted" style="font-size:.82rem">'+_t('shop.none')+'</p>'; return; }
   const rk=x=>x.ship?0:(x.item.s?1:2); all.sort((a,b)=>rk(a)-rk(b)||String(a.ship?'':a.item.s).localeCompare(String(b.ship?'':b.item.s))||(a.ship||a.item).n.localeCompare((b.ship||b.item).n));
   const draw=q=>{ const L=all.filter(x=>!q||(x.ship||x.item).n.toLowerCase().indexOf(q)>=0||((x.item||{}).s||'').toLowerCase().indexOf(q)>=0); let last='';
-    box.querySelector('.st-shop-l').innerHTML=L.slice(0,200).map((x,i)=>{ const sec=x.ship?'Schiffe':(x.item.s||'Sonstiges'), hd=sec!==last?'<div class="st-rh">'+esc(sec)+'</div>':''; last=sec;
-      return hd+'<div class="st-pr" data-si="'+all.indexOf(x)+'"><div><b>'+esc((x.ship||x.item).n)+'</b><span>'+esc(x.term)+'</span></div><em>'+uexMoney(x.price)+'</em></div>'; }).join('')+(L.length>200?'<p class="sc-lmw-muted" style="font-size:.78rem">… '+(L.length-200)+' weitere, bitte filtern.</p>':'');
+    box.querySelector('.st-shop-l').innerHTML=L.slice(0,200).map((x,i)=>{ const sec=x.ship?_t('cat.ship'):(x.item.s||_t('common.misc2')), hd=sec!==last?'<div class="st-rh">'+esc(sec)+'</div>':''; last=sec;
+      return hd+'<div class="st-pr" data-si="'+all.indexOf(x)+'"><div><b>'+esc((x.ship||x.item).n)+'</b><span>'+esc(x.term)+'</span></div><em>'+uexMoney(x.price)+'</em></div>'; }).join('')+(L.length>200?'<p class="sc-lmw-muted" style="font-size:.78rem">'+_t('shop.more_filter',{n:L.length-200})+'</p>':'');
     box.querySelectorAll('[data-si]').forEach(el=>el.onclick=()=>{ const x=all[+el.getAttribute('data-si')]; if(x.ship) stOpenBuy('ship',x.ship); else if(x.item.i) stOpenBuy('item',x.item); }); };
-  box.innerHTML='<input class="st-shop-f" placeholder="In '+all.length+' Angeboten filtern…"><div class="st-shop-l"></div>'; box.querySelector('.st-shop-f').oninput=e=>draw(e.target.value.trim().toLowerCase()); draw(''); }
+  box.innerHTML='<input class="st-shop-f" placeholder="'+esc(_t('shop.filter_placeholder',{n:all.length}))+'"><div class="st-shop-l"></div>'; box.querySelector('.st-shop-f').oninput=e=>draw(e.target.value.trim().toLowerCase()); draw(''); }
 function stDestLoc(tr){ if(!tr) return null; return stPlayerLoc({code:tr.to_raw||'',location:tr.to||'',system:''}); }
 function stBodyOf(o){ const D=ST_DATA; let x=o; while(x&&x.k!=='planet'&&x.k!=='moon'&&x.k!=='star') x=D.by[x.p]; return x||D.star; }
 
@@ -343,7 +357,7 @@ function stantonScene(canvas,sysKey){
       if(L.length===1){ entries.push({o:L[0],p:g.pos,prio:2,sys}); (L[0].on?on:off).push(g.pos); return; }
       L.sort((a,b)=>(b.on-a.on)||String(a.n).localeCompare(String(b.n)));
       const same=L.every(x=>x.loc&&x.loc.id===L[0].loc.id), place=same?L[0].loc:g.anc;   // alle am selben Ort -> Ortsname (Levski), sonst der Planet
-      const nOn=L.filter(x=>x.on).length, go={id:'grp-'+key,n:(place&&place.n?place.n+' · ':'')+L.length+' Spieler'+(nOn?' ('+nOn+' online)':''),k:'player',grp:L,sy:g.sy,loc:place,on:nOn>0,pl:{}};
+      const nOn=L.filter(x=>x.on).length, go={id:'grp-'+key,n:(place&&place.n?place.n+' · ':'')+(nOn?_t('player.here_group_online',{n:L.length,on:nOn}):_t('player.here_group',{n:L.length})),k:'player',grp:L,sy:g.sy,loc:place,on:nOn>0,pl:{}};
       entries.push({o:go,p:g.pos,prio:2,sys}); (nOn?on:off).push(g.pos); });
     if(level.t==='sys') entries.filter(e=>e.o.k==='player'&&e.o.pl.travel).forEach(e=>{ const dl=stDestLoc(e.o.pl.travel); if(!dl) return; const b=stBodyOf(dl), eb=b&&b.k!=='star'?entries.find(x=>x.o.id===b.id):null, to=eb?eb.p.clone().add(new T.Vector3(0,eb.r+0.1,0)):Vs(dl);
       const g=new T.BufferGeometry().setFromPoints([e.p,to]); const ln=new T.Line(g,new T.LineDashedMaterial({color:0x4dff9a,dashSize:0.6,gapSize:0.4,transparent:true,opacity:.85,depthTest:false})); ln.computeLineDistances(); ln.renderOrder=5; ln.userData.sys=e.sys; plPts.push(ln); grp.add(ln); });
@@ -520,19 +534,51 @@ function stantonScene(canvas,sysKey){
   loop();
   return cleanup;
 }
+// Zwei GETRENNTE Sprach-Knoepfe, klar unterscheidbar am Tooltip (Nico's Vorgabe, die alte
+// Funktion bleibt erhalten): "stLang" ist der ALTE Knopf (Spieltexte: Missionstypen,
+// Ausstattungsnamen, INI-Beschreibung, steuert ST_LANG). "stUiLang" ist NEU und steuert nur die
+// Oberflaeche selbst (SC.i18n.lang) -- Knoepfe, Panels, Suche, Legende, Fehlermeldungen, Zeit.
+// Beide zusammen aendern nie dasselbe Feld, koennen also unabhaengig auf DE/EN stehen.
+// Two SEPARATE language buttons, told apart by their tooltip (Nico's requirement, the old
+// feature stays intact): "stLang" is the OLD button (game text: mission types, amenity names,
+// INI description, drives ST_LANG). "stUiLang" is NEW and only drives the interface itself
+// (SC.i18n.lang) -- buttons, panels, search, legend, error messages, time. The two never touch
+// the same field, so they can independently sit on DE/EN.
+function stApplyLang(){
+  const ui=$('stExUI');
+  if(ui){
+    const sysSel=$('stSysSel'), allBtn=sysSel&&sysSel.querySelector('[data-sys="all"]'); if(allBtn) allBtn.title=_t('system.all_title');
+    const exx=$('stExX'); if(exx) exx.title=_t('ui.leave_map');
+    const q=$('stQ'); if(q) q.placeholder=_t('search.placeholder');
+    const qx=$('stQx'); if(qx) qx.title=_t('ui.clear');
+    const cats=$('stCats'); if(cats) cats.querySelectorAll('[data-cat]').forEach(b=>{ b.textContent=_t('cat.'+b.getAttribute('data-cat')); });
+    const legLbl=$('stSideMin'); if(legLbl) legLbl.textContent=_t('tabs.legend')+' ▸';
+    const plLbl=$('stSidePlLbl'); if(plLbl) plLbl.textContent=_t('tabs.players');
+    const gl=$('stLang'); if(gl){ gl.title=_t('gamelang.title'); gl.textContent=ST_LANG==='de'?'DE':'EN'; }
+    const ul=$('stUiLang'); if(ul){ ul.title=_t('uilang.title'); ul.textContent='🌐'+(SC.i18n.lang==='de'?'DE':'EN'); }
+    const plq=$('stPlQ'); if(plq) plq.placeholder=_t('player.search_placeholder');
+    const hint=$('stHint'); if(hint) hint.textContent=_t('hint.controls');
+    const pause=$('stPause'); if(pause){ pause.textContent=ST_PAUSE?'▶':'⏸'; pause.title=ST_PAUSE?_t('action.resume_rotation'):_t('action.pause_rotation'); }
+    const hb=$('stHome'); if(hb) hb.title=_t('action.home_title');
+    const comE=$('stComE'); if(comE) comE.textContent=_t('compass.east');
+  }
+  if(ST_DATA){ stLegend(); stPlList(); }
+  const res=$('stRes'); if(res&&!res.hidden) stSearch();
+  const lp=$('stLoc'); if(lp&&lp.__re) lp.__re();
+}
 function enterStExplore(){
   if(ROOT.classList.contains('st-explore')) return;
   const ctl=window.__stCtl; if(!ctl) return;
   ROOT.classList.add('st-explore');
   const ui=document.createElement('div'); ui.className='st-exui'; ui.id=ID('stExUI');
   ui.innerHTML=
-    '<button class="stx" id="'+ID('stExX')+'" title="Karte verlassen">✕</button>'+
-    '<div class="st-top" id="'+ID('stTop')+'"><div class="st-top-row"><div class="st-sys" id="'+ID('stSysSel')+'">'+[['stanton','Stanton'],['pyro','Pyro'],['nyx','Nyx']].map(s=>'<button data-sys="'+s[0]+'"><i style="background:'+ST_SYSLOOK[s[0]].dot+'"></i>'+s[1]+'</button>').join('')+'<button data-sys="all" title="Alle Systeme">✦</button></div><div class="st-crumb" id="'+ID('stCrumb')+'"></div>'+
-      '<div class="st-sbox"><input id="'+ID('stQ')+'" placeholder="Suchen: Ort, Erz, Item, Schiff, Ware, Blueprint, Mission…" autocomplete="off" enterkeyhint="search"><button id="'+ID('stQx')+'" title="Leeren">✕</button></div></div>'+
-      '<div class="st-cats" id="'+ID('stCats')+'">'+ST_CATS.map(c=>'<button data-cat="'+c[0]+'"'+(ST_CAT===c[0]?' class="on"':'')+'>'+c[1]+'</button>').join('')+'</div>'+
+    '<button class="stx" id="'+ID('stExX')+'" title="'+esc(_t('ui.leave_map'))+'">✕</button>'+
+    '<div class="st-top" id="'+ID('stTop')+'"><div class="st-top-row"><div class="st-sys" id="'+ID('stSysSel')+'">'+[['stanton','Stanton'],['pyro','Pyro'],['nyx','Nyx']].map(s=>'<button data-sys="'+s[0]+'"><i style="background:'+ST_SYSLOOK[s[0]].dot+'"></i>'+s[1]+'</button>').join('')+'<button data-sys="all" title="'+esc(_t('system.all_title'))+'">✦</button></div><div class="st-crumb" id="'+ID('stCrumb')+'"></div>'+
+      '<div class="st-sbox"><input id="'+ID('stQ')+'" placeholder="'+esc(_t('search.placeholder'))+'" autocomplete="off" enterkeyhint="search"><button id="'+ID('stQx')+'" title="'+esc(_t('ui.clear'))+'">✕</button></div></div>'+
+      '<div class="st-cats" id="'+ID('stCats')+'">'+ST_CATS.map(c=>'<button data-cat="'+c[0]+'"'+(ST_CAT===c[0]?' class="on"':'')+'>'+esc(_t(c[1]))+'</button>').join('')+'</div>'+
       '<div class="st-res" id="'+ID('stRes')+'" hidden></div></div>'+
-    '<div class="st-side min" id="'+ID('stSide')+'"><div class="st-tabs"><button id="'+ID('stSideMin')+'" class="on">Legende ▸</button><button id="'+ID('stSidePl')+'">Spieler <span id="'+ID('stPlCnt')+'"></span></button><button class="st-lang" id="'+ID('stLang')+'" title="Spieltexte Deutsch/Englisch">'+(ST_LANG==='de'?'DE':'EN')+'</button></div>'+
-      '<div class="st-tab" id="'+ID('stTabLeg')+'"><div id="'+ID('stLegend')+'"></div></div><div class="st-tab" id="'+ID('stTabPl')+'" hidden><input id="'+ID('stPlQ')+'" placeholder="Spieler suchen…"><div id="'+ID('stPlList')+'"></div></div></div>'+
+    '<div class="st-side min" id="'+ID('stSide')+'"><div class="st-tabs"><button id="'+ID('stSideMin')+'" class="on">'+esc(_t('tabs.legend'))+' ▸</button><button id="'+ID('stSidePl')+'"><span id="'+ID('stSidePlLbl')+'">'+esc(_t('tabs.players'))+'</span> <span id="'+ID('stPlCnt')+'"></span></button><button class="st-lang" id="'+ID('stLang')+'" title="'+esc(_t('gamelang.title'))+'">'+(ST_LANG==='de'?'DE':'EN')+'</button><button class="st-lang st-lang-ui" id="'+ID('stUiLang')+'" title="'+esc(_t('uilang.title'))+'">🌐'+(SC.i18n.lang==='de'?'DE':'EN')+'</button></div>'+
+      '<div class="st-tab" id="'+ID('stTabLeg')+'"><div id="'+ID('stLegend')+'"></div></div><div class="st-tab" id="'+ID('stTabPl')+'" hidden><input id="'+ID('stPlQ')+'" placeholder="'+esc(_t('player.search_placeholder'))+'"><div id="'+ID('stPlList')+'"></div></div></div>'+
     '<div class="st-compass"><svg viewBox="0 0 100 100" width="86" height="86">'+
       '<circle cx="50" cy="50" r="46" fill="rgba(8,12,20,.82)" stroke="rgba(120,165,230,.35)" stroke-width="1.5"/>'+
       '<g id="'+ID('stComDial')+'">'+
@@ -542,18 +588,19 @@ function enterStExplore(){
         '<text x="50" y="13" text-anchor="middle" font-size="11" font-weight="700" fill="#37e1ff" font-family="Chakra Petch,sans-serif">N</text>'+
         '<text x="50" y="95" text-anchor="middle" font-size="9" fill="#cfe0ee" font-family="Chakra Petch,sans-serif">S</text>'+
         '<text x="7" y="54" text-anchor="middle" font-size="9" fill="#cfe0ee" font-family="Chakra Petch,sans-serif">W</text>'+
-        '<text x="93" y="54" text-anchor="middle" font-size="9" fill="#cfe0ee" font-family="Chakra Petch,sans-serif">O</text>'+
+        '<text id="'+ID('stComE')+'" x="93" y="54" text-anchor="middle" font-size="9" fill="#cfe0ee" font-family="Chakra Petch,sans-serif">'+_t('compass.east')+'</text>'+
       '</g>'+
       '<polygon points="50,1 45,10 55,10" fill="#ffd76a"/>'+
     '</svg></div>'+
-    '<div class="st-hint">Ziehen: drehen · Rechts/Shift: verschieben · Rad: zoomen · Klick: hinfliegen</div>'+
-    '<div class="st-zoom"><button class="st-pause" id="'+ID('stPause')+'" title="Drehung anhalten">⏸</button><button class="st-pause" id="'+ID('stHome')+'" title="Zurück zur Sonne"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg></button><span>🛰️</span><input type="range" id="'+ID('stZoom')+'" min="0" max="1" step="0.001"><span>🔭</span></div>';
+    '<div class="st-hint" id="'+ID('stHint')+'">'+esc(_t('hint.controls'))+'</div>'+
+    '<div class="st-zoom"><button class="st-pause" id="'+ID('stPause')+'" title="'+esc(_t('action.pause_rotation'))+'">⏸</button><button class="st-pause" id="'+ID('stHome')+'" title="'+esc(_t('action.home_title'))+'"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg></button><span>🛰️</span><input type="range" id="'+ID('stZoom')+'" min="0" max="1" step="0.001"><span>🔭</span></div>';
   ROOT.appendChild(ui);
   const zoom=$('stZoom'), dial=$('stComDial'), pause=$('stPause');
   if(zoom){ zoom.value=ctl.zoom01(); zoom.oninput=()=>ctl.setZoom01(parseFloat(zoom.value)); }
-  if(pause){ const upd=()=>{ pause.textContent=ST_PAUSE?'▶':'⏸'; pause.title=ST_PAUSE?'Drehung fortsetzen':'Drehung anhalten'; }; upd(); pause.onclick=()=>{ ST_PAUSE=!ST_PAUSE; upd(); }; }
+  if(pause){ const upd=()=>{ pause.textContent=ST_PAUSE?'▶':'⏸'; pause.title=ST_PAUSE?_t('action.resume_rotation'):_t('action.pause_rotation'); }; upd(); pause.onclick=()=>{ ST_PAUSE=!ST_PAUSE; upd(); }; }
   $('stExX').onclick=exitStExplore;
   $('stLang').onclick=()=>{ ST_LANG=ST_LANG==='de'?'en':'de'; try{ localStorage.setItem('livemap_lang',ST_LANG); }catch(e){} $('stLang').textContent=ST_LANG==='de'?'DE':'EN'; const LP=$('stLoc'); if(LP&&LP.__re) LP.__re(); if(!$('stRes').hidden) stSearch(); };
+  $('stUiLang').onclick=()=>{ SC.i18n.setLang(SC.i18n.lang==='de'?'en':'de'); $('stUiLang').textContent='🌐'+(SC.i18n.lang==='de'?'DE':'EN'); stApplyLang(); };
   const hb=$('stHome'); if(hb) hb.onclick=()=>{ ctl.highlight(null); ctl.home(); };
   const side=$('stSide');
   const sideTab=t=>{ const open=!side.classList.contains('min'), cur=$('stTabPl').hidden?'leg':'pl';
@@ -570,7 +617,7 @@ function enterStExplore(){
   $('stSysSel').querySelectorAll('[data-sys]').forEach(b=>b.onclick=()=>{ const k=b.getAttribute('data-sys'); stCloseCard(); if(k==='all'){ ctl.galaxy(); return; } ctl.goSystem(k); sysMark(k); });
   const plTick=()=>stLoadPlayers().then(ch=>{ if(ch&&window.__stCtl) window.__stCtl.rebuild(); stLegend(); stPlList(); });
   clearInterval(window.__stPlT); { const C=window.LIVEMAP_CONFIG||{}, ms=C.PLAYERS_POLL_MS==null?30000:+C.PLAYERS_POLL_MS; if(ms>0) window.__stPlT=setInterval(plTick,Math.max(5000,ms)); }   // 0 = kein erneutes Laden
-  stLoad().then(()=>{ crumb(ctl.level()); stLegend(); plTick(); }).catch(()=>{ $('stLegend').innerHTML='<p class="sc-lmw-muted">Kartendaten konnten nicht geladen werden.</p>'; });
+  stLoad().then(()=>{ crumb(ctl.level()); stLegend(); plTick(); }).catch(()=>{ $('stLegend').innerHTML='<p class="sc-lmw-muted">'+_t('error.data_load_failed')+'</p>'; });
   // Obere Leiste: Reiter + Suche
   const q=$('stQ'); let tmr=null;
   q.oninput=()=>{ clearTimeout(tmr); tmr=setTimeout(stSearch,120); };
@@ -587,7 +634,7 @@ function enterStExplore(){
   window.__stExStop=function(){ cancelAnimationFrame(window.__stExRaf); };
 }
 // ---- Obere Suchleiste: Orte, Erze, Items, Schiffe, Waren, Blueprints, Missionen ----
-const ST_CATS=[['all','Alles'],['pl','Spieler'],['loc','Orte'],['ore','Erze'],['item','Items'],['ship','Schiffe'],['ware','Waren'],['bp','Blueprints'],['mis','Missionen']];
+const ST_CATS=[['all','cat.all'],['pl','cat.pl'],['loc','cat.loc'],['ore','cat.ore'],['item','cat.item'],['ship','cat.ship'],['ware','cat.ware'],['bp','cat.bp'],['mis','cat.mis']];
 const ST_SEC_IC={'Armor':'🛡️','Clothing':'👕','Undersuits':'🧥','Liveries':'🎨','Personal Weapons':'🔫','Vehicle Weapons':'💥','Systems':'⚙️','Avionics':'📡','Utility':'🔧','Miscellaneous':'📦','Decorations':'🪴','Commodities':'🪙'};
 let ST_CAT='all', ST_SEC=null, ST_TERM=null, ST_ORES=null, ST_ORES_TRIED=false;
 const stCache=new Map();
@@ -625,34 +672,34 @@ async function stSearch(){ const box=$('stRes'), qi=$('stQ'); if(!box||!ST_DATA)
   const C=await uexCatalog(), M=await stMis(), ORES=await stOres(), BPD=(all||cat==='bp')?await stBps():{bps:{}};
   if(!C._ix){ C.items.forEach((x,i)=>{ x._i=i; }); C.ships.forEach((x,i)=>{ x._i=i; }); C._ix=1; }
   let h='';
-  const head=(t,n,c)=>all?'<div class="st-rh">'+t+(n>5?' <a data-more="'+c+'">alle '+n+' ›</a>':'')+'</div>':'';
+  const head=(tt,n,c)=>all?'<div class="st-rh">'+tt+(n>5?' <a data-more="'+c+'">'+esc(_t('action.show_all',{n}))+'</a>':'')+'</div>':'';
   if((all||cat==='pl')&&ST_PL){ const L=ST_PL.filter(p=>has(p.name)||has(p.player)||has(p.location)||has(p.ship)||has(p.system));
     if(ST_PL_ERR&&cat==='pl') h+='<p class="st-warn">'+esc(ST_PL_ERR)+'</p>';
-    if(L.length) h+=head('Spieler',L.length,'pl')+L.slice(0,lim(300)).map(p=>stRow('pl',p.id,p.online?'🟢':'⚪',p.name||p.player,[p.online?'online':'offline '+stAgo(p.last_seen||p.when),p.location&&p.location+(p.online&&p.when&&!stLocFresh(p)?' ('+stAgo(p.when)+')':''),p.ship].filter(v=>v&&v!=='—').join(' · '))).join('')+stCut(L.length,lim(300)); else if(cat==='pl'&&!ST_PL_ERR) h+='<p class="sc-lmw-muted" style="padding:10px;font-size:.84rem">Keine Spieler gefunden.</p>'; }
+    if(L.length) h+=head(_t('cat.pl'),L.length,'pl')+L.slice(0,lim(300)).map(p=>stRow('pl',p.id,p.online?'🟢':'⚪',p.name||p.player,[p.online?_t('status.online'):_t('status.offline_last',{time:stAgo(p.last_seen||p.when)}),p.location&&p.location+(p.online&&p.when&&!stLocFresh(p)?' ('+stAgo(p.when)+')':''),p.ship].filter(v=>v&&v!=='—').join(' · '))).join('')+stCut(L.length,lim(300)); else if(cat==='pl'&&!ST_PL_ERR) h+='<p class="sc-lmw-muted" style="padding:10px;font-size:.84rem">'+_t('search.none_players')+'</p>'; }
   if(all||cat==='loc'){ const L=ST_DATA.d.objects.filter(o=>o.k!=='asteroid'&&(!o.h||ST_HID)&&(q?has(o.n):(ST_PRIO[o.k]||0)>=2)).sort((a,b)=>(ST_PRIO[b.k]||0)-(ST_PRIO[a.k]||0)||a.n.localeCompare(b.n));
-    if(L.length) h+=head('Orte',L.length,'loc')+L.slice(0,lim(600)).map(o=>stRow('loc',o.id,'<span class="st-dot" style="background:'+(ST_KIND[o.k]||{}).c+'"></span>',o.n,((ST_KIND[o.k]||{}).l||o.k)+(stBodyOf(o)!==o&&stBodyOf(o).k!=='star'?' · '+stBodyOf(o).n:'')+' · '+stSysName(o))).join('')+stCut(L.length,lim(600)); }
+    if(L.length) h+=head(_t('cat.loc'),L.length,'loc')+L.slice(0,lim(600)).map(o=>stRow('loc',o.id,'<span class="st-dot" style="background:'+(ST_KIND[o.k]||{}).c+'"></span>',o.n,kindLabel(o.k)+(stBodyOf(o)!==o&&stBodyOf(o).k!=='star'?' · '+stBodyOf(o).n:'')+' · '+stSysName(o))).join('')+stCut(L.length,lim(600)); }
   if(all||cat==='ore'){ const L=ORES.filter(o=>has(o.n)||o.mine.some(has)||has(o.code));
-    if(L.length) h+=head('Erze',L.length,'ore')+L.slice(0,lim(200)).map(o=>stRow('ore',o.n,'⛏️',o.n,stOreWhere(o)+(o.code?' · '+o.code:''))).join('')+stCut(L.length,lim(200)); }
+    if(L.length) h+=head(_t('cat.ore'),L.length,'ore')+L.slice(0,lim(200)).map(o=>stRow('ore',o.n,'⛏️',o.n,stOreWhere(o)+(o.code?' · '+o.code:''))).join('')+stCut(L.length,lim(200)); }
   if(all||cat==='item'){
-    if(!q&&!ST_SEC&&cat==='item'){ const S={}; C.items.forEach(x=>{ if(x.k!=='c') S[x.s||'Sonstige']=(S[x.s||'Sonstige']||0)+1; });
-      h+=Object.keys(S).sort((a,b)=>S[b]-S[a]).map(s=>stRow('sec',s,ST_SEC_IC[s]||'📦',s,S[s]+' Items')).join(''); }
+    if(!q&&!ST_SEC&&cat==='item'){ const S={}; C.items.forEach(x=>{ if(x.k!=='c') S[x.s||_t('common.misc')]=(S[x.s||_t('common.misc')]||0)+1; });
+      h+=Object.keys(S).sort((a,b)=>S[b]-S[a]).map(s=>stRow('sec',s,ST_SEC_IC[s]||'📦',s,_t('count.items',{n:S[s]}))).join(''); }
     else { const L=C.items.filter(x=>x.k!=='c'&&(!ST_SEC||x.s===ST_SEC)&&(has(x.n)||has(x.co)||has(x.s)));
-      if(L.length) h+=(ST_SEC&&!all?'<div class="st-rh"><a data-back="1">‹ Kategorien</a> · '+esc(ST_SEC)+'</div>':head('Items',L.length,'item'))+L.slice(0,lim(150)).map((x,i)=>stRow('item',x._i,ST_SEC_IC[x.s]||'📦',x.n,[x.s,x.co,x.sz?'Gr. '+x.sz:''].filter(Boolean).join(' · '))).join('')+stCut(L.length,lim(150)); } }
+      if(L.length) h+=(ST_SEC&&!all?'<div class="st-rh"><a data-back="1">'+esc(_t('action.back_categories'))+'</a> · '+esc(ST_SEC)+'</div>':head(_t('cat.item'),L.length,'item'))+L.slice(0,lim(150)).map((x,i)=>stRow('item',x._i,ST_SEC_IC[x.s]||'📦',x.n,[x.s,x.co,x.sz?_t('label.size_abbr',{sz:x.sz}):''].filter(Boolean).join(' · '))).join('')+stCut(L.length,lim(150)); } }
   if(all||cat==='ship'){ const L=C.ships.filter(x=>has(x.n)||has(x.co));
-    if(L.length) h+=head('Schiffe',L.length,'ship')+L.slice(0,lim(300)).map(x=>stRow('ship',x._i,'🚀',x.n,[x.co,x.crew?'Crew '+x.crew:''].filter(Boolean).join(' · '),stShipImg(x))).join('')+stCut(L.length,lim(300)); }
+    if(L.length) h+=head(_t('cat.ship'),L.length,'ship')+L.slice(0,lim(300)).map(x=>stRow('ship',x._i,'🚀',x.n,[x.co,x.crew?_t('label.crew',{n:x.crew}):''].filter(Boolean).join(' · '),stShipImg(x))).join('')+stCut(L.length,lim(300)); }
   if(all||cat==='ware'){ const L=C.items.filter(x=>x.k==='c'&&has(x.n));
-    if(L.length) h+=head('Waren',L.length,'ware')+L.slice(0,lim(250)).map(x=>stRow('ware',x._i,'🪙',x.n,(x.pb?'Einkauf ab '+uexMoney(x.pb):'')+(x.pb&&x.ps?' · ':'')+(x.ps?'Verkauf bis '+uexMoney(x.ps):''))).join('')+stCut(L.length,lim(250)); }
+    if(L.length) h+=head(_t('cat.ware'),L.length,'ware')+L.slice(0,lim(250)).map(x=>stRow('ware',x._i,'🪙',x.n,(x.pb?_t('price.buy_from',{price:uexMoney(x.pb)}):'')+(x.pb&&x.ps?' · ':'')+(x.ps?_t('price.sell_up_to',{price:uexMoney(x.ps)}):''))).join('')+stCut(L.length,lim(250)); }
   if(all||cat==='bp'){ const B=M.d.bps||{}, R=BPD.bps||{}; const L=[...new Set(Object.keys(R).concat(Object.keys(B)))].filter(n=>has(n)||has((B[n]||{}).cat)||has((R[n]||{}).t)).sort((a,b)=>a.localeCompare(b));
-    const src=n=>B[n]?B[n].m.length+(B[n].m.length===1?' Mission':' Missionen'):(R[n]&&R[n].src==='default'?'von Anfang an':'keine Mission bekannt');
-    if(L.length) h+=head('Blueprints',L.length,'bp')+L.slice(0,lim(1800)).map(n=>stRow('bp',n,'🧩',n,[(R[n]||{}).t||(B[n]||{}).cat,src(n)].filter(Boolean).join(' · '))).join('')+stCut(L.length,lim(1800)); }
+    const src=n=>B[n]?(B[n].m.length===1?_t('count.mission_one'):_t('count.mission_many',{n:B[n].m.length})):(R[n]&&R[n].src==='default'?_t('bp.from_start'):_t('bp.no_known_mission'));
+    if(L.length) h+=head(_t('cat.bp'),L.length,'bp')+L.slice(0,lim(1800)).map(n=>stRow('bp',n,'🧩',n,[(R[n]||{}).t||(B[n]||{}).cat,src(n)].filter(Boolean).join(' · '))).join('')+stCut(L.length,lim(1800)); }
   if(all||cat==='mis'){ const L=M.d.groups.map((g,i)=>[g,i]).filter(([g])=>has(stTy(g.ty))||has(g.g)||g.t.some(has)).sort((a,b)=>stTy(a[0].ty).localeCompare(stTy(b[0].ty))||b[0].n-a[0].n);
-    if(L.length) h+=head('Missionen',L.length,'mis')+L.slice(0,lim(200)).map(([g,i])=>stRow('mis',i,'🎯',stTy(g.ty)+' · '+g.g,g.n+' Aufträge'+(g.il?' · illegal':'')+(g.bp?' · 🧩 '+g.bp.length:''))).join('')+stCut(L.length,lim(200)); }
-  const miss=(M.failed?['Missionen/Blueprints']:[]).concat(!C.items.length?['Items/Waren']:[],!C.ships.length?['Schiffe']:[]);
-  if(miss.length) h='<p class="st-warn">'+esc(miss.join(', '))+' konnten nicht geladen werden. Suche erneut, dann versuche ich es nochmal.</p>'+h;
+    if(L.length) h+=head(_t('cat.mis'),L.length,'mis')+L.slice(0,lim(200)).map(([g,i])=>stRow('mis',i,'🎯',stTy(g.ty)+' · '+g.g,_t('count.orders',{n:g.n})+(g.il?' · illegal':'')+(g.bp?' · 🧩 '+g.bp.length:''))).join('')+stCut(L.length,lim(200)); }
+  const miss=(M.failed?[_t('cat.mis')+'/'+_t('cat.bp')]:[]).concat(!C.items.length?[_t('cat.item')+'/'+_t('cat.ware')]:[],!C.ships.length?[_t('cat.ship')]:[]);
+  if(miss.length) h='<p class="st-warn">'+esc(_t('search.load_failed',{list:miss.join(', ')}))+'</p>'+h;
   // Sichtbar machen, wenn eine Liste gekuerzt wurde (nie still abschneiden)
-  h=h.replace(/<!--CUT:(\d+)-->/g,(m,n)=>'<p class="sc-lmw-muted" style="padding:6px 10px;font-size:.78rem">… '+n+' weitere, bitte genauer suchen.</p>');
+  h=h.replace(/<!--CUT:(\d+)-->/g,(m,n)=>'<p class="sc-lmw-muted" style="padding:6px 10px;font-size:.78rem">'+esc(_t('search.more_specific',{n}))+'</p>');
   if(gen!==ST_SGEN) return;   // eine neuere Suche laeuft schon, dieses Ergebnis ist veraltet
-  box.innerHTML=h||'<p class="sc-lmw-muted" style="padding:10px;font-size:.84rem">Nichts gefunden.</p>';
+  box.innerHTML=h||'<p class="sc-lmw-muted" style="padding:10px;font-size:.84rem">'+_t('search.nothing_found')+'</p>';
   const f1=box.querySelector('.st-r'); if(f1) f1.classList.add('sel');
   box.querySelectorAll('[data-more]').forEach(a=>a.onclick=(e)=>{ e.stopPropagation(); ST_CAT=a.getAttribute('data-more'); stCatsMark(); stSearch(); });
   box.querySelectorAll('[data-back]').forEach(a=>a.onclick=()=>{ ST_SEC=null; stSearch(); });
@@ -670,85 +717,86 @@ async function stPick(kind,key){ const ctl=window.__stCtl, C=await uexCatalog(),
   else if(kind==='mis'){ const g=(await stMis()).d.groups[+key]; ctl.highlight(g.locs); stOpenMisGroup(g); } }
 function stCard(dot,title,sub){ let p=$('stLoc'); if(p) p.remove();
   p=document.createElement('div'); p.id=ID('stLoc'); p.className='st-loc';
-  p.innerHTML='<div class="st-loc-card"><div class="st-loc-h"><span class="st-dot" style="background:'+dot+'"></span><h3>'+esc(title)+'<small>'+esc(sub)+'</small></h3>'+'<button class="st-loc-x" id="'+ID('stLocX')+'">✕</button></div><div class="st-loc-body" id="'+ID('stCardBody')+'"><p class="sc-lmw-muted">Lädt…</p></div></div>';
+  p.innerHTML='<div class="st-loc-card"><div class="st-loc-h"><span class="st-dot" style="background:'+dot+'"></span><h3>'+esc(title)+'<small>'+esc(sub)+'</small></h3>'+'<button class="st-loc-x" id="'+ID('stLocX')+'">✕</button></div><div class="st-loc-body" id="'+ID('stCardBody')+'"><p class="sc-lmw-muted">'+_t('common.loading')+'</p></div></div>';
   ROOT.appendChild(p); $('stLocX').onclick=()=>{ p.remove(); window.__stCtl&&window.__stCtl.highlight(null); }; return $('stCardBody'); }
 function stPriceRows(rows,field,label,asc){ const T=stTermIdx();
   const L=rows.filter(r=>r[field]>0).sort((a,b)=>asc?a[field]-b[field]:b[field]-a[field]);
   if(!L.length) return {html:'',ids:[]}; const ids=[];
-  const html='<div class="st-slbl">'+label+' <span class="st-cnt">'+L.length+' Terminals</span></div>'+L.map(r=>{ const o=T[r.id_terminal]; if(o) ids.push(o.id);
+  const html='<div class="st-slbl">'+label+' <span class="st-cnt">'+_t('count.terminals',{n:L.length})+'</span></div>'+L.map(r=>{ const o=T[r.id_terminal]; if(o) ids.push(o.id);
     const sys=r.star_system_name&&r.star_system_name!=='Stanton'?r.star_system_name:''; const where=o?stBodyOf(o).n:(r.planet_name||r.moon_name||sys||'');
-    return '<div class="st-pr'+(o?'':' nomap')+'"'+(o?' data-oid="'+o.id+'"':'')+' title="'+(o?'Auf der Karte zeigen':'Nicht auf der Live Map')+'"><div><b>'+esc(o?o.n:(r.terminal_name||'?'))+'</b><span>'+esc([r.terminal_name,where,sys].filter((v,i,a)=>v&&a.indexOf(v)===i).join(' · '))+'</span></div><em>'+uexMoney(r[field])+'</em></div>'; }).join('');
+    return '<div class="st-pr'+(o?'':' nomap')+'"'+(o?' data-oid="'+o.id+'"':'')+' title="'+esc(o?_t('tooltip.show_on_map'):_t('tooltip.not_on_map'))+'"><div><b>'+esc(o?o.n:(r.terminal_name||'?'))+'</b><span>'+esc([r.terminal_name,where,sys].filter((v,i,a)=>v&&a.indexOf(v)===i).join(' · '))+'</span></div><em>'+uexMoney(r[field])+'</em></div>'; }).join('');
   return {html,ids}; }
 function stWirePrices(body){ body.querySelectorAll('[data-oid]').forEach(el=>el.onclick=()=>{ const o=ST_DATA.by[el.getAttribute('data-oid')]; window.__stCtl.flyTo(o); openStPanel(o); }); }
 async function stOpenBuy(kind,rec){ if(!rec) return;
-  const sub=kind==='ship'?[rec.co,rec.crew?'Crew '+rec.crew:''].filter(Boolean).join(' · '):kind==='ware'?'Ware':[rec.s,rec.co,rec.sz?'Größe '+rec.sz:''].filter(Boolean).join(' · ');
+  const sub=kind==='ship'?[rec.co,rec.crew?_t('label.crew',{n:rec.crew}):''].filter(Boolean).join(' · '):kind==='ware'?_t('cat.ware'):[rec.s,rec.co,rec.sz?_t('label.size_abbr',{sz:rec.sz}):''].filter(Boolean).join(' · ');
   const body=stCard(kind==='ship'?'#37e1ff':kind==='ware'?'#ffd76a':'#38d39f',rec.n,sub,[kind,kind+':'+rec.i,rec.n]);
   let rows=[];
   if(kind==='ship'&&rec.i) rows=await stGet(UEX_BASE+'/vehicles_purchases_prices?id_vehicle='+rec.i);
   else if(kind==='item'&&rec.i) rows=await stGet(UEX_BASE+'/items_prices?id_item='+rec.i);
   else if(kind==='ware'&&rec.i) rows=await stGet(UEX_BASE+'/commodities_prices?id_commodity='+rec.i);
   if(!ROOT.contains(body)) return;
-  const buy=stPriceRows(rows,'price_buy',kind==='ware'?'Einkaufen':'Kaufen',true), sell=kind==='ware'?stPriceRows(rows,'price_sell','Verkaufen',false):{html:'',ids:[]};
+  const buy=stPriceRows(rows,'price_buy',kind==='ware'?_t('price.buy_wholesale_label'):_t('price.buy_label'),true), sell=kind==='ware'?stPriceRows(rows,'price_sell',_t('price.sell_label'),false):{html:'',ids:[]};
   let h=kind==='ship'&&stShipImg(rec)?'<img class="st-shipimg" src="'+esc(stShipImg(rec))+'" alt="" onerror="this.remove()">':'';
-  if(kind==='ship') h+='<div class="st-chips">'+(rec.msrp?'<span>Pledge $'+rec.msrp+'</span>':'')+(rec.st?'<a href="'+esc(rec.st)+'" target="_blank" rel="noopener" class="st-lnk">RSI-Seite ↗</a>':'')+'</div>';
+  if(kind==='ship') h+='<div class="st-chips">'+(rec.msrp?'<span>'+esc(_t('label.pledge',{n:rec.msrp}))+'</span>':'')+(rec.st?'<a href="'+esc(rec.st)+'" target="_blank" rel="noopener" class="st-lnk">RSI ↗</a>':'')+'</div>';
   h+=buy.html+sell.html;
   if(kind==='item'&&rec.i) h+='<div id="'+ID('stAttr')+'"></div>';
-  if(!buy.html&&!sell.html) h+='<p class="sc-lmw-muted" style="font-size:.84rem">'+(kind==='ship'?'Laut UEX nirgends für aUEC käuflich.':kind==='item'?'Laut UEX nirgends käuflich, nur findbar oder herstellbar.':'Keine Preise bei UEX.')+'</p>';
-  h+='<div class="st-coord">Preise live von UEX · gelb = auf der Karte</div>';
+  if(!buy.html&&!sell.html) h+='<p class="sc-lmw-muted" style="font-size:.84rem">'+(kind==='ship'?_t('notice.ship_not_buyable'):kind==='item'?_t('notice.item_not_buyable'):_t('notice.ware_no_price'))+'</p>';
+  h+='<div class="st-coord">'+_t('price.coord_note')+'</div>';
   body.innerHTML=h; stWirePrices(body);
-  if(kind==='item'&&rec.i) stGet(UEX_BASE+'/items_attributes?id_item='+rec.i).then(A=>{ const bx=$('stAttr'); if(!bx) return; const L=A.filter(a=>a.attribute_name&&a.value!==''&&a.value!=null); if(L.length) bx.innerHTML='<div class="st-slbl">📊 Werte</div><table class="st-attr">'+L.map(a=>'<tr><td>'+esc(a.attribute_name)+'</td><td>'+esc(a.value)+(a.unit?' '+esc(a.unit):'')+'</td></tr>').join('')+'</table>'; });
+  if(kind==='item'&&rec.i) stGet(UEX_BASE+'/items_attributes?id_item='+rec.i).then(A=>{ const bx=$('stAttr'); if(!bx) return; const L=A.filter(a=>a.attribute_name&&a.value!==''&&a.value!=null); if(L.length) bx.innerHTML='<div class="st-slbl">'+_t('label.stats')+'</div><table class="st-attr">'+L.map(a=>'<tr><td>'+esc(a.attribute_name)+'</td><td>'+esc(a.value)+(a.unit?' '+esc(a.unit):'')+'</td></tr>').join('')+'</table>'; });
   const ids=[...new Set(buy.ids.concat(sell.ids))]; if(ids.length) window.__stCtl.highlight(ids); }
 async function stOpenOre(x){ const I=stOreIndex();
   const body=stCard('#e0a458',x.n,(x.code?x.code+' · ':'')+stOreWhere(x),['erz',x.n,x.n]);
   const rows=[]; x.mine.forEach(n=>(I.ores[n]||[]).forEach(r=>rows.push(Object.assign({ore:n},r)))); rows.sort((a,b)=>(b.q-a.q)||(b.ch-a.ch));
   const ids=new Set();
-  let h=rows.length?'<div class="st-slbl">⛏️ Abbauen <span class="st-cnt">beste Qualität zuerst</span></div>'+rows.map((r,i)=>{ const L=I.locs[r.k]||[]; L.forEach(o=>ids.add(o.id));
-    const where=!L.length?stMineLabel(r.k)+' · kein fester Ort':r.k==='HPP_AaronHalo'?'Aaron Halo ('+L.length+' Mining-Basen)':(/^HPP_(Stanton|Pyro)\d/.test(r.k)?L.map(o=>o.n).join(', '):stMineLabel(r.k)+' · '+L.slice(0,4).map(o=>o.n).join(', ')+(L.length>4?' …':''))+(L.length?' · '+stSysName(L[0]):'');
-    return '<div class="st-orow'+(L.length?'':' st-nofix')+'" data-ri="'+i+'"><b>'+esc(where)+'</b><div class="om"><span>'+esc(r.g)+'</span><span title="Chance, dass ein Stein hier das Erz enthält">Chance '+(r.ch>=1?Math.round(r.ch):r.ch.toFixed(1))+' %</span><span title="Höchster Erzanteil im Stein">bis '+Math.round(r.max)+' %</span><span title="Beste Qualität (max. 1000)">Q '+r.q+'</span></div></div>'; }).join(''):'';
-  body.innerHTML=h+'<div id="'+ID('stOreSell')+'"><p class="sc-lmw-muted" style="font-size:.82rem">Lade Verkaufspreise…</p></div>';
+  let h=rows.length?'<div class="st-slbl">'+_t('label.mining')+' <span class="st-cnt">'+_t('hint.best_quality_first')+'</span></div>'+rows.map((r,i)=>{ const L=I.locs[r.k]||[]; L.forEach(o=>ids.add(o.id));
+    const where=!L.length?stMineLabel(r.k)+_t('nofix.mineable_no_place'):r.k==='HPP_AaronHalo'?'Aaron Halo ('+L.length+' Mining-Basen)':(/^HPP_(Stanton|Pyro)\d/.test(r.k)?L.map(o=>o.n).join(', '):stMineLabel(r.k)+' · '+L.slice(0,4).map(o=>o.n).join(', ')+(L.length>4?' …':''))+(L.length?' · '+stSysName(L[0]):'');
+    return '<div class="st-orow'+(L.length?'':' st-nofix')+'" data-ri="'+i+'"><b>'+esc(where)+'</b><div class="om"><span>'+esc(mineGroupLabel(r.g))+'</span><span title="'+esc(_t('tooltip.ore_chance'))+'">'+esc(_t('ore.percent_chance',{n:(r.ch>=1?Math.round(r.ch):r.ch.toFixed(1))}))+'</span><span title="'+esc(_t('tooltip.ore_max_share'))+'">'+esc(_t('ore.up_to_percent',{n:Math.round(r.max)}))+'</span><span title="'+esc(_t('tooltip.best_quality'))+'">'+esc(_t('ore.quality',{n:r.q}))+'</span></div></div>'; }).join(''):'';
+  body.innerHTML=h+'<div id="'+ID('stOreSell')+'"><p class="sc-lmw-muted" style="font-size:.82rem">'+_t('status.loading_sell_prices')+'</p></div>';
   body.querySelectorAll('[data-ri]').forEach(el=>el.onclick=()=>{ const r=rows[+el.getAttribute('data-ri')]; const o=(I.locs[r.k]||[])[0]; if(!o){ stOpenNofix(r.k); return; } window.__stCtl.flyTo(o); openStPanel(o); });
   if(ids.size) window.__stCtl.highlight([...ids]);
   const [raw,ref]=await Promise.all([x.ido?stGet(UEX_BASE+'/commodities_prices?id_commodity='+x.ido):[],x.idr?stGet(UEX_BASE+'/commodities_prices?id_commodity='+x.idr):[]]);
   if(!ROOT.contains(body)) return; const box=body.querySelector('#stOreSell'); if(!box) return;
-  const a=stPriceRows(raw,'price_sell','💰 Roh verkaufen',false), b=stPriceRows(ref,'price_sell','💰 Raffiniert verkaufen',false);
-  box.innerHTML=(a.html+b.html)||'<p class="sc-lmw-muted" style="font-size:.82rem">Keine Verkaufspreise bei UEX.</p>'; stWirePrices(box); }
+  const a=stPriceRows(raw,'price_sell',_t('label.sell_raw'),false), b=stPriceRows(ref,'price_sell',_t('label.sell_refined'),false);
+  box.innerHTML=(a.html+b.html)||'<p class="sc-lmw-muted" style="font-size:.82rem">'+_t('price.none_sell_uex')+'</p>'; stWirePrices(box); }
 // Rezept: was man zum Craften braucht (Baugruppen, Ressourcen in SCU, Items mit Stueckzahl, Mindestqualitaet)
 function stBpRecipe(R){ if(!R||!R.req||!R.req.length) return '';
-  const tm=R.tm?(R.tm>=3600?Math.round(R.tm/360)/10+' Std':R.tm>=60?Math.round(R.tm/60)+' Min':R.tm+' s'):'';
-  return '<div class="st-slbl">🛠 Zum Craften'+(tm?' <span class="st-cnt">'+tm+'</span>':'')+'</div>'+R.req.map(g=>'<div class="st-orow st-bpg"><b>'+esc(g.n||'Material')+(g.c>1?' ×'+g.c:'')+'</b>'+
-    g.it.map(i=>'<div class="om"><span>'+esc(i.n)+'</span><span>'+(i.scu!=null?String(i.scu).replace('.',',')+' SCU':'×'+(i.q||1))+(i.mq>1?' · ab Qualität '+i.mq:'')+'</span></div>').join('')+
-    (g.mod&&g.mod.length?'<div class="om"><span class="sc-lmw-muted">Qualität wirkt auf: '+g.mod.map(esc).join(', ')+'</span></div>':'')+'</div>').join(''); }
+  const tm=R.tm?(R.tm>=3600?_t('time.hours_short',{n:Math.round(R.tm/360)/10}):R.tm>=60?_t('time.min_short',{n:Math.round(R.tm/60)}):_t('time.sec_short',{n:R.tm})):'';
+  return '<div class="st-slbl">'+_t('label.crafting')+(tm?' <span class="st-cnt">'+tm+'</span>':'')+'</div>'+R.req.map(g=>'<div class="st-orow st-bpg"><b>'+esc(g.n||_t('common.material'))+(g.c>1?' ×'+g.c:'')+'</b>'+
+    g.it.map(i=>'<div class="om"><span>'+esc(i.n)+'</span><span>'+(i.scu!=null?String(i.scu).replace('.',',')+' SCU':'×'+(i.q||1))+(i.mq>1?' · '+esc(_t('label.min_quality',{n:i.mq})):'')+'</span></div>').join('')+
+    (g.mod&&g.mod.length?'<div class="om"><span class="sc-lmw-muted">'+esc(_t('label.quality_affects',{list:g.mod.join(', ')}))+'</span></div>':'')+'</div>').join(''); }
 // ORTS-WISSEN der Community: Temperatur/Strahlung von-bis, Schwerkraft, Wetter, Geschichte; jeder ergaenzt, alle Namen unten.
 async function stOpenBp(name){ const M=await stMis(), BP=await stBps(), B=(M.d.bps||{})[name], R=(BP.bps||{})[name]; if(!B&&!R) return; const LS=M.d.lsets||[];
-  const body=stCard('#37e1ff',name,[R?R.t+(R.g?' · Stufe '+R.g:''):(B&&B.cat),'Blueprint'].filter(Boolean).join(' · '),['blueprint',name,name]);
+  const body=stCard('#37e1ff',name,[R?R.t+(R.g?' · '+_t('label.grade',{n:R.g}):''):(B&&B.cat),'Blueprint'].filter(Boolean).join(' · '),['blueprint',name,name]);
   const ids=new Set();
   if(!B){ // nicht in unseren Missionsdaten: Quelle aus den Spieldaten + Rezept
-    body.innerHTML=(R.src==='default'?'<div class="st-slbl">✅ Von Anfang an freigeschaltet</div>':
-      R.src==='reward'?'<div class="st-slbl">🎁 Kommt als Belohnung</div><div class="st-orow"><div class="om"><span>'+R.pools.map(k=>esc(k.replace(/^BP_(MISSIONREWARD|REWARDS)_/,'').replace(/_/g,' '))).join(', ')+'</span></div><div class="om"><span class="sc-lmw-muted">Diese Belohnung hängt in unseren Missionsdaten an keiner Mission, z.B. Event oder Sonderauftrag.</span></div></div>':
-      '<div class="st-slbl">❔ Keine bekannte Quelle</div><div class="st-orow"><div class="om"><span class="sc-lmw-muted">In den Spieldaten hängt dieser Blueprint an keiner Belohnung. Wer weiß, woher er kommt: Feedback geben.</span></div></div>')+
-      stBpRecipe(R)+'<div class="st-coord">Spieldaten '+esc((BP.version||'').replace(/-LIVE.*/,''))+'</div>'; return; }
-  body.innerHTML='<div class="st-slbl">🎯 Gibt es in <span class="st-cnt">'+B.m.length+(B.m.length===1?' Mission':' Missionen')+'</span></div>'+B.m.map((m,i)=>{ (LS[m.l]||[]).forEach(id=>ids.add(id));
+    body.innerHTML=(R.src==='default'?'<div class="st-slbl">'+_t('bp.unlocked_from_start')+'</div>':
+      R.src==='reward'?'<div class="st-slbl">'+_t('bp.comes_as_reward')+'</div><div class="st-orow"><div class="om"><span>'+R.pools.map(k=>esc(k.replace(/^BP_(MISSIONREWARD|REWARDS)_/,'').replace(/_/g,' '))).join(', ')+'</span></div><div class="om"><span class="sc-lmw-muted">'+_t('bp.reward_no_mission')+'</span></div></div>':
+      '<div class="st-slbl">'+_t('bp.no_known_source')+'</div><div class="st-orow"><div class="om"><span class="sc-lmw-muted">'+_t('bp.no_source_note')+'</span></div></div>')+
+      stBpRecipe(R)+'<div class="st-coord">'+esc(_t('data.version_prefix',{version:(BP.version||'').replace(/-LIVE.*/,'')}))+'</div>'; return; }
+  const bpCount='<span class="st-cnt">'+(B.m.length===1?_t('count.mission_one'):_t('count.mission_many',{n:B.m.length}))+'</span>';
+  body.innerHTML='<div class="st-slbl">'+_t('bp.found_in',{count:bpCount})+'</div>'+B.m.map((m,i)=>{ (LS[m.l]||[]).forEach(id=>ids.add(id));
     const areas=(LS[m.l]||[]).map(id=>ST_DATA.by[id]).filter(Boolean); const planets=[...new Set(areas.map(o=>stBodyOf(o)).map(b=>{ let x=b; while(x&&x.k==='moon') x=ST_DATA.by[x.p]; return x&&x.k!=='star'?x.n+' ('+stSysName(x)+')':stSysName(b); }))];
     const one=m.ps>1?Math.round(m.ch/m.ps*10)/10:m.ch;
     return '<div class="st-orow" data-bi="'+i+'"><b>'+esc(m.t||stTy(m.ty))+'</b>'+(m.il?' <em class="t-ill">illegal</em>':'')+'<div class="om"><span>'+esc(stTy(m.ty))+'</span><span>'+esc(m.g)+'</span></div>'+
-      '<div class="om"><span title="Chance auf eine Blueprint-Belohnung · Anzahl möglicher Blueprints im Pool">🎲 '+m.ch+' %'+(m.ps>1?' · 1 aus '+m.ps+' (≈ '+one+' % für diesen)':'')+'</span></div>'+
+      '<div class="om"><span title="'+esc(_t('tooltip.bp_chance'))+'">🎲 '+m.ch+' %'+(m.ps>1?esc(_t('bp.pool_odds',{ps:m.ps,one})):'')+'</span></div>'+
       '<div class="om"><span>📍 '+esc(planets.join(', '))+'</span></div></div>'; }).join('')+
-    stBpRecipe(R)+'<div class="st-coord">Spieldaten '+esc((M.d.version||'').replace(/-LIVE.*/,''))+' · „≈“ gilt, falls das Spiel gleichmäßig aus dem Pool zieht</div>';
+    stBpRecipe(R)+'<div class="st-coord">'+esc(_t('data.version_prefix',{version:(M.d.version||'').replace(/-LIVE.*/,'')}))+' · '+esc(_t('bp.approx_note'))+'</div>';
   body.querySelectorAll('[data-bi]').forEach(el=>el.onclick=()=>{ const m=B.m[+el.getAttribute('data-bi')]; window.__stCtl.highlight(LS[m.l]||[]); });
   if(ids.size) window.__stCtl.highlight([...ids]); }
 function stPlList(){ const box=$('stPlList'), cnt=$('stPlCnt'); const P=ST_PL||[]; if(cnt) cnt.textContent=P.length?'('+P.filter(p=>p.online).length+'/'+P.length+')':''; if(!box) return;
   const q=(($('stPlQ')||{}).value||'').trim().toLowerCase(); const L=P.filter(p=>!q||[p.name,p.player,p.location,p.ship].some(v=>String(v||'').toLowerCase().indexOf(q)>=0));
   box.innerHTML=(ST_PL_ERR?'<p class="st-warn">'+esc(ST_PL_ERR)+'</p>':'')+(L.map(p=>{ const o=stPlayerLoc(p);
-    return '<div class="st-orow st-plrow" data-pid="'+esc(p.id)+'"><b><i class="st-pl-dot'+(p.online?' on':'')+'"></i>'+esc(p.name||p.player||'Spieler')+'</b><div class="om"><span>'+esc(p.online?(p.travel?'✈ nach '+p.travel.to:(p.location||(o&&o.n)||'unbekannt')+(p.when&&!stLocFresh(p)?' ('+stAgo(p.when)+')':'')):'offline, '+stAgo(p.last_seen||p.when))+'</span>'+(o?'<span>'+esc(stSysName(o))+'</span>':'')+(p.ship&&p.ship!=='—'?'<span>🚀 '+esc(p.ship)+'</span>':'')+'</div></div>'; }).join('')||'<p class="sc-lmw-muted" style="font-size:.8rem">'+(ST_PL?'Keine Spieler gefunden.':'Lädt…')+'</p>');
+    return '<div class="st-orow st-plrow" data-pid="'+esc(p.id)+'"><b><i class="st-pl-dot'+(p.online?' on':'')+'"></i>'+esc(p.name||p.player||_t('entity.player'))+'</b><div class="om"><span>'+esc(p.online?(p.travel?_t('travel.to',{to:p.travel.to}):(p.location||(o&&o.n)||_t('location.unknown'))+(p.when&&!stLocFresh(p)?' ('+stAgo(p.when)+')':'')):_t('status.offline_comma',{time:stAgo(p.last_seen||p.when)}))+'</span>'+(o?'<span>'+esc(stSysName(o))+'</span>':'')+(p.ship&&p.ship!=='—'?'<span>🚀 '+esc(p.ship)+'</span>':'')+'</div></div>'; }).join('')||'<p class="sc-lmw-muted" style="font-size:.8rem">'+(ST_PL?_t('search.none_players'):_t('common.loading'))+'</p>');
   box.querySelectorAll('[data-pid]').forEach(el=>el.onclick=()=>{ const p=P.find(x=>String(x.id)===el.getAttribute('data-pid')); if(!p) return; const o=stPlayerLoc(p); if(o) window.__stCtl.flyTo(o); stOpenPlayer(p); }); }
 function stLegend(){ const box=$('stLegend'); if(!box||!ST_DATA) return; const cnt={}, hid={};
   ST_DATA.d.objects.forEach(o=>{ if(o.h) hid[o.k]=(hid[o.k]||0)+1; else cnt[o.k]=(cnt[o.k]||0)+1; });
   cnt.halo=ST_DATA.d.objects.filter(o=>o.ring).length;
-  const rows=Object.keys(ST_KIND).filter(k=>k!=='star'&&(cnt[k]||hid[k])).map(k=>'<label class="st-lg"><input type="checkbox" data-k="'+k+'"'+(ST_VIS[k]?' checked':'')+'><i style="background:'+ST_KIND[k].c+'"></i>'+esc(ST_KIND[k].l)+'<span>'+(cnt[k]||0)+(hid[k]?' +'+hid[k]:'')+'</span></label>').join('');
+  const rows=Object.keys(ST_KIND).filter(k=>k!=='star'&&(cnt[k]||hid[k])).map(k=>'<label class="st-lg"><input type="checkbox" data-k="'+k+'"'+(ST_VIS[k]?' checked':'')+'><i style="background:'+ST_KIND[k].c+'"></i>'+esc(kindLabel(k))+'<span>'+(cnt[k]||0)+(hid[k]?' +'+hid[k]:'')+'</span></label>').join('');
   const pOn=(ST_PL||[]).filter(p=>p.online).length, pOff=(ST_PL||[]).length-pOn;
-  box.innerHTML='<div class="st-slbl">Spieler</div>'+'<label class="st-lg"><input type="checkbox" id="'+ID('stPlOn')+'"'+(ST_PL_ON?' checked':'')+'><i style="background:#4dff9a"></i>Online<span>'+pOn+'</span></label><label class="st-lg"><input type="checkbox" id="'+ID('stPlOff')+'"'+(ST_PL_OFF?' checked':'')+'><i style="background:#8a93a6"></i>Offline (letzter Ort)<span>'+pOff+'</span></label>'+(ST_PL_ERR?'<p class="st-warn">'+esc(ST_PL_ERR)+'</p>':'')+'<div class="st-slbl">Anzeigen</div>'+rows+
-    '<label class="st-lg st-lg-h"><input type="checkbox" id="'+ID('stHid')+'"'+(ST_HID?' checked':'')+'>Versteckte Orte<span>'+Object.values(hid).reduce((a,b)=>a+b,0)+'</span></label>'+
-    '<p class="st-mnote">+Zahl = im Spiel nicht auf der Sternenkarte · Abstände zwischen den Systemen gestaucht · Spieldaten '+esc((ST_DATA.d.version||'').replace(/-LIVE.*/,''))+'</p>';
+  box.innerHTML='<div class="st-slbl">'+_t('legend.players_heading')+'</div>'+'<label class="st-lg"><input type="checkbox" id="'+ID('stPlOn')+'"'+(ST_PL_ON?' checked':'')+'><i style="background:#4dff9a"></i>'+esc(_t('status.online'))+'<span>'+pOn+'</span></label><label class="st-lg"><input type="checkbox" id="'+ID('stPlOff')+'"'+(ST_PL_OFF?' checked':'')+'><i style="background:#8a93a6"></i>'+esc(_t('status.offline_last_location'))+'<span>'+pOff+'</span></label>'+(ST_PL_ERR?'<p class="st-warn">'+esc(ST_PL_ERR)+'</p>':'')+'<div class="st-slbl">'+_t('legend.show_heading')+'</div>'+rows+
+    '<label class="st-lg st-lg-h"><input type="checkbox" id="'+ID('stHid')+'"'+(ST_HID?' checked':'')+'>'+esc(_t('legend.hidden_places'))+'<span>'+Object.values(hid).reduce((a,b)=>a+b,0)+'</span></label>'+
+    '<p class="st-mnote">'+esc(_t('legend.note',{version:(ST_DATA.d.version||'').replace(/-LIVE.*/,'')}))+'</p>';
   box.querySelectorAll('[data-k]').forEach(c=>c.onchange=()=>{ ST_VIS[c.getAttribute('data-k')]=c.checked; window.__stCtl&&window.__stCtl.rebuild(); });
   const h=$('stHid'); if(h) h.onchange=()=>{ ST_HID=h.checked; window.__stCtl&&window.__stCtl.rebuild(); };
   const a1=$('stPlOn'), a2=$('stPlOff'); if(a1) a1.onchange=()=>{ ST_PL_ON=a1.checked; window.__stCtl&&window.__stCtl.rebuild(); }; if(a2) a2.onchange=()=>{ ST_PL_OFF=a2.checked; window.__stCtl&&window.__stCtl.rebuild(); };
@@ -762,12 +810,12 @@ function stOreIndex(){ const D=ST_DATA; if(D.oreIdx) return D.oreIdx; const ores
   D.oreIdx={ores,locs}; return D.oreIdx; }
 function stOpenMisGroup(g){ let p=$('stLoc'); if(p) p.remove(); p=document.createElement('div'); p.id=ID('stLoc'); p.className='st-loc'; p.__re=()=>stOpenMisGroup(g);
   const locs=g.locs.map(id=>ST_DATA.by[id]).filter(Boolean);
-  p.innerHTML='<div class="st-loc-card"><div class="st-loc-h"><span class="st-dot" style="background:#ffd76a"></span><h3>'+esc(stTy(g.ty))+'<small>'+esc(g.g)+(g.il?' · illegal':'')+' · '+g.n+' Aufträge</small></h3>'+'<button class="st-loc-x" id="'+ID('stLocX')+'">✕</button></div><div class="st-loc-body">'+
-    (g.t.length?'<div class="st-slbl">Beispiele</div>'+g.t.map(t=>'<div class="st-mis-t">'+esc(t)+'</div>').join(''):'')+
-    (g.bp?'<div class="st-slbl">🧩 Blueprints <span class="st-cnt">in '+g.nbp+' von '+g.n+' Aufträgen</span></div>'+(g.tb?'<div class="st-mis-sub">'+g.tb.map(esc).join(' · ')+'</div>':'')+
+  p.innerHTML='<div class="st-loc-card"><div class="st-loc-h"><span class="st-dot" style="background:#ffd76a"></span><h3>'+esc(stTy(g.ty))+'<small>'+esc(g.g)+(g.il?' · illegal':'')+' · '+esc(_t('count.orders',{n:g.n}))+'</small></h3>'+'<button class="st-loc-x" id="'+ID('stLocX')+'">✕</button></div><div class="st-loc-body">'+
+    (g.t.length?'<div class="st-slbl">'+_t('label.examples')+'</div>'+g.t.map(t=>'<div class="st-mis-t">'+esc(t)+'</div>').join(''):'')+
+    (g.bp?'<div class="st-slbl">🧩 Blueprints <span class="st-cnt">'+esc(_t('bp.in_x_of_y_orders',{nbp:g.nbp,n:g.n}))+'</span></div>'+(g.tb?'<div class="st-mis-sub">'+g.tb.map(esc).join(' · ')+'</div>':'')+
       '<div class="st-bp">'+g.bp.map(b=>'<span'+(b[2]?' title="'+esc(b[2])+'"':'')+'>'+esc(b[0])+(b[1]<100?' <em>'+b[1]+' %</em>':'')+'</span>').join('')+'</div>':'')+
-    (g.rw?'<div class="st-slbl">Belohnung</div><div class="st-bp">'+g.rw.map(r=>'<span>'+esc(r[0])+' ×'+r[1]+'</span>').join('')+'</div>':'')+
-    '<div class="st-slbl">Angeboten in</div>'+locs.map(o=>'<div class="st-orow" data-gid="'+o.id+'"><b>'+esc(o.n)+'</b><div class="om"><span>'+esc((ST_KIND[o.k]||{}).l||o.k)+'</span></div></div>').join('')+'</div></div>';
+    (g.rw?'<div class="st-slbl">'+_t('label.reward')+'</div><div class="st-bp">'+g.rw.map(r=>'<span>'+esc(r[0])+' ×'+r[1]+'</span>').join('')+'</div>':'')+
+    '<div class="st-slbl">'+_t('label.offered_in')+'</div>'+locs.map(o=>'<div class="st-orow" data-gid="'+o.id+'"><b>'+esc(o.n)+'</b><div class="om"><span>'+esc(kindLabel(o.k))+'</span></div></div>').join('')+'</div></div>';
   ROOT.appendChild(p); $('stLocX').onclick=()=>p.remove();
   p.querySelectorAll('[data-gid]').forEach(el=>el.onclick=()=>{ const o=ST_DATA.by[el.getAttribute('data-gid')]; window.__stCtl.flyTo(o); openStPanel(o); }); }
 // (stOpenMap(), das frueher aus einem Dashboard heraus in einen separaten Taktik-Tisch-Canvas
@@ -781,27 +829,32 @@ function exitStExplore(){
   const ui=$('stExUI'); if(ui) ui.remove();
   const lp=$('stLoc'); if(lp) lp.remove();
 }
-function stMiningHTML(keys){ const D=ST_DATA; let h='<div class="st-slbl">⛏️ Mining & Rohstoffe</div>';
+// g.g kommt bereits deutsch aus den gebauten Spieldaten (siehe GROUPS in scripts/*-build.py,
+// nur 4 feste Werte) -- hier ueber die neuen mine.group.*-Schluessel durchgereicht/uebersetzt.
+// g.g already arrives in German from the built game data (see GROUPS in scripts/*-build.py,
+// only 4 fixed values) -- passed through/translated here via the new mine.group.* keys.
+function mineGroupLabel(g){ const k='mine.group.'+g; return SC.i18n&&SC.i18n.dict.en[k]?_t(k):g; }
+function stMiningHTML(keys){ const D=ST_DATA; let h='<div class="st-slbl">'+_t('label.mining_resources')+'</div>';
   keys.forEach(k=>{ const gs=D.d.mining[k]; if(!gs) return; h+='<div class="st-mprov">'+esc(stMineLabel(k))+'</div>';
-    gs.forEach(g=>{ h+='<div class="st-mgrp">'+esc(g.g)+'</div>';
+    gs.forEach(g=>{ h+='<div class="st-mgrp">'+esc(mineGroupLabel(g.g))+'</div>';
       g.deps.forEach(d=>{ const ores=stOreMerge(d.parts).filter(x=>!/^Inert/i.test(x.ore));
-        h+='<details class="st-dep"><summary><b>'+esc(d.rock)+'</b>'+(d.tier?'<em class="t-'+esc(d.tier)+'">'+esc(d.tier)+'</em>':'')+'<span title="So oft erscheint diese Gesteinsart hier">'+d.rel+' %</span></summary>'+
-          (ores.length?'<table><tr><th>Erz</th><th title="Chance, dass das Erz im Stein steckt">Chance</th><th title="Erzanteil im Stein · Qualität (max. 1000)">Anteil · Q</th></tr>'+ores.map(x=>'<tr><td>'+esc(x.ore)+'</td><td>'+Math.round(x.p*100)+' %</td><td>'+x.b.map(b=>b.min+'–'+b.max+' %<small>Q '+b.q[0]+'–'+b.q[1]+'</small>').join('<br>')+'</td></tr>').join('')+'</table>':'<p class="sc-lmw-muted" style="font-size:.78rem;margin:0 10px 8px">Keine Erzdaten.</p>')+'</details>'; }); }); });
+        h+='<details class="st-dep"><summary><b>'+esc(d.rock)+'</b>'+(d.tier?'<em class="t-'+esc(d.tier)+'">'+esc(d.tier)+'</em>':'')+'<span title="'+esc(_t('tooltip.rock_frequency'))+'">'+d.rel+' %</span></summary>'+
+          (ores.length?'<table><tr><th>'+esc(_t('table.ore'))+'</th><th title="'+esc(_t('tooltip.ore_in_rock'))+'">'+esc(_t('table.chance'))+'</th><th title="'+esc(_t('tooltip.ore_share_quality'))+'">'+esc(_t('table.share_quality'))+'</th></tr>'+ores.map(x=>'<tr><td>'+esc(x.ore)+'</td><td>'+Math.round(x.p*100)+' %</td><td>'+x.b.map(b=>b.min+'–'+b.max+' %<small>Q '+b.q[0]+'–'+b.q[1]+'</small>').join('<br>')+'</td></tr>').join('')+'</table>':'<p class="sc-lmw-muted" style="font-size:.78rem;margin:0 10px 8px">'+_t('common.no_ore_data')+'</p>')+'</details>'; }); }); });
   return h; }
-function stNofixNote(k){ return /^AsteroidCluster_/.test(k)?'Kein fester Ort. Entsteht zufällig im All, per Scanner-Ping finden.':'Keine Koordinaten in den Spieldaten.'; }
+function stNofixNote(k){ return /^AsteroidCluster_/.test(k)?_t('nofix.note_random'):_t('nofix.note_no_coords'); }
 function stOpenNofix(k){ const D=ST_DATA; let p=$('stLoc'); if(p) p.remove();
   p=document.createElement('div'); p.id=ID('stLoc'); p.className='st-loc';
-  p.innerHTML='<div class="st-loc-card"><div class="st-loc-h"><span class="st-dot" style="background:#9c8b76"></span><h3>'+esc(stMineLabel(k))+'<small>Kein fester Ort in den Spieldaten</small></h3>'+'<button class="st-loc-x" id="'+ID('stLocX')+'">✕</button></div><div class="st-loc-body"><div class="st-nofix-note">'+stNofixNote(k)+'</div>'+stMiningHTML([k])+'</div></div>';
+  p.innerHTML='<div class="st-loc-card"><div class="st-loc-h"><span class="st-dot" style="background:#9c8b76"></span><h3>'+esc(stMineLabel(k))+'<small>'+esc(_t('nofix.title'))+'</small></h3>'+'<button class="st-loc-x" id="'+ID('stLocX')+'">✕</button></div><div class="st-loc-body"><div class="st-nofix-note">'+stNofixNote(k)+'</div>'+stMiningHTML([k])+'</div></div>';
   p.__re=()=>stOpenNofix(k); ROOT.appendChild(p); $('stLocX').onclick=()=>p.remove(); }
-function stDist(km){ return km>=1e6?(km/1e6).toLocaleString('de-DE',{maximumFractionDigits:2})+' Mio km':Math.round(km).toLocaleString('de-DE')+' km'; }
+function stDist(km){ return km>=1e6?_t('unit.mio_km',{n:tn(km/1e6,{maximumFractionDigits:2})}):_t('unit.km',{n:tn(Math.round(km))}); }
 async function openStPanel(o){
   const D=ST_DATA; if(!D||!o) return;
   if(o.grp){ stOpenGroup(o); return; }
   if(o.k==='player'){ stOpenPlayer(o.pl); return; }
   let p=$('stLoc'); if(p) p.remove();
   p=document.createElement('div'); p.id=ID('stLoc'); p.className='st-loc';
-  const K=ST_KIND[o.k]||{l:o.k,c:'#ccc'}, par=o.p&&D.by[o.p], b=stBodyOf(o);
-  const sub=[K.l, b&&b!==o&&b.k!=='star'?b.n:(par&&par!==o&&par.k!=='star'?par.n:null), stSysName(o), o.ju].filter(Boolean).join(' · ');
+  const K=ST_KIND[o.k]||{c:'#ccc'}, kl=kindLabel(o.k), par=o.p&&D.by[o.p], b=stBodyOf(o);
+  const sub=[kl, b&&b!==o&&b.k!=='star'?b.n:(par&&par!==o&&par.k!=='star'?par.n:null), stSysName(o), o.ju].filter(Boolean).join(' · ');
   p.innerHTML='<div class="st-loc-card"><div class="st-loc-h"><span class="st-dot" style="background:'+K.c+'"></span><h3>'+esc(o.n)+'<small>'+esc(sub)+'</small></h3>'+'<button class="st-loc-x" id="'+ID('stLocX')+'">✕</button></div><div class="st-loc-body" id="'+ID('stLocBody')+'"></div></div>';
   ROOT.appendChild(p); $('stLocX').onclick=()=>p.remove();
   const body=$('stLocBody'); let h='';
@@ -809,71 +862,71 @@ async function openStPanel(o){
   let desc=isDe&&o.dde?o.dde:o.d;
   if(o.k==='star'){ if(SY.img) h+='<img class="st-shipimg" src="'+esc(SY.img)+'" alt="" onerror="this.remove()">'; desc=isDe?(o.dde||SY.dde||SY.d||o.d):(SY.d||o.d); }
   if(o.k==='gateway'){ const L=(D.gal.links||[]).find(l=>l.a===o.id||l.b===o.id);
-    if(L){ const other=D.by[L.a===o.id?L.b:L.a]; if(other) h+='<div class="st-jump">🌀 Sprungtor nach <b>'+esc(stSysName(other))+'</b>'+(L.live?'':' <em>(nur laut RSI-Sternenkarte, nicht in den Spieldaten)</em>')+'<button class="sc-lmw-btn sm primary" id="'+ID('stJumpGo')+'" data-to="'+other.id+'">Durchfliegen →</button></div>'; } }
-  if(desc) h+='<div class="st-desc" id="'+ID('stDesc')+'" title="Tippen zum Aufklappen">'+esc(desc)+'</div>';
-  if(o.am&&o.am.length) h+='<div class="st-slbl">Ausstattung</div><div class="st-chips">'+o.am.map(a=>'<span>'+esc(isDe?(ST_AM_DE[a]||a):a)+'</span>').join('')+'</div>';
+    if(L){ const other=D.by[L.a===o.id?L.b:L.a]; if(other) h+='<div class="st-jump">'+_t('jump.gateway_to',{sys:'<b>'+esc(stSysName(other))+'</b>'})+(L.live?'':' <em>'+esc(_t('jump.rsi_only_note'))+'</em>')+'<button class="sc-lmw-btn sm primary" id="'+ID('stJumpGo')+'" data-to="'+other.id+'">'+_t('action.fly_through')+'</button></div>'; } }
+  if(desc) h+='<div class="st-desc" id="'+ID('stDesc')+'" title="'+esc(_t('hint.tap_to_expand'))+'">'+esc(desc)+'</div>';
+  if(o.am&&o.am.length) h+='<div class="st-slbl">'+_t('label.amenities')+'</div><div class="st-chips">'+o.am.map(a=>'<span>'+esc(isDe?(ST_AM_DE[a]||a):a)+'</span>').join('')+'</div>';
   if(o.mine&&o.mine.length) h+=stMiningHTML(o.mine);
   if(o.k==='wikelo') h+='<div id="'+ID('stWkBox')+'"></div>';
-  if((o.terms||[]).some(t=>!/^(commodity|refinery|fuel)/.test(t.t||''))) h+='<div class="st-slbl">🛒 Hier erhältlich</div><div id="'+ID('stShopBox')+'"><button class="sc-lmw-btn sm" id="'+ID('stShopGo')+'">Items und Schiffe dieses Orts laden</button></div>';
+  if((o.terms||[]).some(t=>!/^(commodity|refinery|fuel)/.test(t.t||''))) h+='<div class="st-slbl">'+_t('label.available_here')+'</div><div id="'+ID('stShopBox')+'"><button class="sc-lmw-btn sm" id="'+ID('stShopGo')+'">'+_t('action.load_items_ships')+'</button></div>';
   h+='<div id="'+ID('stMisBox')+'"></div>';
   const comm=(o.terms||[]).filter(t=>t.t==='commodity').slice(0,6);
-  if(comm.length) h+='<div class="st-slbl">🪙 Warenmarkt hier</div><div id="'+ID('stGoodsBox')+'"><p class="sc-lmw-muted" style="font-size:.85rem">Lade Live-Preise von UEX…</p></div>';
-  if(o.terms&&o.terms.length) h+='<div class="st-slbl">Terminals ('+o.terms.length+')</div><div class="st-chips">'+o.terms.map(t=>'<span>'+esc(t.n)+'</span>').join('')+'</div>';
-  h+='<div class="st-slbl">🔍 Items & Schiffe suchen</div><input id="'+ID('stCat')+'" placeholder="Item oder Schiff suchen…"><div id="'+ID('stCatRes')+'"><p class="sc-lmw-muted" style="font-size:.82rem"></p></div>';
-  h+='<div class="st-coord">'+stDist(Math.hypot(o.x,o.y,o.z))+' vom Stern · x '+Math.round(o.x).toLocaleString('de-DE')+' · y '+Math.round(o.y).toLocaleString('de-DE')+' · z '+Math.round(o.z).toLocaleString('de-DE')+' km<br>Spieldaten '+esc((D.d.version||'').replace(/-LIVE.*/,''))+(o.h?' · nicht auf der Sternenkarte':'')+(o.approx?' · Position aus Levski abgeleitet (Näherung)':'')+(isDe&&o.dde?' · Text: StarCitizen-Deutsch-INI (CC BY-NC-SA)':'')+'</div>';
+  if(comm.length) h+='<div class="st-slbl">'+_t('label.commodity_market')+'</div><div id="'+ID('stGoodsBox')+'"><p class="sc-lmw-muted" style="font-size:.85rem">'+_t('status.loading_prices')+'</p></div>';
+  if(o.terms&&o.terms.length) h+='<div class="st-slbl">'+esc(_t('label.terminals',{n:o.terms.length}))+'</div><div class="st-chips">'+o.terms.map(t=>'<span>'+esc(t.n)+'</span>').join('')+'</div>';
+  h+='<div class="st-slbl">'+_t('label.search_items_ships')+'</div><input id="'+ID('stCat')+'" placeholder="'+esc(_t('search.item_ship_placeholder'))+'"><div id="'+ID('stCatRes')+'"><p class="sc-lmw-muted" style="font-size:.82rem"></p></div>';
+  h+='<div class="st-coord">'+esc(_t('coord.from_star',{dist:stDist(Math.hypot(o.x,o.y,o.z)),x:tn(Math.round(o.x)),y:tn(Math.round(o.y)),z:tn(Math.round(o.z))}))+'<br>'+esc(_t('data.version_prefix',{version:(D.d.version||'').replace(/-LIVE.*/,'')}))+(o.h?esc(_t('note.not_on_starmap')):'')+(o.approx?esc(_t('note.approx_position')):'')+(isDe&&o.dde?esc(_t('note.de_ini_source')):'')+'</div>';
   body.innerHTML=h;
   const de=$('stDesc'); if(de) de.onclick=()=>de.classList.toggle('open');
   const wk=$('stWkBox'); if(wk) stWikeloHTML(wk);
-  const sg=$('stShopGo'); if(sg) sg.onclick=()=>{ const bx=$('stShopBox'); bx.innerHTML='<p class="sc-lmw-muted" style="font-size:.82rem">Lade von UEX…</p>'; stShopHTML(o,bx); };
+  const sg=$('stShopGo'); if(sg) sg.onclick=()=>{ const bx=$('stShopBox'); bx.innerHTML='<p class="sc-lmw-muted" style="font-size:.82rem">'+_t('status.loading_uex')+'</p>'; stShopHTML(o,bx); };
   const jg=$('stJumpGo'); if(jg) jg.onclick=()=>{ const t=D.by[jg.getAttribute('data-to')]; if(!t) return; window.__stCtl.flyTo(t); openStPanel(t); };
   const misBox=$('stMisBox'), goodsBox=$('stGoodsBox');
   stMis().then(M=>{ const box=misBox; if(!box||!ROOT.contains(box)) return; const ids=[]; let x=o; while(x){ ids.push(x.id); if(x.k==='planet'||(D.by[x.p]||{}).k==='star') break; x=D.by[x.p]; }
     const seen=new Set(), rows=[]; ids.forEach(id=>(M.byLoc[id]||[]).forEach(i=>{ if(!seen.has(i)){ seen.add(i); rows.push(i); } }));
     if(!rows.length) return; rows.sort((a,b)=>M.d.groups[b].n-M.d.groups[a].n);
     const area=ids.length>1?D.by[ids[ids.length-1]].n:o.n;
-    box.innerHTML='<div class="st-slbl">🎯 Missionen im Gebiet '+esc(area)+'</div>'+rows.slice(0,12).map(i=>stMisRow(M.d.groups[i],i)).join('')+(rows.length>12?'<p class="sc-lmw-muted" style="font-size:.76rem">+'+(rows.length-12)+' weitere Gruppen im Reiter „Missionen“</p>':''); });
+    box.innerHTML='<div class="st-slbl">'+esc(_t('mission.area_heading',{area}))+'</div>'+rows.slice(0,12).map(i=>stMisRow(M.d.groups[i],i)).join('')+(rows.length>12?'<p class="sc-lmw-muted" style="font-size:.76rem">'+esc(_t('mission.more_groups',{n:rows.length-12}))+'</p>':''); });
   const cf=$('stCat'), cr=$('stCatRes');
-  if(cf) cf.oninput=async()=>{ const cat=await uexCatalog(); const q=cf.value.toLowerCase().trim(); if(q.length<2){ cr.innerHTML='<p class="sc-lmw-muted" style="font-size:.82rem">Mindestens 2 Buchstaben.</p>'; return; }
+  if(cf) cf.oninput=async()=>{ const cat=await uexCatalog(); const q=cf.value.toLowerCase().trim(); if(q.length<2){ cr.innerHTML='<p class="sc-lmw-muted" style="font-size:.82rem">'+_t('search.min_2_chars')+'</p>'; return; }
     const its=cat.items.filter(x=>x.n.toLowerCase().indexOf(q)>=0).slice(0,8).map(x=>({t:'item',o:x}));
     const shs=cat.ships.filter(x=>x.n.toLowerCase().indexOf(q)>=0).slice(0,8).map(x=>({t:'ship',o:x}));
     const all=shs.concat(its);
-    cr.innerHTML=all.length?all.map((r,i)=>'<div class="st-res" data-ci="'+i+'"><b>'+(r.t==='ship'?'🚀 ':'📦 ')+esc(r.o.n)+'</b><div class="rp" id="'+ID('stRp'+i)+'">'+(r.t==='ship'?'Schiff':esc(r.o.s||'Item'))+' · tippen für Preis</div></div>').join(''):'<p class="sc-lmw-muted" style="font-size:.82rem">Nichts im Katalog.</p>';
+    cr.innerHTML=all.length?all.map((r,i)=>'<div class="st-res" data-ci="'+i+'"><b>'+(r.t==='ship'?'🚀 ':'📦 ')+esc(r.o.n)+'</b><div class="rp" id="'+ID('stRp'+i)+'">'+(r.t==='ship'?_t('label.ship'):esc(r.o.s||_t('label.item')))+esc(_t('hint.tap_for_price'))+'</div></div>').join(''):'<p class="sc-lmw-muted" style="font-size:.82rem">'+_t('common.nothing_in_catalog')+'</p>';
     cr.querySelectorAll('.st-res').forEach(el=>el.onclick=()=>uexPriceInto(all[+el.getAttribute('data-ci')],$('stRp'+el.getAttribute('data-ci')),o.n)); };
   if(comm.length){ let goods=[];
     try{ const lists=await Promise.all(comm.map(t=>fetch(UEX_BASE+'/commodities_prices?id_terminal='+t.id).then(r=>r.json()).then(d=>(d&&d.data)||[]).catch(()=>[])));
       const merged={}; lists.forEach(list=>list.forEach(r=>{ const nm=r.commodity_name; if(!nm) return; const g=merged[nm]||(merged[nm]={n:nm,buy:0,sell:0}); if(r.price_buy>g.buy) g.buy=r.price_buy; if(r.price_sell>g.sell) g.sell=r.price_sell; }));
       goods=Object.values(merged).sort((a,b)=>a.n.localeCompare(b.n)); }catch(e){}
     const box=goodsBox; if(!box||!ROOT.contains(box)) return;
-    const grow=g=>'<div class="st-grow"><span>'+esc(g.n)+'</span><span class="gp">'+'<b class="st-buy" title="Hier kaufen">'+(g.buy?uexMoney(g.buy):'–')+'</b><b class="st-sell" title="Hier verkaufen">'+(g.sell?uexMoney(g.sell):'–')+'</b>'+'</span></div>';
-    box.innerHTML=goods.length?'<input id="'+ID('stGoodF')+'" placeholder="Ware filtern…"><div class="st-grow st-gh"><span>Ware</span><span class="gp"><span>Kauf</span><span>Verkauf</span></span></div><div id="'+ID('stGoods')+'">'+goods.map(grow).join('')+'</div>':'<p class="sc-lmw-muted" style="font-size:.85rem">Keine Preise bei UEX.</p>';
-    const gf=$('stGoodF'); if(gf) gf.oninput=()=>{ const q=gf.value.toLowerCase().trim(); $('stGoods').innerHTML=goods.filter(g=>!q||g.n.toLowerCase().indexOf(q)>=0).map(grow).join('')||'<p class="sc-lmw-muted" style="font-size:.82rem">Nichts gefunden.</p>'; }; }
+    const grow=g=>'<div class="st-grow"><span>'+esc(g.n)+'</span><span class="gp">'+'<b class="st-buy" title="'+esc(_t('label.buy_here'))+'">'+(g.buy?uexMoney(g.buy):'–')+'</b><b class="st-sell" title="'+esc(_t('label.sell_here'))+'">'+(g.sell?uexMoney(g.sell):'–')+'</b>'+'</span></div>';
+    box.innerHTML=goods.length?'<input id="'+ID('stGoodF')+'" placeholder="'+esc(_t('ware.filter_placeholder'))+'"><div class="st-grow st-gh"><span>'+esc(_t('table.commodity'))+'</span><span class="gp"><span>'+esc(_t('table.buy'))+'</span><span>'+esc(_t('table.sell'))+'</span></span></div><div id="'+ID('stGoods')+'">'+goods.map(grow).join('')+'</div>':'<p class="sc-lmw-muted" style="font-size:.85rem">'+_t('price.none_uex')+'</p>';
+    const gf=$('stGoodF'); if(gf) gf.oninput=()=>{ const q=gf.value.toLowerCase().trim(); $('stGoods').innerHTML=goods.filter(g=>!q||g.n.toLowerCase().indexOf(q)>=0).map(grow).join('')||'<p class="sc-lmw-muted" style="font-size:.82rem">'+_t('ware.none_found')+'</p>'; }; }
 }
 window.openStPanel=openStPanel;
 // ---- UEX-Marktdaten fuer Orte im Erkunden-Modus ----
 const UEX_BASE='https://api.uexcorp.space/2.0';
-const uexMoney=n=>(n&&n>0)?Math.round(n).toLocaleString('de-DE')+' aUEC':'—';
+const uexMoney=n=>(n&&n>0)?tn(Math.round(n))+' aUEC':'—';
 async function uexTerminals(){ if(window.__uexTerm) return window.__uexTerm; try{ const r=await fetch(UEX_BASE+'/terminals?id_star_system=68'); const d=await r.json(); window.__uexTerm=(d&&d.data)||[]; }catch(e){ window.__uexTerm=[]; } return window.__uexTerm; }
 async function uexCatalog(){ if(window.__uexCat) return window.__uexCat; const cat={items:[],ships:[]};
   try{ const r=await fetch(pathOf('data/items.json'),{cache:'no-store'}); const d=await r.json(); cat.items=(d.items||[]).filter(x=>x&&x.n); }catch(e){}
   try{ const r=await fetch(pathOf('data/vehicles.json'),{cache:'no-store'}); const d=await r.json(); cat.ships=(d.ships||[]).filter(x=>x&&x.n); }catch(e){}
   if(cat.items.length&&cat.ships.length) window.__uexCat=cat; return cat; }
 async function uexPriceInto(rec,el,loc){
-  if(!el||el.getAttribute('data-done')) return; el.setAttribute('data-done','1'); el.textContent='Lade Preis…';
+  if(!el||el.getAttribute('data-done')) return; el.setAttribute('data-done','1'); el.textContent=_t('status.loading_price');
   try{
-    if(rec.t==='ship'){ if(!rec.o.i){ el.textContent='Nur über Pledge, kein aUEC-Kauf.'; return; }
+    if(rec.t==='ship'){ if(!rec.o.i){ el.textContent=_t('notice.pledge_only'); return; }
       const d=await fetch(UEX_BASE+'/vehicles_purchases_prices?id_vehicle='+rec.o.i).then(r=>r.json()); const rows=((d&&d.data)||[]).filter(x=>x.price_buy>0);
-      if(!rows.length){ el.textContent='Ingame nicht käuflich'+(rec.o.msrp?' · Pledge $'+rec.o.msrp:'')+'.'; return; }
+      if(!rows.length){ el.textContent=_t('notice.not_buyable_ingame',{pledge:rec.o.msrp?_t('label.also_pledge',{n:rec.o.msrp}):''}); return; }
       const avg=Math.round(rows.reduce((a,b)=>a+b.price_buy,0)/rows.length); const where=rows.map(x=>x.terminal_name).filter(Boolean);
-      el.innerHTML='Ø '+uexMoney(avg)+' · kaufbar: '+esc(where.slice(0,3).join(', ')||'—')+(hereMark(where,loc));
-    } else { if(!rec.o.i){ el.textContent='Keine UEX-Preisdaten.'; return; }
+      el.innerHTML='Ø '+uexMoney(avg)+' '+esc(_t('label.buyable_at',{where:where.slice(0,3).join(', ')||'—'}))+(hereMark(where,loc));
+    } else { if(!rec.o.i){ el.textContent=_t('notice.no_uex_data'); return; }
       const d=await fetch(UEX_BASE+'/items_prices?id_item='+rec.o.i).then(r=>r.json()); const rows=((d&&d.data)||[]).filter(x=>x.price_buy>0).sort((a,b)=>a.price_buy-b.price_buy);
-      if(!rows.length){ el.textContent='Nirgends käuflich, nur findbar/craftbar.'; return; }
+      if(!rows.length){ el.textContent=_t('notice.not_buyable_anywhere'); return; }
       const where=rows.map(x=>x.terminal_name).filter(Boolean);
-      el.innerHTML='ab '+uexMoney(rows[0].price_buy)+' · '+esc(where.slice(0,3).join(', '))+(hereMark(where,loc));
+      el.innerHTML=esc(_t('label.from_price',{price:uexMoney(rows[0].price_buy)}))+' · '+esc(where.slice(0,3).join(', '))+(hereMark(where,loc));
     }
-  }catch(e){ el.textContent='Preis konnte nicht geladen werden.'; }
+  }catch(e){ el.textContent=_t('error.price_load_failed'); }
 }
-function hereMark(where,loc){ return where.some(w=>w&&loc&&(w.indexOf(loc)>=0||loc.indexOf(w)>=0))?' <span style="color:#37e1ff">· auch hier</span>':''; }
+function hereMark(where,loc){ return where.some(w=>w&&loc&&(w.indexOf(loc)>=0||loc.indexOf(w)>=0))?' <span style="color:#37e1ff">'+esc(_t('label.also_here'))+'</span>':''; }
 
 // ---- SCLMW.mount(el, opts): der EINE Einstiegspunkt fuer jede Einbettung (eigene Seite, iframe,
 //      <div id="sc-lmw"> in einer fremden Seite). Haengt Canvas + UI in el ein, laedt three.js
@@ -881,6 +934,13 @@ function hereMark(where,loc){ return where.some(w=>w&&loc&&(w.indexOf(loc)>=0||l
 //      gleichzeitig (siehe stantonScene(): eine neue mount() raeumt die alte selbst auf). ----
 function mount(el, opts){
   opts=opts||{};
+  // Oberflaechen-Sprache ZUERST ermitteln, bevor irgendein UI-Text gebaut wird (enterStExplore()
+  // unten ruft schon _t() auf). Reihenfolge siehe js/i18n.js: eigene Wahl (localStorage) >
+  // opts.lang/data-lang/config.js LANG > Browsersprache.
+  // Resolve the UI language FIRST, before any UI text is built (enterStExplore() below already
+  // calls _t()). Order: see js/i18n.js -- the user's own choice (localStorage) > opts.lang/
+  // data-lang/config.js LANG > browser language.
+  if(SC.i18n) SC.i18n.init({lang:opts.lang});
   if(typeof el==='string') el=document.querySelector(el);
   if(!el) throw new Error('SCLMW.mount: Container-Element nicht gefunden / container element not found: '+el);
   if(ROOT&&ROOT!==el) unmount();

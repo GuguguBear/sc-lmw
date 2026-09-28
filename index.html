@@ -22,42 +22,63 @@
 </head>
 <body>
 
+<!-- <noscript> never runs JS, so it can't be switched by i18n.js -- kept bilingual on purpose. -->
 <noscript>This map needs JavaScript to run. / Diese Karte braucht JavaScript.</noscript>
 
 <div id="loading">
   <div class="spin" role="status" aria-label="Loading"></div>
-  <div>Loading star map… / Sternenkarte lädt…</div>
+  <div data-i18n="page.loading">Loading star map…</div>
 </div>
 
 <!-- Mandatory, always-visible fan-project notice (see README.md / CREDITS.md). Sits above the
      map's own UI (z-index 80 > .st-exui's 60) but never blocks clicks (pointer-events:none on
-     the bar itself, only the credits link is clickable). -->
+     the bar itself, only the credits link is clickable). The fallback text below is English;
+     paintI18n() (see the script at the bottom) replaces it with page.fan_notice/page.credits_link
+     from js/i18n.js once the UI language is known, so this notice is always ONE language, never
+     a German/English mix. -->
 <div id="fanNotice">
-  SC LMW 0.9 · Unofficial fan project. Not endorsed by, sponsored by, or affiliated with Cloud
+  <span data-i18n="page.fan_notice">SC LMW 0.9 · Unofficial fan project. Not endorsed by, sponsored by, or affiliated with Cloud
   Imperium Games or Roberts Space Industries. Star Citizen® is a trademark of Cloud Imperium
-  Rights LLC. · <a href="./CREDITS.md" target="_blank" rel="noopener">Credits &amp; licenses</a>
+  Rights LLC.</span> · <a href="./CREDITS.md" target="_blank" rel="noopener" data-i18n="page.credits_link">Credits &amp; licenses</a>
 </div>
 
-<!-- config.js first: everything else reads window.LIVEMAP_CONFIG at call time, not load time. -->
+<!-- config.js first: everything else reads window.LIVEMAP_CONFIG at call time, not load time.
+     js/i18n.js next: it only needs config.js' LANG, and holo.js/starmap.js both call SC.i18n.t(). -->
 <script src="./config.js"></script>
+<script src="./js/i18n.js"></script>
 <script src="./js/holo.js"></script>
 <script src="./js/starmap.js"></script>
 <script>
   document.addEventListener('DOMContentLoaded', function(){
     function hideLoading(){ var l=document.getElementById('loading'); if(l) l.classList.add('gone'); }
+    // Diese drei Textstellen liegen ausserhalb von mount()/SCLMW (Ladeanzeige, Pflicht-Hinweis,
+    // noscript) -- [data-i18n] Elemente werden einmal von Hand uebersetzt, sobald SC.i18n die
+    // Sprache kennt (SCLMW.mount() ruft SC.i18n.init() als erstes auf, siehe js/starmap.js).
+    // These three text spots live outside mount()/SCLMW (loading state, mandatory notice,
+    // noscript) -- [data-i18n] elements are translated by hand once SC.i18n knows the language
+    // (SCLMW.mount() calls SC.i18n.init() first thing, see js/starmap.js).
+    function paintI18n(){
+      if(!window.SCLMW || !window.SCLMW.i18n) return;
+      document.querySelectorAll('[data-i18n]').forEach(function(el){
+        el.textContent = window.SCLMW.i18n.t(el.getAttribute('data-i18n'));
+      });
+    }
     try{
       var cfg=window.LIVEMAP_CONFIG||{};
       // Eigenstaendige Seite: mount() auf <body> selbst, mit standalone:true (siehe
       // .sc-lmw.st-standalone in css/starmap.css) fuer echtes Vollbild. Fuer den Einbau in eine
       // fremde Seite siehe docs/AI_INTEGRATION.md -- dort haengt SCLMW.mount() an einem kleinen
-      // <div>, nicht an <body>.
+      // <div>, nicht an <body>. lang: cfg.LANG uebergibt die in config.js gewaehlte
+      // Oberflaechensprache ('auto'|'de'|'en') an SC.i18n.init() weiter.
       window.SCLMW.mount(document.body, {
         base: './',
         standalone: true,
+        lang: cfg.LANG,
         playersUrl: cfg.PLAYERS_URL,
         playersHeaders: cfg.PLAYERS_HEADERS,
         pollMs: cfg.PLAYERS_POLL_MS
       });
+      paintI18n();
       // mount() baut die UI synchron; die 3D-Szene selbst kommt nach, sobald stLoad() (siehe
       // js/starmap.js) fertig ist. Eine kurze feste Verzoegerung reicht, um von der Seiten-eigenen
       // Ladeanzeige auf die "lädt…"-Zustaende der Karte selbst zu uebergeben.
@@ -67,15 +88,15 @@
       setTimeout(hideLoading, 300);
     }catch(e){
       hideLoading();
-      var l=document.getElementById('loading');
+      var t=(window.SCLMW&&window.SCLMW.i18n)?window.SCLMW.i18n.t:function(k){ return k; };
       document.body.insertAdjacentHTML('beforeend',
         '<div style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;' +
         'padding:24px;text-align:center;background:#070a12;color:#ff6f8b;font-family:system-ui,sans-serif">' +
-        'Failed to start the map / Karte konnte nicht gestartet werden: ' +
-        String((e&&e.message)||e).replace(/[<>&]/g,function(c){return {'<':'&lt;','>':'&gt;','&':'&amp;'}[c];}) +
+        esc(t('page.failed_to_start',{err:(e&&e.message)||e})) +
         '</div>');
       if (window.console && console.error) console.error('initLiveMap failed:', e);
     }
+    function esc(s){ return String(s==null?'':s).replace(/[<>&]/g,function(c){return {'<':'&lt;','>':'&gt;','&':'&amp;'}[c];}); }
   });
 </script>
 </body>

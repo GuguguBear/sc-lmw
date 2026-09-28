@@ -23,7 +23,9 @@ Vollständige Quellenangaben und Lizenzen aller Bausteine stehen in [`CREDITS.md
 - Live-3D-Schiffsmodelle ("Holo") direkt von FleetYards, mit Quellenangabe.
 - Optionale Spielerpositionen aus einer selbst bestimmten URL, automatische
   Gruppierung ab zwei Spielern am selben Ort.
-- DE/EN-Umschaltung für Spieltexte.
+- DE/EN-Umschaltung für die Oberfläche selbst (automatisch per Browsersprache,
+  oder fest per `LANG`/`data-lang`/`mount(...,{lang})`), UND eine eigene,
+  getrennte DE/EN-Umschaltung für Spieltexte.
 - Kein Login, kein Build-Schritt fürs Frontend, kein Server außer einem
   statischen Datei-Host.
 
@@ -74,6 +76,27 @@ und den AGPL-Pflichten, die bei eigenen Änderungen greifen — steht in
 [`docs/AI_INTEGRATION.md`](docs/AI_INTEGRATION.md). Sie ist als fertiger,
 einfügbarer Prompt für eine KI geschrieben, du kannst den ganzen Einbau also
 auch an eine KI abgeben.
+
+### Oberflächensprache (Deutsch/Englisch)
+
+Die ganze Oberfläche — Knöpfe, Panels, Suche, Legende, Fehlermeldungen,
+Zeitangaben, Zahlenformat — ist zweisprachig, Deutsch und Englisch. Sie
+erkennt automatisch die Browsersprache des Besuchers (`de*` → Deutsch, sonst
+Englisch), und in der Karte selbst gibt es einen kleinen Sprach-Umschalter
+(Globus-Symbol), der sie live wechselt, ohne Neuladen, und sich je Besucher
+im eigenen Browser merkt. Du kannst sie auch fest vorgeben:
+
+- `LANG` in `config.js`: `'auto'` (Standard), `'de'` oder `'en'`.
+- `data-lang="de"` am `sc-lmw.js`-Script-Tag (Weg b, direkter Einbau).
+- `mount(el, { lang: 'de' })`, falls du `SCLMW.mount()` selbst aufrufst.
+
+Das ist eine **eigene, getrennte** Einstellung vom kleinen "DE"/"EN"-Knopf,
+den es schon vorher in der Karte gab: dieser ältere Knopf übersetzt nur
+Spieltexte (Missionstypen, Ausstattungsnamen, die deutsche
+Community-Beschreibung) und bleibt davon unberührt. Die
+Oberflächensprache ändert nie Spiel-/Orts-/Schiffs-/Item-Namen — die bleiben
+immer so, wie das Spiel sie nennt, in welcher Sprache auch immer dein
+Datenbau lief.
 
 ### Spieler auf der Karte zeigen
 

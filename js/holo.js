@@ -17,6 +17,10 @@
   // (that was the old version, tied directly to mitglieder.html). starmap.js calls these through
   // the SCLMW short form SC below.
   var SC=window.SCLMW=window.SCLMW||{};
+  // Oberflaechen-Sprache, siehe js/i18n.js (dieselben _t/tn-Kurzformen wie in js/starmap.js).
+  // UI language, see js/i18n.js (same _t/tn short forms as in js/starmap.js).
+  function _t(k,v){ return SC.i18n?SC.i18n.t(k,v):k; }
+  function tn(n,o){ return SC.i18n?SC.i18n.num(n,o):String(n); }
   var FLEET=null, SCRIPTS={}, MODELS={}, BASE='./';
   SC.setHoloBase=function(b){ BASE=b||'./'; FLEET=null; };   // von SCLMW.mount() gesetzt, siehe starmap.js
   function norm(s){ return String(s||'').toLowerCase().replace(/[^a-z0-9]/g,''); }
@@ -67,7 +71,7 @@
   SC.loadThree=three;
   SC.holo=function(el, url, o){ o=o||{};
     if(!el||!url) return;
-    el.classList.add('holo-on'); el.innerHTML='<div class="holo-msg">Holo lädt…</div>';
+    el.classList.add('holo-on'); el.innerHTML='<div class="holo-msg">'+esc(_t('holo.loading'))+'</div>';
     three().then(function(){
       if(!MODELS[url]) MODELS[url]=new Promise(function(ok,no){ (function(){ var gl=new THREE.GLTFLoader(); gl.setDRACOLoader(draco()); return gl; })().load(url,function(g){ ok(g.scene); },undefined,no); });
       return MODELS[url];
@@ -85,26 +89,27 @@
       if(window.ResizeObserver){ ro=new ResizeObserver(function(){ var W=el.clientWidth,H=el.clientHeight; if(W&&H){ r.setSize(W,H); cam.aspect=W/H; cam.updateProjectionMatrix(); } }); ro.observe(el); }
       (function tick(){ if(dead) return; if(!el.isConnected){ stop(); return; } requestAnimationFrame(tick); if(!ctl) model.rotation.y+=0.006; else ctl.update(); r.render(sc,cam); })();
       el._holoStop=stop;
-    }).catch(function(){ if(el.isConnected){ el.classList.remove('holo-on'); el.innerHTML=o.fallback||'<div class="holo-msg">Kein 3D-Modell verfügbar</div>'; } });
+    }).catch(function(){ if(el.isConnected){ el.classList.remove('holo-on'); el.innerHTML=o.fallback||'<div class="holo-msg">'+esc(_t('holo.no_model'))+'</div>'; } });
   };
   SC.holoMount=function(root){ (root||document).querySelectorAll('.holo-box[data-holo]').forEach(function(b){ if(b._holoDone) return; b._holoDone=true; SC.holo(b,b.getAttribute('data-holo'),{fallback:b.getAttribute('data-fallback')?'<img src="'+esc(b.getAttribute('data-fallback'))+'" alt="" style="width:100%;height:100%;object-fit:cover">':''}); }); };
 
-  var STATUS={'flight-ready':'Flugbereit','in-concept':'Konzept','in-production':'In Produktion','announced':'Angekündigt'};
-  function num(v){ return (+v||0).toLocaleString('de-DE'); }
+  var STATUS={'flight-ready':'ship.status.flight_ready','in-concept':'ship.status.in_concept','in-production':'ship.status.in_production','announced':'ship.status.announced'};
+  var RENTAL={'1-day':'rental.1day','3-days':'rental.3days','7-days':'rental.7days','30-days':'rental.30days'};
+  function num(v){ return tn(+v||0); }
   SC.shipSpecs=function(s){ if(!s) return '';
     var rows=[];
-    if(s.klasse||s.fokus) rows.push(['Rolle',[s.klasse,s.fokus].filter(Boolean).join(' · ')]);
-    if(s.groesse) rows.push(['Größe',s.groesse+(s.l?' · '+num(s.l)+' × '+num(s.b)+' × '+num(s.h)+' m':'')]);
-    if(s.crew&&(s.crew[0]||s.crew[1])) rows.push(['Crew',s.crew[0]===s.crew[1]||!s.crew[1]?String(s.crew[0]||s.crew[1]):s.crew[0]+'–'+s.crew[1]]);
-    if(s.scu) rows.push(['Fracht',num(s.scu)+' SCU']);
-    if(s.scm) rows.push(['Speed','SCM '+num(s.scm)+' · max '+num(s.max)+' m/s']);
-    if(s.status) rows.push(['Status',STATUS[s.status]||s.status]);
-    if(s.pledge) rows.push(['Pledge','$'+num(s.pledge)]);
-    if(s.preis) rows.push(['Ingame-Preis',num(s.preis)+' aUEC']);
-    if(s.loaner&&s.loaner.length) rows.push(['Leihschiffe',s.loaner.join(', ')]);
-    var shop=function(l,t){ return l&&l.length?'<div class="holo-shops"><b>'+t+'</b>'+l.map(function(x){ return '<span>'+esc(x.ort)+(x.preis?' · '+num(x.preis)+' aUEC'+(x.zeit?' / '+esc(x.zeit.replace('1-day','Tag').replace('3-days','3 Tage').replace('7-days','7 Tage').replace('30-days','30 Tage')):''):'')+'</span>'; }).join('')+'</div>':''; };
-    return '<div class="iisec holo-specs">'+rows.map(function(x){ return '<div class="iirow"><span>'+esc(x[0])+'</span><b>'+esc(x[1])+'</b></div>'; }).join('')+'</div>'+shop(s.kaufen,'Ingame kaufen')+shop(s.mieten,'Ingame mieten')+
-      '<p class="holo-src">3D-Modell und Daten: <a href="'+esc(s.fy||'https://fleetyards.net')+'" target="_blank" rel="noopener">FleetYards.net</a> · Schiffe © Cloud Imperium Games</p>'; };
+    if(s.klasse||s.fokus) rows.push([_t('ship.role'),[s.klasse,s.fokus].filter(Boolean).join(' · ')]);
+    if(s.groesse) rows.push([_t('ship.size'),s.groesse+(s.l?' · '+num(s.l)+' × '+num(s.b)+' × '+num(s.h)+' m':'')]);
+    if(s.crew&&(s.crew[0]||s.crew[1])) rows.push([_t('ship.crew'),s.crew[0]===s.crew[1]||!s.crew[1]?String(s.crew[0]||s.crew[1]):s.crew[0]+'–'+s.crew[1]]);
+    if(s.scu) rows.push([_t('ship.cargo'),num(s.scu)+' SCU']);
+    if(s.scm) rows.push([_t('ship.speed'),'SCM '+num(s.scm)+' · max '+num(s.max)+' m/s']);
+    if(s.status) rows.push([_t('ship.status'),STATUS[s.status]?_t(STATUS[s.status]):s.status]);
+    if(s.pledge) rows.push([_t('ship.pledge_label'),'$'+num(s.pledge)]);
+    if(s.preis) rows.push([_t('ship.ingame_price'),num(s.preis)+' aUEC']);
+    if(s.loaner&&s.loaner.length) rows.push([_t('ship.loaners'),s.loaner.join(', ')]);
+    var shop=function(l,t){ return l&&l.length?'<div class="holo-shops"><b>'+t+'</b>'+l.map(function(x){ return '<span>'+esc(x.ort)+(x.preis?' · '+num(x.preis)+' aUEC'+(x.zeit?' / '+esc(RENTAL[x.zeit]?_t(RENTAL[x.zeit]):x.zeit):''):'')+'</span>'; }).join('')+'</div>':''; };
+    return '<div class="iisec holo-specs">'+rows.map(function(x){ return '<div class="iirow"><span>'+esc(x[0])+'</span><b>'+esc(x[1])+'</b></div>'; }).join('')+'</div>'+shop(s.kaufen,esc(_t('ship.buy_ingame')))+shop(s.mieten,esc(_t('ship.rent_ingame')))+
+      '<p class="holo-src">'+_t('attribution.model_data',{link:'<a href="'+esc(s.fy||'https://fleetyards.net')+'" target="_blank" rel="noopener">FleetYards.net</a>'})+'</p>'; };
 
   // Unter .sc-lmw skaliert, wie der Rest der Karte (siehe css/starmap.css): keine Regel greift
   // ausserhalb des eigenen Wurzel-Containers auf die Gastseite durch.

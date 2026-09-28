@@ -73,6 +73,16 @@ Do not put real names, Discord ids, or other personally identifying data into
 `id`/`name` unless your own community has agreed to that. `id` only needs to
 be stable and unique — it is never displayed.
 
+### Language
+
+This endpoint's own field values (`name`, `location`, `ship`, ...) are shown
+as-is, in whatever language your backend sends them — the map does not
+translate them. The map's own interface (the panel around this data: labels,
+"online"/"offline", time phrases like "seen 12 min ago") follows the
+separate interface-language setting, see `LANG` in `config.js` /
+`data-lang` on the `sc-lmw.js` script tag / `mount(el,{lang})` in the main
+[README](../README.md#interface-language-germanenglish).
+
 ---
 
 ## Deutsch
@@ -131,3 +141,13 @@ mit derselben Form.
 Trag keine echten Namen, Discord-IDs oder andere personenbezogenen Daten in
 `id`/`name` ein, außer deine eigene Community hat dem ausdrücklich zugestimmt.
 `id` muss nur stabil und eindeutig sein, sie wird nirgends angezeigt.
+
+### Sprache
+
+Die eigenen Feldwerte dieser Schnittstelle (`name`, `location`, `ship`, ...)
+werden unverändert gezeigt, in welcher Sprache dein Server sie liefert — die
+Karte übersetzt sie nicht. Die Oberfläche der Karte selbst (der Rahmen um
+diese Daten: Beschriftungen, „online“/„offline“, Zeitangaben wie „vor 12
+Min. gesehen“) folgt der getrennten Oberflächensprache, siehe `LANG` in
+`config.js` / `data-lang` am `sc-lmw.js`-Script-Tag / `mount(el,{lang})` im
+[README](../README.de.md#oberflächensprache-deutschenglisch).
