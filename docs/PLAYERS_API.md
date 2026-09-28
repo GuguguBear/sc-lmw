@@ -43,6 +43,7 @@ from `PLAYERS_HEADERS` (e.g. a bearer credential), on load and then every
 | `name`      | string          | Display name shown on the map. |
 | `online`    | boolean         | Whether the player is currently in-game / connected. |
 | `last_seen` | ISO-8601 string | Timestamp of the last known position update. Used to grey out stale positions and to show "seen 12 min ago". |
+| `when` | ISO-8601 string, optional | Time of the last *location* report, if it differs from `last_seen` (e.g. the tool is online but the position is older). Positions younger than 15 minutes count as "here right now". Defaults to `last_seen`. |
 | `code`      | string          | The raw in-game location code, as it appears in the player's `Game.log` (e.g. `RR_HUR_Lorville`, `RR_S1_ARC_L1`, `RR_MIC_NB_Outpost_Kudre_Ore`). The map resolves this to a 3D position with a chain of exact match → known aliases → fuzzy word-fragment matching against system/planet/moon/station names. If you don't have log parsing, you may instead fill `location`/`system` only and leave `code` empty — the map falls back to a best-effort match by name. |
 | `location`  | string          | Human-readable location name, used as a fallback and for display. |
 | `system`    | string          | Star system name (`Stanton`, `Pyro`, `Nyx`, ...). |
@@ -100,6 +101,7 @@ Siehe das JSON-Beispiel oben. Die Felder im Einzelnen:
 | `name`      | String           | Anzeigename auf der Karte. |
 | `online`    | Bool             | Ob der Spieler gerade im Spiel/verbunden ist. |
 | `last_seen` | ISO-8601-String  | Zeitpunkt der letzten bekannten Positionsmeldung. Wird genutzt, um alte Positionen auszugrauen und "vor 12 Min" anzuzeigen. |
+| `when` | ISO-8601-String, optional | Zeitpunkt der letzten *Ortsmeldung*, falls abweichend von `last_seen` (z. B. Tool online, Position aber älter). Jünger als 15 Minuten gilt als „gerade hier“. Standard: `last_seen`. |
 | `code`      | String           | Der rohe Ortscode aus dem Spiel, wie er im `Game.log` des Spielers steht (z. B. `RR_HUR_Lorville`, `RR_S1_ARC_L1`, `RR_MIC_NB_Outpost_Kudre_Ore`). Die Karte löst daraus eine 3D-Position auf: erst exakter Treffer, dann bekannte Kürzel, dann unscharfer Wortstück-Abgleich gegen System-/Planeten-/Monde-/Stationsnamen. Ohne Log-Auswertung reichen auch nur `location`/`system`, dann rät die Karte anhand des Namens. |
 | `location`  | String           | Lesbarer Ortsname, als Rückfalloption und zur Anzeige. |
 | `system`    | String           | Sternsystem (`Stanton`, `Pyro`, `Nyx`, ...). |

@@ -164,7 +164,7 @@ function stFuzzyLoc(D,code,sy,body){ const rom={1:'i',2:'ii',3:'iii',4:'iv',5:'v
     if(sc>bs){ bs=sc; best=o; } }
   return best; }
 // Ort gilt als frisch, wenn die letzte Ortsmeldung juenger als 15 Minuten ist (online heisst nur: das Tool laeuft)
-function stLocFresh(p){ const t=Date.parse(String(p.when||'').replace(' ','T')); return !!t&&Date.now()-t<15*60000; }
+function stLocFresh(p){ const t=Date.parse(String(p.when||p.last_seen||'').replace(' ','T')); return !!t&&Date.now()-t<15*60000; }   // 'when' optional (Zeit der letzten Ortsmeldung), sonst last_seen
 function stAgo(ts){ const t=Date.parse(String(ts||'').replace(' ','T')); if(!t) return 'unbekannt'; const m=Math.max(0,Math.round((Date.now()-t)/60000));
   return m<2?'gerade eben':m<60?'vor '+m+' Min.':m<1440?'vor '+Math.round(m/60)+' Std.':'vor '+Math.round(m/1440)+' Tagen'; }
 function stPlayerObj(p){ const o=stPlayerLoc(p); if(!o) return null; return {id:'pl-'+p.id,n:p.name||p.player||'Spieler',k:'player',sy:o.sy,p:o.id,x:o.x,y:o.y,z:o.z,pl:p,loc:o,on:!!p.online}; }
@@ -569,7 +569,7 @@ function enterStExplore(){
   ctl.onSys=sysMark; sysMark(ST_SYS);
   $('stSysSel').querySelectorAll('[data-sys]').forEach(b=>b.onclick=()=>{ const k=b.getAttribute('data-sys'); stCloseCard(); if(k==='all'){ ctl.galaxy(); return; } ctl.goSystem(k); sysMark(k); });
   const plTick=()=>stLoadPlayers().then(ch=>{ if(ch&&window.__stCtl) window.__stCtl.rebuild(); stLegend(); stPlList(); });
-  clearInterval(window.__stPlT); window.__stPlT=setInterval(plTick,30000);
+  clearInterval(window.__stPlT); { const C=window.LIVEMAP_CONFIG||{}, ms=C.PLAYERS_POLL_MS==null?30000:+C.PLAYERS_POLL_MS; if(ms>0) window.__stPlT=setInterval(plTick,Math.max(5000,ms)); }   // 0 = kein erneutes Laden
   stLoad().then(()=>{ crumb(ctl.level()); stLegend(); plTick(); }).catch(()=>{ $('stLegend').innerHTML='<p class="sc-lmw-muted">Kartendaten konnten nicht geladen werden.</p>'; });
   // Obere Leiste: Reiter + Suche
   const q=$('stQ'); let tmr=null;
