@@ -37,7 +37,7 @@
      from js/i18n.js once the UI language is known, so this notice is always ONE language, never
      a German/English mix. -->
 <div id="fanNotice">
-  <span data-i18n="page.fan_notice">SC LMW 0.9 · Unofficial fan project. Not endorsed by, sponsored by, or affiliated with Cloud
+  <span data-i18n="page.fan_notice">SC LMW 1.0 · Unofficial fan project. Not endorsed by, sponsored by, or affiliated with Cloud
   Imperium Games or Roberts Space Industries. Star Citizen® is a trademark of Cloud Imperium
   Rights LLC.</span> · <a href="./CREDITS.md" target="_blank" rel="noopener" data-i18n="page.credits_link">Credits &amp; licenses</a>
 </div>
@@ -47,6 +47,7 @@
 <script src="./config.js"></script>
 <script src="./js/i18n.js"></script>
 <script src="./js/holo.js"></script>
+<script src="./js/guides.js"></script>
 <script src="./js/starmap.js"></script>
 <script>
   document.addEventListener('DOMContentLoaded', function(){
@@ -98,6 +99,13 @@
     }
     function esc(s){ return String(s==null?'':s).replace(/[<>&]/g,function(c){return {'<':'&lt;','>':'&gt;','&':'&amp;'}[c];}); }
   });
+</script>
+<script>
+  // Fan-Hinweis unten: die Karte haelt ihr Handy-Dock darueber (--sclmw-bottom-gap, siehe css/starmap.css).
+  // Fan notice at the bottom: the map keeps its phone dock above it (--sclmw-bottom-gap, see css/starmap.css).
+  (function(){ var n=document.getElementById('fanNotice'); if(!n) return;
+    function gap(){ document.documentElement.style.setProperty('--sclmw-bottom-gap', Math.ceil(n.getBoundingClientRect().height)+'px'); }
+    gap(); if(window.ResizeObserver) new ResizeObserver(gap).observe(n); else window.addEventListener('resize',gap); })();
 </script>
 </body>
 </html>

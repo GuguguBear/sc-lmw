@@ -200,3 +200,46 @@
 .sc-lmw .st-pl-dot.on{background:#4dff9a;box-shadow:0 0 6px #4dff9a}
 .sc-lmw .st-tabs #sclmw-stSidePl span{color:var(--sclmw-dim);font-weight:400}
 .sc-lmw .st-bpg .om{display:flex;justify-content:space-between;gap:10px}
+
+/* ---- Guides (js/guides.js): Ablauf, Timer, Karten der grossen Loops / gameplay guides of the big loops ---- */
+.sc-lmw .lmw-g{font-size:.86rem;line-height:1.45;margin:0 0 6px}
+.sc-lmw .lmw-g p{margin:0 0 8px}
+.sc-lmw .lmw-h{font-family:"Chakra Petch","Inter",sans-serif;font-weight:700;font-size:.76rem;letter-spacing:.08em;color:var(--sclmw-muted);margin:14px 0 8px;text-transform:uppercase}
+.sc-lmw .lmw-h small{text-transform:none;letter-spacing:0;font-weight:400;margin-left:6px;color:var(--sclmw-dim)}
+.sc-lmw .lmw-ul,.sc-lmw .lmw-ol{margin:0 0 6px;padding-left:20px}.sc-lmw .lmw-ul li,.sc-lmw .lmw-ol li{margin:3px 0}
+.sc-lmw .lmw-go{color:var(--sclmw-cyan);text-decoration:underline;cursor:pointer}
+.sc-lmw .lmw-st{padding:8px 12px;border-radius:10px;margin-bottom:8px;border:1px solid rgba(255,90,90,.45);background:rgba(255,90,90,.08)}
+.sc-lmw .lmw-st.on{border-color:rgba(80,220,120,.5);background:rgba(80,220,120,.1)}.sc-lmw .lmw-st b{margin-right:6px}.sc-lmw .lmw-st span{color:var(--sclmw-muted)}
+.sc-lmw .lmw-li{display:flex;gap:8px;margin:0 0 8px}.sc-lmw .lmw-li i{width:18px;height:18px;border-radius:50%;border:1px solid rgba(255,255,255,.25);background:#333}
+.sc-lmw .lmw-li i.g{background:#3ddc6e;box-shadow:0 0 8px #3ddc6e}.sc-lmw .lmw-li i.r{background:#ff4d4d;box-shadow:0 0 8px #ff4d4d}
+.sc-lmw .lmw-warn{padding:8px 12px;border-radius:10px;margin:0 0 8px;border:1px solid rgba(255,190,60,.55);background:rgba(255,190,60,.1)}
+.sc-lmw .lmw-map{width:100%;border-radius:10px;border:1px solid rgba(255,255,255,.12);display:block;margin-bottom:4px}
+.sc-lmw .lmw-src{font-size:.76rem;color:var(--sclmw-muted);margin:4px 0 8px}
+.sc-lmw .lmw-tm{display:flex;flex-wrap:wrap;gap:6px}
+.sc-lmw .lmw-t{display:flex;flex-direction:column;align-items:flex-start;min-height:44px;padding:6px 10px;border-radius:10px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.04);color:inherit;font:inherit;font-size:.8rem;cursor:pointer}
+.sc-lmw .lmw-t span{opacity:.8}.sc-lmw .lmw-t.run{border-color:rgba(255,190,60,.6);background:rgba(255,190,60,.1)}.sc-lmw .lmw-t.done{border-color:rgba(80,220,120,.6);background:rgba(80,220,120,.1)}
+.sc-lmw .lmw-btn{min-height:40px;padding:0 12px;border-radius:10px;border:1px solid var(--sclmw-line2);background:rgba(120,160,230,.06);color:inherit;font:inherit;font-size:.8rem;cursor:pointer;margin:2px 4px 2px 0}
+.sc-lmw .lmw-loot{display:grid;grid-template-columns:minmax(0,1fr) 90px 82px;align-items:center;gap:8px;font-size:.84rem;padding:5px 0;border-bottom:1px solid rgba(120,165,230,.1)}
+.sc-lmw .lmw-loot b{display:block;height:7px;border-radius:4px;background:rgba(120,165,230,.12)}.sc-lmw .lmw-loot i{display:block;height:7px;border-radius:4px;background:linear-gradient(90deg,#38d39f,#37e1ff)}
+.sc-lmw .lmw-loot em{font-style:normal;color:var(--sclmw-muted);font-size:.74rem;white-space:nowrap;text-align:right}
+
+/* --sclmw-bottom-gap: Platz unten fuer eine Leiste der Gastseite (index.html: Fan-Hinweis) / room at the bottom for a host bar */
+/* ---- Handy: oben System + X, Suche voll breit; unten EIN Dock (Reiter ueber Zoom), Knoepfe mind. 44 px, nichts ueberlappt ----
+   ---- Phone: system + X on top, full-width search; ONE dock at the bottom (tabs above zoom), buttons at least 44 px, no overlap ---- */
+@media(max-width:700px){
+  .sc-lmw.st-explore .st-top{top:8px;left:8px;right:60px;gap:6px}
+  .sc-lmw.st-explore .st-top-row{flex-wrap:wrap;gap:6px}
+  .sc-lmw.st-explore .st-sys{flex:1 1 auto;order:0}
+  .sc-lmw.st-explore .st-sys button{flex:1;justify-content:center;min-height:38px;padding:4px 6px;font-size:.74rem}
+  .sc-lmw.st-explore .st-sbox{order:1;flex-basis:100%}
+  .sc-lmw.st-explore .st-sbox input{min-height:42px}
+  .sc-lmw.st-explore .st-top .st-crumb{order:2;max-width:100%;padding:4px 10px;font-size:.74rem;background:rgba(8,12,20,.7)}
+  .sc-lmw.st-explore .st-cats{-webkit-mask-image:linear-gradient(90deg,#000 82%,transparent);mask-image:linear-gradient(90deg,#000 82%,transparent);padding-right:30px}
+  .sc-lmw.st-explore .st-cats button{min-height:36px}
+  .sc-lmw.st-explore .st-exui .stx{top:8px;right:8px}
+  .sc-lmw.st-explore .st-zoom{left:8px;right:8px;width:auto;transform:none;bottom:calc(8px + var(--sclmw-bottom-gap,0px));border-radius:16px;padding:6px 10px;gap:8px}
+  .sc-lmw.st-explore .st-pause{width:44px;height:44px;font-size:1rem}
+  .sc-lmw.st-explore .st-side{left:8px;right:8px;width:auto!important;bottom:calc(72px + var(--sclmw-bottom-gap,0px));top:auto;max-height:46%;border-radius:16px}
+  .sc-lmw.st-explore .st-tabs button{min-height:44px}
+}
+.sc-lmw .st-tabs #sclmw-stSidePl .st-plon{color:#4dff9a;font-weight:700}

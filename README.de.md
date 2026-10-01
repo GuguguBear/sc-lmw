@@ -29,6 +29,9 @@ Vollständige Quellenangaben und Lizenzen aller Bausteine stehen in [`CREDITS.md
 - Kein Login, kein Build-Schritt fürs Frontend, kein Server außer einem
   statischen Datei-Host.
 
+- **Die großen Loops:** Contested Zones (Checkmate, Orbituary, Ruin Station), die Supervisor-Stationen und der Executive Hangar zeigen den ganzen Ablauf direkt am Ort: Live-Timer des Executive Hangars mit den 5 Lichtern, Tresortür-Timer der Ruin Station (einmal je Server abgleichen), Respawn-Timer zum Antippen, welche Keycards und Boards man bekommt oder braucht, und die Laufroutenkarten. Align & Mine, Storm Breaker (Apex-Valakkar), Siege of Orison und Jumptown stehen ebenfalls an ihren Orten, alles untereinander verlinkt.
+- **Beute finden:** In der Item-Ansicht steht, in welchen Kisten- und Ortsarten ein Item liegen kann, sortiert nach bester Chance (optional, aus den Spieldaten der Friendly Fire Department, mit `--with-loot`).
+- **Am Handy:** Die Bedienung sitzt unten in einem Dock, alle Knöpfe sind daumengroß, nichts überlappt.
 ### Schnellstart
 
 ```sh
@@ -119,6 +122,13 @@ Siehe Baum oben (englischer Abschnitt) — die Struktur ist sprachneutral.
 - `api.uexcorp.space` — Waren-/Item-Preise, direkt aus dem Browser geladen.
 - `fleetyards.net` — Schiffsdaten und 3D-Modelle, direkt aus dem Browser geladen.
 - Dein eigener `PLAYERS_URL` — optional, für echte Spieler.
+
+**Guides und optionale Extras**
+
+- Abläufe und Laufroutenkarten: [starcitizen.tools](https://starcitizen.tools) (Karten und Fotos CC BY-SA 4.0, siehe `img/guides/` und CREDITS.md).
+- Zyklus des Executive Hangars: [exec.xyxyll.com](https://exec.xyxyll.com) (MIT). `scripts/exec-build.py` schreibt ihn nach `data/exec.json` (läuft in `build-all.py`; ohne die Datei rechnet die Karte mit eingebauten Werten).
+- Respawn-Zeiten: [exectimer.com](https://exectimer.com).
+- Beute-Fundorte: Spieldaten-Export der [Friendly Fire Department](https://thefriendlyfiredepartment.org), nur mit `python3 scripts/build-all.py --with-loot`. Wird nicht in diesem Repository verteilt.
 
 ### Spieldaten selbst bauen
 

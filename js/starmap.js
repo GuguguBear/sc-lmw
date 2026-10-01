@@ -38,6 +38,8 @@ function rootW(){ return (ROOT&&ROOT.clientWidth)||window.innerWidth||999; }
 // SC is holo.js' namespace (see js/holo.js): fleetShip/holoMount/loadThree/... live there, not
 // as separate window.xyz names -- "one global name" covers both files together.
 const SC=window.SCLMW=window.SCLMW||{};
+// Fuer js/guides.js: Kartendaten, Basispfad, Kameraflug / for js/guides.js: map data, base path, camera flight
+SC.data=()=>ST_DATA; SC.basePath=()=>BASE; SC.flyTo=o=>{ if(window.__stCtl) window.__stCtl.flyTo(o); };
 // Oberflaechen-Sprache (js/i18n.js, EIGENSTAENDIG von ST_LANG unten -- das bleibt die alte
 // Spieltexte-Umschaltung). t()/tn() sind kurze Aufrufe fuer den ganzen Rest dieser Datei.
 // UI language (js/i18n.js, SEPARATE from ST_LANG below -- that stays the old game-text toggle).
@@ -739,10 +741,11 @@ async function stOpenBuy(kind,rec){ if(!rec) return;
   let h=kind==='ship'&&stShipImg(rec)?'<img class="st-shipimg" src="'+esc(stShipImg(rec))+'" alt="" onerror="this.remove()">':'';
   if(kind==='ship') h+='<div class="st-chips">'+(rec.msrp?'<span>'+esc(_t('label.pledge',{n:rec.msrp}))+'</span>':'')+(rec.st?'<a href="'+esc(rec.st)+'" target="_blank" rel="noopener" class="st-lnk">RSI ↗</a>':'')+'</div>';
   h+=buy.html+sell.html;
+  if(kind==='item') h+='<div id="'+ID('stLoot')+'"></div>';   // Beute-Fundorte / loot (js/guides.js, data/loot.json)
   if(kind==='item'&&rec.i) h+='<div id="'+ID('stAttr')+'"></div>';
   if(!buy.html&&!sell.html) h+='<p class="sc-lmw-muted" style="font-size:.84rem">'+(kind==='ship'?_t('notice.ship_not_buyable'):kind==='item'?_t('notice.item_not_buyable'):_t('notice.ware_no_price'))+'</p>';
   h+='<div class="st-coord">'+_t('price.coord_note')+'</div>';
-  body.innerHTML=h; stWirePrices(body);
+  body.innerHTML=h; stWirePrices(body); if(kind==='item'&&SC.guides) SC.guides.loot($('stLoot'),rec.n);
   if(kind==='item'&&rec.i) stGet(UEX_BASE+'/items_attributes?id_item='+rec.i).then(A=>{ const bx=$('stAttr'); if(!bx) return; const L=A.filter(a=>a.attribute_name&&a.value!==''&&a.value!=null); if(L.length) bx.innerHTML='<div class="st-slbl">'+_t('label.stats')+'</div><table class="st-attr">'+L.map(a=>'<tr><td>'+esc(a.attribute_name)+'</td><td>'+esc(a.value)+(a.unit?' '+esc(a.unit):'')+'</td></tr>').join('')+'</table>'; });
   const ids=[...new Set(buy.ids.concat(sell.ids))]; if(ids.length) window.__stCtl.highlight(ids); }
 async function stOpenOre(x){ const I=stOreIndex();
@@ -784,7 +787,7 @@ async function stOpenBp(name){ const M=await stMis(), BP=await stBps(), B=(M.d.b
     stBpRecipe(R)+'<div class="st-coord">'+esc(_t('data.version_prefix',{version:(M.d.version||'').replace(/-LIVE.*/,'')}))+' · '+esc(_t('bp.approx_note'))+'</div>';
   body.querySelectorAll('[data-bi]').forEach(el=>el.onclick=()=>{ const m=B.m[+el.getAttribute('data-bi')]; window.__stCtl.highlight(LS[m.l]||[]); });
   if(ids.size) window.__stCtl.highlight([...ids]); }
-function stPlList(){ const box=$('stPlList'), cnt=$('stPlCnt'); const P=ST_PL||[]; if(cnt) cnt.textContent=P.length?'('+P.filter(p=>p.online).length+'/'+P.length+')':''; if(!box) return;
+function stPlList(){ const box=$('stPlList'), cnt=$('stPlCnt'); const P=ST_PL||[]; if(cnt){ const on=P.filter(p=>p.online).length; cnt.innerHTML=P.length?(on?' <b class="st-plon">'+on+' online</b>':' (0/'+P.length+')'):''; } if(!box) return;
   const q=(($('stPlQ')||{}).value||'').trim().toLowerCase(); const L=P.filter(p=>!q||[p.name,p.player,p.location,p.ship].some(v=>String(v||'').toLowerCase().indexOf(q)>=0));
   box.innerHTML=(ST_PL_ERR?'<p class="st-warn">'+esc(ST_PL_ERR)+'</p>':'')+(L.map(p=>{ const o=stPlayerLoc(p);
     return '<div class="st-orow st-plrow" data-pid="'+esc(p.id)+'"><b><i class="st-pl-dot'+(p.online?' on':'')+'"></i>'+esc(p.name||p.player||_t('entity.player'))+'</b><div class="om"><span>'+esc(p.online?(p.travel?_t('travel.to',{to:p.travel.to}):(p.location||(o&&o.n)||_t('location.unknown'))+(p.when&&!stLocFresh(p)?' ('+stAgo(p.when)+')':'')):_t('status.offline_comma',{time:stAgo(p.last_seen||p.when)}))+'</span>'+(o?'<span>'+esc(stSysName(o))+'</span>':'')+(p.ship&&p.ship!=='—'?'<span>🚀 '+esc(p.ship)+'</span>':'')+'</div></div>'; }).join('')||'<p class="sc-lmw-muted" style="font-size:.8rem">'+(ST_PL?_t('search.none_players'):_t('common.loading'))+'</p>');
@@ -865,6 +868,7 @@ async function openStPanel(o){
     if(L){ const other=D.by[L.a===o.id?L.b:L.a]; if(other) h+='<div class="st-jump">'+_t('jump.gateway_to',{sys:'<b>'+esc(stSysName(other))+'</b>'})+(L.live?'':' <em>'+esc(_t('jump.rsi_only_note'))+'</em>')+'<button class="sc-lmw-btn sm primary" id="'+ID('stJumpGo')+'" data-to="'+other.id+'">'+_t('action.fly_through')+'</button></div>'; } }
   if(desc) h+='<div class="st-desc" id="'+ID('stDesc')+'" title="'+esc(_t('hint.tap_to_expand'))+'">'+esc(desc)+'</div>';
   if(o.am&&o.am.length) h+='<div class="st-slbl">'+_t('label.amenities')+'</div><div class="st-chips">'+o.am.map(a=>'<span>'+esc(isDe?(ST_AM_DE[a]||a):a)+'</span>').join('')+'</div>';
+  if(SC.guides) h+=SC.guides.html(o);   // Ablauf, Timer, Karten der grossen Loops / guides for the big loops (js/guides.js)
   if(o.mine&&o.mine.length) h+=stMiningHTML(o.mine);
   if(o.k==='wikelo') h+='<div id="'+ID('stWkBox')+'"></div>';
   if((o.terms||[]).some(t=>!/^(commodity|refinery|fuel)/.test(t.t||''))) h+='<div class="st-slbl">'+_t('label.available_here')+'</div><div id="'+ID('stShopBox')+'"><button class="sc-lmw-btn sm" id="'+ID('stShopGo')+'">'+_t('action.load_items_ships')+'</button></div>';
@@ -874,7 +878,7 @@ async function openStPanel(o){
   if(o.terms&&o.terms.length) h+='<div class="st-slbl">'+esc(_t('label.terminals',{n:o.terms.length}))+'</div><div class="st-chips">'+o.terms.map(t=>'<span>'+esc(t.n)+'</span>').join('')+'</div>';
   h+='<div class="st-slbl">'+_t('label.search_items_ships')+'</div><input id="'+ID('stCat')+'" placeholder="'+esc(_t('search.item_ship_placeholder'))+'"><div id="'+ID('stCatRes')+'"><p class="sc-lmw-muted" style="font-size:.82rem"></p></div>';
   h+='<div class="st-coord">'+esc(_t('coord.from_star',{dist:stDist(Math.hypot(o.x,o.y,o.z)),x:tn(Math.round(o.x)),y:tn(Math.round(o.y)),z:tn(Math.round(o.z))}))+'<br>'+esc(_t('data.version_prefix',{version:(D.d.version||'').replace(/-LIVE.*/,'')}))+(o.h?esc(_t('note.not_on_starmap')):'')+(o.approx?esc(_t('note.approx_position')):'')+(isDe&&o.dde?esc(_t('note.de_ini_source')):'')+'</div>';
-  body.innerHTML=h;
+  body.innerHTML=h; if(SC.guides) SC.guides.wire(body,o);
   const de=$('stDesc'); if(de) de.onclick=()=>de.classList.toggle('open');
   const wk=$('stWkBox'); if(wk) stWikeloHTML(wk);
   const sg=$('stShopGo'); if(sg) sg.onclick=()=>{ const bx=$('stShopBox'); bx.innerHTML='<p class="sc-lmw-muted" style="font-size:.82rem">'+_t('status.loading_uex')+'</p>'; stShopHTML(o,bx); };

@@ -86,6 +86,7 @@
   // starmap.js (defines window.SCLMW.mount/unmount and calls both).
   loadScript(base+'js/i18n.js')
     .then(function(){ return loadScript(base+'js/holo.js'); })
+    .then(function(){ return loadScript(base+'js/guides.js'); })
     .then(function(){ return loadScript(base+'js/starmap.js'); })
     .then(function(){
       if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', boot);
