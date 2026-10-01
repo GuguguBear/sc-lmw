@@ -1,6 +1,6 @@
 # SC LMW – Star Citizen LiveMap Wiki
 
-**Version 0.9.0** · AGPL-3.0 · [Deutsche Version](README.de.md)
+**Version 1.0.0** · AGPL-3.0 · [Deutsche Version](README.de.md)
 
 **Your whole 'verse on one screen.** A free, open-source 3D map of Star Citizen: every system, planet, moon, station and jump point, a search that knows where to find every ore, item, ship, commodity, blueprint and mission, live trade prices, holographic 3D ships, and your own org's pilots flying around on it in real time.
 
@@ -28,6 +28,9 @@ Drop it into your org website with one line of HTML, or hand the included prompt
 - **Hunt blueprints.** Every blueprint in the game data with its full crafting recipe (parts, resources, minimum quality), and which missions reward it.
 - **Scout missions.** See which mission types are offered where and by whom, and which blueprints they can reward.
 - **Go mining.** Find which planets, moons and belts carry the ore you are after.
+- **Run the big loops.** Contested Zones (Checkmate, Orbituary, Ruin Station), the supervisor stations and the Executive Hangar show the full procedure right at the location: a live Executive Hangar timer with the 5 status lights, a Ruin vault door timer you sync once per server, tap-to-start respawn timers, which keycards and boards you get or need, and the route maps. Align & Mine, Storm Breaker (Apex Valakkar), Siege of Orison and Jumptown are explained at their locations too, all linked to each other.
+- **Find loot.** Item view shows which container and location types an item can drop from, ranked from best to rarer chance (optional, built from the Friendly Fire Department game-data export with `--with-loot`).
+- **Works on the phone.** On small screens the controls sit in one dock at the bottom, all buttons are thumb-sized and nothing overlaps.
 - **Show off the fleet.** Rotating holographic 3D models of the ships, loaded live from FleetYards, with specs, prices and where to buy or rent.
 - **Put it on stream.** It runs in any browser source, so it works as an overlay or info screen for streams and org meetings.
 - **Make it yours.** Plain HTML, CSS and JavaScript. No framework and no build step for the frontend, easy to restyle and extend.
@@ -126,6 +129,13 @@ visible. My site is: <describe your stack and where the map should appear>.
 | Your pilots | your own `PLAYERS_URL` | optional |
 
 Game data and images are not redistributed here. Every user builds them from the original sources. RSI star-map images are intentionally not downloaded. Full attribution: [`CREDITS.md`](CREDITS.md).
+
+**Guides and optional extras**
+
+- Gameplay procedures and route maps: [starcitizen.tools](https://starcitizen.tools) (maps and photos CC BY-SA 4.0, see `img/guides/` and CREDITS.md).
+- Executive Hangar cycle: [exec.xyxyll.com](https://exec.xyxyll.com) (MIT). `scripts/exec-build.py` refreshes it into `data/exec.json` (run by `build-all.py`; without it the map uses built-in values).
+- Respawn times: [exectimer.com](https://exectimer.com).
+- Loot locations: [Friendly Fire Department](https://thefriendlyfiredepartment.org) game-data export, only with `python3 scripts/build-all.py --with-loot`. Not redistributed in this repository.
 
 ## Project layout
 

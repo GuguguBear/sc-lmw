@@ -4,7 +4,7 @@
 
 This file holds a ready-to-paste prompt for an AI coding assistant (Claude,
 ChatGPT, or similar) that tells it exactly how to integrate **SC LMW (Star
-Citizen LiveMap Wiki)**, version 0.9.0, into an existing website. Paste the
+Citizen LiveMap Wiki)**, version 1.0.0, into an existing website. Paste the
 fenced block into your AI assistant's chat, in the same repo/workspace where
 the existing website and this project's files live.
 
@@ -15,7 +15,7 @@ the existing website and this project's files live.
 ### Copy-paste prompt
 
 ````text
-You are integrating "SC LMW" (Star Citizen LiveMap Wiki, v0.9.0), an
+You are integrating "SC LMW" (Star Citizen LiveMap Wiki, v1.0.0), an
 open-source, AGPL-3.0-licensed, static Star Citizen 3D map, into an existing
 website. Follow these steps exactly. Do not ask clarifying questions unless a
 step is genuinely ambiguous for this specific codebase -- make the
@@ -163,7 +163,7 @@ own generic CSS) are in [`examples/iframe.html`](../examples/iframe.html) and
 ### Copier-/Einfügbarer Prompt
 
 ````text
-Du integrierst "SC LMW" (Star Citizen LiveMap Wiki, v0.9.0), eine
+Du integrierst "SC LMW" (Star Citizen LiveMap Wiki, v1.0.0), eine
 Open-Source-, AGPL-3.0-lizenzierte, statische 3D-Karte für Star Citizen, in
 eine bestehende Website. Halte dich genau an diese Schritte. Stelle keine
 Rückfragen, außer ein Schritt ist für dieses konkrete Projekt wirklich

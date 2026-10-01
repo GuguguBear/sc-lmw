@@ -59,6 +59,9 @@ def main():
     run("blueprints-build.py")                # data/blueprints.json (braucht geklontes Repo)
     run("fy-mirror.py")                       # data/fleet.json (FleetYards live API)
     run("items-build.py")                     # data/items.json, data/vehicles.json (Such-Katalog, UEX live API)
+    run("exec-build.py")                      # data/exec.json (Executive-Hangar-Zyklus, exec.xyxyll.com, MIT; optional)
+    if "--with-loot" in sys.argv:             # data/loot.json (Beute-Fundorte, Friendly Fire Department; nur auf Wunsch / opt-in)
+        run("loot-build.py")
 
     print("\n=== Zusammenfassung / summary: ./data/ ===")
     if C.DATA_DIR.is_dir():
