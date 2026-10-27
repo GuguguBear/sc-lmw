@@ -21,6 +21,12 @@ __pycache__/
 # Room database created when server/room_server.py runs on this machine.
 server/*.sqlite
 
+# Companion settings, including the room token. This stays on this computer.
+companion/config.json
+companion/build/
+companion/dist/
+companion/*.spec
+
 # Local game-language files used to build Chinese names. Kept on disk only,
 # the same way as the downloaded German INI.
 /Language/

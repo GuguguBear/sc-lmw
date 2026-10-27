@@ -20,7 +20,10 @@
       mode:'谁可以画路线', modeCaptain:'仅队长', modeMembers:'队员也可以',
       members:'房间成员', you:'你', errNick:'请填写 1 到 32 个字的昵称。', errRoom:'没有这个房间。',
       errNet:'房间服务没连上。请在项目目录运行 python server/room_server.py，然后打开 http://127.0.0.1:8770/ 。', published:'已发布的路线', by:'来自',
-      yours:'你的房间', switchRoom:'建立或加入别的房间'
+      yours:'你的房间', switchRoom:'建立或加入别的房间',
+      link:'连到这台电脑', linkSent:'已经发给本机的地点同步。回到那个窗口，点确认。',
+      linkOff:'本机的地点同步没开。先双击「地点同步」，等窗口出现后再点一次。',
+      locGuide:'你可以手动标位置，也可以用附带程序试着自动读日志。手动：在星图上点开地点，再点「我在这里」。自动：项目自带「地点同步」，源码都在 companion/，可以先读完再运行。它只读本机 Game.log，不进游戏、不读内存、不改游戏文件。打开后点「连到这台电脑」，回窗口确认。网页本身不读游戏目录。RSI 条款没有书面允许读日志，开不开由你决定。'
     },
     'zh-Hant': {
       title:'團隊房間', lead:'這個網頁不讀取遊戲資料夾。你在星圖上點開地點，再點「我在這裡」，隊友就能看到。',
@@ -36,7 +39,10 @@
       mode:'誰可以畫路線', modeCaptain:'僅隊長', modeMembers:'隊員也可以',
       members:'房間成員', you:'你', errNick:'請填寫 1 到 32 個字的暱稱。', errRoom:'沒有這個房間。',
       errNet:'房間服務沒連上。請在專案目錄執行 python server/room_server.py，然後打開 http://127.0.0.1:8770/ 。', published:'已發布的路線', by:'來自',
-      yours:'你的房間', switchRoom:'建立或加入別的房間'
+      yours:'你的房間', switchRoom:'建立或加入別的房間',
+      link:'連到這台電腦', linkSent:'已經發給本機的地點同步。回到那個視窗，點確認。',
+      linkOff:'本機的地點同步沒開。先雙擊「地點同步」，等視窗出現後再點一次。',
+      locGuide:'你可以手動標位置，也可以用附帶程式試著自動讀日誌。手動：在星圖上點開地點，再點「我在這裡」。自動：專案自帶「地點同步」，源碼都在 companion/，可以先讀完再執行。它只讀本機 Game.log，不進遊戲、不讀記憶體、不改遊戲檔案。打開後點「連到這台電腦」，回視窗確認。網頁本身不讀遊戲資料夾。RSI 條款沒有書面允許讀日誌，開不開由你決定。'
     },
     en: {
       title:'Team room', lead:'This page does not read the game folder. Open a place on the map, then choose “I am here”.',
@@ -52,7 +58,10 @@
       mode:'Who can draw routes', modeCaptain:'Captain only', modeMembers:'Members too',
       members:'Room members', you:'you', errNick:'Use a nickname of 1 to 32 characters.', errRoom:'No room with that code.',
       errNet:'Room service is not reachable. Run python server/room_server.py and open http://127.0.0.1:8770/ .', published:'Published routes', by:'by',
-      yours:'Your room', switchRoom:'Create or join a different room'
+      yours:'Your room', switchRoom:'Create or join a different room',
+      link:'Connect this computer', linkSent:'Sent to the place sync on this computer. Go back to that window and confirm.',
+      linkOff:'Place sync is not running. Double-click Place Sync, wait for its window, then click again.',
+      locGuide:'You can mark your place by hand, or try the bundled program to read the game log. By hand: open a place on the map, then choose “I am here.” Automatic: this project includes Place Sync. All of its source is in companion/. Read it before you run it. It only reads Game.log on this computer. It does not enter the game, read memory, or change game files. Open it, choose “Connect this computer,” then confirm in its window. This page does not read the game folder. The RSI terms do not permit reading the log in writing. You decide.'
     },
     de: {
       title:'Teamraum', lead:'Diese Seite liest keinen Spielordner. Öffne einen Ort auf der Karte und wähle „Ich bin hier“.',
@@ -68,7 +77,10 @@
       mode:'Wer Routen zeichnen darf', modeCaptain:'Nur der Captain', modeMembers:'Auch Mitglieder',
       members:'Im Raum', you:'du', errNick:'Nickname mit 1 bis 32 Zeichen.', errRoom:'Diesen Raum gibt es nicht.',
       errNet:'Der Raumdienst ist nicht erreichbar. python server/room_server.py starten und http://127.0.0.1:8770/ öffnen.', published:'Veröffentlichte Routen', by:'von',
-      yours:'Dein Raum', switchRoom:'Anderen Raum anlegen oder beitreten'
+      yours:'Dein Raum', switchRoom:'Anderen Raum anlegen oder beitreten',
+      link:'Diesen Computer verbinden', linkSent:'An die Ortssynchronisation auf diesem Computer gesendet. Dort bestätigen.',
+      linkOff:'Die Ortssynchronisation läuft nicht. Ortssynchronisation doppelklicken, auf das Fenster warten und erneut klicken.',
+      locGuide:'Du kannst den Ort von Hand setzen oder das mitgelieferte Programm das Spiellog lesen lassen. Von Hand: Ort auf der Karte öffnen, dann „Ich bin hier“. Automatisch: das Projekt enthält die Ortssynchronisation. Der ganze Quelltext liegt in companion/. Lies ihn, bevor du ihn startest. Sie liest nur die Game.log auf diesem Computer. Sie betritt das Spiel nicht, liest keinen Speicher und ändert keine Spieldateien. Öffne sie, wähle „Diesen Computer verbinden“ und bestätige im Fenster. Diese Seite liest keinen Spielordner. Die RSI-Bedingungen erlauben das Lesen des Logs nicht schriftlich. Du entscheidest.'
     }
   };
   function lang(){ return (SC.i18n && SC.i18n.lang) || 'en'; }
@@ -206,6 +218,8 @@
       '<div class="st-room-h"><b>'+esc(state.code)+'</b>'+
         '<button type="button" id="stRoomCopy">'+esc(t('copy'))+'</button>'+
         '<button type="button" id="stRoomLeave">'+esc(t('leave'))+'</button></div>'+
+      '<p class="st-room-dim">'+esc(t('locGuide'))+'</p>'+
+      '<div class="row"><button type="button" id="stLinkPc">'+esc(t('link'))+'</button></div>'+
       (state.role==='captain' ? (
         '<div class="st-room-sec"><span>'+esc(t('pending'))+'</span>'+
           (pending.length? pending.map(function(m){
@@ -260,6 +274,8 @@
       setTimeout(function(){ if(statusMsg===t('copied')){ statusMsg=''; paint(); } }, 1200);
     };
     el.querySelector('#stRoomLeave').onclick = leave;
+    var link = el.querySelector('#stLinkPc');
+    if(link) link.onclick = linkPc;
     el.querySelectorAll('[data-ok]').forEach(function(b){ b.onclick=function(){ decide(b.getAttribute('data-ok'),'approve'); }; });
     el.querySelectorAll('[data-no]').forEach(function(b){ b.onclick=function(){ decide(b.getAttribute('data-no'),'reject'); }; });
     var modeBtn = el.querySelector('#stRouteModeBtn');
@@ -340,6 +356,15 @@
   }
   function decide(id, action){
     api('/api/rooms/'+encodeURIComponent(state.code)+'/members/'+encodeURIComponent(id)+'/'+action, {method:'POST', body:{}}).then(take).catch(fail);
+  }
+  function linkPc(){
+    var tok = token();
+    if(!tok || !state || !state.code){ statusMsg = t('linkOff'); paint(); return; }
+    var payload = JSON.stringify({apiBase: API || location.origin, room: state.code, token: tok});
+    fetch('http://127.0.0.1:8780/api/pair', {method:'POST', headers:{'Content-Type':'application/json'}, body: payload})
+      .then(function(r){ if(!r.ok) throw new Error(r.status); return r.json(); })
+      .then(function(d){ if(d && d.error) throw new Error(d.error); statusMsg = t('linkSent'); paint(); })
+      .catch(function(){ statusMsg = t('linkOff'); paint(); });
   }
   function here(){
     var ctl = window.__stCtl;

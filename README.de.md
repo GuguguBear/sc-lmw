@@ -106,6 +106,14 @@ Deutsch zeigt dazu deutsche Missions- und Ausstattungsnamen. Chinesisch zeigt
 chinesische Ortsnamen. Englisch bleibt bei den englischen Namen. Für Besucher
 steht das kurz in [docs/WHATS_NEW.md](docs/WHATS_NEW.md).
 
+### Ort von Hand oder aus dem Log
+
+Die Website liest keinen Spielordner. In der Karte einen Ort öffnen und
+„Ich bin hier“ wählen reicht. Wer es automatisch versuchen will, startet die
+mitgelieferte Ortssynchronisation. Der ganze Quelltext liegt in
+[`companion/`](companion/README.md). Sie liest nur `Game.log` auf diesem
+Computer. Lies die Erklärung dort, bevor du sie startest.
+
 ### Spieler auf der Karte zeigen
 
 Ohne jede Einrichtung zeigt die Karte fünf erfundene Demo-Spieler aus

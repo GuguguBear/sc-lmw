@@ -25,7 +25,7 @@ The same note in four languages. A copy also lives in [docs/WHATS_NEW.md](docs/W
 - **Icons match the map.** Pause, home, and the other small pictures are simple line icons in the theme color.
 - **A team room waits at the door.** Before the map, a short guide asks for a nickname. Use your in-game name so your captain recognizes you. There is no account.
 - **The captain makes the room.** They get a short code, send it to the team, and accept each request. Only people in that room can see each other.
-- **Say where you are.** Open a place on the map, then tap “I am here.” The page does not open your game folder.
+- **Say where you are.** Open a place on the map, then tap “I am here.” The page does not open your game folder. Or run the bundled Place Sync in `companion/` and let it try to read `Game.log`. The source is in the repository. Read [companion/README.md](companion/README.md) before you run it.
 - **Draw a route together.** Turn on route marking, hold Shift, and click places in order. Add a note and publish it. Teammates can comment. The captain decides whether only they can draw, or the whole room can.
 - **Menus use the theme colors.** Lists such as language, theme, and “who can draw” follow the look you picked.
 
@@ -38,7 +38,7 @@ The same note in four languages. A copy also lives in [docs/WHATS_NEW.md](docs/W
 - **Die Symbole passen zur Karte.** Pause, Heimat und die anderen kleinen Bilder sind schlichte Strich-Icons in der Farbe des Themas.
 - **Ein Teamraum steht vor der Karte.** Eine kurze Anleitung fragt nach einem Namen. Nimm deinen Namen aus dem Spiel, dann erkennt dich der Captain. Ein Konto gibt es nicht.
 - **Der Captain legt den Raum an.** Er bekommt einen kurzen Code, gibt ihn weiter und nimmt jede Anfrage an. Nur dieser Raum sieht einander.
-- **Sag, wo du bist.** Öffne einen Ort auf der Karte und tippe auf „Ich bin hier“. Die Seite öffnet keinen Spielordner.
+- **Sag, wo du bist.** Öffne einen Ort auf der Karte und tippe auf „Ich bin hier“. Die Seite öffnet keinen Spielordner. Oder starte die mitgelieferte Ortssynchronisation in `companion/` und lass sie `Game.log` lesen. Der Quelltext liegt im Repository. Lies [companion/README.md](companion/README.md), bevor du sie startest.
 - **Zeichnet gemeinsam eine Route.** Schalte das Markieren ein, halte Shift und klicke die Orte der Reihe nach an. Schreib eine Notiz und veröffentliche sie. Das Team kann kommentieren. Der Captain legt fest, ob nur er zeichnet oder der ganze Raum.
 - **Die Menüs tragen die Farben des Themas.** Sprache, Darstellung und „wer zeichnen darf“ sehen aus wie der Rest der Seite.
 
@@ -51,7 +51,7 @@ The same note in four languages. A copy also lives in [docs/WHATS_NEW.md](docs/W
 - **小图标和星图是同一套线条。** 暂停、回到恒星和其他小图，都用当前主题的颜色来画。
 - **进图之前先看到团队房间。** 页面会请你填一个昵称。用游戏里的名字，队长更容易认出你。不需要注册账号。
 - **队长建立房间。** 队长拿到一串房间码，发给队员，再逐个通过申请。只有这个房间里的人能互相看见。
-- **告诉队友你在哪。** 在星图上点开一个地点，再点「我在这里」。这个网页不会打开你的游戏文件夹。
+- **告诉队友你在哪。** 在星图上点开一个地点，再点「我在这里」。这个网页不会打开你的游戏文件夹。也可以运行仓库里 `companion/` 附带的「地点同步」，让它试着读取 `Game.log`。源码就在仓库里，运行前先看 [companion/README.md](companion/README.md)。
 - **一起画路线。** 打开路线标记，按住 Shift，按顺序点地点。写上备注再发布。队员可以留言。队长可以设定只有自己能画，或全房间都能画。
 - **下拉菜单跟着主题走。** 语言、主题，以及「谁可以画路线」，颜色和形状都与当前外观一致。
 
@@ -64,7 +64,7 @@ The same note in four languages. A copy also lives in [docs/WHATS_NEW.md](docs/W
 - **小圖示和星圖是同一套線條。** 暫停、回到恆星和其他小圖，都用目前主題的顏色來畫。
 - **進圖之前先看到團隊房間。** 頁面會請你填一個暱稱。用遊戲裡的名字，隊長比較容易認出你。不需要註冊帳號。
 - **隊長建立房間。** 隊長拿到一串房間碼，發給隊員，再逐個通過申請。只有這個房間裡的人能互相看見。
-- **告訴隊友你在哪。** 在星圖上點開一個地點，再點「我在這裡」。這個網頁不會打開你的遊戲資料夾。
+- **告訴隊友你在哪。** 在星圖上點開一個地點，再點「我在這裡」。這個網頁不會打開你的遊戲資料夾。也可以執行倉庫裡 `companion/` 附帶的「地點同步」，讓它試著讀取 `Game.log`。源碼就在倉庫裡，執行前先看 [companion/README.md](companion/README.md)。
 - **一起畫路線。** 打開路線標記，按住 Shift，依序點地點。寫上備註再發布。隊員可以留言。隊長可以設定只有自己能畫，或全房間都能畫。
 - **下拉選單跟著主題走。** 語言、主題，以及「誰可以畫路線」，顏色和形狀都與目前外觀一致。
 
@@ -220,6 +220,8 @@ vendor/three/           three.js r128 + loaders (MIT)
 scripts/                data build pipeline (Python)
 examples/               iframe and direct-embed examples
 docs/                   players API, AI integration prompt, screenshots
+companion/              optional local Place Sync. Source you can read. See companion/README.md
+server/                 optional room service. The page does not read the game folder
 ```
 
 ## Show us what you build
