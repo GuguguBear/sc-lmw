@@ -208,6 +208,47 @@ def _asset(name):
     return None
 
 
+def theme_scroll(parent, target, colors):
+    bar = tk.Canvas(parent, width=12, highlightthickness=0, bd=0, bg=colors["bg"], cursor="hand2")
+
+    def paint(_event=None):
+        bar.delete("thumb")
+        try:
+            first, last = target.yview()
+        except tk.TclError:
+            return
+        if last - first >= 0.995:
+            return
+        height = max(1, bar.winfo_height())
+        top = int(first * height)
+        bot = int(last * height)
+        if bot - top < 28:
+            mid = (top + bot) // 2
+            top = max(0, mid - 14)
+            bot = min(height, top + 28)
+        bar.create_rectangle(3, top + 2, 9, max(top + 6, bot - 2), fill=colors["accent"], width=0, tags="thumb")
+
+    def jump(event):
+        height = max(1, bar.winfo_height())
+        first, last = target.yview()
+        span = max(0.05, last - first)
+        target.yview_moveto(min(1 - span, max(0, event.y / height - span / 2)))
+        bar._origin = event.y
+        bar._start = target.yview()[0]
+
+    def drag(event):
+        height = max(1, bar.winfo_height())
+        span = max(0.05, target.yview()[1] - target.yview()[0])
+        moved = (event.y - getattr(bar, "_origin", event.y)) / height
+        target.yview_moveto(min(1 - span, max(0, getattr(bar, "_start", 0) + moved)))
+
+    bar.bind("<Configure>", paint)
+    bar.bind("<Button-1>", jump)
+    bar.bind("<B1-Motion>", drag)
+    target.configure(yscrollcommand=lambda *_args: paint())
+    return bar
+
+
 def _dpi():
     try:
         import ctypes
@@ -823,26 +864,26 @@ def accept_terms(lang, theme):
         widget.bind("<B1-Motion>", drag_move)
     body = tk.Frame(shell, bg=colors["panel"], padx=12, pady=10)
     body.pack(fill="both", expand=True)
+    row = tk.Frame(body, bg=colors["panel"])
+    row.pack(side="bottom", fill="x", pady=(10, 0))
     box = tk.Frame(body, bg=colors["line"])
-    box.pack(fill="both", expand=True)
+    box.pack(side="top", fill="both", expand=True)
     text = tk.Text(
-        box, font=FONT, wrap="word", width=42, height=16, relief="flat", bd=8,
+        box, font=FONT, wrap="word", width=42, height=8, relief="flat", bd=8,
         bg=colors["bg"], fg=colors["ink"], highlightthickness=0,
         padx=6, pady=6,
     )
-    scroll = tk.Scrollbar(box, command=text.yview)
-    text.configure(yscrollcommand=scroll.set)
+    scroll = theme_scroll(box, text, colors)
     scroll.pack(side="right", fill="y")
     text.pack(side="left", fill="both", expand=True)
     text.insert("1.0", tr(lang, "terms_body"))
+    text.mark_set("insert", "1.0")
     text.configure(state="disabled")
 
     def wheel(event):
         text.yview_scroll(int(-event.delta / 120), "units")
 
     text.bind("<MouseWheel>", wheel)
-    row = tk.Frame(body, bg=colors["panel"])
-    row.pack(fill="x", pady=(10, 0))
     yes = tk.Button(
         row, text=tr(lang, "terms_yes"), font=FONT, command=accept,
         bg=colors["accent"], fg=colors["on"], activebackground=colors["accent"],
@@ -859,12 +900,23 @@ def accept_terms(lang, theme):
     no.pack(side="left", padx=(8, 0))
     root.protocol("WM_DELETE_WINDOW", decline)
     root.after(800, lambda: live.__setitem__("ok", True))
-    width, height = 520, 460
+    root.update_idletasks()
+    screen_w = root.winfo_screenwidth()
+    screen_h = root.winfo_screenheight()
+    width = min(560, max(420, screen_w - 48))
+    height = min(680, max(520, int(screen_h * 0.72)))
+    height = min(height, max(420, screen_h - 80))
     root.geometry("%dx%d+%d+%d" % (
         width, height,
-        max(0, (root.winfo_screenwidth() - width) // 2),
-        max(40, (root.winfo_screenheight() - height) // 6),
+        max(0, (screen_w - width) // 2),
+        max(24, (screen_h - height) // 6),
     ))
+
+    def show_start():
+        text.yview_moveto(0)
+
+    root.after_idle(show_start)
+    root.after(50, show_start)
     root.mainloop()
     return agreed["ok"]
 

@@ -68,15 +68,17 @@ The same note in four languages. A copy also lives in [docs/WHATS_NEW.md](docs/W
 - **一起畫路線。** 打開路線標記，按住 Shift，依序點地點。寫上備註再發布。隊員可以留言。隊長可以設定只有自己能畫，或全房間都能畫。
 - **下拉選單跟著主題走。** 語言、主題，以及「誰可以畫路線」，顏色和形狀都與目前外觀一致。
 
-| Stanton, Pyro and Nyx in one view | Down to the planet |
+| The room is still there after a refresh | The team room on the Stanton map |
 |---|---|
-| ![System overview: Stanton, Pyro and Nyx with jump routes](docs/img/01-system-overview.png) | ![Planet view: Hurston with Lorville and a player group marker](docs/img/02-planet-view.png) |
+| ![Team room gate: the saved room is ready to enter](docs/img/01-room-gate.png) | ![Stanton with the team room window](docs/img/02-stanton-room.png) |
 
-| Search anything, see live prices | Your pilots, grouped by location |
+| Connect Starfix on this computer | Down to a planet |
 |---|---|
-| ![Search results and a live UEX commodity price list at a terminal](docs/img/03-search-prices.png) | ![Player list with fictional demo players and a group marker](docs/img/04-player-group.png) |
+| ![The room panel next to the Starfix window](docs/img/03-starfix.png) | ![A planet, with the place list and the room window](docs/img/04-planet.png) |
 
-*All screenshots use the fictional demo pilots from `players.example.json`.*
+| A place open in Stanton | Pyro |
+|---|---|
+| ![Stanton with a place panel and the team room](docs/img/05-stanton-place.png) | ![Pyro with a place panel and the team room](docs/img/06-pyro.png) |
 
 ---
 

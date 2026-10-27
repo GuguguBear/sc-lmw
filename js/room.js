@@ -27,6 +27,8 @@
       freshJoin:'刚加入的房间', freshJoinLead:'可以直接进入星图。',
       resumedWait:'上次提交的申请还在等队长确认。',
       link:'连到这台电脑', linkSent:'已经发给本机的 Starfix。回到那个窗口，点确认。',
+      linkWait:'请在 Starfix 窗口点确认。',
+      linkOn:'已连上房间',
       linkOff:'本机的 Starfix 没开。先双击 Starfix，等窗口出现后再点一次。',
       locGuide:'你可以手动标位置，也可以用附带程序试着自动读日志。手动：在星图上点开地点，再点「我在这里」。自动：项目自带 Starfix，源码都在 companion/，可以先读完再运行。它只读本机 Game.log，不进游戏、不读内存、不改游戏文件。打开后点「连到这台电脑」，回窗口确认。网页本身不读游戏目录。RSI 条款没有书面允许读日志，开不开由你决定。'
     },
@@ -50,6 +52,8 @@
       freshJoin:'剛加入的房間', freshJoinLead:'可以直接進入星圖。',
       resumedWait:'上次送出的申請還在等隊長確認。',
       link:'連到這台電腦', linkSent:'已經發給本機的 Starfix。回到那個視窗，點確認。',
+      linkWait:'請在 Starfix 視窗點確認。',
+      linkOn:'已連上房間',
       linkOff:'本機的 Starfix 沒開。先雙擊 Starfix，等視窗出現後再點一次。',
       locGuide:'你可以手動標位置，也可以用附帶程式試著自動讀日誌。手動：在星圖上點開地點，再點「我在這裡」。自動：專案自帶 Starfix，源碼都在 companion/，可以先讀完再執行。它只讀本機 Game.log，不進遊戲、不讀記憶體、不改遊戲檔案。打開後點「連到這台電腦」，回視窗確認。網頁本身不讀遊戲資料夾。RSI 條款沒有書面允許讀日誌，開不開由你決定。'
     },
@@ -73,6 +77,8 @@
       freshJoin:'Room just joined', freshJoinLead:'You can enter the map.',
       resumedWait:'Your earlier request is still waiting for the captain.',
       link:'Connect this computer', linkSent:'Sent to Starfix on this computer. Go back to that window and confirm.',
+      linkWait:'Confirm in the Starfix window.',
+      linkOn:'Connected to',
       linkOff:'Starfix is not running. Double-click Starfix, wait for its window, then click again.',
       locGuide:'You can mark your place by hand, or try the bundled program to read the game log. By hand: open a place on the map, then choose “I am here.” Automatic: this project includes Starfix. All of its source is in companion/. Read it before you run it. It only reads Game.log on this computer. It does not enter the game, read memory, or change game files. Open it, choose “Connect this computer,” then confirm in its window. This page does not read the game folder. The RSI terms do not permit reading the log in writing. You decide.'
     },
@@ -96,6 +102,8 @@
       freshJoin:'Gerade beigetreten', freshJoinLead:'Du kannst die Karte öffnen.',
       resumedWait:'Deine frühere Anfrage wartet noch auf den Captain.',
       link:'Diesen Computer verbinden', linkSent:'An Starfix auf diesem Computer gesendet. Dort bestätigen.',
+      linkWait:'Im Starfix-Fenster bestätigen.',
+      linkOn:'Verbunden mit',
       linkOff:'Starfix läuft nicht. Starfix doppelklicken, auf das Fenster warten und erneut klicken.',
       locGuide:'Du kannst den Ort von Hand setzen oder das mitgelieferte Programm das Spiellog lesen lassen. Von Hand: Ort auf der Karte öffnen, dann „Ich bin hier“. Automatisch: das Projekt enthält Starfix. Der ganze Quelltext liegt in companion/. Lies ihn, bevor du ihn startest. Es liest nur die Game.log auf diesem Computer. Es betritt das Spiel nicht, liest keinen Speicher und ändert keine Spieldateien. Öffne es, wähle „Diesen Computer verbinden“ und bestätige im Fenster. Diese Seite liest keinen Spielordner. Die RSI-Bedingungen erlauben das Lesen des Logs nicht schriftlich. Du entscheidest.'
     }
@@ -105,7 +113,7 @@
   function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
   function token(){ try{ return localStorage.getItem(TOKEN)||''; }catch(e){ return ''; } }
   function savedCode(){ try{ return localStorage.getItem(CODE)||''; }catch(e){ return ''; } }
-  var state = null, draft = [], marking = false, note = '', statusMsg = '', selected = '', API = '', entered = false, roomKind = '';
+  var state = null, draft = [], marking = false, note = '', statusMsg = '', selected = '', API = '', entered = false, roomKind = '', linkState = '', linkMiss = 0;
 
   function api(path, opt){
     opt = opt || {};
@@ -351,6 +359,7 @@
       '<div class="st-room-body">'+
       '<p class="st-room-dim">'+esc(t('locGuide'))+'</p>'+
       '<div class="row"><button type="button" id="stLinkPc">'+esc(t('link'))+'</button></div>'+
+      linkNote()+
       (state.role==='captain' ? (
         '<div class="st-room-sec"><span>'+esc(t('pending'))+'</span>'+
           (pending.length? pending.map(function(m){
@@ -482,6 +491,7 @@
     entered = true;
     bindPlayers();
     paint();
+    pullLink();
   }
   function take(st){
     state = st;
@@ -500,14 +510,43 @@
   function decide(id, action){
     api('/api/rooms/'+encodeURIComponent(state.code)+'/members/'+encodeURIComponent(id)+'/'+action, {method:'POST', body:{}}).then(take).catch(fail);
   }
+  function linkNote(){
+    if(!state) return '';
+    if(linkState==='on') return '<p class="st-link on">'+esc(t('linkOn'))+' '+esc(state.code)+'</p>';
+    if(linkState==='wait') return '<p class="st-link wait">'+esc(t('linkWait'))+'</p>';
+    if(linkState==='off') return '<p class="st-link off">'+esc(t('linkOff'))+'</p>';
+    return '';
+  }
+  function setLink(next){
+    if(next===linkState) return;
+    linkState = next;
+    if(entered) paint();
+  }
+  function pullLink(){
+    if(!entered || !state || state.status!=='member') return;
+    fetch('http://127.0.0.1:8780/api/status', {cache:'no-store'})
+      .then(function(r){ if(!r.ok) throw new Error('status'); return r.json(); })
+      .then(function(d){
+        var room = String(d && d.room || '').toUpperCase();
+        var pending = String(d && d.pendingRoom || '').toUpperCase();
+        linkMiss = 0;
+        if(d && d.tokenSet && room===state.code) setLink('on');
+        else if(pending===state.code) setLink('wait');
+        else if(linkState==='on') setLink('');
+      })
+      .catch(function(){
+        linkMiss += 1;
+        if(linkMiss>=3 && linkState==='on') setLink('');
+      });
+  }
   function linkPc(){
     var tok = token();
-    if(!tok || !state || !state.code){ statusMsg = t('linkOff'); paint(); return; }
+    if(!tok || !state || !state.code){ setLink('off'); return; }
     var payload = JSON.stringify({apiBase: API || location.origin, room: state.code, token: tok});
     fetch('http://127.0.0.1:8780/api/pair', {method:'POST', headers:{'Content-Type':'application/json'}, body: payload})
       .then(function(r){ if(!r.ok) throw new Error(r.status); return r.json(); })
-      .then(function(d){ if(d && d.error) throw new Error(d.error); statusMsg = t('linkSent'); paint(); })
-      .catch(function(){ statusMsg = t('linkOff'); paint(); });
+      .then(function(d){ if(d && d.error) throw new Error(d.error); setLink('wait'); pullLink(); })
+      .catch(function(){ setLink('off'); });
   }
   function here(){
     var ctl = window.__stCtl;
@@ -536,7 +575,7 @@
     api('/api/rooms/'+encodeURIComponent(state.code)+'/routes/'+encodeURIComponent(id), {method:'DELETE'}).then(function(st){ if(selected===id) selected=''; take(st); }).catch(fail);
   }
   function leave(){
-    state = null; draft = []; marking = false; note = ''; selected = ''; statusMsg = ''; entered = false; roomKind = '';
+    state = null; draft = []; marking = false; note = ''; selected = ''; statusMsg = ''; entered = false; roomKind = ''; linkState = ''; linkMiss = 0;
     try{ localStorage.removeItem(CODE); }catch(e){}
     window.__stRouteOn = false;
     var cfg = window.LIVEMAP_CONFIG || {};
@@ -580,6 +619,7 @@
       var code = savedCode();
       if(token() && code) api('/api/rooms/'+encodeURIComponent(code)).then(function(st){ if(!roomKind) roomKind='saved'; take(st); }).catch(function(){ paint(); });
       if(!window.__stRoomPoll) window.__stRoomPoll=setInterval(function(){ if(state) refresh(); }, 8000);
+      if(!window.__stLinkWatch) window.__stLinkWatch=setInterval(pullLink, 2000);
     if(!window.__stDdClose){
       window.__stDdClose=function(e){ if(e.target.closest&&e.target.closest('.st-dd')) return; document.querySelectorAll('.st-dd-list').forEach(function(n){ n.hidden=true; }); };
       document.addEventListener('click', window.__stDdClose);
