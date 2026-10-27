@@ -4,9 +4,15 @@
 #
 #   python server/room_server.py
 #   then open http://127.0.0.1:8770/
+#
+#   python server/room_server.py --host 0.0.0.0
+#   people on the same network open http://<this-computer>:8770/
 
+import argparse
 import json
+import os
 import secrets
+import socket
 import sqlite3
 import threading
 import time
@@ -20,6 +26,9 @@ DB = Path(__file__).resolve().parent / "rooms.sqlite"
 HOST = "127.0.0.1"
 PORT = 8770
 ALPH = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
+# These stay on disk for local builds. The room site must not hand them out.
+BLOCK_DIR = {"language", ".cache", ".git", ".test", "__pycache__", "server"}
+BLOCK_EXT = {".sqlite", ".ini", ".pyc"}
 ONLINE_S = 600
 LOCK = threading.Lock()
 
@@ -556,6 +565,14 @@ class Handler(BaseHTTPRequestHandler):
         if ROOT not in target.parents and target != ROOT:
             self.send_error(403)
             return
+        try:
+            parts = target.relative_to(ROOT).parts
+        except ValueError:
+            self.send_error(403)
+            return
+        if (parts and parts[0].lower() in BLOCK_DIR) or target.suffix.lower() in BLOCK_EXT or target.name.startswith("."):
+            self.send_error(404)
+            return
         if not target.is_file() or target == DB or "rooms.sqlite" in target.name:
             self.send_error(404)
             return
@@ -568,10 +585,31 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(data)
 
 
+def lan_ip():
+    try:
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sock.connect(("8.8.8.8", 80))
+        ip = sock.getsockname()[0]
+        sock.close()
+        return ip
+    except OSError:
+        return ""
+
+
 def main():
+    env_port = os.environ.get("PORT")
+    ap = argparse.ArgumentParser(description="Serve SC LMW and team rooms")
+    ap.add_argument("--host", default="0.0.0.0" if env_port else HOST)
+    ap.add_argument("--port", type=int, default=int(env_port or PORT))
+    args = ap.parse_args()
     init_db()
-    httpd = ThreadingHTTPServer((HOST, PORT), Handler)
-    print("SC LMW rooms  http://%s:%d/" % (HOST, PORT))
+    ThreadingHTTPServer.allow_reuse_address = True
+    httpd = ThreadingHTTPServer((args.host, args.port), Handler)
+    print("SC LMW  port %d" % args.port)
+    if args.host in ("0.0.0.0", "::") and not env_port:
+        ip = lan_ip()
+        if ip and not ip.startswith("127."):
+            print("same network  http://%s:%d/" % (ip, args.port))
     httpd.serve_forever()
 
 

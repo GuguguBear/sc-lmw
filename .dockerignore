@@ -1,0 +1,9 @@
+.git
+.cache
+data
+Language
+server/*.sqlite
+**/__pycache__
+**/*.pyc
+.cursor
+agent-transcripts

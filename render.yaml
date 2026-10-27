@@ -1,0 +1,10 @@
+# Free Render web service. Sleeps after 15 minutes without visitors.
+# The room database lives on the instance disk and is cleared when it sleeps.
+services:
+  - type: web
+    name: sc-lmw
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/health
