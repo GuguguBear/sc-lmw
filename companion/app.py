@@ -4,7 +4,7 @@
 # and posts the place code to the room you confirm.
 # It does not attach to the game, read memory, sniff packets, or change game files.
 #
-#   Double-click 地点同步.exe
+#   Double-click Starfix.exe
 #   or: python companion/app.py
 #   A window opens. The browser stays closed.
 #   127.0.0.1:8780 stays up only so the star map can hand over the room.
@@ -131,7 +131,6 @@ def public_state():
             "apiBase": CFG["apiBase"],
             "room": CFG["room"],
             "tokenSet": bool(CFG["token"]),
-            "token": CFG["token"],
             "logPath": log_path,
             "logExists": Path(log_path).is_file() if log_path else False,
             "theme": CFG["theme"],
@@ -468,7 +467,7 @@ def port_open():
 def tell(text):
     if sys.platform == "win32":
         import ctypes
-        ctypes.windll.user32.MessageBoxW(0, text, "地点同步", 0x40)
+        ctypes.windll.user32.MessageBoxW(0, text, "Starfix", 0x40)
     else:
         print(text)
 
@@ -502,13 +501,13 @@ def main():
             )
             urllib.request.urlopen(req, timeout=1.5).read()
         except (OSError, urllib.error.URLError):
-            tell("地点同步已经在运行。")
+            tell("Starfix 已经在运行。")
         return
     ThreadingHTTPServer.allow_reuse_address = True
     try:
         httpd = ThreadingHTTPServer((HOST, PORT), Handler)
     except OSError:
-        tell("8780 端口被别的程序占用，地点同步开不了。")
+        tell("8780 端口被别的程序占用，Starfix 开不了。")
         return
     HTTPD = httpd
     threading.Thread(target=httpd.serve_forever, daemon=True).start()

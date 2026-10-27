@@ -44,10 +44,13 @@ LANGS = (
 )
 TEXT = {
     "zh-Hans": {
-        "title": "地点同步",
+        "title": "Starfix",
         "lead": "读取 Game.log，换区后把地点发到房间。",
         "tos": "不进游戏进程，不读内存，不改游戏文件。",
-        "law": "RSI 条款未书面允许这种读取。开不开由你决定。",
+        "terms_title": "使用条款",
+        "terms_yes": "同意并继续",
+        "terms_no": "不同意",
+        "terms_body": "本软件是非官方粉丝工具。它与 Cloud Imperium Games（CIG）、Roberts Space Industries（RSI）及其关联方没有关系，未获其认可、赞助、授权或同意。\n\nCIG 与 RSI 从未以任何形式同意、授权或许可本软件读取游戏客户端日志文件。\n\n本软件按现状提供，没有任何保证。开发者、贡献者、分发者以及本软件本身，不保证它适合任何用途，不保证它安全、不中断、无错误，也不保证使用它不会影响你的游戏账号、电脑或数据。\n\n你自愿使用本软件，并自行承担由此产生的一切风险和后果。这些后果包括但不限于账号警告、限制、封禁、游戏进度或物品损失、数据丢失、设备故障，以及任何直接、间接、附带、特殊或后续的损失。\n\n对你使用、无法使用或停止使用本软件所造成的任何形式的后果，开发者、贡献者、分发者和本软件本身均不负责，也不承担任何赔偿或法律责任。你与 CIG、RSI 之间的协议、处罚、纠纷和争议，与本软件的开发者、贡献者和分发者无关。\n\n选择「同意并继续」，表示你已阅读、理解并接受以上全部内容。选择「不同意」或关闭本窗口，软件立即退出，不会继续运行。",
         "linked_off": "还没连上房间。在星图点「连到这台电脑」，回到这里点确认。",
         "linked_on": "已连上房间 {room}",
         "pair": "星图要连上房间 {room}。确认后，这台电脑会把地点发过去。",
@@ -67,10 +70,13 @@ TEXT = {
         "err_addr": "地址不对", "err_nopair": "没有待确认的连接", "err_http": "房间服务返回",
     },
     "zh-Hant": {
-        "title": "地點同步",
+        "title": "Starfix",
         "lead": "讀取 Game.log，換區後把地點發到房間。",
         "tos": "不進遊戲行程，不讀記憶體，不改遊戲檔案。",
-        "law": "RSI 條款沒有書面允許這種讀取。開不開由你決定。",
+        "terms_title": "使用條款",
+        "terms_yes": "同意並繼續",
+        "terms_no": "不同意",
+        "terms_body": "本軟體是非官方粉絲工具。它與 Cloud Imperium Games（CIG）、Roberts Space Industries（RSI）及其關聯方沒有關係，未獲其認可、贊助、授權或同意。\n\nCIG 與 RSI 從未以任何形式同意、授權或許可本軟體讀取遊戲客戶端日誌檔案。\n\n本軟體按現狀提供，沒有任何保證。開發者、貢獻者、散布者以及本軟體本身，不保證它適合任何用途，不保證它安全、不中斷、無錯誤，也不保證使用它不會影響你的遊戲帳號、電腦或資料。\n\n你自願使用本軟體，並自行承擔由此產生的一切風險和後果。這些後果包括但不限於帳號警告、限制、封鎖、遊戲進度或物品損失、資料遺失、裝置故障，以及任何直接、間接、附帶、特殊或後續的損失。\n\n對你使用、無法使用或停止使用本軟體所造成的任何形式的後果，開發者、貢獻者、散布者和本軟體本身均不負責，也不承擔任何賠償或法律責任。你與 CIG、RSI 之間的協議、處罰、糾紛和爭議，與本軟體的開發者、貢獻者和散布者無關。\n\n選擇「同意並繼續」，表示你已閱讀、理解並接受以上全部內容。選擇「不同意」或關閉本視窗，軟體立即退出，不會繼續執行。",
         "linked_off": "還沒連上房間。在星圖點「連到這台電腦」，回到這裡點確認。",
         "linked_on": "已連上房間 {room}",
         "pair": "星圖要連上房間 {room}。確認後，這台電腦會把地點發過去。",
@@ -90,10 +96,13 @@ TEXT = {
         "err_addr": "地址不對", "err_nopair": "沒有待確認的連接", "err_http": "房間服務返回",
     },
     "en": {
-        "title": "Place sync",
+        "title": "Starfix",
         "lead": "Reads Game.log and sends the place after a zone change.",
         "tos": "It does not enter the game, read memory, or change game files.",
-        "law": "The RSI terms do not permit this in writing. You decide whether to run it.",
+        "terms_title": "Terms of use",
+        "terms_yes": "Agree and continue",
+        "terms_no": "Do not agree",
+        "terms_body": "This software is an unofficial fan tool. It has no relationship with Cloud Imperium Games (CIG), Roberts Space Industries (RSI), or their affiliates. It is not approved, sponsored, authorized, or endorsed by them.\n\nCIG and RSI have never agreed to, authorized, or permitted this software to read the game client log file, in any form.\n\nThe software is provided as is, with no warranty of any kind. The developers, contributors, distributors, and the software itself do not warrant that it is fit for any purpose, that it is safe, uninterrupted, or error-free, or that using it will not affect your game account, computer, or data.\n\nYou use this software voluntarily and you accept every risk and consequence. That includes, without limitation, account warnings, limits, bans, loss of progress or items, loss of data, device failure, and any direct, indirect, incidental, special, or consequential loss.\n\nThe developers, contributors, distributors, and the software itself are not responsible for any consequence of using, being unable to use, or stopping this software, and they accept no damages or legal liability. Any agreement, penalty, dispute, or claim between you and CIG or RSI is not a matter for the developers, contributors, or distributors of this software.\n\nChoose “Agree and continue” only if you have read, understood, and accepted all of the above. Choose “Do not agree,” or close this window, and the software exits at once.",
         "linked_off": "Not connected. On the map, choose Connect this computer, then confirm here.",
         "linked_on": "Connected to {room}",
         "pair": "The map wants to connect room {room}. After you confirm, this computer sends places there.",
@@ -113,10 +122,13 @@ TEXT = {
         "err_addr": "Address is not valid", "err_nopair": "Nothing is waiting to confirm", "err_http": "Room service returned",
     },
     "de": {
-        "title": "Ortssynchronisation",
+        "title": "Starfix",
         "lead": "Liest Game.log und sendet den Ort nach einem Zonenwechsel.",
         "tos": "Kein Eingriff ins Spiel, kein Speicherlesen, keine Spieldateien ändern.",
-        "law": "Die RSI-Bedingungen erlauben das nicht schriftlich. Du entscheidest.",
+        "terms_title": "Nutzungsbedingungen",
+        "terms_yes": "Zustimmen und weiter",
+        "terms_no": "Nicht zustimmen",
+        "terms_body": "Diese Software ist ein inoffizielles Fan-Werkzeug. Sie steht in keiner Beziehung zu Cloud Imperium Games (CIG), Roberts Space Industries (RSI) oder deren verbundenen Unternehmen. Sie ist von ihnen nicht gebilligt, gesponsert, erlaubt oder unterstützt.\n\nCIG und RSI haben niemals in irgendeiner Form zugestimmt, genehmigt oder erlaubt, dass diese Software die Logdatei des Spielclients liest.\n\nDie Software wird ohne jede Gewähr bereitgestellt. Die Entwickler, Mitwirkenden, Verbreiter und die Software selbst garantieren nicht, dass sie für einen Zweck geeignet, sicher, ununterbrochen oder fehlerfrei ist, und auch nicht, dass ihre Nutzung dein Spielkonto, deinen Computer oder deine Daten unberührt lässt.\n\nDu nutzt die Software freiwillig und trägst jedes Risiko und jede Folge selbst. Dazu gehören unter anderem Kontowarnungen, Einschränkungen, Sperren, Verlust von Fortschritt oder Gegenständen, Datenverlust, Gerätefehler und jeder unmittelbare, mittelbare, begleitende, besondere oder Folgeschaden.\n\nDie Entwickler, Mitwirkenden, Verbreiter und die Software selbst haften nicht für irgendeine Folge daraus, dass du die Software nutzt, nicht nutzen kannst oder nicht mehr nutzt, und sie schulden keinen Schadenersatz. Verträge, Strafen, Streit und Ansprüche zwischen dir und CIG oder RSI gehen die Entwickler, Mitwirkenden und Verbreiter dieser Software nichts an.\n\n„Zustimmen und weiter“ heißt, dass du alles gelesen, verstanden und akzeptiert hast. „Nicht zustimmen“ oder das Fenster schließen beendet die Software sofort.",
         "linked_off": "Noch kein Raum. In der Karte „Diesen Computer verbinden“, dann hier bestätigen.",
         "linked_on": "Verbunden mit {room}",
         "pair": "Die Karte will Raum {room} verbinden. Danach sendet dieser Computer die Orte dorthin.",
@@ -312,8 +324,6 @@ class Desktop:
         self.lead.pack(fill="x")
         self.tos = tk.Label(card, text="不进游戏进程，不读内存，不改游戏文件。", font=FONT, anchor="w")
         self.tos.pack(fill="x", pady=(2, 0))
-        self.law = tk.Label(card, text="RSI 条款未书面允许这种读取。开不开由你决定。", font=FONT, anchor="w")
-        self.law.pack(fill="x", pady=(2, 0))
         self.linked = tk.Label(card, text="", font=FONT, anchor="w", justify="left", wraplength=490)
         self.linked.pack(fill="x", pady=(8, 0))
 
@@ -341,7 +351,6 @@ class Desktop:
         self.manual = tk.Frame(card)
         self.api_label, self.api = self._field(self.manual, "星图地址")
         self.room_label, self.room = self._field(self.manual, "房间码")
-        self.token_label, self.token = self._field(self.manual, "房间令牌", secret=True)
         self.manual.pack(fill="x", pady=(8, 0))
 
         self.lang_label = tk.Label(card, text="", font=FONT, anchor="w")
@@ -518,7 +527,7 @@ class Desktop:
         self.bar_sub.configure(bg=c["panel"], fg=c["muted"])
         for widget in self.chrome:
             widget.configure(bg=c["panel"], fg=c["ink"])
-        for widget in (self.lead, self.tos, self.law, self.linked, self.log_label, self.lang_label, self.look, self.place, self.meta, self.api_label, self.room_label, self.token_label):
+        for widget in (self.lead, self.tos, self.linked, self.log_label, self.lang_label, self.look, self.place, self.meta, self.api_label, self.room_label):
             widget.configure(bg=c["panel"], fg=c["muted"])
         self.linked.configure(fg=c["ink"])
         self.place.configure(bg=c["panel"], fg=c["accent"])
@@ -536,7 +545,7 @@ class Desktop:
         self.manual.configure(bg=c["panel"])
         self.place_row.configure(bg=c["panel"])
         self.place_pip.configure(bg=c["accent"])
-        for entry in (self.log, self.api, self.room, self.token):
+        for entry in (self.log, self.api, self.room):
             entry.configure(
                 bg=c["bg"], fg=c["ink"], insertbackground=c["ink"],
                 highlightbackground=c["line"], highlightcolor=c["accent"],
@@ -560,8 +569,6 @@ class Desktop:
         self._set_entry(self.log, state.get("logPath"), force)
         self._set_entry(self.api, state.get("apiBase"), force)
         self._set_entry(self.room, state.get("room"), force)
-        if force:
-            self._set_entry(self.token, state.get("token"), True)
         linked = bool(state.get("room") and state.get("tokenSet"))
         if linked and not self._linked:
             self._link_flash = 14
@@ -602,7 +609,6 @@ class Desktop:
         return {
             "apiBase": self.api.get().strip(),
             "room": self.room.get().strip(),
-            "token": self.token.get().strip(),
             "logPath": self.log.get().strip(),
             "theme": self.theme,
         }
@@ -631,12 +637,10 @@ class Desktop:
         self.bar_title.configure(text=title)
         self.lead.configure(text=tr(self.lang, "lead"))
         self.tos.configure(text=tr(self.lang, "tos"))
-        self.law.configure(text=tr(self.lang, "law"))
         self.log_label.configure(text=tr(self.lang, "log"))
         self.browse.configure(text=tr(self.lang, "browse"))
         self.api_label.configure(text=tr(self.lang, "api"))
         self.room_label.configure(text=tr(self.lang, "room"))
-        self.token_label.configure(text=tr(self.lang, "token"))
         self.lang_label.configure(text=tr(self.lang, "lang"))
         self.look.configure(text=tr(self.lang, "look"))
         self.scan.configure(text=tr(self.lang, "scan"))
@@ -768,5 +772,106 @@ class Desktop:
         self.root.mainloop()
 
 
+def accept_terms(lang, theme):
+    colors = THEMES.get(theme) or THEMES["scifi"]
+    _dpi()
+    root = tk.Tk()
+    root.title("Starfix")
+    ico = _asset("icon.ico")
+    if ico:
+        try:
+            root.iconbitmap(str(ico))
+        except tk.TclError:
+            pass
+    root.configure(bg=colors["accent"])
+    root.overrideredirect(True)
+    root.attributes("-topmost", True)
+    agreed = {"ok": False}
+    drag = {"x": 0, "y": 0}
+    live = {"ok": False}
+
+    def accept():
+        if not live["ok"]:
+            return
+        agreed["ok"] = True
+        root.destroy()
+
+    def decline():
+        root.destroy()
+
+    def drag_start(event):
+        drag["x"] = event.x_root - root.winfo_x()
+        drag["y"] = event.y_root - root.winfo_y()
+
+    def drag_move(event):
+        root.geometry("+%d+%d" % (event.x_root - drag["x"], event.y_root - drag["y"]))
+
+    shell = tk.Frame(root, bg=colors["accent"], padx=1, pady=1)
+    shell.pack(fill="both", expand=True)
+    bar = tk.Frame(shell, bg=colors["panel"], height=28)
+    bar.pack(fill="x")
+    bar.pack_propagate(False)
+    title = tk.Label(bar, text="Starfix", font=FONT, bg=colors["panel"], fg=colors["ink"])
+    title.pack(side="left", padx=10)
+    terms_heading = tk.Label(bar, text="  " + tr(lang, "terms_title"), font=FONT, bg=colors["panel"], fg=colors["muted"])
+    close = tk.Label(bar, text="×", font=FONT, bg=colors["panel"], fg=colors["ink"], padx=12, cursor="hand2")
+    close.pack(side="right", fill="y")
+    close.bind("<Button-1>", lambda _event: decline())
+    terms_heading.pack(side="left")
+    for widget in (bar, title, terms_heading):
+        widget.bind("<ButtonPress-1>", drag_start)
+        widget.bind("<B1-Motion>", drag_move)
+    body = tk.Frame(shell, bg=colors["panel"], padx=12, pady=10)
+    body.pack(fill="both", expand=True)
+    box = tk.Frame(body, bg=colors["line"])
+    box.pack(fill="both", expand=True)
+    text = tk.Text(
+        box, font=FONT, wrap="word", width=42, height=16, relief="flat", bd=8,
+        bg=colors["bg"], fg=colors["ink"], highlightthickness=0,
+        padx=6, pady=6,
+    )
+    scroll = tk.Scrollbar(box, command=text.yview)
+    text.configure(yscrollcommand=scroll.set)
+    scroll.pack(side="right", fill="y")
+    text.pack(side="left", fill="both", expand=True)
+    text.insert("1.0", tr(lang, "terms_body"))
+    text.configure(state="disabled")
+
+    def wheel(event):
+        text.yview_scroll(int(-event.delta / 120), "units")
+
+    text.bind("<MouseWheel>", wheel)
+    row = tk.Frame(body, bg=colors["panel"])
+    row.pack(fill="x", pady=(10, 0))
+    yes = tk.Button(
+        row, text=tr(lang, "terms_yes"), font=FONT, command=accept,
+        bg=colors["accent"], fg=colors["on"], activebackground=colors["accent"],
+        activeforeground=colors["on"], relief="flat", bd=0, padx=12, pady=4,
+        highlightthickness=0, cursor="hand2",
+    )
+    no = tk.Button(
+        row, text=tr(lang, "terms_no"), font=FONT, command=decline,
+        bg=colors["bg"], fg=colors["ink"], activebackground=colors["bg"],
+        activeforeground=colors["ink"], relief="flat", bd=0, padx=12, pady=4,
+        highlightthickness=0, cursor="hand2",
+    )
+    yes.pack(side="left")
+    no.pack(side="left", padx=(8, 0))
+    root.protocol("WM_DELETE_WINDOW", decline)
+    root.after(800, lambda: live.__setitem__("ok", True))
+    width, height = 520, 460
+    root.geometry("%dx%d+%d+%d" % (
+        width, height,
+        max(0, (root.winfo_screenwidth() - width) // 2),
+        max(40, (root.winfo_screenheight() - height) // 6),
+    ))
+    root.mainloop()
+    return agreed["ok"]
+
+
 def open_window(core):
+    lang = canon_lang(core.CFG.get("lang")) or windows_lang()
+    theme = core.CFG.get("theme") if core.CFG.get("theme") in THEMES else "scifi"
+    if not accept_terms(lang, theme):
+        return
     Desktop(core).run()

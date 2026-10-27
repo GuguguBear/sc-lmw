@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>SC LMW 地点同步</title>
+<title>Starfix</title>
 <link rel="stylesheet" href="/css/starmap.css">
 <style>
   .sc-lmw.st-companion{min-height:100vh;background:var(--sclmw-bg)}
@@ -19,9 +19,8 @@
 <div class="sc-lmw st-companion" id="app" data-theme="compact">
   <div class="st-gate">
     <div class="st-gate-card">
-      <h1>地点同步</h1>
-      <p>双击「地点同步」会打开程序自己的窗口，不用打开浏览器。它只在本机运行，读取 Game.log，把换区时写下的地点代码发给你的房间。它不进入游戏进程，不读内存，也不改游戏文件。</p>
-      <p>RSI 条款没有书面允许这种读取。条款禁止未经授权从游戏收集信息。开不开由你决定。</p>
+      <h1>Starfix</h1>
+      <p>双击 Starfix 会打开程序自己的窗口，不用打开浏览器。它只在本机运行，读取 Game.log，把换区时写下的地点代码发给你的房间。它不进入游戏进程，不读内存，也不改游戏文件。每次打开都会先要求同意使用条款。</p>
       <p id="linked">还没连上房间。在星图的房间面板里点「连到这台电脑」，再回到这里点确认。</p>
       <div id="pair" hidden>
         <p id="pairText"></p>
@@ -36,7 +35,6 @@
         <summary>手动填写</summary>
         <label>星图地址<input id="api" value="http://127.0.0.1:8770"></label>
         <label>房间码<input id="room" maxlength="9" placeholder="K7MQ-4R2P"></label>
-        <label>房间令牌<input id="token" type="password" autocomplete="off"></label>
       </details>
 
       <div class="st-room-sec"><span>外观</span>
@@ -69,13 +67,12 @@
 <script>
 (function(){
   var app = document.getElementById('app');
-  var fields = {api:'apiBase', room:'room', token:'token', log:'logPath'};
+  var fields = {api:'apiBase', room:'room', log:'logPath'};
   function val(id){ return document.getElementById(id).value.trim(); }
   function body(extra){
     var out = {
       apiBase: val('api'),
       room: val('room'),
-      token: val('token'),
       logPath: val('log'),
       theme: app.getAttribute('data-theme') || 'compact'
     };
@@ -119,7 +116,6 @@
   fetch('/api/status').then(function(r){ return r.json(); }).then(function(s){
     document.getElementById('api').value = s.apiBase || '';
     document.getElementById('room').value = s.room || '';
-    document.getElementById('token').value = s.token || '';
     document.getElementById('log').value = s.logPath || '';
     paint(s);
   });

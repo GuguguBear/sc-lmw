@@ -109,10 +109,10 @@ steht das kurz in [docs/WHATS_NEW.md](docs/WHATS_NEW.md).
 ### Ort von Hand oder aus dem Log
 
 Die Website liest keinen Spielordner. In der Karte einen Ort öffnen und
-„Ich bin hier“ wählen reicht. Wer es automatisch versuchen will, startet die
-mitgelieferte Ortssynchronisation. Der ganze Quelltext liegt in
-[`companion/`](companion/README.md). Sie liest nur `Game.log` auf diesem
-Computer. Lies die Erklärung dort, bevor du sie startest.
+„Ich bin hier“ wählen reicht. Wer es automatisch versuchen will, startet das
+mitgelieferte Starfix. Der ganze Quelltext liegt in
+[`companion/`](companion/README.md). Es liest nur `Game.log` auf diesem
+Computer. Lies die Erklärung dort, bevor du es startest.
 
 ### Spieler auf der Karte zeigen
 

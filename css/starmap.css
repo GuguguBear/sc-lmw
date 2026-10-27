@@ -516,6 +516,7 @@
 .sc-lmw .st-gate{position:fixed;inset:0;z-index:90;display:flex;align-items:center;justify-content:center;background:rgba(4,7,13,.94);pointer-events:auto}
 .sc-lmw .st-gate[hidden],.sc-lmw .st-room[hidden]{display:none}
 .sc-lmw .st-gate-card{width:min(560px,calc(100% - 32px));max-height:calc(100% - 48px);overflow:auto;box-sizing:border-box;padding:28px 26px 22px;border:1px solid var(--sclmw-line2);background:var(--sclmw-panel,rgba(8,12,20,.96));border-radius:14px;color:var(--sclmw-ink);font-family:"Chakra Petch","Inter","PingFang SC","Microsoft YaHei",sans-serif}
+.sc-lmw .st-gate .st-room-kind{margin:12px 0 4px;color:var(--sclmw-cyan);font-size:14px;font-weight:700;letter-spacing:.04em}
 .sc-lmw .st-gate .st-room-code{margin:4px 0 0;font-size:28px;letter-spacing:.14em;font-weight:700}
 .sc-lmw .st-gate .st-room-link{margin-top:14px;height:auto;padding:0;border:0;background:none;color:var(--sclmw-muted);font-weight:400;text-decoration:underline}
 .sc-lmw .st-gate h1{margin:0 0 8px;font-size:1.7rem;letter-spacing:.04em}
@@ -529,8 +530,20 @@
 .sc-lmw .st-room .row button[data-send],.sc-lmw .st-room .row button[data-del],.sc-lmw .st-room-row button{flex:1 1 72px;width:auto;min-width:72px;padding:0 10px;text-align:center}
 .sc-lmw .st-gate button,.sc-lmw .st-room button{height:36px;min-height:36px;padding:0 12px;border:1px solid var(--sclmw-line2);background:transparent;color:var(--sclmw-ink);font:inherit;font-size:13px;font-weight:700;line-height:1;white-space:nowrap;flex:0 0 auto;box-sizing:border-box;cursor:pointer}
 .sc-lmw .st-gate button.act{flex:1}
-.sc-lmw .st-room{position:absolute;left:16px;bottom:36px;z-index:6;width:min(320px,calc(100% - 32px));max-height:min(62vh,520px);overflow:auto;pointer-events:auto;padding:10px 12px 12px;border:1px solid var(--sclmw-line2);background:rgba(8,12,20,.94);border-radius:14px;color:var(--sclmw-ink);font-family:"Chakra Petch","Inter","PingFang SC","Microsoft YaHei",sans-serif}
-.sc-lmw .st-room-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.sc-lmw .st-room{position:absolute;left:16px;bottom:36px;z-index:8;width:min(340px,calc(100% - 32px));height:min(520px,62vh);display:flex;flex-direction:column;overflow:hidden;box-sizing:border-box;pointer-events:auto;padding:0;border:1px solid var(--sclmw-line2);background:rgba(8,12,20,.94);border-radius:14px;color:var(--sclmw-ink);font-family:"Chakra Petch","Inter","PingFang SC","Microsoft YaHei",sans-serif}
+.sc-lmw .st-room-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex:0 0 auto;padding:8px 12px;cursor:grab;user-select:none;border-bottom:1px solid var(--sclmw-line);touch-action:none}
+.sc-lmw .st-room-h:active{cursor:grabbing}
+.sc-lmw .st-room-body{flex:1 1 auto;min-height:0;overflow:auto;padding:8px 12px 16px}
+.sc-lmw .st-room-edge{position:absolute;z-index:4;touch-action:none}
+.sc-lmw .st-room-edge.n{left:10px;right:10px;top:0;height:6px;cursor:ns-resize}
+.sc-lmw .st-room-edge.s{left:10px;right:10px;bottom:0;height:6px;cursor:ns-resize}
+.sc-lmw .st-room-edge.e{top:10px;bottom:10px;right:0;width:6px;cursor:ew-resize}
+.sc-lmw .st-room-edge.w{top:10px;bottom:10px;left:0;width:6px;cursor:ew-resize}
+.sc-lmw .st-room-edge.nw{left:0;top:0;width:12px;height:12px;cursor:nwse-resize}
+.sc-lmw .st-room-edge.ne{right:0;top:0;width:12px;height:12px;cursor:nesw-resize}
+.sc-lmw .st-room-edge.sw{left:0;bottom:0;width:12px;height:12px;cursor:nesw-resize}
+.sc-lmw .st-room-edge.se{right:0;bottom:0;width:16px;height:16px;cursor:nwse-resize}
+.sc-lmw .st-room-edge.se::after{content:"";position:absolute;right:3px;bottom:3px;width:8px;height:8px;border-right:2px solid var(--sclmw-muted);border-bottom:2px solid var(--sclmw-muted)}
 .sc-lmw .st-room-h b{font-size:16px;letter-spacing:.06em;white-space:nowrap;margin-right:auto}
 .sc-lmw .st-room-h button{margin-left:0}
 .sc-lmw .st-room-sec{margin-top:10px;font-size:13px}
@@ -555,7 +568,7 @@
 .sc-lmw .st-dd-list[hidden]{display:none}
 .sc-lmw .st-dd-list button{width:100%;height:34px;margin:0;border:0;border-radius:0;background:transparent;color:var(--sclmw-ink);font-weight:600;text-align:left}
 .sc-lmw .st-dd-list button.on,.sc-lmw .st-dd-list button:hover{color:#04131b;background:var(--sclmw-cyan)}
-.sc-lmw .st-room:has(.st-dd-list:not([hidden])){overflow:visible}
+.sc-lmw .st-room:has(.st-dd-list:not([hidden])) .st-room-body{overflow:visible}
 .sc-lmw[data-theme="compact"] .st-gate-card,.sc-lmw[data-theme="practical"] .st-gate-card,.sc-lmw[data-theme="chassis"] .st-gate-card,.sc-lmw[data-theme="scifi"] .st-gate-card,
 .sc-lmw[data-theme="compact"] .st-room,.sc-lmw[data-theme="practical"] .st-room,.sc-lmw[data-theme="chassis"] .st-room,.sc-lmw[data-theme="scifi"] .st-room,
 .sc-lmw[data-theme="compact"] .st-gate input,.sc-lmw[data-theme="practical"] .st-gate input,.sc-lmw[data-theme="chassis"] .st-gate input,.sc-lmw[data-theme="scifi"] .st-gate input,

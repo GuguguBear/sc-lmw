@@ -1,4 +1,4 @@
-# 地点同步 / Place Sync
+# Starfix
 
 本目录是星图的可选附属程序。网页本身不读游戏目录。想自动报位置时，才在自己的电脑上运行这里的源码。
 
@@ -15,7 +15,7 @@ The files in this folder are an optional add-on for the star map. The website do
 - **手动。** 在星图上点开一个地点，再点「我在这里」。这一步只用网页，不需要本程序。
 - **自动。** 运行本目录里的程序。它读取你电脑上的 `Game.log`，找换区时游戏自己写下的那一行，把地点代码发给你已经确认过的房间。
 
-程序打开后是一个窗口，不会另外打开浏览器。星图房间面板里的「连到这台电脑」只把房间码和令牌发给本机 `127.0.0.1:8780`。窗口里会先问你确认，你点了确认，它才保存。别的网站不能悄悄写进你的配置。
+程序打开后是一个窗口，不会另外打开浏览器。星图房间面板里的「连到这台电脑」只把房间码和令牌发给本机 `127.0.0.1:8780`。窗口里会先问你确认，你点了确认，它才保存。窗口不显示令牌，也不用你填写。别的网站不能悄悄写进你的配置。
 
 ### 它不做什么
 
@@ -53,11 +53,13 @@ python companion/app.py
 
 需要 Python 3。不需要再装别的包。窗口出现后，到星图房间里点「连到这台电脑」，回到窗口点确认，再点「开始监视」。
 
-`companion/dist/` 里如果有 `地点同步.exe`，那是这套源码在你这台电脑上打包出来的，方便双击。仓库不收录那个可执行文件。要检查程序，请看上面的 `.py` 文件，而不是只看 exe。
+`companion/dist/` 里如果有 `Starfix.exe`，那是这套源码在你这台电脑上打包出来的，方便双击。仓库不收录那个可执行文件。要检查程序，请看上面的 `.py` 文件，而不是只看 exe。
 
 ### 条款
 
-RSI 用户协议没有书面允许从游戏收集信息，其中包括读取游戏写下的日志。这个程序不注入、不读内存、不改游戏文件，但仍然没有官方许可。开不开由你决定。窗口上写着同一句话。
+每次启动都会先弹出使用条款。同意才能继续，不同意或关闭窗口，程序立刻退出。条款不留在主窗口里。
+
+条款写明：本软件与 CIG、RSI 及其关联方没有关系，也未获其任何形式的同意或授权来读取客户端日志。软件按现状提供，没有任何保证。使用造成的一切后果由使用者自己承担。开发者、贡献者、分发者和本软件本身不负责，也不承担赔偿。你和 CIG、RSI 之间的协议、处罚和争议，与本软件的开发者无关。
 
 ## English
 
@@ -68,7 +70,7 @@ There are two ways to tell the room where you are.
 - **By hand.** Open a place on the map and choose “I am here.” The website does that alone. This program is not required.
 - **From the log.** Run the program in this folder. It reads `Game.log` on your computer, looks for the zone-change line the game writes, and sends that place code to the room you confirmed.
 
-The program opens its own window. It does not open a browser. “Connect this computer” on the map sends the room code and token only to `127.0.0.1:8780` on this machine. The window asks you to confirm before it saves them. Another website cannot store that token quietly.
+The program opens its own window. It does not open a browser. “Connect this computer” on the map sends the room code and token only to `127.0.0.1:8780` on this machine. The window asks you to confirm before it saves them. It never shows the token, and you never type it. Another website cannot store that token quietly.
 
 ### What it does not do
 
@@ -106,11 +108,13 @@ python companion/app.py
 
 Python 3 is enough. No extra packages. When the window is open, choose “Connect this computer” in the room, confirm in the window, then start the watch.
 
-A `地点同步.exe` under `companion/dist/`, if you built one, is this same source packaged on your computer. The repository does not include that executable. Inspect the `.py` files.
+A `Starfix.exe` under `companion/dist/`, if you built one, is this same source packaged on your computer. The repository does not include that executable. Inspect the `.py` files.
 
 ### Terms
 
-The RSI agreement does not give written permission to collect information from the game, including information the game writes into its log. This program does not inject, read memory, or change game files. It still has no official permission. You decide whether to run it. The window says the same.
+Every launch asks you to accept the terms before the program continues. If you do not agree, or you close that window, the program exits. The terms are not kept inside the main window.
+
+They state that this software has no relationship with CIG, RSI, or their affiliates, and that those companies have never authorized reading the client log. The software is provided as is, with no warranty. You accept every consequence of using it. The developers, contributors, distributors, and the software itself accept no responsibility and no damages. Any agreement, penalty, or dispute between you and CIG or RSI is not a matter for the developers of this software.
 
 ## Deutsch
 
@@ -121,7 +125,7 @@ Es gibt zwei Wege, dem Raum zu sagen, wo du bist.
 - **Von Hand.** Öffne einen Ort auf der Karte und wähle „Ich bin hier“. Dafür reicht die Website. Dieses Programm brauchst du nicht.
 - **Aus dem Log.** Starte das Programm in diesem Ordner. Es liest `Game.log` auf deinem Computer, sucht die Zeile zum Zonenwechsel und sendet den Ortscode an den Raum, den du bestätigt hast.
 
-Es öffnet ein eigenes Fenster und keinen Browser. „Diesen Computer verbinden“ schickt Raumcode und Token nur an `127.0.0.1:8780` auf diesem Rechner. Das Fenster fragt nach, bevor es speichert. Eine andere Website kann den Token nicht still ablegen.
+Es öffnet ein eigenes Fenster und keinen Browser. „Diesen Computer verbinden“ schickt Raumcode und Token nur an `127.0.0.1:8780` auf diesem Rechner. Das Fenster fragt nach, bevor es speichert. Den Token zeigt es nicht an, und du tippst ihn nicht ein. Eine andere Website kann den Token nicht still ablegen.
 
 ### Was sie nicht tut
 
@@ -159,11 +163,13 @@ python companion/app.py
 
 Python 3 reicht. Keine weiteren Pakete. Wenn das Fenster da ist, in der Karte „Diesen Computer verbinden“ wählen, im Fenster bestätigen und die Überwachung starten.
 
-Eine `地点同步.exe` unter `companion/dist/` ist dieselbe Quelle, auf deinem Computer gepackt. Das Repository enthält diese Datei nicht. Prüfe die `.py`-Dateien.
+Eine `Starfix.exe` unter `companion/dist/` ist dieselbe Quelle, auf deinem Computer gepackt. Das Repository enthält diese Datei nicht. Prüfe die `.py`-Dateien.
 
 ### Bedingungen
 
-Die RSI-Vereinbarung erlaubt schriftlich nicht, Informationen aus dem Spiel zu sammeln, auch nicht aus dem Log, das das Spiel selbst schreibt. Dieses Programm injiziert nicht, liest keinen Speicher und ändert keine Spieldateien. Eine offizielle Erlaubnis hat es trotzdem nicht. Du entscheidest. Im Fenster steht derselbe Satz.
+Bei jedem Start musst du die Bedingungen annehmen, bevor es weitergeht. Ohne Zustimmung oder beim Schließen des Fensters endet das Programm. Der Text bleibt nicht im Hauptfenster.
+
+Er sagt: Diese Software hat keine Beziehung zu CIG, RSI oder deren verbundenen Unternehmen, und diese haben das Lesen der Client-Logdatei niemals erlaubt. Die Software wird ohne Gewähr bereitgestellt. Jede Folge der Nutzung trägst du selbst. Entwickler, Mitwirkende, Verbreiter und die Software selbst haften nicht und schulden keinen Schadenersatz. Verträge, Strafen und Streit zwischen dir und CIG oder RSI gehen die Entwickler dieser Software nichts an.
 
 ## 繁體中文
 
@@ -174,7 +180,7 @@ Die RSI-Vereinbarung erlaubt schriftlich nicht, Informationen aus dem Spiel zu s
 - **手動。** 在星圖上點開一個地點，再點「我在這裡」。這一步只用網頁，不需要本程式。
 - **自動。** 執行本目錄裡的程式。它讀取你電腦上的 `Game.log`，找換區時遊戲自己寫下的那一行，把地點代碼發給你已經確認過的房間。
 
-程式打開後是一個視窗，不會另外打開瀏覽器。星圖房間面板裡的「連到這台電腦」只把房間碼和令牌發給本機 `127.0.0.1:8780`。視窗裡會先問你確認，你點了確認，它才保存。別的網站不能悄悄寫進你的設定。
+程式打開後是一個視窗，不會另外打開瀏覽器。星圖房間面板裡的「連到這台電腦」只把房間碼和令牌發給本機 `127.0.0.1:8780`。視窗裡會先問你確認，你點了確認，它才保存。視窗不顯示令牌，也不用你填寫。別的網站不能悄悄寫進你的設定。
 
 ### 它不做什麼
 
@@ -212,8 +218,10 @@ python companion/app.py
 
 需要 Python 3。不需要再裝別的套件。視窗出現後，到星圖房間裡點「連到這台電腦」，回到視窗點確認，再點「開始監視」。
 
-`companion/dist/` 裡如果有 `地点同步.exe`，那是這套源碼在你這台電腦上打包出來的，方便雙擊。倉庫不收錄那個執行檔。要檢查程式，請看上面的 `.py` 檔案，而不是只看 exe。
+`companion/dist/` 裡如果有 `Starfix.exe`，那是這套源碼在你這台電腦上打包出來的，方便雙擊。倉庫不收錄那個執行檔。要檢查程式，請看上面的 `.py` 檔案，而不是只看 exe。
 
 ### 條款
 
-RSI 使用者協議沒有書面允許從遊戲收集資訊，其中包括讀取遊戲寫下的日誌。這個程式不注入、不讀記憶體、不改遊戲檔案，但仍然沒有官方許可。開不開由你決定。視窗上寫著同一句話。
+每次啟動都會先彈出使用條款。同意才能繼續，不同意或關閉視窗，程式立刻退出。條款不留在主視窗裡。
+
+條款寫明：本軟體與 CIG、RSI 及其關聯方沒有關係，也未獲其任何形式的同意或授權來讀取客戶端日誌。軟體按現狀提供，沒有任何保證。使用造成的一切後果由使用者自己承擔。開發者、貢獻者、散布者和本軟體本身不負責，也不承擔賠償。你和 CIG、RSI 之間的協議、處罰和爭議，與本軟體的開發者無關。

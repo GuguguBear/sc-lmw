@@ -5,6 +5,7 @@
   var TOKEN = 'sclmw_room_token';
   var CODE = 'sclmw_room_code';
   var NICK = 'sclmw_room_nick';
+  var FRAME = 'sclmw_room_frame';
   var DICT = {
     'zh-Hans': {
       title:'团队房间', lead:'这个网页不读取游戏目录。你在星图上点开地点，再点「我在这里」，队友就能看到。',
@@ -21,9 +22,13 @@
       members:'房间成员', you:'你', errNick:'请填写 1 到 32 个字的昵称。', errRoom:'没有这个房间。',
       errNet:'房间服务没连上。请在项目目录运行 python server/room_server.py，然后打开 http://127.0.0.1:8770/ 。', published:'已发布的路线', by:'来自',
       yours:'你的房间', switchRoom:'建立或加入别的房间',
-      link:'连到这台电脑', linkSent:'已经发给本机的地点同步。回到那个窗口，点确认。',
-      linkOff:'本机的地点同步没开。先双击「地点同步」，等窗口出现后再点一次。',
-      locGuide:'你可以手动标位置，也可以用附带程序试着自动读日志。手动：在星图上点开地点，再点「我在这里」。自动：项目自带「地点同步」，源码都在 companion/，可以先读完再运行。它只读本机 Game.log，不进游戏、不读内存、不改游戏文件。打开后点「连到这台电脑」，回窗口确认。网页本身不读游戏目录。RSI 条款没有书面允许读日志，开不开由你决定。'
+      resumed:'上次留下的房间', resumedLead:'刷新后仍是这个房间。房间码没有变，可以直接进入星图。',
+      freshCreate:'刚建立的房间', freshCreateLead:'把房间码发给队员。他们申请加入后，由你确认。',
+      freshJoin:'刚加入的房间', freshJoinLead:'可以直接进入星图。',
+      resumedWait:'上次提交的申请还在等队长确认。',
+      link:'连到这台电脑', linkSent:'已经发给本机的 Starfix。回到那个窗口，点确认。',
+      linkOff:'本机的 Starfix 没开。先双击 Starfix，等窗口出现后再点一次。',
+      locGuide:'你可以手动标位置，也可以用附带程序试着自动读日志。手动：在星图上点开地点，再点「我在这里」。自动：项目自带 Starfix，源码都在 companion/，可以先读完再运行。它只读本机 Game.log，不进游戏、不读内存、不改游戏文件。打开后点「连到这台电脑」，回窗口确认。网页本身不读游戏目录。RSI 条款没有书面允许读日志，开不开由你决定。'
     },
     'zh-Hant': {
       title:'團隊房間', lead:'這個網頁不讀取遊戲資料夾。你在星圖上點開地點，再點「我在這裡」，隊友就能看到。',
@@ -40,9 +45,13 @@
       members:'房間成員', you:'你', errNick:'請填寫 1 到 32 個字的暱稱。', errRoom:'沒有這個房間。',
       errNet:'房間服務沒連上。請在專案目錄執行 python server/room_server.py，然後打開 http://127.0.0.1:8770/ 。', published:'已發布的路線', by:'來自',
       yours:'你的房間', switchRoom:'建立或加入別的房間',
-      link:'連到這台電腦', linkSent:'已經發給本機的地點同步。回到那個視窗，點確認。',
-      linkOff:'本機的地點同步沒開。先雙擊「地點同步」，等視窗出現後再點一次。',
-      locGuide:'你可以手動標位置，也可以用附帶程式試著自動讀日誌。手動：在星圖上點開地點，再點「我在這裡」。自動：專案自帶「地點同步」，源碼都在 companion/，可以先讀完再執行。它只讀本機 Game.log，不進遊戲、不讀記憶體、不改遊戲檔案。打開後點「連到這台電腦」，回視窗確認。網頁本身不讀遊戲資料夾。RSI 條款沒有書面允許讀日誌，開不開由你決定。'
+      resumed:'上次留下的房間', resumedLead:'重新整理後仍是這個房間。房間碼沒有變，可以直接進入星圖。',
+      freshCreate:'剛建立的房間', freshCreateLead:'把房間碼發給隊員。他們申請加入後，由你確認。',
+      freshJoin:'剛加入的房間', freshJoinLead:'可以直接進入星圖。',
+      resumedWait:'上次送出的申請還在等隊長確認。',
+      link:'連到這台電腦', linkSent:'已經發給本機的 Starfix。回到那個視窗，點確認。',
+      linkOff:'本機的 Starfix 沒開。先雙擊 Starfix，等視窗出現後再點一次。',
+      locGuide:'你可以手動標位置，也可以用附帶程式試著自動讀日誌。手動：在星圖上點開地點，再點「我在這裡」。自動：專案自帶 Starfix，源碼都在 companion/，可以先讀完再執行。它只讀本機 Game.log，不進遊戲、不讀記憶體、不改遊戲檔案。打開後點「連到這台電腦」，回視窗確認。網頁本身不讀遊戲資料夾。RSI 條款沒有書面允許讀日誌，開不開由你決定。'
     },
     en: {
       title:'Team room', lead:'This page does not read the game folder. Open a place on the map, then choose “I am here”.',
@@ -59,9 +68,13 @@
       members:'Room members', you:'you', errNick:'Use a nickname of 1 to 32 characters.', errRoom:'No room with that code.',
       errNet:'Room service is not reachable. Run python server/room_server.py and open http://127.0.0.1:8770/ .', published:'Published routes', by:'by',
       yours:'Your room', switchRoom:'Create or join a different room',
-      link:'Connect this computer', linkSent:'Sent to the place sync on this computer. Go back to that window and confirm.',
-      linkOff:'Place sync is not running. Double-click Place Sync, wait for its window, then click again.',
-      locGuide:'You can mark your place by hand, or try the bundled program to read the game log. By hand: open a place on the map, then choose “I am here.” Automatic: this project includes Place Sync. All of its source is in companion/. Read it before you run it. It only reads Game.log on this computer. It does not enter the game, read memory, or change game files. Open it, choose “Connect this computer,” then confirm in its window. This page does not read the game folder. The RSI terms do not permit reading the log in writing. You decide.'
+      resumed:'Room from last time', resumedLead:'Refreshing kept this room. The code is unchanged. You can enter the map.',
+      freshCreate:'Room just created', freshCreateLead:'Send the code to your team. You confirm them after they apply.',
+      freshJoin:'Room just joined', freshJoinLead:'You can enter the map.',
+      resumedWait:'Your earlier request is still waiting for the captain.',
+      link:'Connect this computer', linkSent:'Sent to Starfix on this computer. Go back to that window and confirm.',
+      linkOff:'Starfix is not running. Double-click Starfix, wait for its window, then click again.',
+      locGuide:'You can mark your place by hand, or try the bundled program to read the game log. By hand: open a place on the map, then choose “I am here.” Automatic: this project includes Starfix. All of its source is in companion/. Read it before you run it. It only reads Game.log on this computer. It does not enter the game, read memory, or change game files. Open it, choose “Connect this computer,” then confirm in its window. This page does not read the game folder. The RSI terms do not permit reading the log in writing. You decide.'
     },
     de: {
       title:'Teamraum', lead:'Diese Seite liest keinen Spielordner. Öffne einen Ort auf der Karte und wähle „Ich bin hier“.',
@@ -78,9 +91,13 @@
       members:'Im Raum', you:'du', errNick:'Nickname mit 1 bis 32 Zeichen.', errRoom:'Diesen Raum gibt es nicht.',
       errNet:'Der Raumdienst ist nicht erreichbar. python server/room_server.py starten und http://127.0.0.1:8770/ öffnen.', published:'Veröffentlichte Routen', by:'von',
       yours:'Dein Raum', switchRoom:'Anderen Raum anlegen oder beitreten',
-      link:'Diesen Computer verbinden', linkSent:'An die Ortssynchronisation auf diesem Computer gesendet. Dort bestätigen.',
-      linkOff:'Die Ortssynchronisation läuft nicht. Ortssynchronisation doppelklicken, auf das Fenster warten und erneut klicken.',
-      locGuide:'Du kannst den Ort von Hand setzen oder das mitgelieferte Programm das Spiellog lesen lassen. Von Hand: Ort auf der Karte öffnen, dann „Ich bin hier“. Automatisch: das Projekt enthält die Ortssynchronisation. Der ganze Quelltext liegt in companion/. Lies ihn, bevor du ihn startest. Sie liest nur die Game.log auf diesem Computer. Sie betritt das Spiel nicht, liest keinen Speicher und ändert keine Spieldateien. Öffne sie, wähle „Diesen Computer verbinden“ und bestätige im Fenster. Diese Seite liest keinen Spielordner. Die RSI-Bedingungen erlauben das Lesen des Logs nicht schriftlich. Du entscheidest.'
+      resumed:'Raum von zuletzt', resumedLead:'Nach dem Neuladen ist es derselbe Raum. Der Code ist unverändert. Du kannst die Karte öffnen.',
+      freshCreate:'Gerade angelegt', freshCreateLead:'Gib den Code an das Team. Du bestätigst die Anfragen.',
+      freshJoin:'Gerade beigetreten', freshJoinLead:'Du kannst die Karte öffnen.',
+      resumedWait:'Deine frühere Anfrage wartet noch auf den Captain.',
+      link:'Diesen Computer verbinden', linkSent:'An Starfix auf diesem Computer gesendet. Dort bestätigen.',
+      linkOff:'Starfix läuft nicht. Starfix doppelklicken, auf das Fenster warten und erneut klicken.',
+      locGuide:'Du kannst den Ort von Hand setzen oder das mitgelieferte Programm das Spiellog lesen lassen. Von Hand: Ort auf der Karte öffnen, dann „Ich bin hier“. Automatisch: das Projekt enthält Starfix. Der ganze Quelltext liegt in companion/. Lies ihn, bevor du ihn startest. Es liest nur die Game.log auf diesem Computer. Es betritt das Spiel nicht, liest keinen Speicher und ändert keine Spieldateien. Öffne es, wähle „Diesen Computer verbinden“ und bestätige im Fenster. Diese Seite liest keinen Spielordner. Die RSI-Bedingungen erlauben das Lesen des Logs nicht schriftlich. Du entscheidest.'
     }
   };
   function lang(){ return (SC.i18n && SC.i18n.lang) || 'en'; }
@@ -88,7 +105,7 @@
   function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
   function token(){ try{ return localStorage.getItem(TOKEN)||''; }catch(e){ return ''; } }
   function savedCode(){ try{ return localStorage.getItem(CODE)||''; }catch(e){ return ''; } }
-  var state = null, draft = [], marking = false, note = '', statusMsg = '', selected = '', API = '', entered = false;
+  var state = null, draft = [], marking = false, note = '', statusMsg = '', selected = '', API = '', entered = false, roomKind = '';
 
   function api(path, opt){
     opt = opt || {};
@@ -125,8 +142,112 @@
       dock.className = 'st-room';
       dock.hidden = true;
       root().appendChild(dock);
+      bindFrame(dock);
     }
     return {gate:g, dock:dock};
+  }
+
+  function readFrame(){
+    try{
+      var s = JSON.parse(localStorage.getItem(FRAME)||'null');
+      if(s && typeof s.l==='number' && typeof s.t==='number' && typeof s.w==='number' && typeof s.h==='number') return s;
+    }catch(e){}
+    return null;
+  }
+  function applyFrame(dock){
+    var s = readFrame();
+    if(!s || !dock) return;
+    var host = root();
+    var W = host.clientWidth||1, H = host.clientHeight||1;
+    var w = Math.max(280, Math.min(s.w, W));
+    var h = Math.max(220, Math.min(s.h, H));
+    var l = Math.max(0, Math.min(s.l, W-w));
+    var t = Math.max(0, Math.min(s.t, H-h));
+    dock.style.left = l+'px';
+    dock.style.top = t+'px';
+    dock.style.right = 'auto';
+    dock.style.bottom = 'auto';
+    dock.style.width = w+'px';
+    dock.style.height = h+'px';
+  }
+  function saveFrame(dock){
+    var host = root().getBoundingClientRect();
+    var box = dock.getBoundingClientRect();
+    try{
+      localStorage.setItem(FRAME, JSON.stringify({
+        l: Math.round(box.left-host.left),
+        t: Math.round(box.top-host.top),
+        w: Math.round(box.width),
+        h: Math.round(box.height)
+      }));
+    }catch(e){}
+  }
+  function bindFrame(dock){
+    var drag = null;
+    function place(l, t, w, h){
+      var host = root();
+      var W = host.clientWidth||1, H = host.clientHeight||1;
+      w = Math.max(280, Math.min(w, W));
+      h = Math.max(220, Math.min(h, H));
+      l = Math.max(0, Math.min(l, W-w));
+      t = Math.max(0, Math.min(t, H-h));
+      dock.style.left = l+'px';
+      dock.style.top = t+'px';
+      dock.style.right = 'auto';
+      dock.style.bottom = 'auto';
+      dock.style.width = w+'px';
+      dock.style.height = h+'px';
+    }
+    dock.addEventListener('pointerdown', function(e){
+      if(e.button!==0) return;
+      var edge = e.target.closest && e.target.closest('[data-resize]');
+      var bar = e.target.closest && e.target.closest('.st-room-h');
+      if(!edge && !(bar && !(e.target.closest && e.target.closest('button')))) return;
+      var host = root().getBoundingClientRect();
+      var box = dock.getBoundingClientRect();
+      drag = {
+        mode: edge ? edge.getAttribute('data-resize') : 'move',
+        x: e.clientX, y: e.clientY,
+        l: box.left-host.left, t: box.top-host.top,
+        w: box.width, h: box.height
+      };
+      dock.__frameDrag = true;
+      dock.setPointerCapture(e.pointerId);
+      e.preventDefault();
+    });
+    dock.addEventListener('pointermove', function(e){
+      if(!drag) return;
+      var dx = e.clientX-drag.x, dy = e.clientY-drag.y;
+      var l = drag.l, t = drag.t, w = drag.w, h = drag.h, m = drag.mode;
+      if(m==='move'){ l += dx; t += dy; }
+      else {
+        var east = m==='e'||m==='ne'||m==='se';
+        var west = m==='w'||m==='nw'||m==='sw';
+        var south = m==='s'||m==='se'||m==='sw';
+        var north = m==='n'||m==='ne'||m==='nw';
+        if(east) w = drag.w+dx;
+        if(south) h = drag.h+dy;
+        if(west){ w = drag.w-dx; l = drag.l+dx; }
+        if(north){ h = drag.h-dy; t = drag.t+dy; }
+        if(w<280){ if(west) l -= 280-w; w = 280; }
+        if(h<220){ if(north) t -= 220-h; h = 220; }
+      }
+      place(l, t, w, h);
+    });
+    function end(e){
+      if(!drag) return;
+      drag = null;
+      dock.__frameDrag = false;
+      saveFrame(dock);
+      try{ dock.releasePointerCapture(e.pointerId); }catch(err){}
+    }
+    dock.addEventListener('pointerup', end);
+    dock.addEventListener('pointercancel', end);
+    if(window.ResizeObserver){
+      new ResizeObserver(function(){ if(!drag) applyFrame(dock); }).observe(root());
+    } else {
+      window.addEventListener('resize', function(){ if(!drag) applyFrame(dock); });
+    }
   }
 
   function bindPlayers(){
@@ -156,7 +277,7 @@
     ui.gate.hidden = onMap;
     ui.dock.hidden = !onMap;
     if(!onMap) paintGate(ui.gate);
-    if(onMap) paintDock(ui.dock);
+    if(onMap){ paintDock(ui.dock); if(!ui.dock.__frameDrag) applyFrame(ui.dock); }
     window.__stRouteOn = !!(state && state.status==='member' && marking && canDraw());
     window.__stRouteAdd = function(o){
       if(!window.__stRouteOn || !o) return;
@@ -176,18 +297,27 @@
     if(state && state.code) pre = state.code;
     var wait = state && state.status==='pending';
     var member = state && state.status==='member';
+    var kind = roomKind==='create' ? 'create' : roomKind==='join' ? 'join' : 'saved';
+    var kindLabel = kind==='create' ? t('freshCreate') : kind==='join' ? t('freshJoin') : t('resumed');
+    var kindLead = kind==='create' ? t('freshCreateLead') : kind==='join' ? t('freshJoinLead') : t('resumedLead');
     el.innerHTML =
       '<div class="st-gate-card">'+
         '<h1>'+esc(t('title'))+'</h1>'+
-        '<p>'+esc(t('lead'))+'</p>'+
-        '<ol><li>'+esc(t('s1'))+'</li><li>'+esc(t('s2'))+'</li><li>'+esc(t('s3'))+'</li></ol>'+
+        (member || wait ? '' : (
+          '<p>'+esc(t('lead'))+'</p>'+
+          '<ol><li>'+esc(t('s1'))+'</li><li>'+esc(t('s2'))+'</li><li>'+esc(t('s3'))+'</li></ol>'
+        ))+
         (member ? (
-          '<p class="st-room-dim">'+esc(t('yours'))+'</p>'+
+          '<p class="st-room-kind">'+esc(kindLabel)+'</p>'+
+          '<p>'+esc(kindLead)+'</p>'+
           '<p class="st-room-code">'+esc(state.code)+'</p>'+
           '<div class="row"><button type="button" class="act" id="stEnter">'+esc(t('enter'))+'</button>'+
           '<button type="button" id="stGateCopy">'+esc(t('copy'))+'</button></div>'+
           '<button type="button" id="stSwitch" class="st-room-link">'+esc(t('switchRoom'))+'</button>'
-        ) : wait ? '<p class="st-room-wait">'+esc(t('wait'))+' · '+esc(state.code)+'</p>' : (
+        ) : wait ? (
+          '<p class="st-room-kind">'+esc(kind==='join' ? t('wait') : t('resumedWait'))+'</p>'+
+          '<p class="st-room-code">'+esc(state.code)+'</p>'
+        ) : (
           '<label>'+esc(t('nick'))+'<input id="stRoomNick" maxlength="32" value="'+esc(nick)+'"></label>'+
           '<label>'+esc(t('code'))+'<input id="stRoomCode" maxlength="9" value="'+esc(pre)+'" placeholder="K7MQ-4R2P"></label>'+
           '<div class="row"><button type="button" class="act" id="stRoomCreate">'+esc(t('create'))+'</button>'+
@@ -215,9 +345,10 @@
     var live = (state.members||[]).filter(function(m){ return m.status==='member'; });
     var mine = canDraw();
     el.innerHTML =
-      '<div class="st-room-h"><b>'+esc(state.code)+'</b>'+
+      '<div class="st-room-h" id="stRoomBar" role="group" aria-label="'+esc(state.code)+'"><b>'+esc(state.code)+'</b>'+
         '<button type="button" id="stRoomCopy">'+esc(t('copy'))+'</button>'+
         '<button type="button" id="stRoomLeave">'+esc(t('leave'))+'</button></div>'+
+      '<div class="st-room-body">'+
       '<p class="st-room-dim">'+esc(t('locGuide'))+'</p>'+
       '<div class="row"><button type="button" id="stLinkPc">'+esc(t('link'))+'</button></div>'+
       (state.role==='captain' ? (
@@ -266,7 +397,16 @@
             '</div></div>';
         }).join('') || '<div class="st-room-dim">—</div>')+
       '</div>'+
-      (statusMsg ? '<p class="st-room-err">'+esc(statusMsg)+'</p>' : '');
+      (statusMsg ? '<p class="st-room-err">'+esc(statusMsg)+'</p>' : '')+
+      '</div>'+
+      '<i class="st-room-edge n" data-resize="n"></i>'+
+      '<i class="st-room-edge s" data-resize="s"></i>'+
+      '<i class="st-room-edge e" data-resize="e"></i>'+
+      '<i class="st-room-edge w" data-resize="w"></i>'+
+      '<i class="st-room-edge nw" data-resize="nw"></i>'+
+      '<i class="st-room-edge ne" data-resize="ne"></i>'+
+      '<i class="st-room-edge sw" data-resize="sw"></i>'+
+      '<i class="st-room-edge se" data-resize="se"></i>';
     el.querySelector('#stRoomCopy').onclick = function(){
       var text = state.code;
       if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text);
@@ -300,7 +440,9 @@
     if(clr) clr.onclick = function(){ draft=[]; note=''; paint(); };
     el.querySelectorAll('[data-rt]').forEach(function(b){ b.onclick=function(ev){
       if(ev.target.closest('input,button')) return;
-      selected = b.getAttribute('data-rt'); marking=false;
+      var id = b.getAttribute('data-rt');
+      if(selected===id){ selected=''; paint(); return; }
+      selected = id; marking=false;
       var rt = (state.routes||[]).filter(function(r){ return r.id===selected; })[0];
       var ctl = window.__stCtl;
       if(rt && rt.points[0] && rt.points[0].sy && ctl && ctl.goSystem) ctl.goSystem(rt.points[0].sy);
@@ -324,6 +466,7 @@
     var nick = nickValue();
     if(!nick || nick.length>32){ statusMsg=t('errNick'); paint(); return; }
     statusMsg = '';
+    roomKind = kind==='create' ? 'create' : 'join';
     rememberNick(nick);
     api('/api/session', {method:'POST', body:{nickname:nick}}).then(function(s){
       try{ localStorage.setItem(TOKEN, s.token); }catch(e){}
@@ -393,7 +536,7 @@
     api('/api/rooms/'+encodeURIComponent(state.code)+'/routes/'+encodeURIComponent(id), {method:'DELETE'}).then(function(st){ if(selected===id) selected=''; take(st); }).catch(fail);
   }
   function leave(){
-    state = null; draft = []; marking = false; note = ''; selected = ''; statusMsg = ''; entered = false;
+    state = null; draft = []; marking = false; note = ''; selected = ''; statusMsg = ''; entered = false; roomKind = '';
     try{ localStorage.removeItem(CODE); }catch(e){}
     window.__stRouteOn = false;
     var cfg = window.LIVEMAP_CONFIG || {};
@@ -435,7 +578,7 @@
     detect().then(function(ok){
       if(!ok){ statusMsg=t('errNet'); paint(); return; }
       var code = savedCode();
-      if(token() && code) api('/api/rooms/'+encodeURIComponent(code)).then(take).catch(function(){ paint(); });
+      if(token() && code) api('/api/rooms/'+encodeURIComponent(code)).then(function(st){ if(!roomKind) roomKind='saved'; take(st); }).catch(function(){ paint(); });
       if(!window.__stRoomPoll) window.__stRoomPoll=setInterval(function(){ if(state) refresh(); }, 8000);
     if(!window.__stDdClose){
       window.__stDdClose=function(e){ if(e.target.closest&&e.target.closest('.st-dd')) return; document.querySelectorAll('.st-dd-list').forEach(function(n){ n.hidden=true; }); };
