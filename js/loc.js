@@ -53,6 +53,32 @@
   function loose(t){ return fold(t).split(' ').filter(function(p){ return !/^\d+$/.test(p); }).join(' '); }
   function lookup(q){ return q&&active?active[q]:''; }
 
+  var ROMAN={1:'I',2:'II',3:'III',4:'IV',5:'V',6:'VI',7:'VII',8:'VIII',9:'IX',10:'X',11:'XI',12:'XII'};
+  // Watcher labels spell the class id. The pack uses the official English name.
+  var SUIT={
+    Concierge:'Venture Undersuit Executive',
+    Centurion:'Venture Undersuit Voyager',
+    Imperator:'Venture Undersuit Pathfinder',
+    Ruso:'Venture Undersuit "Rust Society"'
+  };
+  function romanize(t){
+    return String(t||'').replace(/\bMk\s*(\d{1,2})\b/gi, function(all, n){
+      var r=ROMAN[+n];
+      return r ? 'Mk '+r : all;
+    });
+  }
+  function watchForms(t){
+    var forms=[], seen={};
+    function add(s){ if(s && !seen[s]){ seen[s]=1; forms.push(s); } }
+    add(romanize(t));
+    var slim=loose(t);
+    if(slim && slim!==t) add(romanize(slim));
+    var armor=String(t||'').match(/^RRS Specialist Heavy (Core|Helmet|Arms|Legs)$/);
+    if(armor) add('Morozov-SH '+armor[1]);
+    var suit=String(slim||'').match(/^RSI Explorer Undersuit ([A-Za-z]+)$/);
+    if(suit && SUIT[suit[1]]) add(SUIT[suit[1]]);
+    return forms;
+  }
   function text(s){
     if(s==null||s===''||!active) return s;
     var t=String(s), hit=lookup(t);
@@ -61,6 +87,8 @@
     if(folded!==t && (hit=lookup(folded))) return hit;
     var slim=loose(t);
     if(slim && slim!==t && slim!==folded && slim.split(' ').length>=2 && (hit=lookup(slim))) return hit;
+    var forms=watchForms(t), i;
+    for(i=0;i<forms.length;i++){ if(forms[i]!==t && (hit=lookup(forms[i]))) return hit; }
     var m=t.match(/^(.*?)(\s*\((?:raw|ore|r)\)\s*)$/i);
     if(m&&active[m[1]]) return active[m[1]]+m[2];
     var raw=t.replace(/^raw\s+/i,'');
