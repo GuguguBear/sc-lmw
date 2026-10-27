@@ -252,12 +252,34 @@ def room_state(con, code, me):
     return {
         "code": code,
         "role": role,
+        "captain": room["captain"],
         "status": ship["status"],
         "me": {"id": me["id"], "nickname": me["nickname"]},
         "routeMode": room["route_mode"],
         "members": members,
         "routes": routes,
     }
+
+
+def wipe_room(con, code):
+    for rt in con.execute("SELECT id FROM route WHERE room=?", (code,)):
+        con.execute("DELETE FROM comment WHERE route=?", (rt["id"],))
+    con.execute("DELETE FROM route WHERE room=?", (code,))
+    con.execute("DELETE FROM presence WHERE room=?", (code,))
+    con.execute("DELETE FROM membership WHERE room=?", (code,))
+    con.execute("DELETE FROM room WHERE code=?", (code,))
+
+
+def drop_member(con, code, mid):
+    con.execute("DELETE FROM presence WHERE room=? AND member=?", (code, mid))
+    con.execute("DELETE FROM membership WHERE room=? AND member=?", (code, mid))
+    left = con.execute(
+        "SELECT 1 FROM membership WHERE room=? AND status='member'", (code,)
+    ).fetchone()
+    if left:
+        return False
+    wipe_room(con, code)
+    return True
 
 
 def players_json(con, code, me):
@@ -424,6 +446,79 @@ class Handler(BaseHTTPRequestHandler):
                     self.send_json(404, {"error": "member"})
                     return
                 self.send_json(200, room_state(con, code, me))
+                return
+            if len(parts) == 4 and parts[3] in ("leave", "captain", "dissolve"):
+                code = parts[2].upper()
+                room = con.execute("SELECT * FROM room WHERE code=?", (code,)).fetchone()
+                ship = con.execute(
+                    "SELECT status FROM membership WHERE room=? AND member=?",
+                    (code, me["id"]),
+                ).fetchone()
+                if not room or not ship or ship["status"] == "rejected":
+                    self.send_json(404, {"error": "room"})
+                    return
+                kind = parts[3]
+                if kind == "dissolve":
+                    if room["captain"] != me["id"]:
+                        self.send_json(403, {"error": "captain"})
+                        return
+                    wipe_room(con, code)
+                    self.send_json(200, {"dissolved": True})
+                    return
+                if kind == "captain":
+                    if room["captain"] != me["id"] or ship["status"] != "member":
+                        self.send_json(403, {"error": "captain"})
+                        return
+                    target = str(body.get("member") or "")
+                    row = con.execute(
+                        """
+                        SELECT member FROM membership
+                        WHERE room=? AND member=? AND status='member' AND member!=?
+                        """,
+                        (code, target, me["id"]),
+                    ).fetchone()
+                    if not row:
+                        self.send_json(404, {"error": "member"})
+                        return
+                    con.execute("UPDATE room SET captain=? WHERE code=?", (target, code))
+                    self.send_json(200, room_state(con, code, me))
+                    return
+                if ship["status"] != "member":
+                    drop_member(con, code, me["id"])
+                    self.send_json(200, {"left": True})
+                    return
+                if room["captain"] != me["id"]:
+                    gone = drop_member(con, code, me["id"])
+                    self.send_json(200, {"left": True, "dissolved": gone})
+                    return
+                if body.get("dissolve"):
+                    wipe_room(con, code)
+                    self.send_json(200, {"dissolved": True})
+                    return
+                target = str(body.get("transfer") or "")
+                if target:
+                    row = con.execute(
+                        """
+                        SELECT member FROM membership
+                        WHERE room=? AND member=? AND status='member' AND member!=?
+                        """,
+                        (code, target, me["id"]),
+                    ).fetchone()
+                    if not row:
+                        self.send_json(404, {"error": "member"})
+                        return
+                    con.execute("UPDATE room SET captain=? WHERE code=?", (target, code))
+                    drop_member(con, code, me["id"])
+                    self.send_json(200, {"left": True})
+                    return
+                others = con.execute(
+                    """
+                    SELECT member FROM membership
+                    WHERE room=? AND status='member' AND member!=?
+                    """,
+                    (code, me["id"]),
+                ).fetchone()
+                self.send_json(409, {"error": "handoff" if others else "solo"})
                 return
             if len(parts) == 4 and parts[3] == "settings":
                 code = parts[2].upper()

@@ -10,7 +10,7 @@
   /* Minimal page shell: the map itself fills <body> (see SCLMW.mount() below and
      .sc-lmw.st-standalone in starmap.css). This just holds the loading state and the
      mandatory fan-project notice. */
-  html,body{margin:0;height:100%;font-family:"Inter","PingFang SC","PingFang TC","Microsoft YaHei","Microsoft JhengHei",system-ui,sans-serif}
+  html,body{margin:0;height:100%;overflow:hidden;font-family:"Inter","PingFang SC","PingFang TC","Microsoft YaHei","Microsoft JhengHei",system-ui,sans-serif}
   #loading{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:#94a2c2;background:#070a12}
   #loading .spin{width:34px;height:34px;border-radius:50%;border:3px solid rgba(120,165,230,.25);border-top-color:#37e1ff;animation:spin 1s linear infinite}
   @keyframes spin{to{transform:rotate(360deg)}}

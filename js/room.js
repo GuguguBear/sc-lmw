@@ -6,6 +6,7 @@
   var CODE = 'sclmw_room_code';
   var NICK = 'sclmw_room_nick';
   var FRAME = 'sclmw_room_frame';
+  var CREW = 'sclmw_crew_frame';
   var DICT = {
     'zh-Hans': {
       title:'团队房间', lead:'这个网页不读取游戏目录。你在星图上点开地点，再点「我在这里」，队友就能看到。',
@@ -19,7 +20,10 @@
       route:'标记路线', routeOn:'结束标记', routeHint:'按住 Shift，依次点地点。',
       note:'路线备注', publish:'发布给房间', clear:'清空', comment:'评论', send:'发送', del:'删除',
       mode:'谁可以画路线', modeCaptain:'仅队长', modeMembers:'队员也可以',
-      members:'房间成员', you:'你', errNick:'请填写 1 到 32 个字的昵称。', errRoom:'没有这个房间。',
+      members:'房间成员', fold:'收起', you:'你', captainTag:'队长',
+      give:'设为队长', giveLeave:'交给他并离开', dissolve:'解散房间', dissolveLeave:'解散并离开', cancel:'取消',
+      handTitle:'离开前先交接', handLead:'把队长交给一位队员，或解散房间。', handSolo:'房间里只有你。离开会解散这个房间。',
+      errNick:'请填写 1 到 32 个字的昵称。', errRoom:'没有这个房间。',
       agoNow:'刚刚', agoSec:'{n} 秒前', agoMin:'{n} 分钟前', agoHour:'{n} 小时前', agoDay:'{n} 天前',
       noPlace:'星图上对不上这个地点。',
       errNet:'房间服务没连上。请在项目目录运行 python server/room_server.py，然后打开 http://127.0.0.1:8770/ 。', published:'已发布的路线', by:'来自',
@@ -46,7 +50,10 @@
       route:'標記路線', routeOn:'結束標記', routeHint:'按住 Shift，依序點地點。',
       note:'路線備註', publish:'發布給房間', clear:'清空', comment:'評論', send:'送出', del:'刪除',
       mode:'誰可以畫路線', modeCaptain:'僅隊長', modeMembers:'隊員也可以',
-      members:'房間成員', you:'你', errNick:'請填寫 1 到 32 個字的暱稱。', errRoom:'沒有這個房間。',
+      members:'房間成員', fold:'收起', you:'你', captainTag:'隊長',
+      give:'設為隊長', giveLeave:'交給他並離開', dissolve:'解散房間', dissolveLeave:'解散並離開', cancel:'取消',
+      handTitle:'離開前先交接', handLead:'把隊長交給一位隊員，或解散房間。', handSolo:'房間裡只有你。離開會解散這個房間。',
+      errNick:'請填寫 1 到 32 個字的暱稱。', errRoom:'沒有這個房間。',
       agoNow:'剛剛', agoSec:'{n} 秒前', agoMin:'{n} 分鐘前', agoHour:'{n} 小時前', agoDay:'{n} 天前',
       noPlace:'星圖上對不上這個地點。',
       errNet:'房間服務沒連上。請在專案目錄執行 python server/room_server.py，然後打開 http://127.0.0.1:8770/ 。', published:'已發布的路線', by:'來自',
@@ -73,7 +80,10 @@
       route:'Mark route', routeOn:'Stop marking', routeHint:'Hold Shift and click places in order.',
       note:'Route note', publish:'Publish to room', clear:'Clear', comment:'Comment', send:'Send', del:'Delete',
       mode:'Who can draw routes', modeCaptain:'Captain only', modeMembers:'Members too',
-      members:'Room members', you:'you', errNick:'Use a nickname of 1 to 32 characters.', errRoom:'No room with that code.',
+      members:'Room members', fold:'Minimize', you:'you', captainTag:'Captain',
+      give:'Make captain', giveLeave:'Give and leave', dissolve:'Close room', dissolveLeave:'Close and leave', cancel:'Cancel',
+      handTitle:'Hand off before leaving', handLead:'Give the captain role to a member, or close the room.', handSolo:'You are the only person here. Leaving closes the room.',
+      errNick:'Use a nickname of 1 to 32 characters.', errRoom:'No room with that code.',
       agoNow:'Just now', agoSec:'{n}s ago', agoMin:'{n} min ago', agoHour:'{n} h ago', agoDay:'{n} d ago',
       noPlace:'This place is not on the map.',
       errNet:'Room service is not reachable. Run python server/room_server.py and open http://127.0.0.1:8770/ .', published:'Published routes', by:'by',
@@ -100,7 +110,10 @@
       route:'Route markieren', routeOn:'Markieren beenden', routeHint:'Shift halten und Orte der Reihe nach anklicken.',
       note:'Notiz zur Route', publish:'Für den Raum veröffentlichen', clear:'Leeren', comment:'Kommentar', send:'Senden', del:'Löschen',
       mode:'Wer Routen zeichnen darf', modeCaptain:'Nur der Captain', modeMembers:'Auch Mitglieder',
-      members:'Im Raum', you:'du', errNick:'Nickname mit 1 bis 32 Zeichen.', errRoom:'Diesen Raum gibt es nicht.',
+      members:'Im Raum', fold:'Einklappen', you:'du', captainTag:'Captain',
+      give:'Zum Captain machen', giveLeave:'Geben und gehen', dissolve:'Raum schließen', dissolveLeave:'Schließen und gehen', cancel:'Abbrechen',
+      handTitle:'Vor dem Gehen übergeben', handLead:'Captain an ein Mitglied geben, oder den Raum schließen.', handSolo:'Du bist allein. Gehen schließt den Raum.',
+      errNick:'Nickname mit 1 bis 32 Zeichen.', errRoom:'Diesen Raum gibt es nicht.',
       agoNow:'Gerade', agoSec:'vor {n} s', agoMin:'vor {n} min', agoHour:'vor {n} h', agoDay:'vor {n} d',
       noPlace:'Dieser Ort ist nicht auf der Karte.',
       errNet:'Der Raumdienst ist nicht erreichbar. python server/room_server.py starten und http://127.0.0.1:8770/ öffnen.', published:'Veröffentlichte Routen', by:'von',
@@ -121,7 +134,7 @@
   function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
   function token(){ try{ return localStorage.getItem(TOKEN)||''; }catch(e){ return ''; } }
   function savedCode(){ try{ return localStorage.getItem(CODE)||''; }catch(e){ return ''; } }
-  var state = null, draft = [], marking = false, note = '', statusMsg = '', selected = '', API = '', entered = false, roomKind = '', linkState = '', linkMiss = 0;
+  var state = null, draft = [], marking = false, note = '', statusMsg = '', selected = '', API = '', entered = false, roomKind = '', linkState = '', linkMiss = 0, leaving = false;
 
   function api(path, opt){
     opt = opt || {};
@@ -158,27 +171,48 @@
       dock.className = 'st-room';
       dock.hidden = true;
       root().appendChild(dock);
-      bindFrame(dock);
+      bindFrame(dock, {key:FRAME, minW:280, minH:220});
     }
-    return {gate:g, dock:dock};
+    var crew = document.getElementById('stCrew');
+    var crewIco = document.getElementById('stCrewIco');
+    if(!crew){
+      crew = document.createElement('div');
+      crew.id = 'stCrew';
+      crew.className = 'st-room st-crew';
+      crew.hidden = true;
+      root().appendChild(crew);
+      crewIco = document.createElement('button');
+      crewIco.type = 'button';
+      crewIco.id = 'stCrewIco';
+      crewIco.className = 'st-float-ico';
+      crewIco.hidden = true;
+      root().appendChild(crewIco);
+      bindFrame(crew, {key:CREW, minW:220, minH:160});
+      bindIcon(crewIco, CREW, function(){ patchFrame(CREW, {mini:0}); paint(); });
+    }
+    return {gate:g, dock:dock, crew:crew, crewIco:crewIco};
   }
 
-  function readFrame(){
-    try{
-      var s = JSON.parse(localStorage.getItem(FRAME)||'null');
-      if(s && typeof s.l==='number' && typeof s.t==='number' && typeof s.w==='number' && typeof s.h==='number') return s;
-    }catch(e){}
+  function readRaw(key){
+    try{ var s = JSON.parse(localStorage.getItem(key)||'null'); if(s && typeof s==='object') return s; }catch(e){}
     return null;
   }
-  function applyFrame(dock){
-    var s = readFrame();
-    if(!s || !dock) return;
+  function patchFrame(key, part){
+    var s = readRaw(key) || {};
+    Object.keys(part).forEach(function(k){ s[k] = part[k]; });
+    try{ localStorage.setItem(key, JSON.stringify(s)); }catch(e){}
+    return s;
+  }
+  function applyFrame(dock, key, minW, minH){
+    var s = readRaw(key || FRAME);
+    if(!s || !dock || typeof s.l!=='number' || !(s.w>0) || !(s.h>0)) return;
+    minW = minW || 280; minH = minH || 220;
     var host = root();
     var W = host.clientWidth||1, H = host.clientHeight||1;
-    var w = Math.max(280, Math.min(s.w, W));
-    var h = Math.max(220, Math.min(s.h, H));
-    var l = Math.max(0, Math.min(s.l, W-w));
-    var t = Math.max(0, Math.min(s.t, H-h));
+    var w = Math.max(minW, Math.min(s.w, W));
+    var h = Math.max(minH, Math.min(s.h, H));
+    var l = Math.max(0, Math.min(s.l, Math.max(0, W-w)));
+    var t = Math.max(0, Math.min(s.t, Math.max(0, H-h)));
     dock.style.left = l+'px';
     dock.style.top = t+'px';
     dock.style.right = 'auto';
@@ -186,27 +220,36 @@
     dock.style.width = w+'px';
     dock.style.height = h+'px';
   }
-  function saveFrame(dock){
+  function saveFrame(dock, key){
+    if(!dock || dock.hidden || dock.offsetWidth<40) return;
     var host = root().getBoundingClientRect();
     var box = dock.getBoundingClientRect();
-    try{
-      localStorage.setItem(FRAME, JSON.stringify({
-        l: Math.round(box.left-host.left),
-        t: Math.round(box.top-host.top),
-        w: Math.round(box.width),
-        h: Math.round(box.height)
-      }));
-    }catch(e){}
+    patchFrame(key || FRAME, {
+      l: Math.round(box.left-host.left),
+      t: Math.round(box.top-host.top),
+      w: Math.round(box.width),
+      h: Math.round(box.height)
+    });
   }
-  function bindFrame(dock){
-    var drag = null;
+  function placeIcon(ico, l, t){
+    var host = root();
+    var W = host.clientWidth||1, H = host.clientHeight||1;
+    var w = ico.offsetWidth||48, h = ico.offsetHeight||48;
+    l = Math.max(8, Math.min(l, W-w-8));
+    t = Math.max(8, Math.min(t, H-h-8));
+    ico.style.left = l+'px';
+    ico.style.top = t+'px';
+  }
+  function bindFrame(dock, opt){
+    opt = opt || {};
+    var key = opt.key || FRAME, minW = opt.minW || 280, minH = opt.minH || 220, drag = null;
     function place(l, t, w, h){
       var host = root();
       var W = host.clientWidth||1, H = host.clientHeight||1;
-      w = Math.max(280, Math.min(w, W));
-      h = Math.max(220, Math.min(h, H));
-      l = Math.max(0, Math.min(l, W-w));
-      t = Math.max(0, Math.min(t, H-h));
+      w = Math.max(minW, Math.min(w, W));
+      h = Math.max(minH, Math.min(h, H));
+      l = Math.max(0, Math.min(l, Math.max(0, W-w)));
+      t = Math.max(0, Math.min(t, Math.max(0, H-h)));
       dock.style.left = l+'px';
       dock.style.top = t+'px';
       dock.style.right = 'auto';
@@ -245,8 +288,8 @@
         if(south) h = drag.h+dy;
         if(west){ w = drag.w-dx; l = drag.l+dx; }
         if(north){ h = drag.h-dy; t = drag.t+dy; }
-        if(w<280){ if(west) l -= 280-w; w = 280; }
-        if(h<220){ if(north) t -= 220-h; h = 220; }
+        if(w<minW){ if(west) l -= minW-w; w = minW; }
+        if(h<minH){ if(north) t -= minH-h; h = minH; }
       }
       place(l, t, w, h);
     });
@@ -254,16 +297,51 @@
       if(!drag) return;
       drag = null;
       dock.__frameDrag = false;
-      saveFrame(dock);
+      saveFrame(dock, key);
       try{ dock.releasePointerCapture(e.pointerId); }catch(err){}
     }
     dock.addEventListener('pointerup', end);
     dock.addEventListener('pointercancel', end);
     if(window.ResizeObserver){
-      new ResizeObserver(function(){ if(!drag) applyFrame(dock); }).observe(root());
+      new ResizeObserver(function(){ if(!drag) applyFrame(dock, key, minW, minH); }).observe(root());
     } else {
-      window.addEventListener('resize', function(){ if(!drag) applyFrame(dock); });
+      window.addEventListener('resize', function(){ if(!drag) applyFrame(dock, key, minW, minH); });
     }
+  }
+  function bindIcon(ico, key, onOpen){
+    var drag = null, moved = false;
+    ico.addEventListener('pointerdown', function(e){
+      if(e.button!==0) return;
+      var host = root().getBoundingClientRect();
+      var box = ico.getBoundingClientRect();
+      drag = {x:e.clientX, y:e.clientY, l:box.left-host.left, t:box.top-host.top};
+      moved = false;
+      ico.setPointerCapture(e.pointerId);
+      e.preventDefault();
+    });
+    ico.addEventListener('pointermove', function(e){
+      if(!drag) return;
+      var dx = e.clientX-drag.x, dy = e.clientY-drag.y;
+      if(Math.abs(dx)>4 || Math.abs(dy)>4) moved = true;
+      placeIcon(ico, drag.l+dx, drag.t+dy);
+    });
+    function end(e){
+      if(!drag) return;
+      var dx = e.clientX-drag.x, dy = e.clientY-drag.y;
+      placeIcon(ico, drag.l+dx, drag.t+dy);
+      patchFrame(key, {ix:parseFloat(ico.style.left), iy:parseFloat(ico.style.top)});
+      drag = null;
+      try{ ico.releasePointerCapture(e.pointerId); }catch(err){}
+      if(!moved) onOpen();
+    }
+    ico.addEventListener('pointerup', end);
+    ico.addEventListener('pointercancel', end);
+  }
+  function edgeHtml(){
+    return '<i class="st-room-edge n" data-resize="n"></i><i class="st-room-edge s" data-resize="s"></i>'+
+      '<i class="st-room-edge e" data-resize="e"></i><i class="st-room-edge w" data-resize="w"></i>'+
+      '<i class="st-room-edge nw" data-resize="nw"></i><i class="st-room-edge ne" data-resize="ne"></i>'+
+      '<i class="st-room-edge sw" data-resize="sw"></i><i class="st-room-edge se" data-resize="se"></i>';
   }
 
   function bindPlayers(){
@@ -292,8 +370,18 @@
     var onMap = !!(entered && state && state.status==='member');
     ui.gate.hidden = onMap;
     ui.dock.hidden = !onMap;
+    var crewMini = !!(readRaw(CREW) && readRaw(CREW).mini);
+    ui.crew.hidden = !onMap || crewMini;
+    ui.crewIco.hidden = !onMap || !crewMini;
     if(!onMap) paintGate(ui.gate);
-    if(onMap){ paintDock(ui.dock); if(!ui.dock.__frameDrag) applyFrame(ui.dock); }
+    if(onMap){
+      paintDock(ui.dock);
+      paintCrew(ui.crew, ui.crewIco);
+      if(!ui.dock.__frameDrag) applyFrame(ui.dock, FRAME, 280, 220);
+      if(!ui.crew.__frameDrag) applyFrame(ui.crew, CREW, 220, 160);
+      var saved = readRaw(CREW);
+      if(saved && typeof saved.ix==='number') placeIcon(ui.crewIco, saved.ix, saved.iy);
+    }
     window.__stRouteOn = !!(state && state.status==='member' && marking && canDraw());
     window.__stRouteAdd = function(o){
       if(!window.__stRouteOn || !o) return;
@@ -306,6 +394,11 @@
   }
 
   function paintGate(el){
+    if(leaving && state && state.role==='captain' && state.status==='member'){
+      el.innerHTML = '<div class="st-gate-card"><h1>'+esc(t('title'))+'</h1>'+handoffHtml()+'</div>';
+      bindHandoff(el);
+      return;
+    }
     var nick = '';
     try{ nick = localStorage.getItem(NICK)||''; }catch(e){}
     var pre = '';
@@ -353,18 +446,18 @@
       setTimeout(function(){ if(statusMsg===t('copied')){ statusMsg=''; paint(); } }, 1200);
     };
     var sw = el.querySelector('#stSwitch');
-    if(sw) sw.onclick = leave;
+    if(sw) sw.onclick = askLeave;
   }
 
   function paintDock(el){
     var pending = (state.members||[]).filter(function(m){ return m.status==='pending'; });
-    var live = (state.members||[]).filter(function(m){ return m.status==='member'; });
     var mine = canDraw();
     el.innerHTML =
       '<div class="st-room-h" id="stRoomBar" role="group" aria-label="'+esc(state.code)+'"><b>'+esc(state.code)+'</b>'+
         '<button type="button" id="stRoomCopy">'+esc(t('copy'))+'</button>'+
         '<button type="button" id="stRoomLeave">'+esc(t('leave'))+'</button></div>'+
       '<div class="st-room-body">'+
+      (leaving && state.role==='captain' ? handoffHtml() : '')+
       '<p class="st-room-dim">'+esc(t('locGuide'))+'</p>'+
       '<div class="row"><button type="button" id="stLinkPc">'+esc(t('link'))+'</button></div>'+
       linkNote()+
@@ -381,11 +474,9 @@
           '<div class="st-dd-list" hidden>'+
             '<button type="button" data-mode="captain"'+(state.routeMode==='captain'?' class="on"':'')+'>'+esc(t('modeCaptain'))+'</button>'+
             '<button type="button" data-mode="members"'+(state.routeMode==='members'?' class="on"':'')+'>'+esc(t('modeMembers'))+'</button>'+
-          '</div></div></div>'
+          '</div></div></div>'+
+        '<div class="row"><button type="button" id="stDissolve">'+esc(t('dissolve'))+'</button></div>'
       ) : '')+
-      '<div class="st-room-sec"><span>'+esc(t('members'))+'</span>'+
-        live.map(memberRow).join('')+
-      '</div>'+
       '<div class="row"><button type="button" id="stHere">'+esc(t('here'))+'</button>'+
         (mine ? '<button type="button" id="stMark"'+(marking?' class="on"':'')+'>'+esc(marking?t('routeOn'):t('route'))+'</button>' : '')+
       '</div>'+
@@ -413,24 +504,19 @@
       '</div>'+
       (statusMsg ? '<p class="st-room-err">'+esc(statusMsg)+'</p>' : '')+
       '</div>'+
-      '<i class="st-room-edge n" data-resize="n"></i>'+
-      '<i class="st-room-edge s" data-resize="s"></i>'+
-      '<i class="st-room-edge e" data-resize="e"></i>'+
-      '<i class="st-room-edge w" data-resize="w"></i>'+
-      '<i class="st-room-edge nw" data-resize="nw"></i>'+
-      '<i class="st-room-edge ne" data-resize="ne"></i>'+
-      '<i class="st-room-edge sw" data-resize="sw"></i>'+
-      '<i class="st-room-edge se" data-resize="se"></i>';
+      edgeHtml();
     el.querySelector('#stRoomCopy').onclick = function(){
       var text = state.code;
       if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text);
       statusMsg = t('copied'); paint();
       setTimeout(function(){ if(statusMsg===t('copied')){ statusMsg=''; paint(); } }, 1200);
     };
-    el.querySelector('#stRoomLeave').onclick = leave;
+    el.querySelector('#stRoomLeave').onclick = askLeave;
+    bindHandoff(el);
+    var dissolve = el.querySelector('#stDissolve');
+    if(dissolve) dissolve.onclick = function(){ exitRoom({dissolve:true}); };
     var link = el.querySelector('#stLinkPc');
     if(link) link.onclick = linkPc;
-    el.querySelectorAll('[data-mate]').forEach(function(b){ b.onclick=function(){ jumpMember(b.getAttribute('data-mate')); }; });
     el.querySelectorAll('[data-ok]').forEach(function(b){ b.onclick=function(){ decide(b.getAttribute('data-ok'),'approve'); }; });
     el.querySelectorAll('[data-no]').forEach(function(b){ b.onclick=function(){ decide(b.getAttribute('data-no'),'reject'); }; });
     var modeBtn = el.querySelector('#stRouteModeBtn');
@@ -467,6 +553,33 @@
     el.querySelectorAll('[data-del]').forEach(function(b){ b.onclick=function(){ delRoute(b.getAttribute('data-del')); }; });
   }
 
+  function paintCrew(el, ico){
+    var live = (state.members||[]).filter(function(m){ return m.status==='member'; });
+    el.innerHTML =
+      '<div class="st-room-h"><b>'+esc(t('members'))+'</b>'+
+        '<button type="button" id="stCrewMin">'+esc(t('fold'))+'</button></div>'+
+      '<div class="st-room-body">'+
+        (live.map(memberRow).join('') || '<div class="st-room-dim">—</div>')+
+      '</div>'+edgeHtml();
+    el.querySelector('#stCrewMin').onclick = function(ev){
+      ev.stopPropagation();
+      var box = el.getBoundingClientRect();
+      var host = root().getBoundingClientRect();
+      var prev = readRaw(CREW) || {};
+      var ix = typeof prev.ix==='number' ? prev.ix : Math.round(box.left-host.left);
+      var iy = typeof prev.iy==='number' ? prev.iy : Math.round(box.top-host.top);
+      patchFrame(CREW, {mini:1, ix:ix, iy:iy});
+      paint();
+    };
+    el.querySelectorAll('[data-mate]').forEach(function(b){ b.onclick=function(){ jumpMember(b.getAttribute('data-mate')); }; });
+    el.querySelectorAll('[data-cap]').forEach(function(b){ b.onclick=function(){
+      api('/api/rooms/'+encodeURIComponent(state.code)+'/captain', {method:'POST', body:{member:b.getAttribute('data-cap')}}).then(take).catch(fail);
+    }; });
+    ico.textContent = String(live.length);
+    ico.title = t('members');
+    ico.setAttribute('aria-label', t('members'));
+  }
+
   function ageText(seen){
     if(typeof seen!=='number' || !isFinite(seen)) return '';
     var s = Math.max(0, Math.round(Date.now()/1000 - seen));
@@ -491,11 +604,39 @@
   }
   function memberRow(m){
     var you = m.id===state.me.id ? ' · '+esc(t('you')) : '';
-    var name = '<b>'+esc(m.nickname)+you+'</b>';
-    if(!m.location) return '<div class="st-mate">'+name+'</div>';
-    var when = typeof m.seen==='number' ? '<time data-seen="'+m.seen+'">'+esc(ageText(m.seen))+'</time>' : '';
-    return '<button type="button" class="st-mate" data-mate="'+esc(m.id)+'">'+name+
-      '<span>'+esc(placeLabel(m))+'</span>'+when+'</button>';
+    var cap = (state.captain ? m.id===state.captain : state.role==='captain' && m.id===state.me.id) ? ' · '+esc(t('captainTag')) : '';
+    var name = '<b>'+esc(m.nickname)+you+cap+'</b>';
+    var give = state.role==='captain' && m.id!==state.me.id ? '<button type="button" data-cap="'+esc(m.id)+'">'+esc(t('give'))+'</button>' : '';
+    var body;
+    if(!m.location) body = '<div class="st-mate">'+name+'</div>';
+    else {
+      var when = typeof m.seen==='number' ? '<time data-seen="'+m.seen+'">'+esc(ageText(m.seen))+'</time>' : '';
+      body = '<button type="button" class="st-mate" data-mate="'+esc(m.id)+'">'+name+'<span>'+esc(placeLabel(m))+'</span>'+when+'</button>';
+    }
+    return '<div class="st-mate-row">'+body+give+'</div>';
+  }
+  function handoffHtml(){
+    var rest = (state.members||[]).filter(function(m){ return m.status==='member' && state.me && m.id!==state.me.id; });
+    if(!rest.length){
+      return '<div class="st-room-sec st-hand"><span>'+esc(t('handTitle'))+'</span><p class="st-room-dim">'+esc(t('handSolo'))+'</p>'+
+        '<div class="row"><button type="button" id="stDissolveLeave">'+esc(t('dissolveLeave'))+'</button>'+
+        '<button type="button" id="stHandCancel">'+esc(t('cancel'))+'</button></div></div>';
+    }
+    return '<div class="st-room-sec st-hand"><span>'+esc(t('handTitle'))+'</span><p class="st-room-dim">'+esc(t('handLead'))+'</p>'+
+      rest.map(function(m){
+        return '<div class="st-room-row"><span>'+esc(m.nickname)+'</span><button type="button" data-hand="'+esc(m.id)+'">'+esc(t('giveLeave'))+'</button></div>';
+      }).join('')+
+      '<div class="row"><button type="button" id="stDissolveLeave">'+esc(t('dissolve'))+'</button>'+
+      '<button type="button" id="stHandCancel">'+esc(t('cancel'))+'</button></div></div>';
+  }
+  function bindHandoff(el){
+    var go = el.querySelector('#stDissolveLeave');
+    if(go) go.onclick = function(){ exitRoom({dissolve:true}); };
+    var cancel = el.querySelector('#stHandCancel');
+    if(cancel) cancel.onclick = function(){ leaving = false; paint(); };
+    el.querySelectorAll('[data-hand]').forEach(function(b){
+      b.onclick = function(){ exitRoom({transfer:b.getAttribute('data-hand')}); };
+    });
   }
   function jumpMember(id){
     var m = (state.members||[]).filter(function(x){ return x.id===id; })[0];
@@ -623,7 +764,8 @@
   function delRoute(id){
     api('/api/rooms/'+encodeURIComponent(state.code)+'/routes/'+encodeURIComponent(id), {method:'DELETE'}).then(function(st){ if(selected===id) selected=''; take(st); }).catch(fail);
   }
-  function leave(){
+  function localLeave(){
+    leaving = false;
     state = null; draft = []; marking = false; note = ''; selected = ''; statusMsg = ''; entered = false; roomKind = ''; linkState = ''; linkMiss = 0;
     try{ localStorage.removeItem(CODE); }catch(e){}
     window.__stRouteOn = false;
@@ -634,6 +776,19 @@
     if(typeof window.__stReloadPlayers==='function') window.__stReloadPlayers();
     paint();
   }
+  function askLeave(){
+    if(state && state.role==='captain' && state.status==='member'){ leaving = true; paint(); return; }
+    exitRoom({});
+  }
+  function exitRoom(body){
+    if(!state || !state.code){ localLeave(); return; }
+    api('/api/rooms/'+encodeURIComponent(state.code)+'/leave', {method:'POST', body:body||{}}).then(function(){
+      localLeave();
+    }).catch(function(e){
+      if(e && e.body && (e.body.error==='handoff' || e.body.error==='solo')){ leaving = true; paint(); return; }
+      fail(e);
+    });
+  }
   function refresh(){
     if(!state || !token()) return Promise.resolve();
     return api('/api/rooms/'+encodeURIComponent(state.code)).then(function(st){
@@ -642,7 +797,7 @@
       statusMsg = keep;
       if(keep) paint();
     }).catch(function(e){
-      if(e && e.status===403) leave();
+      if(e && (e.status===403 || e.status===404)) localLeave();
     });
   }
 
