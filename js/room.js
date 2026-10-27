@@ -21,7 +21,8 @@
       note:'路线备注', publish:'发布给房间', clear:'清空', comment:'评论', send:'发送', del:'删除',
       mode:'谁可以画路线', modeCaptain:'仅队长', modeMembers:'队员也可以',
       members:'房间成员', fold:'收起', you:'你', captainTag:'队长',
-      give:'设为队长', giveLeave:'交给他并离开', dissolve:'解散房间', dissolveLeave:'解散并离开', cancel:'取消',
+      find:'搜索昵称或地点', none:'没有匹配的人',
+      give:'设为队长', giveShort:'队长', giveLeave:'交给他并离开', dissolve:'解散房间', dissolveLeave:'解散并离开', cancel:'取消',
       handTitle:'离开前先交接', handLead:'把队长交给一位队员，或解散房间。', handSolo:'房间里只有你。离开会解散这个房间。',
       errNick:'请填写 1 到 32 个字的昵称。', errRoom:'没有这个房间。',
       agoNow:'刚刚', agoSec:'{n} 秒前', agoMin:'{n} 分钟前', agoHour:'{n} 小时前', agoDay:'{n} 天前',
@@ -51,7 +52,8 @@
       note:'路線備註', publish:'發布給房間', clear:'清空', comment:'評論', send:'送出', del:'刪除',
       mode:'誰可以畫路線', modeCaptain:'僅隊長', modeMembers:'隊員也可以',
       members:'房間成員', fold:'收起', you:'你', captainTag:'隊長',
-      give:'設為隊長', giveLeave:'交給他並離開', dissolve:'解散房間', dissolveLeave:'解散並離開', cancel:'取消',
+      find:'搜尋暱稱或地點', none:'沒有符合的人',
+      give:'設為隊長', giveShort:'隊長', giveLeave:'交給他並離開', dissolve:'解散房間', dissolveLeave:'解散並離開', cancel:'取消',
       handTitle:'離開前先交接', handLead:'把隊長交給一位隊員，或解散房間。', handSolo:'房間裡只有你。離開會解散這個房間。',
       errNick:'請填寫 1 到 32 個字的暱稱。', errRoom:'沒有這個房間。',
       agoNow:'剛剛', agoSec:'{n} 秒前', agoMin:'{n} 分鐘前', agoHour:'{n} 小時前', agoDay:'{n} 天前',
@@ -81,7 +83,8 @@
       note:'Route note', publish:'Publish to room', clear:'Clear', comment:'Comment', send:'Send', del:'Delete',
       mode:'Who can draw routes', modeCaptain:'Captain only', modeMembers:'Members too',
       members:'Room members', fold:'Minimize', you:'you', captainTag:'Captain',
-      give:'Make captain', giveLeave:'Give and leave', dissolve:'Close room', dissolveLeave:'Close and leave', cancel:'Cancel',
+      find:'Search name or place', none:'No match',
+      give:'Make captain', giveShort:'Lead', giveLeave:'Give and leave', dissolve:'Close room', dissolveLeave:'Close and leave', cancel:'Cancel',
       handTitle:'Hand off before leaving', handLead:'Give the captain role to a member, or close the room.', handSolo:'You are the only person here. Leaving closes the room.',
       errNick:'Use a nickname of 1 to 32 characters.', errRoom:'No room with that code.',
       agoNow:'Just now', agoSec:'{n}s ago', agoMin:'{n} min ago', agoHour:'{n} h ago', agoDay:'{n} d ago',
@@ -111,7 +114,8 @@
       note:'Notiz zur Route', publish:'Für den Raum veröffentlichen', clear:'Leeren', comment:'Kommentar', send:'Senden', del:'Löschen',
       mode:'Wer Routen zeichnen darf', modeCaptain:'Nur der Captain', modeMembers:'Auch Mitglieder',
       members:'Im Raum', fold:'Einklappen', you:'du', captainTag:'Captain',
-      give:'Zum Captain machen', giveLeave:'Geben und gehen', dissolve:'Raum schließen', dissolveLeave:'Schließen und gehen', cancel:'Abbrechen',
+      find:'Name oder Ort', none:'Niemand passt',
+      give:'Zum Captain machen', giveShort:'Capt.', giveLeave:'Geben und gehen', dissolve:'Raum schließen', dissolveLeave:'Schließen und gehen', cancel:'Abbrechen',
       handTitle:'Vor dem Gehen übergeben', handLead:'Captain an ein Mitglied geben, oder den Raum schließen.', handSolo:'Du bist allein. Gehen schließt den Raum.',
       errNick:'Nickname mit 1 bis 32 Zeichen.', errRoom:'Diesen Raum gibt es nicht.',
       agoNow:'Gerade', agoSec:'vor {n} s', agoMin:'vor {n} min', agoHour:'vor {n} h', agoDay:'vor {n} d',
@@ -134,7 +138,7 @@
   function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
   function token(){ try{ return localStorage.getItem(TOKEN)||''; }catch(e){ return ''; } }
   function savedCode(){ try{ return localStorage.getItem(CODE)||''; }catch(e){ return ''; } }
-  var state = null, draft = [], marking = false, note = '', statusMsg = '', selected = '', API = '', entered = false, roomKind = '', linkState = '', linkMiss = 0, leaving = false;
+  var state = null, draft = [], marking = false, note = '', statusMsg = '', selected = '', API = '', entered = false, roomKind = '', linkState = '', linkMiss = 0, leaving = false, crewQ = '';
 
   function api(path, opt){
     opt = opt || {};
@@ -165,6 +169,7 @@
       root().appendChild(g);
     }
     var dock = document.getElementById('stRoom');
+    var dockIco = document.getElementById('stRoomIco');
     if(!dock){
       dock = document.createElement('div');
       dock.id = 'stRoom';
@@ -172,6 +177,15 @@
       dock.hidden = true;
       root().appendChild(dock);
       bindFrame(dock, {key:FRAME, minW:280, minH:220});
+    }
+    if(!dockIco){
+      dockIco = document.createElement('button');
+      dockIco.type = 'button';
+      dockIco.id = 'stRoomIco';
+      dockIco.className = 'st-float-ico st-room-ico';
+      dockIco.hidden = true;
+      root().appendChild(dockIco);
+      bindIcon(dockIco, FRAME, function(){ patchFrame(FRAME, {mini:0}); paint(); });
     }
     var crew = document.getElementById('stCrew');
     var crewIco = document.getElementById('stCrewIco');
@@ -190,7 +204,7 @@
       bindFrame(crew, {key:CREW, minW:220, minH:160});
       bindIcon(crewIco, CREW, function(){ patchFrame(CREW, {mini:0}); paint(); });
     }
-    return {gate:g, dock:dock, crew:crew, crewIco:crewIco};
+    return {gate:g, dock:dock, dockIco:dockIco, crew:crew, crewIco:crewIco};
   }
 
   function readRaw(key){
@@ -368,9 +382,14 @@
   function paint(){
     var ui = ensure();
     var onMap = !!(entered && state && state.status==='member');
-    ui.gate.hidden = onMap;
-    ui.dock.hidden = !onMap;
+    var dockMini = !!(readRaw(FRAME) && readRaw(FRAME).mini);
     var crewMini = !!(readRaw(CREW) && readRaw(CREW).mini);
+    ui.gate.hidden = onMap;
+    ui.dock.hidden = !onMap || dockMini;
+    ui.dockIco.hidden = !onMap || !dockMini;
+    ui.dockIco.textContent = state && state.code ? state.code : '';
+    ui.dockIco.title = t('title');
+    ui.dockIco.setAttribute('aria-label', t('title'));
     ui.crew.hidden = !onMap || crewMini;
     ui.crewIco.hidden = !onMap || !crewMini;
     if(!onMap) paintGate(ui.gate);
@@ -379,6 +398,8 @@
       paintCrew(ui.crew, ui.crewIco);
       if(!ui.dock.__frameDrag) applyFrame(ui.dock, FRAME, 280, 220);
       if(!ui.crew.__frameDrag) applyFrame(ui.crew, CREW, 220, 160);
+      var roomSaved = readRaw(FRAME);
+      if(roomSaved && typeof roomSaved.ix==='number') placeIcon(ui.dockIco, roomSaved.ix, roomSaved.iy);
       var saved = readRaw(CREW);
       if(saved && typeof saved.ix==='number') placeIcon(ui.crewIco, saved.ix, saved.iy);
     }
@@ -454,8 +475,12 @@
     var mine = canDraw();
     el.innerHTML =
       '<div class="st-room-h" id="stRoomBar" role="group" aria-label="'+esc(state.code)+'"><b>'+esc(state.code)+'</b>'+
+        '<div class="st-room-acts">'+
         '<button type="button" id="stRoomCopy">'+esc(t('copy'))+'</button>'+
-        '<button type="button" id="stRoomLeave">'+esc(t('leave'))+'</button></div>'+
+        '<button type="button" id="stRoomLeave">'+esc(t('leave'))+'</button>'+
+        (state.role==='captain' ? '<button type="button" id="stDissolve">'+esc(t('dissolve'))+'</button>' : '')+
+        '<button type="button" id="stRoomMin">'+esc(t('fold'))+'</button>'+
+        '</div></div>'+
       '<div class="st-room-body">'+
       (leaving && state.role==='captain' ? handoffHtml() : '')+
       '<p class="st-room-dim">'+esc(t('locGuide'))+'</p>'+
@@ -474,8 +499,7 @@
           '<div class="st-dd-list" hidden>'+
             '<button type="button" data-mode="captain"'+(state.routeMode==='captain'?' class="on"':'')+'>'+esc(t('modeCaptain'))+'</button>'+
             '<button type="button" data-mode="members"'+(state.routeMode==='members'?' class="on"':'')+'>'+esc(t('modeMembers'))+'</button>'+
-          '</div></div></div>'+
-        '<div class="row"><button type="button" id="stDissolve">'+esc(t('dissolve'))+'</button></div>'
+          '</div></div></div>'
       ) : '')+
       '<div class="row"><button type="button" id="stHere">'+esc(t('here'))+'</button>'+
         (mine ? '<button type="button" id="stMark"'+(marking?' class="on"':'')+'>'+esc(marking?t('routeOn'):t('route'))+'</button>' : '')+
@@ -512,6 +536,16 @@
       setTimeout(function(){ if(statusMsg===t('copied')){ statusMsg=''; paint(); } }, 1200);
     };
     el.querySelector('#stRoomLeave').onclick = askLeave;
+    el.querySelector('#stRoomMin').onclick = function(ev){
+      ev.stopPropagation();
+      var box = el.getBoundingClientRect();
+      var host = root().getBoundingClientRect();
+      var prev = readRaw(FRAME) || {};
+      var ix = typeof prev.ix==='number' ? prev.ix : Math.round(box.left-host.left);
+      var iy = typeof prev.iy==='number' ? prev.iy : Math.round(box.top-host.top);
+      patchFrame(FRAME, {mini:1, ix:ix, iy:iy});
+      paint();
+    };
     bindHandoff(el);
     var dissolve = el.querySelector('#stDissolve');
     if(dissolve) dissolve.onclick = function(){ exitRoom({dissolve:true}); };
@@ -553,14 +587,27 @@
     el.querySelectorAll('[data-del]').forEach(function(b){ b.onclick=function(){ delRoute(b.getAttribute('data-del')); }; });
   }
 
+  function liveMembers(){
+    return (state.members||[]).filter(function(m){ return m.status==='member'; });
+  }
+  function memberRank(m){
+    if(state.me && m.id===state.me.id) return 0;
+    if(state.captain && m.id===state.captain) return 1;
+    return 2;
+  }
   function paintCrew(el, ico){
-    var live = (state.members||[]).filter(function(m){ return m.status==='member'; });
+    var live = liveMembers();
+    var boxWas = document.activeElement && document.activeElement.id==='stCrewQ' ? document.activeElement : null;
+    var caret = boxWas ? boxWas.selectionStart : null;
+    var caretEnd = boxWas ? boxWas.selectionEnd : null;
+    var listWas = el.querySelector('#stCrewList');
+    var scroll = listWas ? listWas.scrollTop : 0;
     el.innerHTML =
       '<div class="st-room-h"><b>'+esc(t('members'))+'</b>'+
+        '<em class="st-crew-n" id="stCrewN"></em>'+
         '<button type="button" id="stCrewMin">'+esc(t('fold'))+'</button></div>'+
-      '<div class="st-room-body">'+
-        (live.map(memberRow).join('') || '<div class="st-room-dim">—</div>')+
-      '</div>'+edgeHtml();
+      '<input id="stCrewQ" class="st-crew-q" type="search" autocomplete="off" placeholder="'+esc(t('find'))+'" value="'+esc(crewQ)+'">'+
+      '<div class="st-room-body" id="stCrewList"></div>'+edgeHtml();
     el.querySelector('#stCrewMin').onclick = function(ev){
       ev.stopPropagation();
       var box = el.getBoundingClientRect();
@@ -571,13 +618,42 @@
       patchFrame(CREW, {mini:1, ix:ix, iy:iy});
       paint();
     };
-    el.querySelectorAll('[data-mate]').forEach(function(b){ b.onclick=function(){ jumpMember(b.getAttribute('data-mate')); }; });
-    el.querySelectorAll('[data-cap]').forEach(function(b){ b.onclick=function(){
-      api('/api/rooms/'+encodeURIComponent(state.code)+'/captain', {method:'POST', body:{member:b.getAttribute('data-cap')}}).then(take).catch(fail);
-    }; });
+    var q = el.querySelector('#stCrewQ');
+    function onQ(){ crewQ = q.value; fillCrew(el); }
+    q.addEventListener('input', onQ);
+    q.addEventListener('search', onQ);
+    fillCrew(el);
+    var listNow = el.querySelector('#stCrewList');
+    if(listNow) listNow.scrollTop = scroll;
+    if(boxWas){
+      q.focus();
+      if(caret!=null) q.setSelectionRange(caret, caretEnd);
+    }
     ico.textContent = String(live.length);
     ico.title = t('members');
     ico.setAttribute('aria-label', t('members'));
+  }
+  function fillCrew(el){
+    var live = liveMembers();
+    var q = crewQ.trim().toLowerCase();
+    var shown = live.filter(function(m){
+      if(!q) return true;
+      return ((m.nickname||'')+' '+(m.location||'')+' '+placeLabel(m)).toLowerCase().indexOf(q)!==-1;
+    }).sort(function(a,b){
+      var d = memberRank(a)-memberRank(b);
+      return d || ((b.seen||0)-(a.seen||0));
+    });
+    var n = el.querySelector('#stCrewN');
+    if(n) n.textContent = q ? (shown.length+'/'+live.length) : String(live.length);
+    var list = el.querySelector('#stCrewList');
+    if(!list) return;
+    list.innerHTML = shown.length
+      ? shown.map(memberRow).join('')
+      : '<div class="st-room-dim">'+(q ? esc(t('none')) : '—')+'</div>';
+    list.querySelectorAll('[data-mate]').forEach(function(b){ b.onclick=function(){ jumpMember(b.getAttribute('data-mate')); }; });
+    list.querySelectorAll('[data-cap]').forEach(function(b){ b.onclick=function(){
+      api('/api/rooms/'+encodeURIComponent(state.code)+'/captain', {method:'POST', body:{member:b.getAttribute('data-cap')}}).then(take).catch(fail);
+    }; });
   }
 
   function ageText(seen){
@@ -603,16 +679,19 @@
     return raw;
   }
   function memberRow(m){
-    var you = m.id===state.me.id ? ' · '+esc(t('you')) : '';
-    var cap = (state.captain ? m.id===state.captain : state.role==='captain' && m.id===state.me.id) ? ' · '+esc(t('captainTag')) : '';
-    var name = '<b>'+esc(m.nickname)+you+cap+'</b>';
-    var give = state.role==='captain' && m.id!==state.me.id ? '<button type="button" data-cap="'+esc(m.id)+'">'+esc(t('give'))+'</button>' : '';
-    var body;
-    if(!m.location) body = '<div class="st-mate">'+name+'</div>';
-    else {
-      var when = typeof m.seen==='number' ? '<time data-seen="'+m.seen+'">'+esc(ageText(m.seen))+'</time>' : '';
-      body = '<button type="button" class="st-mate" data-mate="'+esc(m.id)+'">'+name+'<span>'+esc(placeLabel(m))+'</span>'+when+'</button>';
-    }
+    var tags = '';
+    if(state.me && m.id===state.me.id) tags += '<em>'+esc(t('you'))+'</em>';
+    var isCap = state.captain ? m.id===state.captain : !!(state.role==='captain' && state.me && m.id===state.me.id);
+    if(isCap) tags += '<em class="is-cap">'+esc(t('captainTag'))+'</em>';
+    var give = state.role==='captain' && state.me && m.id!==state.me.id
+      ? '<button type="button" data-cap="'+esc(m.id)+'" title="'+esc(t('give'))+'">'+esc(t('giveShort'))+'</button>' : '';
+    var fresh = typeof m.seen==='number' && (Date.now()/1000-m.seen)<180;
+    var when = typeof m.seen==='number' ? '<time data-seen="'+m.seen+'">'+esc(ageText(m.seen))+'</time>' : '';
+    var place = m.location ? '<span>'+esc(placeLabel(m))+'</span>' : '';
+    var inner = '<i class="st-crew-pip'+(fresh?' on':'')+'"></i><b>'+esc(m.nickname)+'</b>'+tags+place+when;
+    var body = m.location
+      ? '<button type="button" class="st-mate has-place" data-mate="'+esc(m.id)+'">'+inner+'</button>'
+      : '<div class="st-mate">'+inner+'</div>';
     return '<div class="st-mate-row">'+body+give+'</div>';
   }
   function handoffHtml(){
