@@ -25,6 +25,7 @@ server/*.sqlite
 companion/config.json
 companion/build/
 companion/dist/
+companion/dist-next/
 companion/*.spec
 
 # Local game-language files used to build Chinese names. Kept on disk only,

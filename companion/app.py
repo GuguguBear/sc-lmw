@@ -10,7 +10,9 @@
 #   127.0.0.1:8780 stays up only so the star map can hand over the room.
 
 import json
+import os
 import re
+import subprocess
 import sys
 import threading
 import time
@@ -29,9 +31,37 @@ def frozen():
 BUNDLE = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent))
 DATA = Path(sys.executable).resolve().parent if frozen() else Path(__file__).resolve().parent
 ROOT = BUNDLE if frozen() else BUNDLE.parent
+RELEASE_API = "https://api.github.com/repos/GuguguBear/sc-lmw/releases/latest"
+RELEASE_PAGE = "https://github.com/GuguguBear/sc-lmw/releases"
+RELEASE_EXE = "https://github.com/GuguguBear/sc-lmw/releases/download/"
+
+
+def read_version():
+    # companion/VERSION is the number published as the starfix-1.2.3 release.
+    for path in (BUNDLE / "VERSION", Path(__file__).resolve().parent / "VERSION"):
+        try:
+            text = path.read_text(encoding="utf-8").strip()
+        except OSError:
+            continue
+        if re.fullmatch(r"\d+\.\d+\.\d+", text):
+            return text
+    return "0.0.0"
+
+
+VERSION = read_version()
+
+
+def version_tuple(text):
+    match = re.fullmatch(r"(?:starfix-)?(\d+)\.(\d+)\.(\d+)", str(text or "").strip())
+    if not match:
+        return None
+    return tuple(int(part) for part in match.groups())
 CONFIG = DATA / "config.json"
 HOST = "127.0.0.1"
 PORT = 8780
+# The star map calls this port from the live site or from a page on this
+# computer. Any other website must not read the log path or change the room.
+LIVE_ORIGIN = "https://gugugubear.pythonanywhere.com"
 
 TRANS = re.compile(
     r"Transitioning from zone (?P<from_zone>[\w.-]+) in (?P<from_system>[\w.-]+) "
@@ -471,9 +501,39 @@ def set_running(on):
         STATE["status"] = "stopped"
 
 
+def origin_allowed(origin):
+    if not origin:
+        return True
+    if origin == LIVE_ORIGIN:
+        return True
+    parsed = urlparse(origin)
+    host = (parsed.hostname or "").lower()
+    return parsed.scheme == "http" and host in ("127.0.0.1", "localhost")
+
+
 class Handler(BaseHTTPRequestHandler):
     def log_message(self, fmt, *args):
         return
+
+    def cors(self):
+        origin = self.headers.get("Origin")
+        if not origin or not origin_allowed(origin):
+            return
+        self.send_header("Access-Control-Allow-Origin", origin)
+        self.send_header("Vary", "Origin")
+
+    def rejected_origin(self):
+        origin = self.headers.get("Origin")
+        if not origin or origin_allowed(origin):
+            return False
+        raw = b'{"error":"origin"}'
+        self.send_response(403)
+        self.send_header("Content-Type", "application/json; charset=utf-8")
+        self.send_header("Content-Length", str(len(raw)))
+        self.send_header("Cache-Control", "no-store")
+        self.end_headers()
+        self.wfile.write(raw)
+        return True
 
     def send_json(self, code, obj):
         raw = json.dumps(obj, ensure_ascii=False).encode("utf-8")
@@ -481,26 +541,25 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(raw)))
         self.send_header("Cache-Control", "no-store")
-        origin = self.headers.get("Origin")
-        if origin:
-            self.send_header("Access-Control-Allow-Origin", origin)
-            self.send_header("Vary", "Origin")
+        self.cors()
         self.end_headers()
         self.wfile.write(raw)
 
     def do_OPTIONS(self):
+        if self.rejected_origin():
+            return
         self.send_response(204)
         self.send_header("Content-Length", "0")
-        origin = self.headers.get("Origin")
-        if origin:
-            self.send_header("Access-Control-Allow-Origin", origin)
-            self.send_header("Vary", "Origin")
-            self.send_header("Access-Control-Allow-Headers", "Content-Type")
-            self.send_header("Access-Control-Allow-Methods", "POST, OPTIONS")
+        self.cors()
+        self.send_header("Access-Control-Allow-Headers", "Content-Type")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
         self.end_headers()
 
     def read_json(self):
-        n = int(self.headers.get("Content-Length") or 0)
+        try:
+            n = int(self.headers.get("Content-Length") or 0)
+        except ValueError:
+            return {}
         if n <= 0 or n > 100_000:
             return {}
         try:
@@ -509,6 +568,8 @@ class Handler(BaseHTTPRequestHandler):
             return {}
 
     def do_GET(self):
+        if self.rejected_origin():
+            return
         path = unquote(urlparse(self.path).path)
         if path == "/api/status":
             self.send_json(200, public_state())
@@ -535,6 +596,8 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(data)
 
     def do_POST(self):
+        if self.rejected_origin():
+            return
         path = unquote(urlparse(self.path).path)
         body = self.read_json()
         try:
@@ -619,6 +682,154 @@ def tell(text):
         print(text)
 
 
+def _update_lang():
+    try:
+        return desk.windows_lang()
+    except Exception:
+        return "zh-Hans"
+
+
+def unreachable_text():
+    page = RELEASE_PAGE
+    lang = _update_lang()
+    if lang == "zh-Hant":
+        return "偵測到您的網路可能無法存取軟體更新伺服器 Github，建議手動前往查看是否有更新版本\n" + page
+    if lang == "en":
+        return "This network may be unable to reach the update server (GitHub). Check the releases page yourself for a newer version.\n" + page
+    if lang == "de":
+        return "Dieses Netzwerk erreicht den Update-Server (GitHub) möglicherweise nicht. Bitte prüfe die Releases-Seite selbst.\n" + page
+    return "检测到您的网络可能无法访问软件更新服务器 Github，建议手动前往查看是否有更新版本\n" + page
+
+
+def update_ready_text(version):
+    lang = _update_lang()
+    if lang == "zh-Hant":
+        return "發現新版本 %s。點確定後會下載並替換目前的程式，然後自動重新開啟。" % version
+    if lang == "en":
+        return "Version %s is available. Choose OK to download it, replace this copy, and open it again." % version
+    if lang == "de":
+        return "Version %s ist da. Mit OK wird sie geladen, diese Datei ersetzt und danach neu geöffnet." % version
+    return "发现新版本 %s。点确定后会下载并替换当前程序，然后自动重新打开。" % version
+
+
+def _github_json(url):
+    req = urllib.request.Request(url, headers={
+        "User-Agent": "Starfix/" + VERSION,
+        "Accept": "application/vnd.github+json",
+    })
+    try:
+        with urllib.request.urlopen(req, timeout=8) as resp:
+            raw = resp.read(1_000_000)
+    except urllib.error.HTTPError as exc:
+        if exc.code == 404:
+            return None
+        raise OSError("github")
+    except (urllib.error.URLError, TimeoutError, OSError):
+        raise OSError("github")
+    try:
+        data = json.loads(raw.decode("utf-8"))
+    except json.JSONDecodeError:
+        raise OSError("github")
+    return data if isinstance(data, dict) else None
+
+
+def newer_release():
+    mine = version_tuple(VERSION)
+    data = _github_json(RELEASE_API)
+    if not mine or not data:
+        return None
+    theirs = version_tuple(data.get("tag_name"))
+    if not theirs or theirs <= mine:
+        return None
+    url = ""
+    for item in data.get("assets") or []:
+        if not isinstance(item, dict) or item.get("name") != "Starfix.exe":
+            continue
+        link = str(item.get("browser_download_url") or "")
+        if link.startswith(RELEASE_EXE):
+            url = link
+            break
+    if not url:
+        return None
+    return {"version": "%d.%d.%d" % theirs, "url": url}
+
+
+def download_release(url, dest):
+    req = urllib.request.Request(url, headers={"User-Agent": "Starfix/" + VERSION})
+    total = 0
+    try:
+        with urllib.request.urlopen(req, timeout=120) as resp, dest.open("wb") as out:
+            while True:
+                chunk = resp.read(64 * 1024)
+                if not chunk:
+                    break
+                total += len(chunk)
+                if total > 80_000_000:
+                    raise OSError("github")
+                out.write(chunk)
+    except (urllib.error.URLError, TimeoutError, OSError):
+        raise OSError("github")
+    if total < 1_000_000:
+        raise OSError("github")
+
+
+def swap_and_exit(src, dest):
+    script = Path(os.environ.get("TEMP") or os.environ.get("TMP") or ".") / "starfix-update.ps1"
+
+    def quote(value):
+        return "'" + str(value).replace("'", "''") + "'"
+
+    script.write_text(
+        "$src = %s\n$dst = %s\n$procId = %d\n"
+        "$deadline = (Get-Date).AddSeconds(40)\n"
+        "while ((Get-Process -Id $procId -ErrorAction SilentlyContinue) -and ((Get-Date) -lt $deadline)) { Start-Sleep -Milliseconds 200 }\n"
+        "Start-Sleep -Milliseconds 500\n"
+        "try {\n"
+        "  Move-Item -LiteralPath $src -Destination $dst -Force\n"
+        "  Start-Process -FilePath $dst\n"
+        "} catch {\n"
+        "  Add-Type -AssemblyName System.Windows.Forms\n"
+        "  [System.Windows.Forms.MessageBox]::Show('更新文件已经下载，但没能替换当前程序。请关掉 Starfix 后，手动用旁边的 Starfix.update.exe 替换。', 'Starfix')\n"
+        "}\n"
+        "Remove-Item -LiteralPath %s -Force -ErrorAction SilentlyContinue\n"
+        % (quote(src), quote(dest), os.getpid(), quote(script)),
+        encoding="utf-8",
+    )
+    flags = 0x00000200 | 0x08000000
+    subprocess.Popen(
+        ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(script)],
+        creationflags=flags,
+        close_fds=True,
+    )
+    os._exit(0)
+
+
+def maybe_update():
+    # Only the packaged exe replaces itself. Running from source stays as it is.
+    if not frozen():
+        return
+    try:
+        found = newer_release()
+    except OSError:
+        tell(unreachable_text())
+        return
+    if not found:
+        return
+    dest = Path(sys.executable).resolve()
+    src = dest.with_name("Starfix.update.exe")
+    tell(update_ready_text(found["version"]))
+    try:
+        download_release(found["url"], src)
+    except OSError:
+        try:
+            src.unlink()
+        except OSError:
+            pass
+        tell(unreachable_text())
+        return
+    swap_and_exit(src, dest)
+
+
 def raise_window():
     fn = RAISE
     if fn:
@@ -650,6 +861,7 @@ def main():
         except (OSError, urllib.error.URLError):
             tell("Starfix 已经在运行。")
         return
+    maybe_update()
     ThreadingHTTPServer.allow_reuse_address = True
     try:
         httpd = ThreadingHTTPServer((HOST, PORT), Handler)
@@ -682,6 +894,11 @@ if __name__ == "__main__":
             "Status[persistent] Port[Armor_Torso]"
         )
         assert worn is None and WORN["Armor_Torso"].startswith("RRS ")
+        assert version_tuple("1.2.3") == (1, 2, 3)
+        assert version_tuple("starfix-1.2.3") == (1, 2, 3)
+        assert version_tuple("starfix-" + "a" * 40) is None
+        assert version_tuple("1.0.1") > version_tuple("1.0.0")
+        assert version_tuple(VERSION) is not None
         assert WORN_CLS["Armor_Torso"] == "rrs_specialist_heavy_core_04_03_01"
         assert gear_list()[0]["cls"] == "rrs_specialist_heavy_core_04_03_01"
         here = ingest(

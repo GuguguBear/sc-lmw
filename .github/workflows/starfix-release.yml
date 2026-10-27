@@ -23,19 +23,30 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - name: Read the Starfix version
+        id: ver
+        working-directory: companion
+        shell: pwsh
+        run: |
+          $v = (Get-Content -Raw VERSION).Trim()
+          if ($v -notmatch '^\d+\.\d+\.\d+$') { throw "companion/VERSION must look like 1.2.3" }
+          "version=$v" >> $env:GITHUB_OUTPUT
       - name: Build Starfix.exe
         working-directory: companion
         run: |
           python -m pip install --disable-pip-version-check pyinstaller
-          python -m PyInstaller --noconfirm --clean --onefile --windowed --name Starfix --icon icon.ico --add-data "icon.png;." --add-data "icon.ico;." --add-data "index.html;." --add-data "..\css\starmap.css;css" app.py
+          python -m PyInstaller --noconfirm --clean --onefile --windowed --name Starfix --icon icon.ico --add-data "icon.png;." --add-data "icon.ico;." --add-data "index.html;." --add-data "VERSION;." --add-data "..\css\starmap.css;css" app.py
       - name: Publish the release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: starfix-${{ github.sha }}
-          name: Starfix
+          tag_name: starfix-${{ steps.ver.outputs.version }}
+          name: Starfix ${{ steps.ver.outputs.version }}
           make_latest: true
+          overwrite_files: true
           files: companion/dist/Starfix.exe
           body: |
+            Starfix ${{ steps.ver.outputs.version }}
             Windows build of the optional log reader. The source is in companion/.
             It only reads Game.log on the computer where you run it.
+            The program compares this version with GitHub Releases when it starts.
           generate_release_notes: false

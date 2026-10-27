@@ -30,6 +30,8 @@ class _WsgiAdapter(_room.Handler):
             n = int(environ.get("CONTENT_LENGTH") or 0)
         except ValueError:
             n = 0
+        if n < 0 or n > 200_000:
+            n = 0
         raw = environ["wsgi.input"].read(n) if n else b""
         self.rfile = BytesIO(raw)
         self.wfile = BytesIO()

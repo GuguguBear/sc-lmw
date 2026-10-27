@@ -302,6 +302,7 @@ class Desktop:
         self._zoomed = False
         self._ready = False
         self._phase = 0
+        self._marquee = 0
         self._linked = False
         self._link_flash = 0
         self._icon_img = None
@@ -353,7 +354,8 @@ class Desktop:
         self.mark.pack(side="left")
         self.bar_title = tk.Label(bar, text=tr(self.lang, "title"), font=FONT)
         self.bar_title.pack(side="left")
-        self.bar_sub = tk.Label(bar, text="  SC LMW", font=FONT)
+        ver = str(getattr(self.core, "VERSION", "") or "").strip()
+        self.bar_sub = tk.Label(bar, text=("  " + ver) if ver else "  SC LMW", font=FONT)
         self.bar_sub.pack(side="left")
         self.btn_close = self._chrome_btn(bar, "×", self.close, "close")
         self.btn_close.pack(side="right", fill="y")
@@ -370,7 +372,6 @@ class Desktop:
         self.rule.pack(fill="x")
 
         card = tk.Frame(shell, padx=12, pady=8)
-        card.pack(fill="both", expand=True)
         self.card = card
 
         self.lead = tk.Label(card, text="读取 Game.log，换区后把地点发到房间。", font=FONT, anchor="w")
@@ -438,21 +439,14 @@ class Desktop:
         self.scan = self._button(actions, "读最近地点", self._scan)
         self.scan.pack(side="left", padx=(6, 0))
 
-        place_row = tk.Frame(card)
-        place_row.pack(fill="x", pady=(10, 0))
-        self.place_row = place_row
-        self.place_pip = tk.Frame(place_row, width=3)
-        self.place_pip.pack(side="left", fill="y", padx=(0, 8))
-        self.place = tk.Label(place_row, text="还没有地点", font=FONT_PLACE, anchor="w")
-        self.place.pack(side="left", fill="x", expand=True)
-        self.kit = tk.Label(card, text="", font=FONT, anchor="w", justify="left", wraplength=490)
         self.err = tk.Label(card, text="", font=FONT, anchor="w", justify="left", wraplength=490)
+        self.feed = tk.Canvas(shell, height=96, highlightthickness=0, bd=0)
+        self._feed = {"place": "", "ship": "", "gear": "", "on": False}
+        card.bind("<Configure>", self._fit_wrap)
 
         foot_rule = tk.Frame(shell, height=1)
-        foot_rule.pack(fill="x")
         self.foot_rule = foot_rule
-        foot = tk.Frame(shell, height=36)
-        foot.pack(fill="x")
+        foot = tk.Frame(shell, height=42)
         foot.pack_propagate(False)
         self.foot = foot
         self.meta = tk.Label(foot, text="", font=FONT, anchor="w", padx=12)
@@ -461,6 +455,10 @@ class Desktop:
         self.quit.pack(side="right", padx=8, pady=4)
         self.back = self._button(foot, "后台运行", self._background)
         self.back.pack(side="right", padx=(8, 0), pady=4)
+        foot.pack(side="bottom", fill="x")
+        foot_rule.pack(side="bottom", fill="x")
+        self.feed.pack(side="bottom", fill="x")
+        card.pack(fill="both", expand=True)
 
         self._apply_copy()
         self._paint()
@@ -478,9 +476,10 @@ class Desktop:
             max(0, (screen_w - width) // 2),
             max(40, (screen_h - height) // 6),
         )
-        self.root.minsize(420, 480)
+        self.root.minsize(420, 520)
         self.root.geometry(self._normal)
         self.root.bind("<Map>", self._on_map)
+        self._mount_grips()
         self.root.after(30, self._seat_taskbar)
         self._ready = True
 
@@ -605,11 +604,12 @@ class Desktop:
         self.bar_sub.configure(bg=c["panel"], fg=c["muted"])
         for widget in self.chrome:
             widget.configure(bg=c["panel"], fg=c["ink"])
-        for widget in (self.lead, self.tos, self.linked, self.log_label, self.lang_label, self.look, self.place, self.meta, self.api_label, self.room_label):
+        for widget in (self.lead, self.tos, self.linked, self.log_label, self.lang_label, self.look, self.meta, self.api_label, self.room_label):
             widget.configure(bg=c["panel"], fg=c["muted"])
         self.linked.configure(fg=c["ink"])
-        self.place.configure(bg=c["panel"], fg=c["accent"])
-        self.kit.configure(bg=c["panel"], fg=c["muted"] if "muted" in c else c["ink"])
+        self.feed.configure(bg=c["bg"])
+        for grip in getattr(self, "_grips", []):
+            grip.configure(bg=c["accent"])
         self.log_label.configure(fg=c["accent"])
         self.lang_label.configure(fg=c["accent"])
         self.look.configure(fg=c["accent"])
@@ -622,8 +622,6 @@ class Desktop:
         self.theme_row.configure(bg=c["panel"])
         self.actions.configure(bg=c["panel"])
         self.manual.configure(bg=c["panel"])
-        self.place_row.configure(bg=c["panel"])
-        self.place_pip.configure(bg=c["accent"])
         for entry in (self.log, self.api, self.room):
             entry.configure(
                 bg=c["bg"], fg=c["ink"], insertbackground=c["ink"],
@@ -668,25 +666,20 @@ class Desktop:
             text = place["code"]
             if place.get("system"):
                 text += "  ·  " + place["system"]
-            self.place.configure(text=text)
         else:
-            self.place.configure(text=tr(self.lang, "place_none"))
-        kit = []
-        if place.get("ship"):
-            kit.append(place["ship"])
+            text = tr(self.lang, "place_none")
         names = [item.get("name") for item in (place.get("gear") or []) if item.get("name")]
-        if names:
-            kit.append(" · ".join(names[:6]))
-        self.kit.configure(text="\n".join(kit))
-        if kit and not self.kit.winfo_ismapped():
-            self.kit.pack(fill="x", pady=(4, 0), after=self.place_row)
-        elif not kit and self.kit.winfo_ismapped():
-            self.kit.pack_forget()
+        self._feed = {
+            "place": text,
+            "ship": place.get("ship") or "",
+            "gear": "  ·  ".join(names[:8]),
+            "on": bool(state.get("running")),
+        }
         self.meta.configure(text=_status_text(state, self.lang))
         err = self._local_error(state.get("error") or "")
         self.err.configure(text=err)
         if err and not self.err.winfo_ismapped():
-            self.err.pack(fill="x", pady=(4, 0), before=self.place_row)
+            self.err.pack(fill="x", pady=(4, 0))
         elif not err and self.err.winfo_ismapped():
             self.err.pack_forget()
         self.watch.configure(text=tr(self.lang, "watch_stop" if state.get("running") else "watch"))
@@ -749,16 +742,85 @@ class Desktop:
             return tr(self.lang, "err_http") + err[len("房间服务返回"):]
         return err
 
+    def _fit_wrap(self, event=None):
+        width = event.width if event is not None else self.card.winfo_width()
+        wrap = max(180, width - 8)
+        self.linked.configure(wraplength=wrap)
+        self.pair_text.configure(wraplength=wrap)
+        self.err.configure(wraplength=wrap)
+
     def _refit(self):
+        self._fit_wrap()
+
+    def _mount_grips(self):
+        cursors = {
+            "n": "size_ns", "s": "size_ns", "e": "size_we", "w": "size_we",
+            "nw": "size_nw_se", "se": "size_nw_se", "ne": "size_ne_sw", "sw": "size_ne_sw",
+        }
+        specs = (
+            ("n", {"relx": 0, "rely": 0, "relwidth": 1, "height": 6, "anchor": "nw"}),
+            ("s", {"relx": 0, "rely": 1, "relwidth": 1, "height": 6, "anchor": "sw"}),
+            ("w", {"relx": 0, "rely": 0, "relheight": 1, "width": 6, "anchor": "nw"}),
+            ("e", {"relx": 1, "rely": 0, "relheight": 1, "width": 6, "anchor": "ne"}),
+            ("nw", {"relx": 0, "rely": 0, "width": 14, "height": 14, "anchor": "nw"}),
+            ("ne", {"relx": 1, "rely": 0, "width": 14, "height": 14, "anchor": "ne"}),
+            ("sw", {"relx": 0, "rely": 1, "width": 14, "height": 14, "anchor": "sw"}),
+            ("se", {"relx": 1, "rely": 1, "width": 14, "height": 14, "anchor": "se"}),
+        )
+        self._grips = []
+        for edge, opts in specs:
+            grip = tk.Frame(self.root, cursor=cursors[edge], bg=self._colors()["accent"])
+            grip.place(**opts)
+            grip.bind("<ButtonPress-1>", lambda event, name=edge: self._resize_start(event, name))
+            grip.bind("<B1-Motion>", self._resize_move)
+            grip.bind("<ButtonRelease-1>", self._resize_end)
+            self._grips.append(grip)
+
+    def _resize_start(self, event, edge):
         if self._zoomed:
+            self._zoomed = False
+            self.btn_max.configure(text="□")
+        self._geom = {
+            "edge": edge,
+            "x": event.x_root, "y": event.y_root,
+            "w": self.root.winfo_width(), "h": self.root.winfo_height(),
+            "px": self.root.winfo_x(), "py": self.root.winfo_y(),
+        }
+
+    def _resize_move(self, event):
+        g = self._geom
+        if not g:
             return
-        self.root.update_idletasks()
-        width = max(self.root.winfo_width(), 520)
-        height = self.shell.winfo_reqheight() + 4
-        if height < 560:
-            height = 560
-        self.root.geometry("%dx%d+%d+%d" % (width, height, self.root.winfo_x(), self.root.winfo_y()))
-        self._normal = self.root.geometry()
+        dx = event.x_root - g["x"]
+        dy = event.y_root - g["y"]
+        x, y, w, h = g["px"], g["py"], g["w"], g["h"]
+        edge = g["edge"]
+        if "e" in edge:
+            w = g["w"] + dx
+        if "s" in edge:
+            h = g["h"] + dy
+        if "w" in edge:
+            w = g["w"] - dx
+            x = g["px"] + dx
+        if "n" in edge:
+            h = g["h"] - dy
+            y = g["py"] + dy
+        if w < 420:
+            if "w" in edge:
+                x -= 420 - w
+            w = 420
+        if h < 520:
+            if "n" in edge:
+                y -= 520 - h
+            h = 520
+        self.root.geometry("%dx%d+%d+%d" % (int(w), int(h), int(x), int(y)))
+
+    def _resize_end(self, _event):
+        if not self._geom:
+            return
+        self._geom = None
+        if not self._zoomed:
+            self._normal = self.root.geometry()
 
     def _browse(self):
         path = filedialog.askopenfilename(
@@ -833,16 +895,49 @@ class Desktop:
             self.linked.configure(fg=c["on"], bg=c["accent"])
             self.root.configure(bg=c["accent"])
             self.shell.configure(bg=c["accent"])
-        watching = False
-        try:
-            watching = bool(self.core.public_state().get("running"))
-        except Exception:
-            watching = False
-        if watching:
-            self.place_pip.configure(bg=c["accent"] if (self._phase // 6) % 2 == 0 else c["line"])
-        else:
-            self.place_pip.configure(bg=c["accent"] if self._linked else c["line"])
+        self._draw_feed()
         self.root.after(90, self._animate)
+
+    def _draw_feed(self):
+        box = self.feed
+        if not box.winfo_exists():
+            return
+        c = self._colors()
+        width = max(box.winfo_width(), 2)
+        height = max(box.winfo_height(), 2)
+        feed = self._feed
+        on = bool(feed.get("on"))
+        box.delete("all")
+        box.configure(bg=c["bg"])
+        box.create_rectangle(0, 0, 3, height, fill=c["accent"], width=0)
+        live = "LIVE" if on else "IDLE"
+        pulse = (self._phase // 6) % 2 == 0
+        box.create_text(14, 16, text=live, anchor="w", font=FONT, fill=c["accent"] if (on and pulse) or not on else c["line"])
+        if on:
+            for i in range(6):
+                hot = ((self._phase // 2) + i) % 6 < 3
+                box.create_rectangle(width - 16 - i * 7, 8, width - 12 - i * 7, 22, fill=c["accent"] if hot else c["line"], width=0)
+            y = 6 + (self._phase * 5) % max(1, height - 8)
+            box.create_rectangle(10, y, width - 8, y + 2, fill=c["line"], width=0)
+        place = feed.get("place") or ""
+        ship = feed.get("ship") or ""
+        gear = feed.get("gear") or ""
+        box.create_text(14, 40, text=place, anchor="w", font=FONT, fill=c["ink"])
+        caret = " ▍" if on and pulse else ""
+        box.create_text(14, 60, text=(ship or "—") + caret, anchor="w", font=FONT, fill=c["accent"] if ship else c["muted"])
+        if gear:
+            import tkinter.font as tkfont
+            measure = tkfont.Font(font=FONT).measure(gear)
+            room = max(40, width - 28)
+            if on and measure > room:
+                gap = 48
+                self._marquee = (self._marquee + 3) % (measure + gap)
+                shift = self._marquee
+                box.create_text(14 - shift, 80, text=gear + " " * 8 + gear, anchor="w", font=FONT, fill=c["muted"])
+            else:
+                box.create_text(14, 80, text=gear, anchor="w", font=FONT, fill=c["muted"])
+        elif on:
+            box.create_text(14, 80, text="· · ·", anchor="w", font=FONT, fill=c["line"])
 
     def _tray_hwnd_ready(self):
         if self._tray_hwnd or sys.platform != "win32":
@@ -1020,12 +1115,13 @@ class Desktop:
         self.root.mainloop()
 
 
-def accept_terms(lang, theme):
+def accept_terms(lang, theme, version=""):
     colors = THEMES.get(theme) or THEMES["scifi"]
     _dpi()
     root = tk.Tk()
     root.overrideredirect(True)
-    root.title("Starfix")
+    ver = str(version or "").strip()
+    root.title("Starfix" + ((" " + ver) if ver else ""))
     ico = _asset("icon.ico")
     if ico:
         try:
@@ -1058,7 +1154,7 @@ def accept_terms(lang, theme):
     bar = tk.Frame(shell, bg=colors["panel"], height=28)
     bar.pack(fill="x")
     bar.pack_propagate(False)
-    title = tk.Label(bar, text="Starfix", font=FONT, bg=colors["panel"], fg=colors["ink"])
+    title = tk.Label(bar, text="Starfix" + ((" " + ver) if ver else ""), font=FONT, bg=colors["panel"], fg=colors["ink"])
     title.pack(side="left", padx=10)
     terms_heading = tk.Label(bar, text="  " + tr(lang, "terms_title"), font=FONT, bg=colors["panel"], fg=colors["muted"])
     close = tk.Label(bar, text="×", font=FONT, bg=colors["panel"], fg=colors["ink"], padx=12, cursor="hand2")
@@ -1130,6 +1226,6 @@ def accept_terms(lang, theme):
 def open_window(core):
     lang = canon_lang(core.CFG.get("lang")) or windows_lang()
     theme = core.CFG.get("theme") if core.CFG.get("theme") in THEMES else "scifi"
-    if not accept_terms(lang, theme):
+    if not accept_terms(lang, theme, getattr(core, "VERSION", "")):
         return
     Desktop(core).run()

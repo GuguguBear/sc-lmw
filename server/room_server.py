@@ -27,8 +27,9 @@ HOST = "127.0.0.1"
 PORT = 8770
 ALPH = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
 # These stay on disk for local builds. The room site must not hand them out.
-BLOCK_DIR = {"language", ".cache", ".git", ".test", "__pycache__", "server"}
-BLOCK_EXT = {".sqlite", ".ini", ".pyc"}
+BLOCK_DIR = {"language", ".cache", ".git", ".test", "__pycache__", "server", "companion"}
+BLOCK_EXT = {".sqlite", ".ini", ".pyc", ".spec"}
+BLOCK_NAME = {"config.json"}
 ONLINE_S = 600
 LOCK = threading.Lock()
 
@@ -349,7 +350,10 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
 
     def read_json(self):
-        n = int(self.headers.get("Content-Length") or 0)
+        try:
+            n = int(self.headers.get("Content-Length") or 0)
+        except ValueError:
+            return {}
         if n <= 0 or n > 200_000:
             return {}
         try:
@@ -418,7 +422,14 @@ class Handler(BaseHTTPRequestHandler):
                 if not room:
                     self.send_json(404, {"error": "room"})
                     return
-                status = "member" if room["captain"] == me["id"] else "pending"
+                existing = con.execute(
+                    "SELECT status FROM membership WHERE room=? AND member=?",
+                    (code, me["id"]),
+                ).fetchone()
+                if room["captain"] == me["id"] or (existing and existing["status"] == "member"):
+                    status = "member"
+                else:
+                    status = "pending"
                 con.execute(
                     """
                     INSERT INTO membership (room, member, status, created) VALUES (?,?,?,?)
@@ -715,7 +726,7 @@ class Handler(BaseHTTPRequestHandler):
         except ValueError:
             self.send_error(403)
             return
-        if (parts and parts[0].lower() in BLOCK_DIR) or target.suffix.lower() in BLOCK_EXT or target.name.startswith("."):
+        if (parts and parts[0].lower() in BLOCK_DIR) or target.suffix.lower() in BLOCK_EXT or target.name.lower() in BLOCK_NAME or target.name.startswith("."):
             self.send_error(404)
             return
         if not target.is_file() or target == DB or "rooms.sqlite" in target.name:

@@ -348,8 +348,20 @@ window.__stLeaderFrame=function(entries, scr, hover){ ensurePilotUi();
   const hv=hover&&hover.o&&hover.o.k==='player'&&hover.o.pl&&!hover.o.grp?hover:null;
   if(hv&&String(hv.o.pl.id)!==ST_PIN){ const hp=scr(hv.p);
     if(hp){ const bits=pilotBits(hv.o.pl);
-      tip.innerHTML='<b>'+esc(hv.o.n)+'</b><span>'+esc(bits.place)+'</span><span>'+esc(bits.ship||_t('pilot.no_ship'))+'</span>';
-      tip.style.left=(hp.x+16)+'px'; tip.style.top=(hp.y+14)+'px'; tip.hidden=false;
+      const lines=[hv.o.n, bits.place, bits.ship||_t('pilot.no_ship')];
+      const sig=lines.join('\n');
+      if(tip.dataset.sig!==sig){
+        tip.dataset.sig=sig;
+        tip.innerHTML=lines.map(function(line,i){ return (i?'<span':'<b')+' class="st-fit"><span class="st-run">'+esc(line)+'</span>'+(i?'</span>':'</b>'); }).join('');
+      }
+      const W=ROOT.clientWidth||1, cap=Math.min(440, Math.max(160, W-32));
+      tip.style.maxWidth=cap+'px';
+      let left=hp.x+16, top=hp.y+14;
+      tip.hidden=false;
+      if(left+tip.offsetWidth>W-8) left=Math.max(8, hp.x-tip.offsetWidth-16);
+      if(top+tip.offsetHeight>(ROOT.clientHeight||1)-8) top=Math.max(8, hp.y-tip.offsetHeight-12);
+      tip.style.left=left+'px'; tip.style.top=top+'px';
+      tip.querySelectorAll('.st-fit').forEach(tuneFit);
     } else tip.hidden=true;
   } else tip.hidden=true;
 };
