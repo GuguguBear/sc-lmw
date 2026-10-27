@@ -23,6 +23,7 @@ server/*.sqlite
 
 # Companion settings, including the room token. This stays on this computer.
 companion/config.json
+companion/history.jsonl
 companion/build/
 companion/dist/
 companion/dist-next/

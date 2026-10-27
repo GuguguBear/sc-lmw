@@ -696,9 +696,24 @@
 .sc-lmw .st-call-gear{margin-top:8px}
 .sc-lmw .st-call-gear p{margin:0;color:var(--sclmw-muted);font-size:13px}
 .sc-lmw[data-theme="compact"] .st-call,.sc-lmw[data-theme="practical"] .st-call,.sc-lmw[data-theme="chassis"] .st-call,.sc-lmw[data-theme="scifi"] .st-call{border-radius:0}
+.sc-lmw .st-tabs button#stHistBtn{font-size:13px}
+.sc-lmw .st-hist{position:absolute;right:16px;top:66px;z-index:8;width:min(380px,calc(100% - 32px));max-height:min(520px,62vh);display:flex;flex-direction:column;overflow:hidden;box-sizing:border-box;padding:0;border:1px solid var(--sclmw-line2);background:rgba(8,12,20,.94);border-radius:14px;color:var(--sclmw-ink);font-family:"Chakra Petch","Inter","PingFang SC","Microsoft YaHei",sans-serif;font-size:13px;pointer-events:auto}
+.sc-lmw .st-hist[hidden]{display:none}
+.sc-lmw .st-hist header{display:flex;align-items:center;gap:8px;flex:0 0 auto;padding:8px 12px;border-bottom:1px solid var(--sclmw-line)}
+.sc-lmw .st-hist header b{font-size:16px;letter-spacing:.06em;margin-right:auto}
+.sc-lmw .st-hist header button{height:32px;min-height:32px;padding:0 12px;border:1px solid var(--sclmw-line2);background:transparent;color:var(--sclmw-ink);font:inherit;font-size:13px;font-weight:700;cursor:pointer}
+.sc-lmw .st-hist-lead{flex:0 0 auto;margin:0;padding:8px 12px 0;color:var(--sclmw-muted);font-size:13px;line-height:1.45}
+.sc-lmw .st-hist-list{flex:1 1 auto;min-height:0;overflow:auto;padding:8px 12px 12px}
+.sc-lmw .st-hist-empty{margin:8px 0;color:var(--sclmw-muted);font-size:13px;line-height:1.45}
+.sc-lmw button.st-hist-row{display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start;gap:2px;width:100%;height:auto;min-height:0;margin:6px 0;padding:8px 10px;border:1px solid var(--sclmw-line);background:transparent;color:var(--sclmw-ink);text-align:left;white-space:normal;font-weight:400;line-height:1.4;cursor:pointer;box-sizing:border-box}
+.sc-lmw button.st-hist-row:hover{border-color:var(--sclmw-cyan)}
+.sc-lmw button.st-hist-row time{color:var(--sclmw-cyan);font-size:13px;font-weight:700;font-variant-numeric:tabular-nums}
+.sc-lmw button.st-hist-row b{font-size:14px;font-weight:700}
+.sc-lmw button.st-hist-row small{color:var(--sclmw-dim);font-size:13px}
+.sc-lmw[data-theme="compact"] .st-hist,.sc-lmw[data-theme="practical"] .st-hist,.sc-lmw[data-theme="chassis"] .st-hist,.sc-lmw[data-theme="scifi"] .st-hist{border-radius:0}
 /* Single-line labels sit in the middle of their box. The route pill was a
    stretched block, so its line stayed on the top edge. */
-.sc-lmw button:not(.st-mate):not(.st-dd-btn){
+.sc-lmw button:not(.st-mate):not(.st-dd-btn):not(.st-hist-row){
   display:inline-flex;
   align-items:center;
   justify-content:center;

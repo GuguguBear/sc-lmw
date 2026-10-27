@@ -20,6 +20,7 @@ import urllib.error
 import urllib.request
 
 import desk
+import history
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import quote, unquote, urlparse
@@ -57,6 +58,7 @@ def version_tuple(text):
         return None
     return tuple(int(part) for part in match.groups())
 CONFIG = DATA / "config.json"
+history.open_store(DATA / "history.jsonl")
 HOST = "127.0.0.1"
 PORT = 8780
 # The star map calls this port from the live site or from a page on this
@@ -367,6 +369,7 @@ def post_place(place):
 
 def consider(line, send):
     global LAST_SIG
+    history.note(line)
     place = ingest(line)
     with LOCK:
         current = STATE.get("place") or {}
@@ -419,6 +422,7 @@ def scan_tail():
 
 
 def watch():
+    history.backfill(CFG["logPath"])
     while not STOP.is_set():
         path = Path(CFG["logPath"])
         if not path.is_file():
@@ -592,6 +596,9 @@ class Handler(BaseHTTPRequestHandler):
         path = unquote(urlparse(self.path).path)
         if path == "/api/status":
             self.send_json(200, public_state())
+            return
+        if path == "/api/history":
+            self.send_json(200, {"events": history.public()})
             return
         if path in ("/", "/index.html"):
             self.file(BUNDLE / "index.html", "text/html; charset=utf-8")
@@ -1050,6 +1057,7 @@ def main():
         return
     HTTPD = httpd
     threading.Thread(target=httpd.serve_forever, daemon=True).start()
+    threading.Thread(target=lambda: history.backfill(CFG["logPath"]), daemon=True).start()
     try:
         desk.open_window(sys.modules[__name__])
     finally:
@@ -1098,6 +1106,61 @@ if __name__ == "__main__":
         ingest(ship_line)
         assert SHIP == "Aegis Idris-M", SHIP
         assert DEST and DEST["code"] == "RR_HUR_L2", DEST
+        trail = history.new_state()
+        bought = history.parse(
+            "<2026-10-27T10:53:23.969Z> SendShopBuyRequest shopName[SCShop_LiveFire_Truckstop02-001] "
+            "client_price[400.000000] itemName[nvtc_optics_rdot_x1_s1] quantity[1]",
+            trail,
+        )
+        assert bought == [] and trail["buy"]["item"] == "nvtc_optics_rdot_x1_s1"
+        done = history.parse(
+            "<2026-10-27T10:53:24.579Z> RmShopFlowResponse result[Success] type[Buying]",
+            trail,
+        )
+        assert done and done[0]["kind"] == "buy" and done[0]["qty"] == 1 and done[0]["price"] == 400
+        jumped = history.parse(
+            "<2026-10-26T00:20:00.000Z> AEGS_Idris_M_903672034572|CSCItemNavigation::CalculateRoute|"
+            "Projected Start Location is 赫 HUR L3 for pilot to destination LOC_RR_S1_L4",
+            trail,
+        )
+        jump = next(row for row in jumped if row["kind"] == "jump")
+        assert jump["start"] == "赫 HUR L3" and jump["code"] == "RR_HUR_L4" and jump["dest"] == "HUR-L4"
+        assert jump["ship"] == "Aegis Idris-M"
+        beacon = history.parse(
+            "<2026-10-26T00:22:00.000Z> AEGS_Idris_M_903672034572|CSCItemNavigation::CalculateRoute|"
+            "Projected Start Location is 赫 HUR L5 for pilot to destination MISSION_QT_Quantum_Beacon_ShortRange_Salvage_1",
+            trail,
+        )
+        beacon_jump = next(row for row in beacon if row["kind"] == "jump")
+        assert beacon_jump["destKind"] == "beacon" and beacon_jump["code"] == ""
+        asset = history.parse(
+            "<2026-10-27T11:30:23.000Z> RSI_Constellation_Mk5_Centaurus_904444518961|"
+            "CSCItemNavigation::CalculateRoute|Projected Start Location is 赫 HUR L4 for pilot "
+            "to destination arccorp_cluster_001_frost_{C4F29ABD-9E68-4FD7-9A70-A0522884BF50}.socpak",
+            trail,
+        )
+        asset_jump = next(row for row in asset if row["kind"] == "jump")
+        assert asset_jump["dest"] == "" and asset_jump["code"] == ""
+        rough = history.parse(
+            "<2026-10-26T01:32:16.000Z> AEGS_Idris_M_903672034572|CSCItemNavigation::CalculateRoute|"
+            "Projected Start Location is 赫 HUR L1 for pilot to destination ab_collector_gas_Stanton1",
+            trail,
+        )
+        rough_jump = next(row for row in rough if row["kind"] == "jump")
+        assert rough_jump["dest"] == "" and rough_jump["start"] == "赫 HUR L1"
+        mission = history.parse(
+            '<2026-10-26T00:21:00.000Z> Notification "新任务：返回 赫-L1 绿色林地站:" , Action: Next',
+            trail,
+        )
+        assert mission and mission[0]["kind"] == "mission" and mission[0]["code"] == "RR_HUR_L1"
+        assert history.parse(
+            '<2026-10-26T00:21:01.000Z> Notification "飞船启动: 找到按钮" , Action: Next',
+            trail,
+        ) == []
+        assert history.parse(
+            "<2026-10-26T00:18:39.366Z> Legacy login success",
+            trail,
+        )[0]["kind"] == "online"
         print("parser ok", got, SHIP, WORN["Armor_Torso"])
     else:
         main()
