@@ -1,6 +1,6 @@
 # SC LMW – Star Citizen LiveMap Wiki
 
-**Version 1.0.0** · AGPL-3.0 · [Deutsche Version](README.de.md)
+**Version 1.0.0** · AGPL-3.0 · [Deutsche Version](README.de.md) · [What changed](docs/WHATS_NEW.md)
 
 **Your whole 'verse on one screen.** A free, open-source 3D map of Star Citizen: every system, planet, moon, station and jump point, a search that knows where to find every ore, item, ship, commodity, blueprint and mission, live trade prices, holographic 3D ships, and your own org's pilots flying around on it in real time.
 
@@ -76,15 +76,23 @@ Optional: `python3 scripts/build-all.py --with-de` adds the German in-game texts
 
 The map stays inside its box. It never styles your `body`, fonts or layout, uses one global name (`window.SCLMW`), scales with its container and works from any domain or sub-folder. Both ways are tested against a deliberately "hostile" guest page: see [`examples/iframe.html`](examples/iframe.html) and [`examples/embed.html`](examples/embed.html).
 
-## Interface language (German/English)
+## Interface language
 
-The whole interface — buttons, panels, search, legend, error messages, time phrases, number format — is bilingual, German and English. It auto-detects the visitor's browser language (`de*` → German, else English), and there's a small language switch in the map itself (globe icon) that changes it live, no reload, remembered per visitor in their own browser. You can also set it explicitly:
+The interface — buttons, panels, search, legend, error messages, time phrases, number format — is available in German, English, Simplified Chinese and Traditional Chinese. It follows the visitor's browser language (`zh-TW` / `zh-HK` / `zh-MO` → Traditional Chinese, other `zh*` → Simplified Chinese, `de*` → German, otherwise English). The language button opens the list and switches live, without a reload. The choice is remembered in that browser. You can also set it explicitly:
 
-- `LANG` in `config.js`: `'auto'` (default), `'de'`, or `'en'`.
-- `data-lang="de"` on the `sc-lmw.js` script tag (direct-embed method).
-- `mount(el, { lang: 'de' })` if you call `SCLMW.mount()` yourself.
+- `LANG` in `config.js`: `'auto'` (default), `'de'`, `'en'`, `'zh-Hans'`, or `'zh-Hant'`. `zh` / `zh-CN` / `zh-SG` count as Simplified, `zh-TW` / `zh-HK` / `zh-MO` as Traditional.
+- `data-lang="zh-Hans"` on the `sc-lmw.js` script tag (direct-embed method).
+- `mount(el, { lang: 'zh-Hans' })` if you call `SCLMW.mount()` yourself.
 
-This is a **separate** setting from the small "DE"/"EN" button that was already in the map before: that older button only translates in-game text (mission types, amenity names, the German community description) and is untouched by this. The interface language never changes game/location/ship/item names — those stay exactly as the game names them, in whichever language your data build used.
+Choosing German also shows German mission and amenity names. Choosing Chinese shows Chinese place names. English keeps the English names. Details for visitors are in [docs/WHATS_NEW.md](docs/WHATS_NEW.md).
+
+## Appearance
+
+Five interface themes, switched from the ▣ button next to the language control and remembered in the browser: Classic (the original look), Compact, Practical, Chassis and Sci-fi.
+
+- `THEME` in `config.js`: `'compact'` (default), `'classic'`, `'practical'`, `'chassis'`, or `'scifi'`.
+- `data-theme="chassis"` on the script tag, or `mount(el, { theme: 'chassis' })`.
+- A visitor's own choice wins over this default.
 
 ## Show your own pilots
 
@@ -145,9 +153,9 @@ config.js               the one file most people edit (PLAYERS_URL, ...)
 players.example.json    five fictional demo pilots
 js/starmap.js           map engine: 3D scene, search, categories, prices, blueprints, missions
 js/holo.js              FleetYards 3D ship models
-js/i18n.js              interface language (German/English), see "Interface language" above
+js/i18n.js              interface language (de / en / zh-Hans / zh-Hant)
 js/sc-lmw.js            one-script-tag loader for embedding
-css/starmap.css         styles, all scoped under .sc-lmw
+css/starmap.css         styles under .sc-lmw; themes classic, compact, practical, chassis, scifi
 vendor/three/           three.js r128 + loaders (MIT)
 scripts/                data build pipeline (Python)
 examples/               iframe and direct-embed examples

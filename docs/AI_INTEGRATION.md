@@ -67,13 +67,16 @@ reasonable choice and note what you chose.
          data-players-url       see step 4 below (default: <base>players.example.json, the fictional demo)
          data-players-headers   a JSON object as a string, e.g. '{"Authorization":"Bearer xyz"}'
          data-poll-ms            how often (ms) to re-fetch data-players-url (default: 30000)
-         data-lang               interface language 'auto'|'de'|'en' (default: config.js LANG,
+         data-lang               interface language 'auto'|'de'|'en'|'zh-Hans'|'zh-Hant' (default: config.js LANG,
                                   else 'auto' = browser language). This is the INTERFACE itself
                                   (buttons, panels, search, error messages) -- separate from the
                                   small in-map "DE"/"EN" button, which only translates in-game
                                   text (mission types, amenity names) and is unaffected. A
                                   visitor's own choice (the interface has its own language
                                   switch) is remembered in their browser and wins over this.
+         data-theme              'classic'|'compact'|'practical'|'chassis'|'scifi'
+                                  (default: config.js THEME, else 'compact'). The visitor's
+                                  own choice wins over this.
        If you need programmatic control (mount/unmount at a chosen time,
        change options later), call `window.SCLMW.mount(el, opts)` /
        `window.SCLMW.unmount()` yourself instead of using the auto-init
@@ -218,7 +221,7 @@ mehrdeutig -- triff dann die vernünftigste Wahl und vermerke sie.
          data-players-url        siehe Schritt 4 unten (Standard: <base>players.example.json, die erfundenen Demo-Spieler)
          data-players-headers    ein JSON-Objekt als String, z.B. '{"Authorization":"Bearer xyz"}'
          data-poll-ms             wie oft (ms) data-players-url neu abgefragt wird (Standard: 30000)
-         data-lang                Oberflaechensprache 'auto'|'de'|'en' (Standard: LANG aus
+         data-lang                Oberflaechensprache 'auto'|'de'|'en'|'zh-Hans'|'zh-Hant' (Standard: LANG aus
                                    config.js, sonst 'auto' = Browsersprache). Das ist die
                                    OBERFLAECHE selbst (Knoepfe, Panels, Suche,
                                    Fehlermeldungen) -- getrennt vom kleinen "DE"/"EN"-Knopf in
@@ -227,6 +230,9 @@ mehrdeutig -- triff dann die vernünftigste Wahl und vermerke sie.
                                    Wahl des Besuchers (die Oberflaeche hat einen eigenen
                                    Sprach-Umschalter) wird in dessen Browser gemerkt und
                                    schlaegt diese Vorgabe.
+         data-theme               'classic'|'compact'|'practical'|'chassis'|'scifi'
+                                   (Standard: THEME aus config.js, sonst 'compact'). Die
+                                   eigene Wahl des Besuchers schlaegt diese Vorgabe.
        Brauchst du programmatische Kontrolle (mounten/entmounten zu einem
        gewaehlten Zeitpunkt, Optionen spaeter aendern), ruf statt des
        Auto-Init-Script-Tags selbst `window.SCLMW.mount(el, opts)` /

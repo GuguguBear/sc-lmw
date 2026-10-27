@@ -2,7 +2,7 @@
 
 > **Inoffizielles Fan-Projekt. Nicht von Cloud Imperium Games oder Roberts Space Industries unterstützt, gesponsert oder mit ihnen verbunden. Star Citizen® ist eine Marke von Cloud Imperium Rights LLC.**
 
-[English version](README.md)
+[English version](README.md) · [Was sich geändert hat](docs/WHATS_NEW.md)
 
 
 Eine eigenständige, statische, loginfreie 3D-Karte des Star-Citizen-Universums
@@ -80,26 +80,29 @@ und den AGPL-Pflichten, die bei eigenen Änderungen greifen — steht in
 einfügbarer Prompt für eine KI geschrieben, du kannst den ganzen Einbau also
 auch an eine KI abgeben.
 
-### Oberflächensprache (Deutsch/Englisch)
+### Oberflächensprache
 
-Die ganze Oberfläche — Knöpfe, Panels, Suche, Legende, Fehlermeldungen,
-Zeitangaben, Zahlenformat — ist zweisprachig, Deutsch und Englisch. Sie
-erkennt automatisch die Browsersprache des Besuchers (`de*` → Deutsch, sonst
-Englisch), und in der Karte selbst gibt es einen kleinen Sprach-Umschalter
-(Globus-Symbol), der sie live wechselt, ohne Neuladen, und sich je Besucher
-im eigenen Browser merkt. Du kannst sie auch fest vorgeben:
+Die Oberfläche — Knöpfe, Panels, Suche, Legende, Fehlermeldungen, Zeitangaben,
+Zahlenformat — gibt es auf Deutsch, Englisch, vereinfachtem Chinesisch und
+traditionellem Chinesisch. Sie folgt der Browsersprache (`zh-TW` / `zh-HK` /
+`zh-MO` → traditionell, anderes `zh*` → vereinfacht, `de*` → Deutsch, sonst
+Englisch). Der Sprachknopf öffnet die Liste und wechselt live, ohne
+Neuladen. Die Wahl bleibt in diesem Browser gespeichert.
 
-- `LANG` in `config.js`: `'auto'` (Standard), `'de'` oder `'en'`.
+- `LANG` in `config.js`: `'auto'` (Standard), `'de'`, `'en'`, `'zh-Hans'` oder `'zh-Hant'`.
+
+### Darstellung
+
+Fünf Themen, umschaltbar über den ▣-Knopf neben der Sprache, gemerkt im Browser:
+Klassisch, Kompakt, Praktisch, Gehäuse und Science-Fiction. `THEME` in `config.js`
+ist `'compact'` (Standard), `'classic'`, `'practical'`, `'chassis'` oder `'scifi'`.
+Die eigene Wahl des Besuchers schlägt diese Vorgabe.
 - `data-lang="de"` am `sc-lmw.js`-Script-Tag (Weg b, direkter Einbau).
 - `mount(el, { lang: 'de' })`, falls du `SCLMW.mount()` selbst aufrufst.
 
-Das ist eine **eigene, getrennte** Einstellung vom kleinen "DE"/"EN"-Knopf,
-den es schon vorher in der Karte gab: dieser ältere Knopf übersetzt nur
-Spieltexte (Missionstypen, Ausstattungsnamen, die deutsche
-Community-Beschreibung) und bleibt davon unberührt. Die
-Oberflächensprache ändert nie Spiel-/Orts-/Schiffs-/Item-Namen — die bleiben
-immer so, wie das Spiel sie nennt, in welcher Sprache auch immer dein
-Datenbau lief.
+Deutsch zeigt dazu deutsche Missions- und Ausstattungsnamen. Chinesisch zeigt
+chinesische Ortsnamen. Englisch bleibt bei den englischen Namen. Für Besucher
+steht das kurz in [docs/WHATS_NEW.md](docs/WHATS_NEW.md).
 
 ### Spieler auf der Karte zeigen
 
