@@ -2,7 +2,7 @@
 
 > **Inoffizielles Fan-Projekt. Nicht von Cloud Imperium Games oder Roberts Space Industries unterstützt, gesponsert oder mit ihnen verbunden. Star Citizen® ist eine Marke von Cloud Imperium Rights LLC.**
 
-[English version](README.md) · [Was sich geändert hat](docs/WHATS_NEW.md)
+[English](README.md) · Deutsch · [简体中文](README.md#简体中文) · [繁體中文](README.md#繁體中文) · [Was sich geändert hat](docs/WHATS_NEW.md)
 
 
 Eine eigenständige, statische, loginfreie 3D-Karte des Star-Citizen-Universums
@@ -23,9 +23,9 @@ Vollständige Quellenangaben und Lizenzen aller Bausteine stehen in [`CREDITS.md
 - Live-3D-Schiffsmodelle ("Holo") direkt von FleetYards, mit Quellenangabe.
 - Optionale Spielerpositionen aus einer selbst bestimmten URL, automatische
   Gruppierung ab zwei Spielern am selben Ort.
-- DE/EN-Umschaltung für die Oberfläche selbst (automatisch per Browsersprache,
-  oder fest per `LANG`/`data-lang`/`mount(...,{lang})`), UND eine eigene,
-  getrennte DE/EN-Umschaltung für Spieltexte.
+- Oberfläche auf Deutsch, Englisch, vereinfachtem und traditionellem Chinesisch
+  (automatisch per Browsersprache, oder fest per `LANG`/`data-lang`/`mount(...,{lang})`).
+  Ein Knopf schaltet alles. Deutsch zeigt deutsche Spielnamen, Chinesisch zeigt chinesische Ortsnamen.
 - Kein Login, kein Build-Schritt fürs Frontend, kein Server außer einem
   statischen Datei-Host.
 
