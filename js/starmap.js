@@ -503,9 +503,7 @@ function stantonScene(canvas,sysKey){
     if(irr) m.material.color.setScalar(0.72); spin.push(m); return m; }
   function ringPoints(G,rin,rout,thick,n,color){ const a=new Float32Array(n*3); for(let i=0;i<n;i++){ const rr=rin+Math.random()*(rout-rin), th=Math.random()*6.283; a[i*3]=rr*Math.cos(th); a[i*3+1]=(Math.random()-0.5)*thick; a[i*3+2]=rr*Math.sin(th); }
     const g=new T.BufferGeometry(); g.setAttribute('position',new T.BufferAttribute(a,3)); const p=new T.Points(g,new T.PointsMaterial({color:color,size:1.5,sizeAttenuation:false})); G.add(p); return p; }
-  function stripeTex(){ const c=document.createElement('canvas'); c.width=256; c.height=16; const x=c.getContext('2d'); const g=x.createLinearGradient(0,0,256,0); g.addColorStop(0,'rgba(255,255,255,.12)'); g.addColorStop(.45,'rgba(255,255,255,1)'); g.addColorStop(.55,'rgba(255,255,255,1)'); g.addColorStop(1,'rgba(255,255,255,.12)'); x.fillStyle=g; x.fillRect(0,0,256,16); const t=new T.CanvasTexture(c); t.wrapS=t.wrapT=T.RepeatWrapping; return t; }
-
-  let level={t:'sys',o:null}, grp=null, entries=[], spin=[], animNodes=[], lastEx=null, wormTex=[], sysTick=0, sysGroups=[];
+  let level={t:'sys',o:null}, grp=null, entries=[], spin=[], animNodes=[], lastEx=null, wormClock=null, wormMouths=[], wormStat=null, sysTick=0, sysGroups=[];
   const LV={sys:{min:0.8,max:1000,def:isMobile?64:52,bgMin:isMobile?52:46,bgMax:isMobile?82:58}, body:{min:1.35,max:36,def:isMobile?7.5:4.4}};
   let az=0.6, el=isMobile?0.75:0.5, azT=az, elT=el, R=LV.sys.def, RT=R;
   const OFF={}, ZERO=new T.Vector3(); const offOf=k=>OFF[k]||((ST_DATA&&ST_DATA.sys[k])?(OFF[k]=new T.Vector3().fromArray(ST_DATA.sys[k].off)):ZERO);
@@ -576,20 +574,124 @@ function stantonScene(canvas,sysKey){
       const g=new T.BufferGeometry(); g.setAttribute('position',new T.BufferAttribute(a,3));
       const live=onl==='1';
       const pt=new T.Points(g,new T.PointsMaterial({color:live?beaconHex():0x8a93a6,size:live?(isMobile?58:68):(isMobile?28:30),sizeAttenuation:false,map:live?beaconOn.tex:beaconOff.tex,transparent:true,alphaTest:0.02,depthTest:false,blending:live?T.AdditiveBlending:T.NormalBlending})); pt.renderOrder=6; pt.userData.beacon=live; pt.userData.sys=sy==='-'?null:sy; if(sy==='-') pt.userData.sys=ST_SYS; plPts.push(pt); grp.add(pt); }); }
-  // Wurmloecher zwischen den Toren: Schlangen-Roehre mit fliessenden Lichtstreifen, Farbe von System A nach B
-  function buildLinks(){ const D=ST_DATA; wormTex=[];
-    (D.gal.links||[]).forEach(l=>{ const A=D.by[l.a], B=D.by[l.b]; if(!A||!B) return; const pa=Vs(A), pb=Vs(B);
+  // Wurmloecher: die Roehre weicht Planeten, Monden, Sternen, Guerteln und Brocken aus,
+  // und der Shader laesst sie langsam kriechen. Farbe laeuft von System A nach System B.
+  const WORM_VERT=[
+    'attribute float room; attribute float glow; attribute vec3 side; attribute vec3 lift;',
+    'uniform float uTime; uniform float uPhase; uniform float uSpin; uniform float uThrob;',
+    'varying vec2 vUv; varying float vGlow; varying float vNd; varying float vU;',
+    'void main(){',
+    '  vUv=uv; vU=uv.x; vGlow=glow;',
+    '  float env=sin(uv.x*3.14159265);',
+    '  float ang=uTime*0.07, cs=cos(ang), sn=sin(ang);',
+    '  vec3 s1=side*cs+lift*sn, s2=lift*cs-side*sn;',
+    '  float amp=min(3.4, max(0.0, room-0.9)*0.5)*env;',
+    '  float big=sin(uv.x*5.6+uTime*0.15+uPhase)*amp;',
+    '  float big2=cos(uv.x*3.1-uTime*0.09+uPhase)*amp*0.42;',
+    '  float sp=uTime*0.4+uv.x*12.0+uPhase;',
+    '  float spin=min(uSpin, max(0.0, room-0.4)*0.2)*env;',
+    '  vec3 p=position+s1*big+s2*big2+(s1*cos(sp)+s2*sin(sp))*spin;',
+    '  p+=normal*sin(uv.x*21.0-uTime*1.25+uPhase)*uThrob*env;',
+    '  vec4 mv=modelViewMatrix*vec4(p,1.0);',
+    '  vNd=abs(dot(normalize(normalMatrix*normal), normalize(-mv.xyz)));',
+    '  gl_Position=projectionMatrix*mv;',
+    '}'
+  ].join('\n');
+  const WORM_FRAG=[
+    'uniform vec3 uA; uniform vec3 uB; uniform float uTime; uniform float uGain;',
+    'varying vec2 vUv; varying float vGlow; varying float vNd; varying float vU;',
+    'void main(){',
+    '  float u=vU;',
+    '  vec3 col=mix(uA,uB,smoothstep(0.08,0.92,u));',
+    '  float streak=exp(-pow((fract(u*3.0-uTime*0.045)-0.16)*5.5,2.0));',
+    '  float vein=exp(-pow((fract(u*1.4-uTime*0.018)-0.5)*3.2,2.0));',
+    '  float core=pow(vNd,2.0), rim=pow(1.0-vNd,2.4);',
+    '  vec3 rgb=col*(0.22+core*0.85)+vec3(1.0,0.95,0.86)*(streak*0.5+vein*0.12)+col*rim*0.28;',
+    '  float ends=smoothstep(0.0,0.04,u)*smoothstep(1.0,0.96,u);',
+    '  float alpha=uGain*vGlow*(0.16+core*0.5+rim*0.22+streak*0.65)*ends;',
+    '  gl_FragColor=vec4(rgb, alpha);',
+    '}'
+  ].join('\n');
+  function buildLinks(){ const D=ST_DATA; wormClock={value:0}; wormMouths=[];
+    const spheres=[], slabs=[];
+    D.d.objects.forEach(function(o){ let r=0;
+      if(o.k==='star') r=(o.sy==='stanton'?1.9:1.3)+3.6;
+      else if(o.k==='planet') r=pSize(o)+2.8;
+      else if(o.k==='moon'){ const par=D.by[o.p]; r=(par&&par.k==='star'?0.16:0.09)+1.6; }
+      else if(o.k==='asteroid') r=2.15;
+      else if(o.k==='lagrange') r=3.05;
+      if(r) spheres.push({p:Vs(o), r:r, tag:o.k+' '+(o.n||'')});
+      if(o.k==='belt'&&o.belt&&D.by[o.p]){ const inner=o.belt.in*1e-6, outer=o.belt.out*1e-6, pad=3.6;
+        slabs.push({c:Vs(D.by[o.p]), inner:Math.min(inner,outer)-pad, outer:Math.max(inner,outer)+pad, half:Math.max(3,(o.belt.depth||0)*1e-6+2.4), tag:'belt '+(o.n||'')}); }
+      if(o.ring&&o.ring.out) slabs.push({c:Vs(o), inner:o.ring.in*1e-6-2.5, outer:o.ring.out*1e-6+2.5, half:2.6, tag:'ring '+(o.n||'')}); });
+    const cen=Object.keys(D.sys).map(k=>offOf(k));
+    function clearanceAt(x,y,z){ let m=64, tag='';
+      for(let i=0;i<spheres.length;i++){ const o=spheres[i], dx=x-o.p.x, dy=y-o.p.y, dz=z-o.p.z, d=Math.hypot(dx,dy,dz)-o.r; if(d<m){ m=d; tag=o.tag; } }
+      for(let i=0;i<slabs.length;i++){ const s=slabs[i], dx=x-s.c.x, dz=z-s.c.z, dy=y-s.c.y, rad=Math.hypot(dx,dz);
+        if(rad>s.inner&&rad<s.outer){ const h=Math.abs(dy)-s.half; if(h<m){ m=h; tag=s.tag; } } }
+      clearanceAt.tag=tag; return m; }
+    function pushOut(p){ const pad=1.15;
+      for(let i=0;i<spheres.length;i++){ const o=spheres[i], need=o.r+pad; let dx=p.x-o.p.x, dy=p.y-o.p.y, dz=p.z-o.p.z, d=Math.hypot(dx,dy,dz);
+        if(d<need){ if(d<1e-4){ p.y+=need; continue; } const k=(need-d)/d; p.x+=dx*k; p.y+=dy*k; p.z+=dz*k; } }
+      for(let i=0;i<slabs.length;i++){ const s=slabs[i], dx=p.x-s.c.x, dz=p.z-s.c.z, dy=p.y-s.c.y, rad=Math.hypot(dx,dz), half=s.half+pad;
+        if(rad>s.inner&&rad<s.outer&&dy<half) p.y=s.c.y+half+0.4; } }
+    function smoothSpine(pts){ const px=pts.map(p=>p.x), py=pts.map(p=>p.y), pz=pts.map(p=>p.z);
+      for(let i=1;i<pts.length-1;i++){ pts[i].x=px[i]*0.55+(px[i-1]+px[i+1])*0.225; pts[i].y=py[i]*0.55+(py[i-1]+py[i+1])*0.225; pts[i].z=pz[i]*0.55+(pz[i-1]+pz[i+1])*0.225; } }
+    function starFade(x,y,z){ let dmin=1e9; for(let i=0;i<cen.length;i++){ const c=cen[i], d=Math.hypot(x-c.x,y-c.y,z-c.z); if(d<dmin) dmin=d; }
+      const s=Math.min(1,Math.max(0,(dmin-16)/26)); return 0.45+0.55*s*s*(3-2*s); }
+    const stat={tubes:0, minRoom:1e9, links:[]}; wormStat=stat;
+    (D.gal.links||[]).forEach(function(l,li){ const A=D.by[l.a], B=D.by[l.b]; if(!A||!B) return; const pa=Vs(A), pb=Vs(B);
       if(!l.live){ const g=new T.BufferGeometry().setFromPoints([pa,pb]); const ln=new T.Line(g,new T.LineDashedMaterial({color:0x8aa0c8,dashSize:6,gapSize:5,transparent:true,opacity:.35})); ln.computeLineDistances(); grp.add(ln); return; }
       const dir=pb.clone().sub(pa), len=dir.length(); dir.normalize();
       const up=Math.abs(dir.y)<0.9?new T.Vector3(0,1,0):new T.Vector3(1,0,0), n1=new T.Vector3().crossVectors(dir,up).normalize(), n2=new T.Vector3().crossVectors(dir,n1).normalize();
-      const pts=[], amp=len*0.05; for(let i=0;i<=28;i++){ const t=i/28, env=Math.sin(Math.PI*t); pts.push(pa.clone().lerp(pb,t).addScaledVector(n1,Math.sin(t*Math.PI*4)*amp*env).addScaledVector(n2,Math.cos(t*Math.PI*3)*amp*0.6*env)); }
-      const curve=new T.CatmullRomCurve3(pts), ca=new T.Color((ST_SYSLOOK[l.sa]||ST_SYSLOOK.stanton).dot), cb=new T.Color((ST_SYSLOOK[l.sb]||ST_SYSLOOK.stanton).dot);
-      const cen=Object.keys(D.sys).map(k=>offOf(k)), vp=new T.Vector3();
-      [[0.2,1],[0.7,0.28]].forEach(([rad,op])=>{ const geo=new T.TubeGeometry(curve,320,rad,8,false), uv=geo.attributes.uv, P=geo.attributes.position, cols=new Float32Array(uv.count*3);
-        for(let i=0;i<uv.count;i++){ vp.fromBufferAttribute(P,i); const dmin=Math.min(...cen.map(c=>c.distanceTo(vp))), s=Math.min(1,Math.max(0,(dmin-30)/30)), f=0.4+0.6*s*s*(3-2*s);
-          const c=ca.clone().lerp(cb,uv.getX(i)).multiplyScalar(f); cols[i*3]=c.r; cols[i*3+1]=c.g; cols[i*3+2]=c.b; } geo.setAttribute('color',new T.BufferAttribute(cols,3));
-        const tex=stripeTex(); tex.repeat.set(12,1); wormTex.push(tex);
-        grp.add(new T.Mesh(geo,new T.MeshBasicMaterial({map:tex,vertexColors:true,transparent:true,opacity:op,blending:T.AdditiveBlending,depthWrite:false,side:T.DoubleSide}))); }); }); }
+      const N=64, amp=len*0.05, pts=[];
+      for(let i=0;i<=N;i++){ const t=i/N, env=Math.sin(Math.PI*t);
+        pts.push(pa.clone().lerp(pb,t).addScaledVector(n1,Math.sin(t*Math.PI*4)*amp*env).addScaledVector(n2,Math.cos(t*Math.PI*3)*amp*0.55*env)); }
+      const born=pts.map(p=>p.clone());
+      function lock(){ pts[0].copy(pa); pts[N].copy(pb); }
+      for(let iter=0; iter<10; iter++){
+        for(let i=1;i<N;i++){ pushOut(pts[i]); if(iter<7){ const b=born[i]; let dx=pts[i].x-b.x, dy=pts[i].y-b.y, dz=pts[i].z-b.z, d=Math.hypot(dx,dy,dz);
+          if(d>18){ const k=18/d; pts[i].x=b.x+dx*k; pts[i].y=b.y+dy*k; pts[i].z=b.z+dz*k; } } }
+        lock(); if(iter%2===0){ smoothSpine(pts); lock(); } }
+      const curve=new T.CatmullRomCurve3(pts,false,'centripetal'), scratch=new T.Vector3();
+      function bump(i,target,w){ if(i<=0||i>=N) return; const p=pts[i]; p.x+=(target.x-p.x)*w; p.y+=(target.y-p.y)*w; p.z+=(target.z-p.z)*w; }
+      for(let pass=0; pass<8; pass++){ let hit=false;
+        for(let s=1;s<220;s++){ const u=s/220; curve.getPoint(u,scratch); if(clearanceAt(scratch.x,scratch.y,scratch.z)<0.8){ hit=true;
+          const bad=scratch.clone(); pushOut(bad); const i=Math.max(1,Math.min(N-1,Math.round(u*N)));
+          for(let k=-14;k<=14;k++) bump(i+k,bad,Math.exp(-k*k/32)*0.34); } }
+        lock(); smoothSpine(pts); lock(); for(let i=1;i<N;i++) pushOut(pts[i]); lock(); if(!hit) break; }
+      for(let k=0;k<6;k++){ smoothSpine(pts); lock();
+        for(let s=1;s<220;s++){ const u=s/220; curve.getPoint(u,scratch); if(clearanceAt(scratch.x,scratch.y,scratch.z)<0.9){
+          const bad=scratch.clone(); pushOut(bad); const i=Math.max(1,Math.min(N-1,Math.round(u*N)));
+          for(let n=-14;n<=14;n++) bump(i+n,bad,Math.exp(-n*n/32)*0.34); } }
+        lock(); for(let i=1;i<N;i++) pushOut(pts[i]); lock(); }
+      let minRoom=1e9, near='';
+      for(let s=0;s<=320;s++){ curve.getPoint(s/320,scratch); const c=clearanceAt(scratch.x,scratch.y,scratch.z); if(c<minRoom){ minRoom=c; near=clearanceAt.tag||''; } }
+      if(minRoom<stat.minRoom) stat.minRoom=minRoom;
+      const seg=180, radS=12, ca=new T.Color((ST_SYSLOOK[l.sa]||ST_SYSLOOK.stanton).dot), cb=new T.Color((ST_SYSLOOK[l.sb]||ST_SYSLOOK.stanton).dot);
+      const phase=li*2.1;
+      function wormMat(gain,spin,throb,ph){ return new T.ShaderMaterial({
+        uniforms:{uTime:wormClock, uPhase:{value:phase+ph}, uGain:{value:gain}, uSpin:{value:spin}, uThrob:{value:throb}, uA:{value:ca}, uB:{value:cb}},
+        vertexShader:WORM_VERT, fragmentShader:WORM_FRAG, transparent:true, depthWrite:false, depthTest:true, fog:false,
+        blending:T.AdditiveBlending, side:T.DoubleSide }); }
+      [[0.2,0.55,0.16,0.035,0],[0.16,0.32,0.16,0.03,0],[0.46,0.2,0,0.07,0],[1.02,0.06,0,0.03,0]].forEach(function(layer){
+        const geo=new T.TubeGeometry(curve,seg,layer[0],radS,false), count=geo.attributes.position.count, step=radS+1;
+        const roomA=new Float32Array(count), glowA=new Float32Array(count), sideA=new Float32Array(count*3), liftA=new Float32Array(count*3);
+        for(let i=0;i<=seg;i++){ curve.getPointAt(i/seg,scratch); const room=Math.max(0,clearanceAt(scratch.x,scratch.y,scratch.z)), glow=starFade(scratch.x,scratch.y,scratch.z);
+          for(let j=0;j<=radS;j++){ const ix=i*step+j; if(ix>=count) break; roomA[ix]=room; glowA[ix]=glow; sideA[ix*3]=n1.x; sideA[ix*3+1]=n1.y; sideA[ix*3+2]=n1.z; liftA[ix*3]=n2.x; liftA[ix*3+1]=n2.y; liftA[ix*3+2]=n2.z; } }
+        geo.setAttribute('room',new T.BufferAttribute(roomA,1)); geo.setAttribute('glow',new T.BufferAttribute(glowA,1));
+        geo.setAttribute('side',new T.BufferAttribute(sideA,3)); geo.setAttribute('lift',new T.BufferAttribute(liftA,3));
+        const mesh=new T.Mesh(geo,wormMat(layer[1],layer[2],layer[3],layer[4])); mesh.renderOrder=3; grp.add(mesh); stat.tubes++; });
+      function mouth(p,tangent,color,ph){
+        const ring=new T.Mesh(new T.TorusGeometry(1.25,0.05,8,32), new T.MeshBasicMaterial({color:color,transparent:true,opacity:0.85,blending:T.AdditiveBlending,depthWrite:false,side:T.DoubleSide}));
+        ring.position.copy(p); const axis=tangent.clone().normalize(); if(axis.lengthSq()>0.5) ring.quaternion.setFromUnitVectors(new T.Vector3(0,0,1),axis);
+        ring.userData={ph:ph,bs:1,op:0.85}; ring.renderOrder=4; grp.add(ring); wormMouths.push(ring);
+        const sp=new T.Sprite(new T.SpriteMaterial({map:sunGlowTex,color:color,transparent:true,opacity:0.38,blending:T.AdditiveBlending,depthWrite:false}));
+        sp.position.copy(p); sp.scale.set(6,6,1); sp.userData={ph:ph+0.8,bs:6,op:0.38}; sp.renderOrder=4; grp.add(sp); wormMouths.push(sp); }
+      curve.getPoint(0.5,scratch);
+      stat.links.push({id:l.sa+'-'+l.sb, minRoom:+minRoom.toFixed(2), near:near, mid:[+scratch.x.toFixed(2),+scratch.y.toFixed(2),+scratch.z.toFixed(2)]});
+      mouth(pa, curve.getTangentAt(0), ca, phase); mouth(pb, curve.getTangentAt(1), cb, phase+1.2); });
+    if(!isFinite(stat.minRoom)) stat.minRoom=null; }
   function buildBody(F){ const D=ST_DATA, s=1/F.r;
     const rel=o=>new T.Vector3((o.x-F.x)*s,(o.z-F.z)*s,-(o.y-F.y)*s);
     const m=bodyMesh(F,1); grp.add(m); entries.push({o:F,p:new T.Vector3(),body:true,r:1,prio:3});
@@ -605,7 +707,7 @@ function stantonScene(canvas,sysKey){
     addMarkers(descendants(F.id,c=>c.k==='moon'),o=>{ const v=rel(o); if(v.length()<lift) v.setLength(lift); return v; });
   }
   function dispose(g){ g.traverse(x=>{ if(x.geometry) x.geometry.dispose(); if(x.material){ if(x.material.map&&x.material.map!==dotTex&&x.material.map!==sunGlowTex&&x.material.map!==neb&&!Object.values(ICON).includes(x.material.map)) x.material.map.dispose(); x.material.dispose(); } }); }
-  function rebuild(){ if(!ST_DATA) return;
+  function rebuild(){ wormClock=null; wormMouths=[]; wormStat=null; if(!ST_DATA) return;
     if(grp){ scene.remove(grp); dispose(grp); } grp=new T.Group(); scene.add(grp); entries=[]; spin=[]; animNodes=[]; sysGroups=[]; lblLayer.innerHTML='';
     camera.near=level.t==='sys'?0.05:0.004; camera.updateProjectionMatrix();
     if(level.t==='sys') buildSys(); else buildBody(level.o);
@@ -675,8 +777,12 @@ function stantonScene(canvas,sysKey){
     const p=new T.Vector3(); if(!ray.ray.intersectPlane(plane,p)) return null; return p.distanceTo(tgt)>R*4?null:p; }
   // Zoomen zum Mauszeiger: der Punkt unter dem Zeiger bleibt stehen
   function zoomBy(f,cx,cy){ const nr=clampR(RT*f); if(canNav()&&cx!=null){ const p=groundAt(cx,cy); if(p){ tgtT.add(p.sub(tgtT).multiplyScalar(1-nr/RT)); clampT(); } } RT=nr; }
-  function pan(dx,dy){ if(!canNav()) return; const feel=ctrlSens('pan'); dx=dx*(ST_DRAG.x?-1:1)*feel; dy=dragDy(dy)*feel; const s=R*0.9/(boxWH().h||1), sy=s/Math.max(0.35,Math.sin(Math.abs(el)));
-    tgtT.x+=-dx*Math.cos(az)*s-dy*Math.sin(az)*sy; tgtT.z+=dx*Math.sin(az)*s-dy*Math.cos(az)*sy; clampT(); }
+  // Bildschirmfläche: rechts/links und oben/unten. Die frühere Y-Bewegung lief auf dem Boden
+  // in Blickrichtung und schob die Karte in die Tiefe.
+  function pan(dx,dy){ if(!canNav()) return; const feel=ctrlSens('pan'); dx=dx*(ST_DRAG.x?-1:1)*feel; dy=dragDy(dy)*feel;
+    const s=2*R*Math.tan(camera.fov*Math.PI/360)/(boxWH().h||1);
+    camera.updateMatrixWorld(); const e=camera.matrixWorld.elements;
+    tgtT.x+=(-dx*e[0]+dy*e[4])*s; tgtT.y+=(-dx*e[1]+dy*e[5])*s; tgtT.z+=(-dx*e[2]+dy*e[6])*s; clampT(); }
   // Alle Zeiger-/Rad-/Tastatur-Listener haengen am CANVAS bzw. an ROOT, NIE an window: eine Karte
   // in einer kleinen Box auf einer fremden Seite darf nicht deren Mausrad, Rechtsklick oder
   // Pfeiltasten global abfangen. ROOT bekommt dafuer tabindex, sonst kann ein <div> nie Tastatur-
@@ -730,7 +836,8 @@ function stantonScene(canvas,sysKey){
     const ex=explore(); if(ex!==lastEx){ lastEx=ex; if(ST_DATA&&level.t==='sys') rebuild(); }
     if(!ex){ if(level.t!=='sys') focus(null); tgtT.copy(offOf(ST_SYS)); }
     else if(level.t==='sys'&&ST_DATA&&++sysTick%30===0){ let bk=null,bd=1e9; Object.keys(ST_DATA.sys).forEach(k=>{ const dd=offOf(k).distanceTo(tgtT); if(dd<bd){ bd=dd; bk=k; } }); if(bd<180) setSys(bk); }
-    wormTex.forEach(t=>{ t.offset.x-=0.006; });
+    if(wormClock) wormClock.value=performance.now()*0.001;
+    if(wormMouths.length) wormMouths.forEach(function(m){ const t=wormClock?wormClock.value:0, s=1+0.07*Math.sin(t*1.3+m.userData.ph); m.scale.set(m.userData.bs*s,m.userData.bs*s,m.userData.bs); if(m.material) m.material.opacity=m.userData.op*(0.7+0.3*(0.5+0.5*Math.sin(t*1.7+m.userData.ph))); });
     beaconOn.draw(performance.now());
     sysGroups.forEach(g=>{ g.visible=true; }); if(plPts){ const bcol=beaconHex(), pulse=0.5+0.5*Math.sin(performance.now()/240); plPts.forEach(p=>{ p.visible=true; if(p.userData.beacon){ p.material.color.setHex(bcol); p.material.size=(isMobile?58:68)+pulse*18; p.material.opacity=0.82+pulse*0.18; } }); }
     if(animNodes.length){ animNodes.forEach(a=>{ a.o.rotation.y+=a.s; }); entries.forEach(e=>{ if(e.node) e.node.getWorldPosition(e.p); }); }
@@ -784,7 +891,7 @@ function stantonScene(canvas,sysKey){
     setSystem:k=>{ if(!k) return; ST_SYS=k; tintSky(k); if(!explore()&&ST_DATA){ bgScale(); rebuild(); tgtT.copy(offOf(k)); tgt.copy(tgtT); RT=LV.sys.def*BGK; } },
     zoom01:()=>{ const L=LV[level.t]; return (Math.log(RT)-Math.log(L.min))/(Math.log(L.max)-Math.log(L.min)); },
     setZoom01:t=>{ const L=LV[level.t]; RT=Math.exp(Math.log(L.min)+t*(Math.log(L.max)-Math.log(L.min))); },
-    debug:()=>({R,RT,tgt:tgt.toArray(),tgtT:tgtT.toArray(),level:level.t}), pos:n=>{ const e=entries.find(x=>x.o.n===n); return e?e.p.toArray():null; }, links:()=>(ST_DATA.gal.links||[]).map(l=>({l:l.sa+'-'+l.sb,live:l.live,a:ST_DATA.by[l.a]&&ST_DATA.by[l.a].n,b:ST_DATA.by[l.b]&&ST_DATA.by[l.b].n,pa:ST_DATA.by[l.a]&&Vs(ST_DATA.by[l.a]).toArray().map(v=>+v.toFixed(1)),pb:ST_DATA.by[l.b]&&Vs(ST_DATA.by[l.b]).toArray().map(v=>+v.toFixed(1))})), tubes:()=>wormTex.length,
+    debug:()=>({R,RT,tgt:tgt.toArray(),tgtT:tgtT.toArray(),level:level.t}), pos:n=>{ const e=entries.find(x=>x.o.n===n); return e?e.p.toArray():null; }, links:()=>(ST_DATA.gal.links||[]).map(l=>({l:l.sa+'-'+l.sb,live:l.live,a:ST_DATA.by[l.a]&&ST_DATA.by[l.a].n,b:ST_DATA.by[l.b]&&ST_DATA.by[l.b].n,pa:ST_DATA.by[l.a]&&Vs(ST_DATA.by[l.a]).toArray().map(v=>+v.toFixed(1)),pb:ST_DATA.by[l.b]&&Vs(ST_DATA.by[l.b]).toArray().map(v=>+v.toFixed(1))})), tubes:()=>wormStat?wormStat.tubes:0, worm:()=>wormStat, aim:(x,y,z,d)=>{ tgtT.set(x,y,z); tgt.copy(tgtT); if(d>0){ RT=d; R=d; } },
     reset:()=>{ hl=null; hover=null; hlSet=null; drawHl(); if(level.t!=='sys') focus(null);
       const th=document.querySelector('.cmd'), tk=th&&ST_THEME_SYS[th.getAttribute('data-dtheme')]; if(tk){ ST_SYS=tk; tintSky(tk); } bgScale(); tgtT.copy(offOf(ST_SYS)); RT=LV.sys.def*BGK; }, onLevel:null };
   tintSky(ST_SYS);
