@@ -125,7 +125,7 @@ let ST_BPS=null;
 async function stBps(){ if(ST_BPS) return ST_BPS; try{ ST_BPS=await fetch(pathOf('data/blueprints.json'),{cache:'no-cache'}).then(r=>{ if(!r.ok) throw new Error(r.status); return r.json(); }); }catch(e){ return {bps:{}}; } return ST_BPS; }
 async function stMis(){ if(ST_MIS) return ST_MIS; try{ const d=await fetch(pathOf('data/missions.json'),{cache:'no-cache'}).then(r=>{ if(!r.ok) throw new Error(r.status); return r.json(); }); const byLoc={};
   d.groups.forEach((g,i)=>g.locs.forEach(id=>(byLoc[id]=byLoc[id]||[]).push(i))); ST_MIS={d,byLoc}; return ST_MIS; }catch(e){ return {d:{groups:[],bps:{},lsets:[]},byLoc:{},failed:1}; } }
-function stMisRow(g,i){ return '<details class="st-dep"><summary><b>'+esc(stTy(g.ty))+'</b>'+(g.il?'<em class="t-ill">illegal</em>':'')+'<span title="'+esc(_t('tooltip.mission_variants'))+'">'+g.n+'×</span></summary><div class="st-mis-b"><div class="sc-lmw-muted">'+esc(gn(g.g))+(g.bp?' · 🧩 '+g.bp.length+' Blueprints':'')+'</div>'+(g.t.length?g.t.map(t=>'<div>· '+esc(gn(t))+'</div>').join(''):'')+'</div></details>'; }
+function stMisRow(g,i){ return '<details class="st-dep"><summary><b>'+esc(stTy(g.ty))+'</b>'+(g.il?'<em class="t-ill">'+esc(_t('tag.illegal'))+'</em>':'')+'<span title="'+esc(_t('tooltip.mission_variants'))+'">'+g.n+'×</span></summary><div class="st-mis-b"><div class="sc-lmw-muted">'+esc(gn(g.g))+(g.bp?' · 🧩 '+g.bp.length+' '+esc(_t('cat.bp')):'')+'</div>'+(g.t.length?g.t.map(t=>'<div>· '+esc(gn(t))+'</div>').join(''):'')+'</div></details>'; }
 // ---- SPIELER: Position/Status kommen aus einer externen, konfigurierbaren Quelle (window.LIVEMAP_CONFIG.PLAYERS_URL). Siehe docs/PLAYERS_API.md. ----
 let ST_PL=null, ST_PL_ERR='', ST_PL_ON=true, ST_PL_OFF=true, ST_PL_SIG='';
 async function stLoadPlayers(){ try{ const cfg=window.LIVEMAP_CONFIG||{};
@@ -200,7 +200,8 @@ let ST_PIN='', ST_CALL_HELD=false, ST_CALL_DRAG=null, ST_CALL_MINI=false;
 function callStore(){ try{ const s=JSON.parse(localStorage.getItem('sclmw_call_frame')||'null'); return s&&typeof s==='object'?s:{}; }catch(e){ return {}; } }
 function callSave(part){ const s=callStore(); Object.keys(part).forEach(function(k){ s[k]=part[k]; }); try{ localStorage.setItem('sclmw_call_frame', JSON.stringify(s)); }catch(e){} }
 function portLabel(port){ const k='pilot.port.'+port, s=_t(k); return s===k?String(port||'').replace(/^Armor_/,''):s; }
-function pilotBits(p){ return {gear:Array.isArray(p.gear)?p.gear:[], ship:p.ship?String(p.ship):'', place:gn(p.location||'')||_t('location.unknown')}; }
+function gearName(g){ if(!g) return ''; var exact=g.cls&&SC.loc&&SC.loc.item?SC.loc.item(g.cls):''; if(exact) return exact; return gn(g.name||'')||g.name||''; }
+function pilotBits(p){ return {gear:Array.isArray(p.gear)?p.gear:[], ship:p.ship?gn(String(p.ship)):'', place:gn(p.location||'')||_t('location.unknown')}; }
 function pilotAge(p){ const d=Date.parse(String(p.when||p.last_seen||'').replace(' ','T')); if(!d) return _t('location.unknown');
   const s=Math.max(0, Math.round((Date.now()-d)/1000));
   if(s<5) return _t('time.just_now');
@@ -289,7 +290,7 @@ function paintPilot(p){ ensurePilotUi(); const box=$('stCall'); if(!box||!p) ret
     box.querySelector('.st-call-ship').textContent=bits.ship||_t('pilot.no_ship');
     box.querySelector('.st-call-ship').classList.toggle('is-empty', !bits.ship);
     const gear=box.querySelector('.st-call-gear');
-    gear.innerHTML=bits.gear.length?bits.gear.map(function(g){ return '<div><span>'+esc(portLabel(g.port))+'</span><b>'+esc(g.name)+'</b></div>'; }).join(''):'<p>'+esc(_t('pilot.no_gear'))+'</p>';
+    gear.innerHTML=bits.gear.length?bits.gear.map(function(g){ return '<div><span>'+esc(portLabel(g.port))+'</span><b>'+esc(gearName(g))+'</b></div>'; }).join(''):'<p>'+esc(_t('pilot.no_gear'))+'</p>';
   }
   const age=pilotAge(p), ageEl=box.querySelector('.st-call-when b'); if(ageEl.textContent!==age) ageEl.textContent=age;
   const ico=$('stCallIco'); if(ico){ ico.textContent=(p.name||p.player||'?').slice(0,1); ico.title=p.name||p.player||_t('entity.player'); }
@@ -359,11 +360,12 @@ async function stWikeloHTML(box){ const M=await stMis(), W=(M.d.wikelo||[]), C=a
   if(!W.length){ box.innerHTML=''; return; }
   const shipOf=n=>C.ships.filter(s=>n.indexOf(s.n)===0).sort((a,b)=>b.n.length-a.n.length)[0];
   const row=w=>{ const sh=w.k==='ship'?shipOf(w.t):null, im=sh&&stShipImg(sh), fav=stWkCat(w)==='favor';
-    const ttl=fav?w.cost.map(c=>gn(c[0])).join(' + ')+' → '+(w.rw.find(r=>r[0]==='Wikelo Favor')||[,1])[1]+'× Wikelo Favor':gn(w.t);
-    return '<details class="st-dep st-wk"><summary>'+(im?'<img src="'+esc(im)+'" alt="" onerror="this.remove()">':'')+'<b>'+esc(ttl)+'</b><span title="Wikelo-Ruf">+'+w.rep+'</span></summary><div class="st-mis-b">'+
-      '<div class="st-wk-h">'+_t('wikelo.you_get')+'</div>'+w.rw.map(r=>'<div>· '+esc(r[0])+(r[1]>1?' ×'+r[1]:'')+'</div>').join('')+
+    const favN=w.rw.find(r=>r[0]==='Wikelo Favor')||['Wikelo Favor',1];
+    const ttl=fav?w.cost.map(c=>gn(c[0])).join(' + ')+' → '+favN[1]+'× '+gn('Wikelo Favor'):gn(w.t);
+    return '<details class="st-dep st-wk"><summary>'+(im?'<img src="'+esc(im)+'" alt="" onerror="this.remove()">':'')+'<b>'+esc(ttl)+'</b><span title="'+esc(_t('wikelo.rep'))+'">+'+w.rep+'</span></summary><div class="st-mis-b">'+
+      '<div class="st-wk-h">'+_t('wikelo.you_get')+'</div>'+w.rw.map(r=>'<div>· '+esc(gn(r[0]))+(r[1]>1?' ×'+r[1]:'')+'</div>').join('')+
       '<div class="st-wk-h">'+_t('wikelo.you_give')+'</div>'+(w.cost.length?w.cost.map(c=>'<div>· '+esc(gn(c[0]))+(c[1]?(c[2]==='scu'?' · '+c[1]+' SCU':' ×'+c[1]):'')+'</div>').join(''):'<div class="sc-lmw-muted">'+_t('wikelo.nothing_specified')+'</div>')+
-      (w.pre.length?'<div class="st-wk-h">'+_t('label.requirement')+'</div>'+w.pre.map(p=>'<div>· '+esc(p)+'</div>').join(''):'')+'</div></details>'; };
+      (w.pre.length?'<div class="st-wk-h">'+_t('label.requirement')+'</div>'+w.pre.map(p=>'<div>· '+esc(gn(p))+'</div>').join(''):'')+'</div></details>'; };
   const draw=tab=>{ const L=W.filter(w=>stWkCat(w)===tab); box.querySelector('.st-wk-list').innerHTML=(tab==='favor'?'<p class="st-mnote" style="margin:0 0 8px">'+_t('wikelo.favor_note')+'</p>':'')+(L.map(row).join('')||'<p class="sc-lmw-muted" style="font-size:.8rem">'+_t('common.nothing_in_category')+'</p>');
     box.querySelectorAll('[data-wkt]').forEach(b=>b.classList.toggle('on',b.getAttribute('data-wkt')===tab)); };
   box.innerHTML='<div class="st-slbl">'+_t('wikelo.title')+' <span class="st-cnt">'+_t('wikelo.offers',{n:W.length})+'</span></div><div class="st-wk-tabs">'+ST_WK_TABS.map(tb=>'<button data-wkt="'+tb[0]+'">'+_t(tb[1])+' <span>'+W.filter(w=>stWkCat(w)===tb[0]).length+'</span></button>').join('')+'</div><div class="st-wk-list"></div>';
@@ -378,8 +380,8 @@ async function stShopHTML(o,box){ const C=await uexCatalog(); const byI={}; C.it
     if(!y) mm[k]=Object.assign({},x,{terms:[x.term]}); else { if(x.price<y.price) y.price=x.price; if(y.terms.indexOf(x.term)<0) y.terms.push(x.term); y.term=y.terms.length>1?_t('count.terminals',{n:y.terms.length}):y.terms[0]; } });
   const all=Object.values(mm); if(!all.length){ box.innerHTML='<p class="sc-lmw-muted" style="font-size:.82rem">'+_t('shop.none')+'</p>'; return; }
   const rk=x=>x.ship?0:(x.item.s?1:2); all.sort((a,b)=>rk(a)-rk(b)||String(a.ship?'':a.item.s).localeCompare(String(b.ship?'':b.item.s))||(a.ship||a.item).n.localeCompare((b.ship||b.item).n));
-  const draw=q=>{ const L=all.filter(x=>!q||(x.ship||x.item).n.toLowerCase().indexOf(q)>=0||((x.item||{}).s||'').toLowerCase().indexOf(q)>=0); let last='';
-    box.querySelector('.st-shop-l').innerHTML=L.slice(0,200).map((x,i)=>{ const sec=x.ship?_t('cat.ship'):(x.item.s||_t('common.misc2')), hd=sec!==last?'<div class="st-rh">'+esc(sec)+'</div>':''; last=sec;
+  const draw=q=>{ const L=all.filter(x=>{ if(!q) return true; const n=(x.ship||x.item).n||'', s=(x.item||{}).s||''; return n.toLowerCase().indexOf(q)>=0||String(gn(n)).toLowerCase().indexOf(q)>=0||s.toLowerCase().indexOf(q)>=0||String(gn(s)).toLowerCase().indexOf(q)>=0; }); let last='';
+    box.querySelector('.st-shop-l').innerHTML=L.slice(0,200).map((x,i)=>{ const sec=x.ship?_t('cat.ship'):(gn(x.item.s)||_t('common.misc2')), hd=sec!==last?'<div class="st-rh">'+esc(sec)+'</div>':''; last=sec;
       return hd+'<div class="st-pr" data-si="'+all.indexOf(x)+'"><div><b>'+esc(gn((x.ship||x.item).n))+'</b><span>'+esc(gn(x.term))+'</span></div><em>'+uexMoney(x.price)+'</em></div>'; }).join('')+(L.length>200?'<p class="sc-lmw-muted" style="font-size:.78rem">'+_t('shop.more_filter',{n:L.length-200})+'</p>':'');
     box.querySelectorAll('[data-si]').forEach(el=>el.onclick=()=>{ const x=all[+el.getAttribute('data-si')]; if(x.ship) stOpenBuy('ship',x.ship); else if(x.item.i) stOpenBuy('item',x.item); }); };
   box.innerHTML='<input class="st-shop-f" placeholder="'+esc(_t('shop.filter_placeholder',{n:all.length}))+'"><div class="st-shop-l"></div>'; box.querySelector('.st-shop-f').oninput=e=>draw(e.target.value.trim().toLowerCase()); draw(''); }
@@ -932,6 +934,8 @@ function refreshGameText(){
   const lp=$('stLoc'); if(lp&&lp.__re) lp.__re();
   const box=$('stRes'); if(box&&!box.hidden) stSearch();
   stPlList();
+  const call=$('stCall'); if(call) delete call.dataset.sig;
+  if(ST_PIN){ const pinned=(ST_PL||[]).find(function(x){ return String(x.id)===ST_PIN; }); if(pinned) paintPilot(pinned); }
   if(window.__stCtl&&window.__stCtl.onLevel) window.__stCtl.onLevel(window.__stCtl.level());
 }
 function paintLoc(){
@@ -1172,7 +1176,7 @@ async function stSearch(){ const box=$('stRes'), qi=$('stQ'); if(!box||!ST_DATA)
     const src=n=>B[n]?(B[n].m.length===1?_t('count.mission_one'):_t('count.mission_many',{n:B[n].m.length})):(R[n]&&R[n].src==='default'?_t('bp.from_start'):_t('bp.no_known_mission'));
     if(L.length) h+=head(_t('cat.bp'),L.length,'bp')+L.slice(0,lim(1800)).map(n=>stRow('bp',n,'🧩',gn(n),[gn((R[n]||{}).t||(B[n]||{}).cat),src(n)].filter(Boolean).join(' · '))).join('')+stCut(L.length,lim(1800)); }
   if(all||cat==='mis'){ const L=M.d.groups.map((g,i)=>[g,i]).filter(([g])=>has(stTy(g.ty))||has(g.g)||g.t.some(has)).sort((a,b)=>stTy(a[0].ty).localeCompare(stTy(b[0].ty))||b[0].n-a[0].n);
-    if(L.length) h+=head(_t('cat.mis'),L.length,'mis')+L.slice(0,lim(200)).map(([g,i])=>stRow('mis',i,'🎯',stTy(g.ty)+' · '+gn(g.g),_t('count.orders',{n:g.n})+(g.il?' · illegal':'')+(g.bp?' · 🧩 '+g.bp.length:''))).join('')+stCut(L.length,lim(200)); }
+    if(L.length) h+=head(_t('cat.mis'),L.length,'mis')+L.slice(0,lim(200)).map(([g,i])=>stRow('mis',i,'🎯',stTy(g.ty)+' · '+gn(g.g),_t('count.orders',{n:g.n})+(g.il?' · '+_t('tag.illegal'):'')+(g.bp?' · 🧩 '+g.bp.length+' '+_t('cat.bp'):''))).join('')+stCut(L.length,lim(200)); }
   const miss=(M.failed?[_t('cat.mis')+'/'+_t('cat.bp')]:[]).concat(!C.items.length?[_t('cat.item')+'/'+_t('cat.ware')]:[],!C.ships.length?[_t('cat.ship')]:[]);
   if(miss.length) h='<p class="st-warn">'+esc(_t('search.load_failed',{list:miss.join(', ')}))+'</p>'+h;
   // Sichtbar machen, wenn eine Liste gekuerzt wurde (nie still abschneiden)
@@ -1258,7 +1262,7 @@ async function stOpenBp(name){ const M=await stMis(), BP=await stBps(), B=(M.d.b
   body.innerHTML='<div class="st-slbl">'+_t('bp.found_in',{count:bpCount})+'</div>'+B.m.map((m,i)=>{ (LS[m.l]||[]).forEach(id=>ids.add(id));
     const areas=(LS[m.l]||[]).map(id=>ST_DATA.by[id]).filter(Boolean); const planets=[...new Set(areas.map(o=>stBodyOf(o)).map(b=>{ let x=b; while(x&&x.k==='moon') x=ST_DATA.by[x.p]; return x&&x.k!=='star'?gn(x.n)+' ('+stSysName(x)+')':stSysName(b); }))];
     const one=m.ps>1?Math.round(m.ch/m.ps*10)/10:m.ch;
-    return '<div class="st-orow" data-bi="'+i+'"><b>'+esc(gn(m.t)||stTy(m.ty))+'</b>'+(m.il?' <em class="t-ill">illegal</em>':'')+'<div class="om"><span>'+esc(stTy(m.ty))+'</span><span>'+esc(gn(m.g))+'</span></div>'+
+    return '<div class="st-orow" data-bi="'+i+'"><b>'+esc(gn(m.t)||stTy(m.ty))+'</b>'+(m.il?' <em class="t-ill">'+esc(_t('tag.illegal'))+'</em>':'')+'<div class="om"><span>'+esc(stTy(m.ty))+'</span><span>'+esc(gn(m.g))+'</span></div>'+
       '<div class="om"><span title="'+esc(_t('tooltip.bp_chance'))+'">🎲 '+m.ch+' %'+(m.ps>1?esc(_t('bp.pool_odds',{ps:m.ps,one})):'')+'</span></div>'+
       '<div class="om"><span>📍 '+esc(planets.join(', '))+'</span></div></div>'; }).join('')+
     stBpRecipe(R)+'<div class="st-coord">'+esc(_t('data.version_prefix',{version:(M.d.version||'').replace(/-LIVE.*/,'')}))+' · '+esc(_t('bp.approx_note'))+'</div>';
@@ -1290,11 +1294,11 @@ function stOreIndex(){ const D=ST_DATA; if(D.oreIdx) return D.oreIdx; const ores
   D.oreIdx={ores,locs}; return D.oreIdx; }
 function stOpenMisGroup(g){ let p=$('stLoc'); if(p) p.remove(); p=document.createElement('div'); p.id=ID('stLoc'); p.className='st-loc'; p.__re=()=>stOpenMisGroup(g);
   const locs=g.locs.map(id=>ST_DATA.by[id]).filter(Boolean);
-  p.innerHTML='<div class="st-loc-card"><div class="st-loc-h"><span class="st-dot" style="background:#ffd76a"></span><h3>'+esc(stTy(g.ty))+'<small>'+esc(gn(g.g))+(g.il?' · illegal':'')+' · '+esc(_t('count.orders',{n:g.n}))+'</small></h3>'+'<button class="st-loc-x" id="'+ID('stLocX')+'">✕</button></div><div class="st-loc-body">'+
+  p.innerHTML='<div class="st-loc-card"><div class="st-loc-h"><span class="st-dot" style="background:#ffd76a"></span><h3>'+esc(stTy(g.ty))+'<small>'+esc(gn(g.g))+(g.il?' · '+esc(_t('tag.illegal')):'')+' · '+esc(_t('count.orders',{n:g.n}))+'</small></h3>'+'<button class="st-loc-x" id="'+ID('stLocX')+'">✕</button></div><div class="st-loc-body">'+
     (g.t.length?'<div class="st-slbl">'+_t('label.examples')+'</div>'+g.t.map(t=>'<div class="st-mis-t">'+esc(gn(t))+'</div>').join(''):'')+
-    (g.bp?'<div class="st-slbl">🧩 Blueprints <span class="st-cnt">'+esc(_t('bp.in_x_of_y_orders',{nbp:g.nbp,n:g.n}))+'</span></div>'+(g.tb?'<div class="st-mis-sub">'+g.tb.map(esc).join(' · ')+'</div>':'')+
-      '<div class="st-bp">'+g.bp.map(b=>'<span'+(b[2]?' title="'+esc(b[2])+'"':'')+'>'+esc(b[0])+(b[1]<100?' <em>'+b[1]+' %</em>':'')+'</span>').join('')+'</div>':'')+
-    (g.rw?'<div class="st-slbl">'+_t('label.reward')+'</div><div class="st-bp">'+g.rw.map(r=>'<span>'+esc(r[0])+' ×'+r[1]+'</span>').join('')+'</div>':'')+
+    (g.bp?'<div class="st-slbl">🧩 '+esc(_t('cat.bp'))+' <span class="st-cnt">'+esc(_t('bp.in_x_of_y_orders',{nbp:g.nbp,n:g.n}))+'</span></div>'+(g.tb?'<div class="st-mis-sub">'+g.tb.map(function(t){ return esc(gn(t)); }).join(' · ')+'</div>':'')+
+      '<div class="st-bp">'+g.bp.map(b=>'<span'+(b[2]?' title="'+esc(gn(b[2]))+'"':'')+'>'+esc(gn(b[0]))+(b[1]<100?' <em>'+b[1]+' %</em>':'')+'</span>').join('')+'</div>':'')+
+    (g.rw?'<div class="st-slbl">'+_t('label.reward')+'</div><div class="st-bp">'+g.rw.map(r=>'<span>'+esc(gn(r[0]))+' ×'+r[1]+'</span>').join('')+'</div>':'')+
     '<div class="st-slbl">'+_t('label.offered_in')+'</div>'+locs.map(o=>'<div class="st-orow" data-gid="'+o.id+'"><b>'+esc(gn(o.n))+'</b><div class="om"><span>'+esc(kindLabel(o.k))+'</span></div></div>').join('')+'</div></div>';
   ROOT.appendChild(p); $('stLocX').onclick=()=>p.remove();
   p.querySelectorAll('[data-gid]').forEach(el=>el.onclick=()=>{ const o=ST_DATA.by[el.getAttribute('data-gid')]; window.__stCtl.flyTo(o); openStPanel(o); }); }

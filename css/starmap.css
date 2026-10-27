@@ -71,7 +71,7 @@
 .sc-lmw::-webkit-scrollbar-corner,.sc-lmw *::-webkit-scrollbar-corner{background:transparent}
 .sc-lmw .st-fit{min-width:0;max-width:100%;overflow:hidden}
 .sc-lmw .st-fit>.st-run{display:inline-block;white-space:nowrap}
-.sc-lmw .st-loc-h h3>.st-fit,.sc-lmw .st-crumb.st-fit,.sc-lmw .st-call-name.st-fit,.sc-lmw .st-grow>.st-fit,.sc-lmw .st-call-ship.st-fit{display:block}
+.sc-lmw .st-loc-h h3>.st-fit,.sc-lmw .st-call-name.st-fit,.sc-lmw .st-grow>.st-fit,.sc-lmw .st-call-ship.st-fit{display:block}
 .sc-lmw .st-crumb>.st-run{display:inline-flex;align-items:center;gap:7px}
 @keyframes sclmw-ping{0%,16%{transform:translateX(0)}84%,100%{transform:translateX(calc(-1 * var(--st-shift, 0px)))}}
 .sc-lmw .st-fit>.st-run.on{animation:sclmw-ping var(--st-dur, 7s) ease-in-out infinite alternate}
@@ -695,3 +695,19 @@
 .sc-lmw .st-call-gear{margin-top:8px}
 .sc-lmw .st-call-gear p{margin:0;color:var(--sclmw-muted);font-size:13px}
 .sc-lmw[data-theme="compact"] .st-call,.sc-lmw[data-theme="practical"] .st-call,.sc-lmw[data-theme="chassis"] .st-call,.sc-lmw[data-theme="scifi"] .st-call{border-radius:0}
+/* Single-line labels sit in the middle of their box. The route pill was a
+   stretched block, so its line stayed on the top edge. */
+.sc-lmw button:not(.st-mate):not(.st-dd-btn){
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+}
+.sc-lmw .st-pick button:not(.st-mate),
+.sc-lmw .st-dd-list button:not(.st-mate){justify-content:flex-start;text-align:left}
+.sc-lmw .st-chips>span,
+.sc-lmw .st-bp>span,
+.sc-lmw .st-dep em,
+.sc-lmw .st-lnk{
+  display:inline-flex;
+  align-items:center;
+}

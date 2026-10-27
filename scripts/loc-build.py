@@ -17,6 +17,15 @@ LANG = ROOT / "Language"
 LABELS = ROOT / ".cache" / "scunpacked-data" / "labels.json"
 DATA = C.cli_path(C.DATA_DIR)
 
+# Same maker spelling companion/app.py uses when it turns a class id into a label.
+PRETTY_MAKER = {
+    "AEGS": "Aegis", "ANVL": "Anvil", "CRUS": "Crusader", "MISC": "MISC",
+    "ORIG": "Origin", "RSI": "RSI", "DRAK": "Drake", "BANU": "Banu",
+    "XIAN": "Aopoa", "TMBL": "Tumbril", "GRIN": "Greycat", "KRIG": "Kruger",
+    "CNOU": "Consolidated", "ESPR": "Esperia", "GAMA": "Gatac",
+    "VNCL": "Vanduul", "MRAI": "Mirai",
+}
+
 MAKERS = sorted([
     "Roberts Space Industries", "Consolidated Outland", "Drake Interplanetary",
     "Musashi Industrial & Starflight Concern", "Origin Jumpworks", "Aegis Dynamics",
@@ -84,6 +93,73 @@ def walk_strings(node, bag):
     elif isinstance(node, list):
         for x in node:
             walk_strings(x, bag)
+
+
+def item_class(key):
+    base = key.split(",")[0]
+    low = base.lower()
+    mark = "item_name_"
+    if low.startswith(mark):
+        return base[len(mark):]
+    return ""
+
+
+def pretty_class(code):
+    parts = [p for p in code.split("_") if p]
+    while parts and parts[-1].isdigit():
+        parts.pop()
+    if not parts:
+        return ""
+    maker = PRETTY_MAKER.get(parts[0].upper(), parts[0].upper())
+    rest = " ".join(p.capitalize() for p in parts[1:])
+    return (maker + " " + rest).strip()
+
+
+def loose_class(label):
+    return " ".join(p for p in label.split() if not p.isdigit())
+
+
+def ini_get(table, key):
+    if key in table:
+        return table[key]
+    base = key.split(",")[0]
+    return table.get(base, "")
+
+
+def add_item_aliases(hans, hant, hans_ini, hant_ini):
+    """Map the watcher's class-shaped labels onto the ini item names.
+
+    The log only has ids like rrs_specialist_heavy_core_04_03_01. The card
+    shows a shortened English label. Both forms are filled from item_Name
+    when that key already has a translation.
+    """
+    buckets = {}
+    cls_hans, cls_hant = {}, {}
+    for key, zh in hans_ini.items():
+        code = item_class(key)
+        if not code or not zh:
+            continue
+        zt = ini_get(hant_ini, key) or zh
+        low = code.lower()
+        if low not in cls_hans or "," not in key:
+            cls_hans[low] = zh
+            cls_hant[low] = zt
+        pretty = pretty_class(code)
+        if len(pretty) < 3:
+            continue
+        buckets.setdefault(pretty, []).append((len(code), zh, zt))
+        slim = loose_class(pretty)
+        if slim and slim != pretty:
+            buckets.setdefault(slim, []).append((len(code), zh, zt))
+    added = 0
+    for form, opts in buckets.items():
+        if form in hans:
+            continue
+        opts.sort(key=lambda o: (len(o[1]), o[0]))
+        hans[form] = opts[0][1]
+        hant[form] = opts[0][2]
+        added += 1
+    return added, {"hans": cls_hans, "hant": cls_hant}
 
 
 def strip_maker(v):
@@ -196,11 +272,12 @@ def main():
             hant[name] = hant[src]
             cased += 1
 
+    pretty_n, classes = add_item_aliases(hans, hant, hans_ini, hant_ini)
     out = DATA / "loc.json"
-    C.write_json(out, {"hans": hans, "hant": hant, "alias": alias})
+    C.write_json(out, {"hans": hans, "hant": hant, "alias": alias, "class": classes})
     C.write_json(DATA / "loc-keys.json", keys)
-    print("loc.json %d names (%d ship aliases, %d case aliases), %d keys, hans %d bytes" % (
-        len(hans), aliased, cased, len(keys), out.stat().st_size))
+    print("loc.json %d names (%d ship aliases, %d case aliases, %d item labels), %d class ids, %d keys, hans %d bytes" % (
+        len(hans), aliased, cased, pretty_n, len(classes["hans"]), len(keys), out.stat().st_size))
     for sample in ("Hurston", "Lorville", "Area18", "Stanton", "Cutlass Black", "Agricium",
                    "A2 Hercules Starlifter", "Hauling - Planetary"):
         print(" ", sample, "->", hans.get(sample, "—"))

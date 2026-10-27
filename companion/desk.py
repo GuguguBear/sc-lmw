@@ -1,4 +1,5 @@
-# Native window for the place watcher. No system title bar, no browser.
+# Native window for the place watcher. The dark title bar is ours, and the
+# window stays on the taskbar. It leaves the screen only from 后台运行.
 
 import sys
 import tkinter as tk
@@ -60,7 +61,8 @@ TEXT = {
         "lang": "语言", "look": "外观",
         "theme.classic": "经典", "theme.compact": "紧凑", "theme.practical": "实用", "theme.chassis": "机壳", "theme.scifi": "科幻",
         "watch": "开始监视", "watch_stop": "停止监视", "scan": "读最近地点",
-        "place_none": "还没有地点", "quit": "退出",
+        "place_none": "还没有地点", "quit": "退出", "back": "后台运行",
+        "tray_show": "打开窗口", "tray_tip": "Starfix 在后台。点图标可以打开。",
         "file_title": "选择 Game.log", "file_log": "日志", "file_all": "全部",
         "log_ok": "日志在", "log_missing": "找不到日志",
         "sent": "已发送 {code}", "seen": "日志里看到 {code}", "parsed": "解析到 {code}",
@@ -86,7 +88,8 @@ TEXT = {
         "lang": "語言", "look": "外觀",
         "theme.classic": "經典", "theme.compact": "緊湊", "theme.practical": "實用", "theme.chassis": "機殼", "theme.scifi": "科幻",
         "watch": "開始監視", "watch_stop": "停止監視", "scan": "讀最近地點",
-        "place_none": "還沒有地點", "quit": "退出",
+        "place_none": "還沒有地點", "quit": "退出", "back": "背景執行",
+        "tray_show": "打開視窗", "tray_tip": "Starfix 在背景。點圖示可以打開。",
         "file_title": "選擇 Game.log", "file_log": "日誌", "file_all": "全部",
         "log_ok": "日誌在", "log_missing": "找不到日誌",
         "sent": "已發送 {code}", "seen": "日誌裡看到 {code}", "parsed": "解析到 {code}",
@@ -112,7 +115,8 @@ TEXT = {
         "lang": "Language", "look": "Appearance",
         "theme.classic": "Classic", "theme.compact": "Compact", "theme.practical": "Practical", "theme.chassis": "Chassis", "theme.scifi": "Sci-fi",
         "watch": "Start watch", "watch_stop": "Stop watch", "scan": "Latest place",
-        "place_none": "No place yet", "quit": "Quit",
+        "place_none": "No place yet", "quit": "Quit", "back": "Background",
+        "tray_show": "Show window", "tray_tip": "Starfix is in the background. Click the icon to open it.",
         "file_title": "Choose Game.log", "file_log": "Log", "file_all": "All",
         "log_ok": "log found", "log_missing": "log missing",
         "sent": "Sent {code}", "seen": "Log shows {code}", "parsed": "Parsed {code}",
@@ -138,7 +142,8 @@ TEXT = {
         "lang": "Sprache", "look": "Aussehen",
         "theme.classic": "Klassisch", "theme.compact": "Kompakt", "theme.practical": "Praktisch", "theme.chassis": "Gehäuse", "theme.scifi": "Science-Fiction",
         "watch": "Überwachen", "watch_stop": "Stoppen", "scan": "Letzten Ort",
-        "place_none": "Noch kein Ort", "quit": "Beenden",
+        "place_none": "Noch kein Ort", "quit": "Beenden", "back": "Hintergrund",
+        "tray_show": "Fenster öffnen", "tray_tip": "Starfix läuft im Hintergrund. Icon anklicken öffnet es.",
         "file_title": "Game.log wählen", "file_log": "Log", "file_all": "Alle",
         "log_ok": "Log da", "log_missing": "Log fehlt",
         "sent": "Gesendet {code}", "seen": "Log zeigt {code}", "parsed": "Gelesen {code}",
@@ -300,8 +305,15 @@ class Desktop:
         self._linked = False
         self._link_flash = 0
         self._icon_img = None
+        self._tray_on = False
+        self._tray_hwnd = None
+        self._tray_proc = None
+        self._tray_class = None
+        self._tray_hicon = None
+        self._resume_frame = False
         _dpi()
         self.root = tk.Tk()
+        self.root.overrideredirect(True)
         self.root.title(tr(self.lang, "title"))
         ico = _asset("icon.ico")
         if ico:
@@ -309,8 +321,8 @@ class Desktop:
                 self.root.iconbitmap(str(ico))
             except tk.TclError:
                 pass
-        self.root.overrideredirect(True)
         self.root.configure(bg=THEMES[self.theme]["accent"])
+        self.root.protocol("WM_DELETE_WINDOW", self.close)
         self.core.RAISE = lambda: self.root.after(0, self._raise)
 
         shell = tk.Frame(self.root, padx=1, pady=1)
@@ -447,11 +459,12 @@ class Desktop:
         self.meta.pack(side="left", fill="y")
         self.quit = self._button(foot, "退出", self.close)
         self.quit.pack(side="right", padx=8, pady=4)
+        self.back = self._button(foot, "后台运行", self._background)
+        self.back.pack(side="right", padx=(8, 0), pady=4)
 
         self._apply_copy()
         self._paint()
         self._fill(core.public_state(), force=True)
-        self.root.bind("<Map>", self._on_map)
         self.root.after(400, self._tick)
         self.root.after(90, self._animate)
         self.root.update_idletasks()
@@ -465,8 +478,10 @@ class Desktop:
             max(0, (screen_w - width) // 2),
             max(40, (screen_h - height) // 6),
         )
+        self.root.minsize(420, 480)
         self.root.geometry(self._normal)
-        self.root.after(30, self._taskbar)
+        self.root.bind("<Map>", self._on_map)
+        self.root.after(30, self._seat_taskbar)
         self._ready = True
 
     def _hwnd(self):
@@ -475,23 +490,42 @@ class Desktop:
         hwnd = ctypes.windll.user32.GetParent(self.root.winfo_id())
         return hwnd or self.root.winfo_id()
 
-    def _taskbar(self):
+    def _mark_appwindow(self):
         import ctypes
-        GWL_EXSTYLE = -20
-        WS_EX_APPWINDOW = 0x00040000
-        WS_EX_TOOLWINDOW = 0x00000080
+        user32 = ctypes.windll.user32
         hwnd = self._hwnd()
-        style = ctypes.windll.user32.GetWindowLongW(hwnd, GWL_EXSTYLE)
-        style = (style & ~WS_EX_TOOLWINDOW) | WS_EX_APPWINDOW
-        ctypes.windll.user32.SetWindowLongW(hwnd, GWL_EXSTYLE, style)
-        self.root.withdraw()
-        self.root.after(20, self.root.deiconify)
+        style = user32.GetWindowLongW(hwnd, -20)
+        style = (style & ~0x00000080) | 0x00040000
+        user32.SetWindowLongW(hwnd, -20, style)
+        user32.SetWindowPos(hwnd, None, 0, 0, 0, 0, 0x0001 | 0x0002 | 0x0004 | 0x0010 | 0x0020)
+
+    def _seat_taskbar(self):
+        # withdraw() drops the frameless flag. Put it back before the window
+        # is shown again, in this same step, so it neither stays hidden nor
+        # grows a system title bar.
+        try:
+            self.root.withdraw()
+            self.root.update()
+            self.root.overrideredirect(True)
+            self.root.deiconify()
+            self.root.lift()
+            self._mark_appwindow()
+        except tk.TclError:
+            try:
+                self.root.overrideredirect(True)
+                self.root.deiconify()
+            except tk.TclError:
+                pass
 
     def _on_map(self, _event):
-        if not self._ready:
+        if not self._resume_frame or str(self.root.state()) != "normal":
             return
-        if str(self.root.state()) == "normal" and not self.root.overrideredirect():
+        self._resume_frame = False
+        try:
             self.root.overrideredirect(True)
+        except tk.TclError:
+            return
+        self._mark_appwindow()
 
     def _chrome_btn(self, parent, text, command, role):
         label = tk.Label(parent, text=text, font=FONT, padx=12, cursor="hand2")
@@ -518,13 +552,15 @@ class Desktop:
     def _drag_move(self, event):
         if self._zoomed or not self._drag:
             return
-        x = event.x_root - self._drag[0]
-        y = event.y_root - self._drag[1]
-        self.root.geometry("+%d+%d" % (x, y))
+        self.root.geometry("+%d+%d" % (event.x_root - self._drag[0], event.y_root - self._drag[1]))
 
     def _minimize(self):
-        self.root.overrideredirect(False)
-        self.root.iconify()
+        self._resume_frame = True
+        try:
+            self.root.overrideredirect(False)
+            self.root.iconify()
+        except tk.TclError:
+            self._resume_frame = False
 
     def _toggle_zoom(self):
         if self._zoomed:
@@ -699,6 +735,7 @@ class Desktop:
         self.look.configure(text=tr(self.lang, "look"))
         self.scan.configure(text=tr(self.lang, "scan"))
         self.quit.configure(text=tr(self.lang, "quit"))
+        self.back.configure(text=tr(self.lang, "back"))
         self.pair_yes.configure(text=tr(self.lang, "pair_yes"))
         self.pair_no.configure(text=tr(self.lang, "pair_no"))
         for key, btn in self.theme_buttons.items():
@@ -807,18 +844,175 @@ class Desktop:
             self.place_pip.configure(bg=c["accent"] if self._linked else c["line"])
         self.root.after(90, self._animate)
 
-    def _raise(self):
-        self.root.deiconify()
-        self.root.overrideredirect(True)
-        self.root.lift()
-        self.root.attributes("-topmost", True)
-        self.root.after(250, lambda: self.root.attributes("-topmost", False))
+    def _tray_hwnd_ready(self):
+        if self._tray_hwnd or sys.platform != "win32":
+            return bool(self._tray_hwnd)
+        import ctypes
+        from ctypes import wintypes
+        user32 = ctypes.windll.user32
+        kernel32 = ctypes.windll.kernel32
+        kernel32.GetModuleHandleW.restype = wintypes.HINSTANCE
+        kernel32.GetModuleHandleW.argtypes = [wintypes.LPCWSTR]
+        user32.DefWindowProcW.restype = ctypes.c_ssize_t
+        user32.DefWindowProcW.argtypes = [wintypes.HWND, wintypes.UINT, wintypes.WPARAM, wintypes.LPARAM]
+        proc_type = ctypes.WINFUNCTYPE(ctypes.c_ssize_t, wintypes.HWND, wintypes.UINT, wintypes.WPARAM, wintypes.LPARAM)
+
+        def proc(hwnd, msg, wparam, lparam):
+            if msg == 0x8000 and int(wparam) == 1:
+                mouse = int(lparam) & 0xFFFF
+                if mouse in (0x0202, 0x0203):
+                    self.root.after(0, self._show)
+                elif mouse == 0x0205:
+                    self.root.after(0, self._tray_menu)
+                return 0
+            return user32.DefWindowProcW(hwnd, msg, wparam, lparam)
+
+        class WndClass(ctypes.Structure):
+            _fields_ = [
+                ("style", wintypes.UINT),
+                ("lpfnWndProc", proc_type),
+                ("cbClsExtra", ctypes.c_int),
+                ("cbWndExtra", ctypes.c_int),
+                ("hInstance", wintypes.HINSTANCE),
+                ("hIcon", wintypes.HICON),
+                ("hCursor", wintypes.HANDLE),
+                ("hbrBackground", wintypes.HBRUSH),
+                ("lpszMenuName", wintypes.LPCWSTR),
+                ("lpszClassName", wintypes.LPCWSTR),
+            ]
+
+        self._tray_proc = proc_type(proc)
+        klass = WndClass()
+        klass.lpfnWndProc = self._tray_proc
+        klass.hInstance = kernel32.GetModuleHandleW(None)
+        klass.lpszClassName = "StarfixTray"
+        user32.RegisterClassW.argtypes = [ctypes.POINTER(WndClass)]
+        user32.RegisterClassW.restype = wintypes.ATOM
+        atom = user32.RegisterClassW(ctypes.byref(klass))
+        if not atom and kernel32.GetLastError() not in (0, 1410):
+            return False
+        user32.CreateWindowExW.argtypes = [
+            wintypes.DWORD, wintypes.LPCWSTR, wintypes.LPCWSTR, wintypes.DWORD,
+            ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.c_int,
+            wintypes.HWND, wintypes.HMENU, wintypes.HINSTANCE, wintypes.LPVOID,
+        ]
+        user32.CreateWindowExW.restype = wintypes.HWND
+        hwnd = user32.CreateWindowExW(
+            0, "StarfixTray", "Starfix", 0, 0, 0, 0, 0,
+            wintypes.HWND(-3), None, klass.hInstance, None,
+        )
+        if not hwnd:
+            return False
+        self._tray_hwnd = hwnd
+        self._tray_class = atom
+        return True
+
+    def _tray_icon(self):
+        if self._tray_hicon:
+            return self._tray_hicon
+        path = _asset("icon.ico")
+        if not path:
+            return None
+        import ctypes
+        from ctypes import wintypes
+        user32 = ctypes.windll.user32
+        user32.LoadImageW.restype = wintypes.HICON
+        user32.LoadImageW.argtypes = [wintypes.HINSTANCE, wintypes.LPCWSTR, wintypes.UINT, ctypes.c_int, ctypes.c_int, wintypes.UINT]
+        icon = user32.LoadImageW(None, str(path), 1, 16, 16, 0x10)
+        self._tray_hicon = icon or None
+        return self._tray_hicon
+
+    def _tray_data(self):
+        import ctypes
+        from ctypes import wintypes
+        class Data(ctypes.Structure):
+            _fields_ = [
+                ("cbSize", wintypes.DWORD),
+                ("hWnd", wintypes.HWND),
+                ("uID", wintypes.UINT),
+                ("uFlags", wintypes.UINT),
+                ("uCallbackMessage", wintypes.UINT),
+                ("hIcon", wintypes.HICON),
+                ("szTip", wintypes.WCHAR * 128),
+            ]
+        data = Data()
+        data.cbSize = ctypes.sizeof(data)
+        data.hWnd = self._tray_hwnd
+        data.uID = 1
+        data.uFlags = 1 | 2 | 4
+        data.uCallbackMessage = 0x8000
+        data.hIcon = self._tray_icon()
+        data.szTip = tr(self.lang, "tray_tip")[:127]
+        return data
+
+    def _tray_add(self):
+        if self._tray_on:
+            return True
+        if not self._tray_hwnd_ready() or not self._tray_icon():
+            return False
+        import ctypes
+        data = self._tray_data()
+        ok = ctypes.windll.shell32.Shell_NotifyIconW(0, ctypes.byref(data))
+        self._tray_on = bool(ok)
+        return self._tray_on
+
+    def _tray_remove(self):
+        if not self._tray_on or not self._tray_hwnd:
+            self._tray_on = False
+            return
+        import ctypes
+        data = self._tray_data()
+        ctypes.windll.shell32.Shell_NotifyIconW(2, ctypes.byref(data))
+        self._tray_on = False
+
+    def _tray_menu(self):
+        if not self._tray_on or not self._tray_hwnd:
+            return
+        import ctypes
+        from ctypes import wintypes
+        user32 = ctypes.windll.user32
+        user32.CreatePopupMenu.restype = wintypes.HMENU
+        user32.AppendMenuW.argtypes = [wintypes.HMENU, wintypes.UINT, ctypes.c_size_t, wintypes.LPCWSTR]
+        user32.TrackPopupMenu.restype = wintypes.BOOL
+        user32.TrackPopupMenu.argtypes = [wintypes.HMENU, wintypes.UINT, ctypes.c_int, ctypes.c_int, ctypes.c_int, wintypes.HWND, ctypes.c_void_p]
+        menu = user32.CreatePopupMenu()
+        user32.AppendMenuW(menu, 0, 1, tr(self.lang, "tray_show"))
+        user32.AppendMenuW(menu, 0, 2, tr(self.lang, "quit"))
+        point = wintypes.POINT()
+        user32.GetCursorPos(ctypes.byref(point))
+        user32.SetForegroundWindow(self._tray_hwnd)
+        cmd = user32.TrackPopupMenu(menu, 0x0100 | 0x0080 | 0x0020, point.x, point.y, 0, self._tray_hwnd, None)
+        user32.PostMessageW(self._tray_hwnd, 0, 0, 0)
+        user32.DestroyMenu(menu)
+        if cmd == 1:
+            self._show()
+        elif cmd == 2:
+            self.close()
+
+    def _background(self):
+        if not self._tray_add():
+            return
         try:
+            self.root.withdraw()
+        except tk.TclError:
+            self._tray_remove()
+
+    def _show(self):
+        self._tray_remove()
+        try:
+            self.root.overrideredirect(True)
+            self.root.deiconify()
+            self.root.lift()
             self.root.focus_force()
+            self._mark_appwindow()
         except tk.TclError:
             pass
 
+    def _raise(self):
+        self._show()
+
     def close(self):
+        self._tray_remove()
         self.core.request_stop()
         self.root.destroy()
 
@@ -830,6 +1024,7 @@ def accept_terms(lang, theme):
     colors = THEMES.get(theme) or THEMES["scifi"]
     _dpi()
     root = tk.Tk()
+    root.overrideredirect(True)
     root.title("Starfix")
     ico = _asset("icon.ico")
     if ico:
@@ -838,8 +1033,6 @@ def accept_terms(lang, theme):
         except tk.TclError:
             pass
     root.configure(bg=colors["accent"])
-    root.overrideredirect(True)
-    root.attributes("-topmost", True)
     agreed = {"ok": False}
     drag = {"x": 0, "y": 0}
     live = {"ok": False}

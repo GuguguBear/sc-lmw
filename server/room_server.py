@@ -167,8 +167,12 @@ def gear_items(raw):
             continue
         port = str(item.get("port") or "")[:40]
         name = str(item.get("name") or "")[:80]
+        cls = str(item.get("cls") or "")[:80]
         if port and name:
-            out.append({"port": port, "name": name})
+            row = {"port": port, "name": name}
+            if cls:
+                row["cls"] = cls
+            out.append(row)
     return out
 
 

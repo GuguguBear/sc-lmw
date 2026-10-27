@@ -12,8 +12,8 @@
   if(['auto','hans','hant','off','custom'].indexOf(mode)<0) mode='auto';
 
   var pack=null, packWait=null, keys=null, keysWait=null;
-  var custom=null; // {map, name, lines}
-  var active=null;
+  var custom=null; // {map, name, lines, cls}
+  var active=null, activeClass=null;
   var userText=null, userName='';
 
   function uiLang(){ return (SC.i18n&&SC.i18n.lang)||'en'; }
@@ -39,22 +39,39 @@
   }
   function rebuild(){
     var r=resolved();
-    if(!r||!pack){ active=null; return; }
+    if(!r||!pack){ active=null; activeClass=null; return; }
     var lang=r==='custom'?(fallbackLang()||'hans'):r;
     var baseDict=pack[lang]?Object.assign({}, pack[lang]):{};
     if(r==='custom'&&custom&&custom.map) Object.assign(baseDict, custom.map);
     active=withAlias(baseDict);
+    var table=pack&&pack.class&&pack.class[lang]?Object.assign({}, pack.class[lang]):{};
+    if(r==='custom'&&custom&&custom.cls) Object.assign(table, custom.cls);
+    activeClass=table;
   }
+
+  function fold(t){ return String(t||'').replace(/-/g,' ').replace(/\s+/g,' ').trim(); }
+  function loose(t){ return fold(t).split(' ').filter(function(p){ return !/^\d+$/.test(p); }).join(' '); }
+  function lookup(q){ return q&&active?active[q]:''; }
 
   function text(s){
     if(s==null||s===''||!active) return s;
-    var t=String(s), hit=active[t];
+    var t=String(s), hit=lookup(t);
     if(hit) return hit;
+    var folded=fold(t);
+    if(folded!==t && (hit=lookup(folded))) return hit;
+    var slim=loose(t);
+    if(slim && slim!==t && slim!==folded && slim.split(' ').length>=2 && (hit=lookup(slim))) return hit;
     var m=t.match(/^(.*?)(\s*\((?:raw|ore|r)\)\s*)$/i);
     if(m&&active[m[1]]) return active[m[1]]+m[2];
     var raw=t.replace(/^raw\s+/i,'');
     if(raw!==t&&active[raw]) return active[raw];
     return s;
+  }
+
+  function classFromKey(k){
+    var base=String(k||'').split(',')[0], low=base.toLowerCase();
+    var mark='item_name_';
+    return low.indexOf(mark)===0 ? base.slice(mark.length).toLowerCase() : '';
   }
 
   function parseIni(raw){
@@ -120,15 +137,19 @@
         hits.push({rank:rank, en:en, val:val, n:k.length});
       });
       hits.sort(function(a,b){ return b.rank-a.rank||b.n-a.n; });
-      var map={};
+      var map={}, classes={};
       hits.forEach(function(h){ map[h.en]=h.val; });
-      return {map:map, lines:Object.keys(ini).length, applied:Object.keys(map).length};
+      Object.keys(ini).forEach(function(k){
+        var code=classFromKey(k), val=ini[k];
+        if(code && val && (!classes[code] || k.indexOf(',')<0)) classes[code]=val;
+      });
+      return {map:map, cls:classes, lines:Object.keys(ini).length, applied:Object.keys(map).length};
     });
   }
   function adopt(raw, name){
     return ensurePack().then(function(){ return mapFromIni(raw); }).then(function(got){
       if(!got.applied){ var err=new Error('empty'); err.code='empty'; throw err; }
-      custom={map:got.map, name:name||'global.ini', lines:got.lines, applied:got.applied};
+      custom={map:got.map, cls:got.cls||{}, name:name||'global.ini', lines:got.lines, applied:got.applied};
       userText=raw; userName=custom.name;
       mode='custom';
       try{ localStorage.setItem(MODE_KEY,'custom'); }catch(e){}
@@ -147,14 +168,20 @@
     return Promise.all([packP, userP]).then(function(){
       if(!userText){ if(want){ rebuild(); notify(); } return; }
       return mapFromIni(userText).then(function(got){
-        if(got.applied) custom={map:got.map, name:userName, lines:got.lines, applied:got.applied};
+        if(got.applied) custom={map:got.map, cls:got.cls||{}, name:userName, lines:got.lines, applied:got.applied};
         rebuild(); notify();
       });
     });
   }
 
+  function item(cls){
+    if(!cls||!activeClass) return '';
+    return activeClass[String(cls).toLowerCase()]||'';
+  }
+
   SC.loc={
     text:text,
+    item:item,
     mode:function(){ return mode; },
     resolved:resolved,
     stats:function(){ return {ready:!!pack, mode:mode, resolved:resolved(), custom:custom?custom.applied:0, customName:custom?custom.name:'', hasFile:!!userText}; },
@@ -164,7 +191,7 @@
       if(m==='custom'&&!userText) return;
       mode=m; try{ localStorage.setItem(MODE_KEY,m); }catch(e){}
       var p=(m==='off')?Promise.resolve():ensurePack();
-      p.then(function(){ if(m==='custom'&&userText&&!custom) return mapFromIni(userText).then(function(got){ if(got.applied) custom={map:got.map, name:userName, lines:got.lines, applied:got.applied}; }); }).then(function(){ rebuild(); notify(); });
+        p.then(function(){ if(m==='custom'&&userText&&!custom) return mapFromIni(userText).then(function(got){ if(got.applied) custom={map:got.map, cls:got.cls||{}, name:userName, lines:got.lines, applied:got.applied}; }); }).then(function(){ rebuild(); notify(); });
     },
     loadFile:function(file){ return file.text().then(function(t){ return adopt(t, file.name||'global.ini'); }); },
     applyText:function(text){ return adopt(text, 'global.ini'); },

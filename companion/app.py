@@ -62,6 +62,7 @@ PORT_ORDER = (
     "Armor_Legs", "Armor_Backpack",
 )
 WORN = {}
+WORN_CLS = {}
 SHIP = ""
 DEST = None
 LAST_SIG = ""
@@ -182,12 +183,15 @@ def lagrange_place(body, lag):
 
 
 def gear_list():
-    ordered = [{"port": key, "name": WORN[key]} for key in PORT_ORDER if key in WORN]
-    ordered.extend(
-        {"port": key, "name": value}
-        for key, value in WORN.items()
-        if key not in PORT_ORDER
-    )
+    def row(key):
+        item = {"port": key, "name": WORN[key]}
+        cls = WORN_CLS.get(key) or ""
+        if cls:
+            item["cls"] = cls
+        return item
+
+    ordered = [row(key) for key in PORT_ORDER if key in WORN]
+    ordered.extend(row(key) for key in WORN if key not in PORT_ORDER)
     return ordered[:12]
 
 
@@ -216,6 +220,7 @@ def ingest(line):
     place = tidy_place(parse_line(text))
     for cls, port in GEAR_RE.findall(text):
         WORN[port] = pretty_item(cls)
+        WORN_CLS[port] = cls
     if "CSCItemNavigation::" in text and ("OnPlayer" in text or "OnQuantumDriveArrived" in text):
         found = SHIP_RE.search(text)
         if found:
@@ -677,6 +682,8 @@ if __name__ == "__main__":
             "Status[persistent] Port[Armor_Torso]"
         )
         assert worn is None and WORN["Armor_Torso"].startswith("RRS ")
+        assert WORN_CLS["Armor_Torso"] == "rrs_specialist_heavy_core_04_03_01"
+        assert gear_list()[0]["cls"] == "rrs_specialist_heavy_core_04_03_01"
         here = ingest(
             "CSCItemNavigation::CalculateRoute|Projected Start Location is HUR L4 for route"
         )
