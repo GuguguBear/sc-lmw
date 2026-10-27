@@ -4,6 +4,8 @@
 
 **English** · [Deutsch](README.de.md) · [简体中文](#简体中文) · [繁體中文](#繁體中文)
 
+**Website / 网站 / 網站：** https://gugugubear.pythonanywhere.com/
+
 **Your whole 'verse on one screen.** A free, open-source 3D map of Star Citizen: every system, planet, moon, station and jump point, a search that knows where to find every ore, item, ship, commodity, blueprint and mission, live trade prices, holographic 3D ships, and your own org's pilots flying around on it in real time.
 
 Drop it into your org website with one line of HTML, or hand the included prompt to an AI and let it do the wiring for you.
