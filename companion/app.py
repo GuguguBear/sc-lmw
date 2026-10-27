@@ -40,6 +40,31 @@ TRANS = re.compile(
 )
 CODE = re.compile(r"\b((?:RR|Stanton|Pyro|Nyx|Terra)[A-Za-z0-9_]{2,80})\b")
 HINT = re.compile(r"zone|location|quantum|jump", re.I)
+GEAR_RE = re.compile(
+    r"Attachment\[[^,]+,\s*([A-Za-z0-9_]+),\s*[^\]]+\]\s+Status\[[^\]]+\]\s+Port\[(Armor_[A-Za-z0-9_]+)\]"
+)
+SHIP_RE = re.compile(
+    r"\b((?:AEGS|ANVL|CRUS|MISC|ORIG|RSI|DRAK|BANU|XIAN|TMBL|GRIN|KRIG|CNOU|ESPR|GAMA|VNCL|MRAI)(?:_[A-Za-z][A-Za-z0-9]*)+)_\d{6,}"
+)
+SELECT_RE = re.compile(r"selected point LOC_RR_S([1-4])_L(\d)\b", re.I)
+START_RE = re.compile(r"Projected Start Location is .*?\b(HUR|CRU|ARC|MIC)\s+L(\d)\b", re.I)
+ARRIVE_RE = re.compile(r"arrived at final destination", re.I)
+MAKER_NAME = {
+    "AEGS": "Aegis", "ANVL": "Anvil", "CRUS": "Crusader", "MISC": "MISC",
+    "ORIG": "Origin", "RSI": "RSI", "DRAK": "Drake", "BANU": "Banu",
+    "XIAN": "Aopoa", "TMBL": "Tumbril", "GRIN": "Greycat", "KRIG": "Kruger",
+    "CNOU": "Consolidated", "ESPR": "Esperia", "GAMA": "Gatac",
+    "VNCL": "Vanduul", "MRAI": "Mirai",
+}
+BODY_N = {"HUR": "1", "CRU": "2", "ARC": "3", "MIC": "4"}
+PORT_ORDER = (
+    "Armor_Undersuit", "Armor_Helmet", "Armor_Torso", "Armor_Arms",
+    "Armor_Legs", "Armor_Backpack",
+)
+WORN = {}
+SHIP = ""
+DEST = None
+LAST_SIG = ""
 
 LOCK = threading.Lock()
 STOP = threading.Event()
@@ -106,6 +131,104 @@ def system_of(code, named=""):
     if c.startswith("stanton") or re.match(r"rr_(hur|cru|arc|mic)", c):
         return "Stanton"
     return ""
+
+
+def pretty_ship(code):
+    parts = code.split("_")
+    if "SCItem" in parts:
+        parts = parts[: parts.index("SCItem")]
+    maker = MAKER_NAME.get(parts[0], parts[0])
+    rest = parts[1:]
+    if rest and len(rest[-1]) == 1:
+        body = " ".join(rest[:-1]) + "-" + rest[-1]
+    else:
+        body = " ".join(rest)
+    return (maker + " " + body).strip()
+
+
+def pretty_item(code):
+    parts = code.split("_")
+    while parts and parts[-1].isdigit():
+        parts.pop()
+    maker = MAKER_NAME.get(parts[0].upper(), parts[0].upper()) if parts else ""
+    rest = " ".join(part.capitalize() for part in parts[1:])
+    return (maker + " " + rest).strip()
+
+
+def tidy_place(place):
+    if not place:
+        return place
+    found = re.fullmatch(r"RR_(HUR|CRU|ARC|MIC)_L(\d)", place.get("code") or "", re.I)
+    if not found:
+        return place
+    out = dict(place)
+    out["code"] = "RR_%s_L%s" % (found.group(1).upper(), found.group(2))
+    out["location"] = "%s-L%s" % (found.group(1).upper(), found.group(2))
+    out["system"] = out.get("system") or "Stanton"
+    return out
+
+
+def lagrange_place(body, lag):
+    if body in BODY_N:
+        num = BODY_N[body]
+        name = body
+    else:
+        num = str(body)
+        name = {v: k for k, v in BODY_N.items()}.get(num, "")
+    if not name:
+        return None
+    code = "RR_%s_L%s" % (name, lag)
+    return {"code": code, "location": "%s-L%s" % (name, lag), "system": "Stanton"}
+
+
+def gear_list():
+    ordered = [{"port": key, "name": WORN[key]} for key in PORT_ORDER if key in WORN]
+    ordered.extend(
+        {"port": key, "name": value}
+        for key, value in WORN.items()
+        if key not in PORT_ORDER
+    )
+    return ordered[:12]
+
+
+def snapshot(place):
+    out = {
+        "code": (place or {}).get("code") or "",
+        "location": (place or {}).get("location") or "",
+        "system": (place or {}).get("system") or "",
+        "ship": SHIP,
+        "gear": gear_list(),
+    }
+    return out
+
+
+def signature(payload):
+    return json.dumps(
+        [payload.get("code"), payload.get("ship"), payload.get("gear")],
+        ensure_ascii=False,
+        sort_keys=True,
+    )
+
+
+def ingest(line):
+    global SHIP, DEST
+    text = line or ""
+    place = tidy_place(parse_line(text))
+    for cls, port in GEAR_RE.findall(text):
+        WORN[port] = pretty_item(cls)
+    if "CSCItemNavigation::" in text and ("OnPlayer" in text or "OnQuantumDriveArrived" in text):
+        found = SHIP_RE.search(text)
+        if found:
+            SHIP = pretty_ship(found.group(1))
+    selected = SELECT_RE.search(text)
+    if selected:
+        DEST = lagrange_place(selected.group(1), selected.group(2))
+    started = START_RE.search(text)
+    if started:
+        place = lagrange_place(started.group(1).upper(), started.group(2))
+    if ARRIVE_RE.search(text) and DEST:
+        place = DEST
+    return place
 
 
 def parse_line(line):
@@ -189,21 +312,28 @@ def post_place(place):
 
 
 def consider(line, send):
-    place = parse_line(line)
-    if not place:
-        return None
+    global LAST_SIG
+    place = ingest(line)
     with LOCK:
-        prev = STATE["place"]
-        same = prev and prev.get("code") == place["code"]
-    if same:
-        return place
+        current = STATE.get("place") or {}
+    base = place or (current if current.get("code") else None)
+    if not base or not base.get("code"):
+        if not send:
+            with LOCK:
+                STATE["place"] = snapshot(base or {})
+        return None
+    payload = snapshot(base)
+    sig = signature(payload)
+    if sig == LAST_SIG:
+        return payload
+    LAST_SIG = sig
     if send:
-        post_place(place)
+        post_place(payload)
     else:
         with LOCK:
-            STATE["place"] = place
+            STATE["place"] = payload
             STATE["error"] = ""
-    return place
+    return payload
 
 
 def scan_tail():
@@ -214,22 +344,24 @@ def scan_tail():
             STATE["status"] = "no log"
         return None
     data = path.read_bytes()
-    tail = data[-400_000:]
-    text = tail.decode("utf-8", "replace")
+    text = data[-8_000_000:].decode("utf-8", "replace")
     found = None
     for line in text.splitlines():
-        place = parse_line(line)
+        place = ingest(line)
         if place:
             found = place
+    payload = snapshot(found or {})
     with LOCK:
+        global LAST_SIG
         STATE["offset"] = path.stat().st_size
-        if found:
-            STATE["place"] = found
+        STATE["place"] = payload
+        LAST_SIG = signature(payload)
+        if payload.get("code"):
             STATE["error"] = ""
-            STATE["status"] = "seen " + found["code"]
+            STATE["status"] = "seen " + payload["code"]
         else:
             STATE["status"] = "no place in the recent log"
-    return found
+    return payload if payload.get("code") else None
 
 
 def watch():
@@ -315,6 +447,16 @@ def set_running(on):
             STATE["offset"] = path.stat().st_size if path.is_file() else 0
             STATE["status"] = "watching"
             STATE["error"] = ""
+        scan_tail()
+        with LOCK:
+            place = STATE.get("place") or {}
+        if place.get("code") and CFG.get("token") and CFG.get("room"):
+            try:
+                post_place(place)
+            except Exception as exc:
+                with LOCK:
+                    STATE["error"] = str(exc)[:180]
+                    STATE["status"] = "send failed"
         THREAD = threading.Thread(target=watch, daemon=True)
         THREAD.start()
         return
@@ -530,6 +672,22 @@ if __name__ == "__main__":
         got = parse_line(sample)
         assert got and got["code"] == "RR_HUR_Lorville" and got["system"] == "Stanton", got
         assert parse_line("ordinary engine line without a place") is None
-        print("parser ok", got)
+        worn = ingest(
+            "Player[Pilot] Attachment[item_1, rrs_specialist_heavy_core_04_03_01, 1] "
+            "Status[persistent] Port[Armor_Torso]"
+        )
+        assert worn is None and WORN["Armor_Torso"].startswith("RRS ")
+        here = ingest(
+            "CSCItemNavigation::CalculateRoute|Projected Start Location is HUR L4 for route"
+        )
+        assert here and here["code"] == "RR_HUR_L4", here
+        ship_line = (
+            "AEGS_Idris_M_876820722641|CSCItemNavigation::OnPlayerSelectedQuantumTarget|"
+            "selected point LOC_RR_S1_L2"
+        )
+        ingest(ship_line)
+        assert SHIP == "Aegis Idris-M", SHIP
+        assert DEST and DEST["code"] == "RR_HUR_L2", DEST
+        print("parser ok", got, SHIP, WORN["Armor_Torso"])
     else:
         main()

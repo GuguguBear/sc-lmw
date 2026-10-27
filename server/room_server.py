@@ -116,6 +116,11 @@ def init_db():
             );
             """
         )
+        cols = {row[1] for row in con.execute("PRAGMA table_info(presence)")}
+        if "ship" not in cols:
+            con.execute("ALTER TABLE presence ADD COLUMN ship TEXT")
+        if "gear" not in cols:
+            con.execute("ALTER TABLE presence ADD COLUMN gear TEXT")
 
 
 def clean_nick(raw):
@@ -147,6 +152,30 @@ def member_by_token(con, token):
     return con.execute("SELECT * FROM member WHERE token=?", (token,)).fetchone()
 
 
+def gear_items(raw):
+    if not raw:
+        return []
+    try:
+        data = json.loads(raw)
+    except (TypeError, json.JSONDecodeError):
+        return []
+    if not isinstance(data, list):
+        return []
+    out = []
+    for item in data[:12]:
+        if not isinstance(item, dict):
+            continue
+        port = str(item.get("port") or "")[:40]
+        name = str(item.get("name") or "")[:80]
+        if port and name:
+            out.append({"port": port, "name": name})
+    return out
+
+
+def clean_gear(raw):
+    return json.dumps(gear_items(json.dumps(raw if isinstance(raw, list) else [])), ensure_ascii=False)
+
+
 def room_state(con, code, me):
     room = con.execute("SELECT * FROM room WHERE code=?", (code,)).fetchone()
     if not room:
@@ -159,7 +188,7 @@ def room_state(con, code, me):
     role = "captain" if room["captain"] == me["id"] else "member"
     rows = con.execute(
         """
-        SELECT m.id, m.nickname, s.status, p.location, p.system, p.code, p.seen
+        SELECT m.id, m.nickname, s.status, p.location, p.system, p.code, p.seen, p.ship, p.gear
         FROM membership s
         JOIN member m ON m.id = s.member
         LEFT JOIN presence p ON p.room = s.room AND p.member = s.member
@@ -182,6 +211,9 @@ def room_state(con, code, me):
                 "location": r["location"] or "",
                 "system": r["system"] or "",
                 "code": r["code"] or "",
+                "seen": int(r["seen"]) if r["seen"] else None,
+                "ship": r["ship"] or "",
+                "gear": gear_items(r["gear"]),
                 "online": bool(r["seen"] and now() - r["seen"] < ONLINE_S),
             }
         )
@@ -251,7 +283,8 @@ def players_json(con, code, me):
                 "code": m["code"],
                 "location": m["location"],
                 "system": m["system"],
-                "ship": None,
+                "ship": m.get("ship") or None,
+                "gear": m.get("gear") or [],
                 "travel": None,
             }
         )
@@ -417,15 +450,28 @@ class Handler(BaseHTTPRequestHandler):
                 if not loc and not code_loc:
                     self.send_json(400, {"error": "location"})
                     return
+                old = con.execute(
+                    "SELECT ship, gear FROM presence WHERE room=? AND member=?",
+                    (code, me["id"]),
+                ).fetchone()
+                if "ship" in body:
+                    ship_name = str(body.get("ship") or "")[:80]
+                else:
+                    ship_name = (old["ship"] if old and old["ship"] else "") or ""
+                if "gear" in body:
+                    worn = clean_gear(body.get("gear"))
+                else:
+                    worn = (old["gear"] if old and old["gear"] else "") or "[]"
                 con.execute(
                     """
-                    INSERT INTO presence (room, member, location, system, code, seen)
-                    VALUES (?,?,?,?,?,?)
+                    INSERT INTO presence (room, member, location, system, code, seen, ship, gear)
+                    VALUES (?,?,?,?,?,?,?,?)
                     ON CONFLICT(room, member) DO UPDATE SET
                       location=excluded.location, system=excluded.system,
-                      code=excluded.code, seen=excluded.seen
+                      code=excluded.code, seen=excluded.seen,
+                      ship=excluded.ship, gear=excluded.gear
                     """,
-                    (code, me["id"], loc, sys, code_loc, now()),
+                    (code, me["id"], loc, sys, code_loc, now(), ship_name, worn),
                 )
                 self.send_json(200, {"ok": True})
                 return

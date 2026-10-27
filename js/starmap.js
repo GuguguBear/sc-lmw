@@ -161,6 +161,7 @@ function stPlayerLoc(p){ const D=ST_DATA; if(!D||!p) return null; const code=Str
   if(body) return body;
   // 6) nur das System ist bekannt: KEIN Punkt auf der Karte (frueher der Stern, dort sassen dann Spieler "in der Sonne"); die Liste zeigt den Ort als Text
   return null; }
+SC.playerLoc = stPlayerLoc;
 // Monde eines Planeten, die in derselben Richtung stehen (Clio und Euterpe bei microTech), um mindestens minDeg auseinanderziehen.
 // Nur die Richtung in der Bahnebene aendert sich, Hoehe und Abstand bleiben. Rueckgabe: id -> Richtung (Vector3, Laenge wie vorher)
 function stSpread(list,minDeg){ const out={}, n=list.length, min=minDeg*Math.PI/180; if(!n) return out;
@@ -195,18 +196,73 @@ function stOpenGroup(g){ const L=g.grp, nOn=L.filter(x=>x.on).length;
   const body=stCard(nOn?'#4dff9a':'#8a93a6',(g.loc&&g.loc.n)?gn(g.loc.n):_t('player.multiple'),nOn?_t('player.here_count_online',{n:L.length,on:nOn}):_t('player.here_count',{n:L.length}));
   body.innerHTML=L.map((x,i)=>{ const p=x.pl; return '<div class="st-pr" data-gi="'+i+'" style="cursor:pointer"><div><b>'+(x.on?'<span style="color:#4dff9a">●</span> ':'<span class="sc-lmw-muted">○</span> ')+esc(x.n)+'</b><span>'+esc([gn(p.location||(x.loc&&x.loc.n)||''),x.on?_t('status.online'):_t('status.offline_last',{time:stAgo(p.last_seen||p.when)}),gn(p.ship||'')].filter(Boolean).join(' · '))+'</span></div><em>'+_t('action.profile')+'</em></div>'; }).join('');
   body.querySelectorAll('[data-gi]').forEach(r=>r.onclick=()=>stOpenPlayer(L[+r.getAttribute('data-gi')].pl)); }
-async function stOpenPlayer(p){ const o=stPlayerLoc(p), sysn=o?stSysName(o):(p.system||'');
-  const body=stCard(p.online?'#4dff9a':'#8a93a6',p.name||_t('entity.player'),(p.online?_t('status.online'):_t('status.offline_last',{time:stAgo(p.last_seen||p.when)}))+(sysn?' · '+sysn:''));
-  const C=await uexCatalog(), sh=p.ship?C.ships.find(s=>s.n===p.ship):null, b=o?stBodyOf(o):null;
-  let h='<div class="st-pl-top"><div class="st-pl-st'+(p.online?' on':'')+'">'+(p.online?_t('status.online_dot'):_t('status.offline_dot',{time:esc(stAgo(p.last_seen||p.when))}))+'</div></div>';
-  if(p.travel){ const dl=stDestLoc(p.travel); h+='<div class="st-jump">'+(p.travel.from?_t('travel.jump_from_to',{from:'<b>'+esc(gn(p.travel.from))+'</b>',to:'<b>'+esc(gn(p.travel.to))+'</b>'}):_t('travel.jump_to',{to:'<b>'+esc(gn(p.travel.to))+'</b>'}))+' '+(p.travel.at?'<em>'+esc(stAgo(p.travel.at))+'</em>':'')+(dl?'<button class="sc-lmw-btn sm primary" id="'+ID('stPlDest')+'" data-to="'+dl.id+'">'+_t('action.show_destination')+'</button>':'')+'</div>'; }
-  h+='<div class="st-slbl">📍 '+(p.online&&stLocFresh(p)?_t('location.here_now'):p.online?_t('location.last_report',{time:esc(stAgo(p.when))}):_t('location.last_seen'))+'</div><div class="st-pr"'+(o?' data-oid="'+o.id+'"':'')+'><div><b>'+esc(gn(p.location||(o&&o.n)||'')||_t('location.unknown'))+'</b><span>'+esc([b&&b!==o&&b.k!=='star'?gn(b.n):'',sysn].filter(Boolean).join(' · '))+'</span></div>'+(o?'<em>'+_t('action.fly_to')+'</em>':'')+'</div>';
-  if(p.ship) h+='<div class="st-slbl">🚀 '+_t('label.ship')+'</div><div id="'+ID('stPlShipV')+'">'+(sh&&stShipImg(sh)?'<img class="st-shipimg" src="'+esc(stShipImg(sh))+'" alt="" onerror="this.remove()">':'')+'</div>'+'<div style="font-size:.88rem">'+esc(gn(p.ship))+'</div>';
-  body.innerHTML=h; stWirePrices(body);
-  // 3D-Holo des Schiffs, wenn FleetYards eins liefert (Groessen-Check in modelUrl), sonst bleibt das Bild
-  if(p.ship&&SC.fleetShip) SC.fleetShip(sh?sh.n:p.ship).then(fy=>{ const v=$('stPlShipV'); if(!fy||!v) return null; return SC.modelUrl(fy,true).then(url=>{ if(!url) return; const im=v.querySelector('img'); v.innerHTML='<div class="holo-box sm" data-holo="'+esc(url)+'" data-fallback="'+esc(im?im.getAttribute('src'):'')+'"></div>'; SC.holoMount(v); }); });
-  const pd=$('stPlDest'); if(pd) pd.onclick=()=>{ const t=ST_DATA.by[pd.getAttribute('data-to')]; if(t){ window.__stCtl.flyTo(t); } };
+let ST_PIN='';
+function portLabel(port){ const k='pilot.port.'+port, s=_t(k); return s===k?String(port||'').replace(/^Armor_/,''):s; }
+function pilotBits(p){ return {gear:Array.isArray(p.gear)?p.gear:[], ship:p.ship?String(p.ship):'', place:gn(p.location||'')||_t('location.unknown')}; }
+function ensurePilotUi(){ if(!ROOT||$('stCall')) return;
+  const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+  svg.id=ID('stLeader'); svg.setAttribute('class','st-leader');
+  const ln=document.createElementNS('http://www.w3.org/2000/svg','line'); ln.id=ID('stLeaderLn'); svg.appendChild(ln);
+  const tip=document.createElement('div'); tip.id=ID('stTip'); tip.className='st-tip'; tip.hidden=true;
+  const box=document.createElement('div'); box.id=ID('stCall'); box.className='st-call'; box.hidden=true;
+  box.innerHTML='<button type="button" class="st-call-x" id="'+ID('stCallX')+'">✕</button><b class="st-call-name"></b><div class="st-call-place"></div><div class="st-call-ship"></div><div class="st-call-gear"></div>';
+  ROOT.appendChild(svg); ROOT.appendChild(tip); ROOT.appendChild(box);
+  $('stCallX').onclick=function(ev){ ev.stopPropagation(); window.__stPinPlayer(null); };
 }
+function paintPilot(p){ ensurePilotUi(); const box=$('stCall'); if(!box||!p) return;
+  const bits=pilotBits(p), sig=JSON.stringify([p.name,bits.place,bits.ship,bits.gear]);
+  if(box.dataset.sig!==sig){ box.dataset.sig=sig;
+    box.querySelector('.st-call-name').textContent=p.name||p.player||_t('entity.player');
+    box.querySelector('.st-call-place').textContent=bits.place;
+    box.querySelector('.st-call-ship').textContent=bits.ship||_t('pilot.no_ship');
+    const gear=box.querySelector('.st-call-gear');
+    gear.innerHTML=bits.gear.length?bits.gear.map(function(g){ return '<div><span>'+esc(portLabel(g.port))+'</span><b>'+esc(g.name)+'</b></div>'; }).join(''):'<p>'+esc(_t('pilot.no_gear'))+'</p>';
+  }
+  box.hidden=false;
+}
+function playerAt(entries, id){ if(!id) return null;
+  for(const e of entries){ if(!e.o||e.o.k!=='player') continue;
+    if(e.o.pl&&String(e.o.pl.id)===String(id)) return e;
+    if(e.o.grp){ const hit=e.o.grp.find(function(g){ return g.pl&&String(g.pl.id)===String(id); }); if(hit) return e; }
+  }
+  return null;
+}
+function edgePoint(box, x, y){ const left=box.offsetLeft, top=box.offsetTop, w=box.offsetWidth||1, h=box.offsetHeight||1, cx=left+w/2, cy=top+h/2, dx=x-cx, dy=y-cy;
+  if(!dx&&!dy) return {x:cx,y:cy};
+  const s=Math.min((w/2)/Math.abs(dx||1e-6),(h/2)/Math.abs(dy||1e-6));
+  return {x:cx+dx*s, y:cy+dy*s};
+}
+window.__stPinPlayer=function(p){ ST_PIN=p&&p.id!=null?String(p.id):'';
+  const box=$('stCall'), svg=$('stLeader');
+  if(!ST_PIN){ if(box) box.hidden=true; if(svg) svg.hidden=true; return; }
+  paintPilot((ST_PL||[]).find(function(x){ return String(x.id)===ST_PIN; })||p);
+};
+window.__stLeaderFrame=function(entries, scr, hover){ ensurePilotUi();
+  const tip=$('stTip'), box=$('stCall'), line=$('stLeaderLn'), svg=$('stLeader');
+  if(!tip||!box||!line||!svg) return;
+  const live=ST_PIN&&(ST_PL||[]).find(function(x){ return String(x.id)===ST_PIN; });
+  if(live) paintPilot(live);
+  const pinned=playerAt(entries, ST_PIN), pt=pinned?scr(pinned.p):null;
+  if(pinned&&pt&&!box.hidden){ const W=ROOT.clientWidth||1, H=ROOT.clientHeight||1;
+    svg.setAttribute('viewBox','0 0 '+W+' '+H); svg.setAttribute('width',W); svg.setAttribute('height',H);
+    let left=pt.x+36, top=pt.y-28;
+    if(left+box.offsetWidth>W-12) left=Math.max(12, pt.x-box.offsetWidth-36);
+    if(top+box.offsetHeight>H-12) top=Math.max(12, H-box.offsetHeight-12);
+    if(top<12) top=12; if(left<12) left=12;
+    box.style.left=left+'px'; box.style.top=top+'px';
+    const edge=edgePoint(box, pt.x, pt.y);
+    line.setAttribute('x1',pt.x); line.setAttribute('y1',pt.y); line.setAttribute('x2',edge.x); line.setAttribute('y2',edge.y);
+    svg.hidden=false;
+  } else svg.hidden=true;
+  const hv=hover&&hover.o&&hover.o.k==='player'&&hover.o.pl&&!hover.o.grp?hover:null;
+  if(hv&&String(hv.o.pl.id)!==ST_PIN){ const hp=scr(hv.p);
+    if(hp){ const bits=pilotBits(hv.o.pl);
+      tip.innerHTML='<b>'+esc(hv.o.n)+'</b><span>'+esc(bits.place)+'</span><span>'+esc(bits.ship||_t('pilot.no_ship'))+'</span>';
+      tip.style.left=(hp.x+16)+'px'; tip.style.top=(hp.y+14)+'px'; tip.hidden=false;
+    } else tip.hidden=true;
+  } else tip.hidden=true;
+};
+function stOpenPlayer(p){ if(p && window.__stPinPlayer) window.__stPinPlayer(p); }
 const ST_WK_TABS=[['ship','wikelo.tab.ship'],['Armor','wikelo.tab.armor'],['Personal Weapons','wikelo.tab.weapons'],['other','wikelo.tab.other'],['favor','wikelo.tab.favor']];
 function stWkCat(w){ if(w.rw.some(r=>r[0]==='Wikelo Favor')) return 'favor'; if(w.k==='ship') return 'ship'; return (w.cat==='Armor'||w.cat==='Personal Weapons')?w.cat:'other'; }
 async function stWikeloHTML(box){ const M=await stMis(), W=(M.d.wikelo||[]), C=await uexCatalog(); if(!box||!ROOT.contains(box)) return;
@@ -494,10 +550,11 @@ function stantonScene(canvas,sysKey){
       let s=null; if(show){ s=scr(e.p); if(!s||s.x<-50||s.x>W+50||s.y<-20||s.y>H+20) show=false; else if(!e.body&&behind(e.p)) show=false; }
       if(show){ const label=o.k==='player'?o.n:gn(o.n); const w=label.length*(/[^\u0000-\u00ff]/.test(label)?13:(e.prio>=3?9:6.4))+8, h=16, x=s.x-w/2, y=s.y-(e.body?Math.max(10,scrRadius(e))+14:18);
         if(!force&&placed.some(r=>x<r.x+r.w&&x+w>r.x&&y<r.y+r.h&&y+h>r.y)) show=false; else { placed.push({x,y,w,h}); d.style.transform='translate('+x.toFixed(1)+'px,'+y.toFixed(1)+'px)'; } }
-      if(!show) d.style.transform='translate(-9999px,0)'; d.classList.toggle('hl',force||mark); } }
+      if(!show) d.style.transform='translate(-9999px,0)'; d.classList.toggle('hl',force||mark); }
+    if(window.__stLeaderFrame) window.__stLeaderFrame(entries, scr, hover); }
   size();
   let raf=0, dragging=false, panning=false, lastX=0, lastY=0, downX=0, downY=0, uiDown=false;
-  const onUI=(e)=> !!(e&&e.target&&e.target.closest&&e.target.closest('.st-loc-card,.st-zoom,.stx,.st-side,.st-crumb,.st-top,.st-room,.st-gate'));
+  const onUI=(e)=> !!(e&&e.target&&e.target.closest&&e.target.closest('.st-loc-card,.st-zoom,.stx,.st-side,.st-crumb,.st-top,.st-room,.st-gate,.st-call'));
   const clampR=v=>explore()?Math.max(LV[level.t].min,Math.min(LV[level.t].max,v)):Math.max(LV.sys.bgMin*BGK,Math.min(LV.sys.bgMax*BGK,v));
   const canNav=()=>explore()&&level.t==='sys';
   const ray=new T.Raycaster(), ndc=new T.Vector2(), plane=new T.Plane(new T.Vector3(0,1,0),0);
@@ -1018,8 +1075,9 @@ function stOpenNofix(k){ const D=ST_DATA; let p=$('stLoc'); if(p) p.remove();
 function stDist(km){ return km>=1e6?_t('unit.mio_km',{n:tn(km/1e6,{maximumFractionDigits:2})}):_t('unit.km',{n:tn(Math.round(km))}); }
 async function openStPanel(o){
   const D=ST_DATA; if(!D||!o) return;
-  if(o.grp){ stOpenGroup(o); return; }
+  if(o.grp){ if(window.__stPinPlayer) window.__stPinPlayer(null); stOpenGroup(o); return; }
   if(o.k==='player'){ stOpenPlayer(o.pl); return; }
+  if(window.__stPinPlayer) window.__stPinPlayer(null);
   window.__stPlace=o;
   let p=$('stLoc'); if(p) p.remove();
   p=document.createElement('div'); p.id=ID('stLoc'); p.className='st-loc';

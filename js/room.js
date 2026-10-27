@@ -20,6 +20,8 @@
       note:'路线备注', publish:'发布给房间', clear:'清空', comment:'评论', send:'发送', del:'删除',
       mode:'谁可以画路线', modeCaptain:'仅队长', modeMembers:'队员也可以',
       members:'房间成员', you:'你', errNick:'请填写 1 到 32 个字的昵称。', errRoom:'没有这个房间。',
+      agoNow:'刚刚', agoSec:'{n} 秒前', agoMin:'{n} 分钟前', agoHour:'{n} 小时前', agoDay:'{n} 天前',
+      noPlace:'星图上对不上这个地点。',
       errNet:'房间服务没连上。请在项目目录运行 python server/room_server.py，然后打开 http://127.0.0.1:8770/ 。', published:'已发布的路线', by:'来自',
       yours:'你的房间', switchRoom:'建立或加入别的房间',
       resumed:'上次留下的房间', resumedLead:'刷新后仍是这个房间。房间码没有变，可以直接进入星图。',
@@ -45,6 +47,8 @@
       note:'路線備註', publish:'發布給房間', clear:'清空', comment:'評論', send:'送出', del:'刪除',
       mode:'誰可以畫路線', modeCaptain:'僅隊長', modeMembers:'隊員也可以',
       members:'房間成員', you:'你', errNick:'請填寫 1 到 32 個字的暱稱。', errRoom:'沒有這個房間。',
+      agoNow:'剛剛', agoSec:'{n} 秒前', agoMin:'{n} 分鐘前', agoHour:'{n} 小時前', agoDay:'{n} 天前',
+      noPlace:'星圖上對不上這個地點。',
       errNet:'房間服務沒連上。請在專案目錄執行 python server/room_server.py，然後打開 http://127.0.0.1:8770/ 。', published:'已發布的路線', by:'來自',
       yours:'你的房間', switchRoom:'建立或加入別的房間',
       resumed:'上次留下的房間', resumedLead:'重新整理後仍是這個房間。房間碼沒有變，可以直接進入星圖。',
@@ -70,6 +74,8 @@
       note:'Route note', publish:'Publish to room', clear:'Clear', comment:'Comment', send:'Send', del:'Delete',
       mode:'Who can draw routes', modeCaptain:'Captain only', modeMembers:'Members too',
       members:'Room members', you:'you', errNick:'Use a nickname of 1 to 32 characters.', errRoom:'No room with that code.',
+      agoNow:'Just now', agoSec:'{n}s ago', agoMin:'{n} min ago', agoHour:'{n} h ago', agoDay:'{n} d ago',
+      noPlace:'This place is not on the map.',
       errNet:'Room service is not reachable. Run python server/room_server.py and open http://127.0.0.1:8770/ .', published:'Published routes', by:'by',
       yours:'Your room', switchRoom:'Create or join a different room',
       resumed:'Room from last time', resumedLead:'Refreshing kept this room. The code is unchanged. You can enter the map.',
@@ -95,6 +101,8 @@
       note:'Notiz zur Route', publish:'Für den Raum veröffentlichen', clear:'Leeren', comment:'Kommentar', send:'Senden', del:'Löschen',
       mode:'Wer Routen zeichnen darf', modeCaptain:'Nur der Captain', modeMembers:'Auch Mitglieder',
       members:'Im Raum', you:'du', errNick:'Nickname mit 1 bis 32 Zeichen.', errRoom:'Diesen Raum gibt es nicht.',
+      agoNow:'Gerade', agoSec:'vor {n} s', agoMin:'vor {n} min', agoHour:'vor {n} h', agoDay:'vor {n} d',
+      noPlace:'Dieser Ort ist nicht auf der Karte.',
       errNet:'Der Raumdienst ist nicht erreichbar. python server/room_server.py starten und http://127.0.0.1:8770/ öffnen.', published:'Veröffentlichte Routen', by:'von',
       yours:'Dein Raum', switchRoom:'Anderen Raum anlegen oder beitreten',
       resumed:'Raum von zuletzt', resumedLead:'Nach dem Neuladen ist es derselbe Raum. Der Code ist unverändert. Du kannst die Karte öffnen.',
@@ -376,10 +384,7 @@
           '</div></div></div>'
       ) : '')+
       '<div class="st-room-sec"><span>'+esc(t('members'))+'</span>'+
-        live.map(function(m){
-          return '<div class="st-room-row"><span>'+esc(m.nickname)+(m.id===state.me.id?' · '+esc(t('you')):'')+'</span>'+
-            '<em>'+esc(m.location||'')+'</em></div>';
-        }).join('')+
+        live.map(memberRow).join('')+
       '</div>'+
       '<div class="row"><button type="button" id="stHere">'+esc(t('here'))+'</button>'+
         (mine ? '<button type="button" id="stMark"'+(marking?' class="on"':'')+'>'+esc(marking?t('routeOn'):t('route'))+'</button>' : '')+
@@ -425,6 +430,7 @@
     el.querySelector('#stRoomLeave').onclick = leave;
     var link = el.querySelector('#stLinkPc');
     if(link) link.onclick = linkPc;
+    el.querySelectorAll('[data-mate]').forEach(function(b){ b.onclick=function(){ jumpMember(b.getAttribute('data-mate')); }; });
     el.querySelectorAll('[data-ok]').forEach(function(b){ b.onclick=function(){ decide(b.getAttribute('data-ok'),'approve'); }; });
     el.querySelectorAll('[data-no]').forEach(function(b){ b.onclick=function(){ decide(b.getAttribute('data-no'),'reject'); }; });
     var modeBtn = el.querySelector('#stRouteModeBtn');
@@ -461,6 +467,49 @@
     el.querySelectorAll('[data-del]').forEach(function(b){ b.onclick=function(){ delRoute(b.getAttribute('data-del')); }; });
   }
 
+  function ageText(seen){
+    if(typeof seen!=='number' || !isFinite(seen)) return '';
+    var s = Math.max(0, Math.round(Date.now()/1000 - seen));
+    if(s<5) return t('agoNow');
+    if(s<60) return t('agoSec').replace('{n}', String(s));
+    var m = Math.floor(s/60);
+    if(m<60) return t('agoMin').replace('{n}', String(m));
+    var h = Math.floor(m/60);
+    if(h<48) return t('agoHour').replace('{n}', String(h));
+    return t('agoDay').replace('{n}', String(Math.floor(h/24)));
+  }
+  function tickAges(){
+    document.querySelectorAll('.st-mate time[data-seen]').forEach(function(n){
+      var next = ageText(+n.getAttribute('data-seen'));
+      if(n.textContent!==next) n.textContent = next;
+    });
+  }
+  function placeLabel(m){
+    var raw = m.location || '';
+    if(SC.loc && SC.loc.text) return SC.loc.text(raw) || raw;
+    return raw;
+  }
+  function memberRow(m){
+    var you = m.id===state.me.id ? ' · '+esc(t('you')) : '';
+    var name = '<b>'+esc(m.nickname)+you+'</b>';
+    if(!m.location) return '<div class="st-mate">'+name+'</div>';
+    var when = typeof m.seen==='number' ? '<time data-seen="'+m.seen+'">'+esc(ageText(m.seen))+'</time>' : '';
+    return '<button type="button" class="st-mate" data-mate="'+esc(m.id)+'">'+name+
+      '<span>'+esc(placeLabel(m))+'</span>'+when+'</button>';
+  }
+  function jumpMember(id){
+    var m = (state.members||[]).filter(function(x){ return x.id===id; })[0];
+    var o = m && SC.playerLoc ? SC.playerLoc({code:m.code||'', location:m.location||'', system:m.system||''}) : null;
+    var ctl = window.__stCtl;
+    if(!o || !ctl || !ctl.flyTo){
+      statusMsg = t('noPlace');
+      paint();
+      setTimeout(function(){ if(statusMsg===t('noPlace')){ statusMsg=''; paint(); } }, 1600);
+      return;
+    }
+    ctl.flyTo(o);
+    if(typeof window.openStPanel==='function') window.openStPanel(o);
+  }
   function nickValue(){
     var el = document.getElementById('stRoomNick');
     return el ? el.value.trim() : '';
@@ -619,6 +668,7 @@
       var code = savedCode();
       if(token() && code) api('/api/rooms/'+encodeURIComponent(code)).then(function(st){ if(!roomKind) roomKind='saved'; take(st); }).catch(function(){ paint(); });
       if(!window.__stRoomPoll) window.__stRoomPoll=setInterval(function(){ if(state) refresh(); }, 8000);
+      if(!window.__stAgeTick) window.__stAgeTick=setInterval(tickAges, 1000);
       if(!window.__stLinkWatch) window.__stLinkWatch=setInterval(pullLink, 2000);
     if(!window.__stDdClose){
       window.__stDdClose=function(e){ if(e.target.closest&&e.target.closest('.st-dd')) return; document.querySelectorAll('.st-dd-list').forEach(function(n){ n.hidden=true; }); };

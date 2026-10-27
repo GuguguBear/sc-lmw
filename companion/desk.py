@@ -433,6 +433,7 @@ class Desktop:
         self.place_pip.pack(side="left", fill="y", padx=(0, 8))
         self.place = tk.Label(place_row, text="还没有地点", font=FONT_PLACE, anchor="w")
         self.place.pack(side="left", fill="x", expand=True)
+        self.kit = tk.Label(card, text="", font=FONT, anchor="w", justify="left", wraplength=490)
         self.err = tk.Label(card, text="", font=FONT, anchor="w", justify="left", wraplength=490)
 
         foot_rule = tk.Frame(shell, height=1)
@@ -572,6 +573,7 @@ class Desktop:
             widget.configure(bg=c["panel"], fg=c["muted"])
         self.linked.configure(fg=c["ink"])
         self.place.configure(bg=c["panel"], fg=c["accent"])
+        self.kit.configure(bg=c["panel"], fg=c["muted"] if "muted" in c else c["ink"])
         self.log_label.configure(fg=c["accent"])
         self.lang_label.configure(fg=c["accent"])
         self.look.configure(fg=c["accent"])
@@ -633,6 +635,17 @@ class Desktop:
             self.place.configure(text=text)
         else:
             self.place.configure(text=tr(self.lang, "place_none"))
+        kit = []
+        if place.get("ship"):
+            kit.append(place["ship"])
+        names = [item.get("name") for item in (place.get("gear") or []) if item.get("name")]
+        if names:
+            kit.append(" · ".join(names[:6]))
+        self.kit.configure(text="\n".join(kit))
+        if kit and not self.kit.winfo_ismapped():
+            self.kit.pack(fill="x", pady=(4, 0), after=self.place_row)
+        elif not kit and self.kit.winfo_ismapped():
+            self.kit.pack_forget()
         self.meta.configure(text=_status_text(state, self.lang))
         err = self._local_error(state.get("error") or "")
         self.err.configure(text=err)
