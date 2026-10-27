@@ -116,7 +116,7 @@ def default_log():
 
 def load_config():
     cfg = {
-        "apiBase": "http://127.0.0.1:8770",
+        "apiBase": "https://gugugubear.pythonanywhere.com",
         "room": "",
         "token": "",
         "logPath": default_log(),
@@ -130,6 +130,9 @@ def load_config():
                 cfg.update({k: saved[k] for k in cfg if k in saved and isinstance(saved[k], str)})
         except (OSError, json.JSONDecodeError):
             pass
+    base = str(cfg.get("apiBase") or "").strip().rstrip("/")
+    if base in ("http://127.0.0.1:8770", "http://localhost:8770"):
+        cfg["apiBase"] = "https://gugugubear.pythonanywhere.com"
     return cfg
 
 
@@ -281,16 +284,32 @@ def parse_line(line):
     return {"code": code, "location": code, "system": system_of(code)}
 
 
+def log_kind(path):
+    if not path:
+        return "missing"
+    file = Path(path)
+    try:
+        if not file.is_file():
+            return "missing"
+        if file.stat().st_size <= 0:
+            return "empty"
+    except OSError:
+        return "missing"
+    return "ok"
+
+
 def public_state():
     with LOCK:
         place = STATE["place"]
         log_path = CFG["logPath"]
+        kind = log_kind(log_path)
         return {
             "apiBase": CFG["apiBase"],
             "room": CFG["room"],
             "tokenSet": bool(CFG["token"]),
             "logPath": log_path,
-            "logExists": Path(log_path).is_file() if log_path else False,
+            "logExists": kind != "missing",
+            "logKind": kind,
             "theme": CFG["theme"],
             "pendingRoom": PENDING["room"] if PENDING else "",
             "running": STATE["running"],
@@ -618,8 +637,8 @@ class Handler(BaseHTTPRequestHandler):
                 request_stop()
                 return
             if path == "/api/focus":
-                self.send_json(200, {"ok": True})
-                raise_window()
+                shown = raise_window()
+                self.send_json(200, {"ok": True, "shown": bool(shown)})
                 return
             if path == "/api/settings":
                 apply_settings(body)
@@ -684,7 +703,7 @@ def tell(text):
 
 def _update_lang():
     try:
-        return desk.windows_lang()
+        return desk.canon_lang(CFG.get("lang")) or desk.windows_lang()
     except Exception:
         return "zh-Hans"
 
@@ -831,9 +850,180 @@ def maybe_update():
 
 
 def raise_window():
+    if desk.request_front():
+        return True
     fn = RAISE
     if fn:
         fn()
+        return True
+    return False
+
+
+def parse_tasklist_pids(text):
+    found = []
+    for line in str(text or "").splitlines():
+        line = line.strip()
+        if not line.startswith('"'):
+            continue
+        parts = [part.strip().strip('"') for part in line.split('","')]
+        if len(parts) < 2 or parts[0].lower() != "starfix.exe":
+            continue
+        try:
+            found.append(int(parts[1]))
+        except ValueError:
+            continue
+    return found
+
+
+def other_starfix_pids():
+    if sys.platform != "win32":
+        return []
+    try:
+        done = subprocess.run(
+            ["tasklist", "/FI", "IMAGENAME eq Starfix.exe", "/FO", "CSV", "/NH"],
+            capture_output=True,
+            creationflags=0x08000000,
+        )
+    except OSError:
+        return []
+    text = done.stdout.decode("mbcs", "replace")
+    skip = {os.getpid()}
+    try:
+        skip.add(os.getppid())
+    except OSError:
+        pass
+    return [pid for pid in parse_tasklist_pids(text) if pid not in skip and pid > 0]
+
+
+def end_starfix_pids(pids):
+    if sys.platform != "win32":
+        return
+    me = os.getpid()
+    try:
+        parent = os.getppid()
+    except OSError:
+        parent = 0
+    for pid in pids:
+        if pid <= 0 or pid in (me, parent):
+            continue
+        try:
+            subprocess.run(
+                ["taskkill", "/PID", str(pid), "/F"],
+                capture_output=True,
+                creationflags=0x08000000,
+            )
+        except OSError:
+            pass
+
+
+def foreground_pid():
+    if sys.platform != "win32":
+        return 0
+    import ctypes
+    from ctypes import wintypes
+    user32 = ctypes.WinDLL("user32", use_last_error=True)
+    user32.GetForegroundWindow.restype = wintypes.HWND
+    user32.GetWindowThreadProcessId.argtypes = [wintypes.HWND, ctypes.POINTER(wintypes.DWORD)]
+    user32.GetWindowThreadProcessId.restype = wintypes.DWORD
+    hwnd = user32.GetForegroundWindow()
+    if not hwnd:
+        return 0
+    pid = wintypes.DWORD()
+    user32.GetWindowThreadProcessId(hwnd, ctypes.byref(pid))
+    return int(pid.value)
+
+
+def allow_foreground(pids):
+    if sys.platform != "win32":
+        return
+    import ctypes
+    from ctypes import wintypes
+    user32 = ctypes.WinDLL("user32", use_last_error=True)
+    user32.AllowSetForegroundWindow.argtypes = [wintypes.DWORD]
+    user32.AllowSetForegroundWindow.restype = wintypes.BOOL
+    for pid in pids:
+        user32.AllowSetForegroundWindow(int(pid))
+
+
+def ask_yes(text):
+    if sys.platform != "win32":
+        return False
+    import ctypes
+    # Yes/No, question icon, topmost, and allowed to take the foreground.
+    flags = 0x00000004 | 0x00000020 | 0x00040000 | 0x00010000
+    return ctypes.windll.user32.MessageBoxW(0, text, "Starfix", flags) == 6
+
+
+def already_running_text():
+    lang = _update_lang()
+    if lang == "zh-Hant":
+        return "已經有一個 Starfix 在執行，所以這次沒有打開新視窗。\n\n要結束舊行程並重新打開嗎？"
+    if lang == "en":
+        return "Starfix is already running, so this launch did not open another window.\n\nClose the old one and open this copy?"
+    if lang == "de":
+        return "Starfix läuft bereits, darum hat dieser Start kein neues Fenster geöffnet.\n\nDas alte Programm beenden und dieses öffnen?"
+    return "已经有一个 Starfix 在运行，所以这次没有打开新窗口。\n\n要结束旧进程并重新打开吗？"
+
+
+def still_running_text():
+    lang = _update_lang()
+    if lang == "zh-Hant":
+        return "舊的 Starfix 沒有退出，這次沒有打開新視窗。"
+    if lang == "en":
+        return "The old Starfix did not exit, so this copy did not open."
+    if lang == "de":
+        return "Das alte Starfix wurde nicht beendet, darum öffnet diese Kopie nicht."
+    return "旧的 Starfix 没有退出，这次没有打开新窗口。"
+
+
+def post_focus():
+    try:
+        req = urllib.request.Request(
+            PAGE + "api/focus",
+            data=b"{}",
+            method="POST",
+            headers={"Content-Type": "application/json"},
+        )
+        with urllib.request.urlopen(req, timeout=1.5) as resp:
+            raw = resp.read(10_000)
+        data = json.loads(raw.decode("utf-8"))
+        return bool(isinstance(data, dict) and data.get("ok"))
+    except (OSError, urllib.error.URLError, json.JSONDecodeError, UnicodeError):
+        return False
+
+
+def wait_until(pred, seconds):
+    deadline = time.time() + seconds
+    while time.time() < deadline:
+        if pred():
+            return True
+        time.sleep(0.1)
+    return bool(pred())
+
+
+def claim_single_instance():
+    # A second double-click used to exit quietly. Bring the open window forward.
+    # If it never appears, ask before ending the old Starfix.exe.
+    if not port_open():
+        return True
+    if sys.platform != "win32" or not frozen():
+        if not post_focus():
+            tell("Starfix 已经在运行。")
+        return False
+    others = other_starfix_pids()
+    allow_foreground(others)
+    for _ in range(2):
+        post_focus()
+        if wait_until(lambda: foreground_pid() in others, 0.6):
+            return False
+    if others and ask_yes(already_running_text()):
+        end_starfix_pids(others)
+        if wait_until(lambda: not port_open(), 5):
+            return True
+        tell(still_running_text())
+    elif not others:
+        tell(already_running_text().split("\n")[0])
+    return False
 
 
 def request_stop():
@@ -849,17 +1039,7 @@ def request_stop():
 
 def main():
     global HTTPD
-    if port_open():
-        try:
-            req = urllib.request.Request(
-                PAGE + "api/focus",
-                data=b"{}",
-                method="POST",
-                headers={"Content-Type": "application/json"},
-            )
-            urllib.request.urlopen(req, timeout=1.5).read()
-        except (OSError, urllib.error.URLError):
-            tell("Starfix 已经在运行。")
+    if not claim_single_instance():
         return
     maybe_update()
     ThreadingHTTPServer.allow_reuse_address = True
@@ -875,6 +1055,8 @@ def main():
     finally:
         request_stop()
         httpd.server_close()
+        if frozen():
+            end_starfix_pids(other_starfix_pids())
 
 
 if __name__ == "__main__":
@@ -899,6 +1081,10 @@ if __name__ == "__main__":
         assert version_tuple("starfix-" + "a" * 40) is None
         assert version_tuple("1.0.1") > version_tuple("1.0.0")
         assert version_tuple(VERSION) is not None
+        assert parse_tasklist_pids('"Starfix.exe","4321","Console","1","12,345 K"\nINFO: none\n') == [4321]
+        assert parse_tasklist_pids('"notepad.exe","1","Console","1","1 K"') == []
+        assert log_kind("") == "missing"
+        assert log_kind(r"D:\no-such-starfix-log.log") == "missing"
         assert WORN_CLS["Armor_Torso"] == "rrs_specialist_heavy_core_04_03_01"
         assert gear_list()[0]["cls"] == "rrs_specialist_heavy_core_04_03_01"
         here = ingest(

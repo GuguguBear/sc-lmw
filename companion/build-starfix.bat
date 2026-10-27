@@ -1,28 +1,31 @@
-﻿@echo off
+@echo off
 setlocal EnableExtensions
 cd /d "%~dp0"
-title 打包 Starfix
+title Starfix
 
-echo.
-echo  正在用当前源码打包 Starfix.exe
-echo.
+rem ASCII on purpose. UTF-8 Chinese in a bat file is split by cmd.
 
 call :find_python
 if not defined PY (
-  echo  没有找到 Python 3。
-  echo  请先安装 Python 3，安装时勾选 Add python.exe to PATH。
+  echo.
+  echo  Python 3 was not found.
+  echo  Install Python 3 and tick Add python.exe to PATH.
   echo  https://www.python.org/downloads/
   goto :fail
 )
 
-echo  使用 "%PY%"
+echo.
+call :say "\u6b63\u5728\u7528\u5f53\u524d\u6e90\u7801\u6253\u5305 Starfix.exe"
+echo.
+call :say "\u4f7f\u7528"
+echo   "%PY%"
 "%PY%" -c "import sys; print(sys.version)"
 if errorlevel 1 goto :fail
 
 "%PY%" -c "import PyInstaller" >nul 2>&1
 if errorlevel 1 (
   echo.
-  echo  正在安装打包工具 PyInstaller ...
+  call :say "\u6b63\u5728\u5b89\u88c5\u6253\u5305\u5de5\u5177 PyInstaller ..."
   "%PY%" -m pip install --disable-pip-version-check pyinstaller
   if errorlevel 1 goto :fail
 )
@@ -30,34 +33,34 @@ if errorlevel 1 (
 tasklist /FI "IMAGENAME eq Starfix.exe" /NH | find /I "Starfix.exe" >nul
 if not errorlevel 1 (
   echo.
-  echo  Starfix 正在运行。不关掉它，新的 exe 写不进去。
-  echo  请先关闭所有 Starfix 窗口，然后按任意键继续。
+  call :say "Starfix \u6b63\u5728\u8fd0\u884c\u3002\u4e0d\u5173\u6389\u5b83\uff0c\u65b0\u7684 exe \u5199\u4e0d\u8fdb\u53bb\u3002"
+  call :say "\u8bf7\u5148\u5173\u95ed\u6240\u6709 Starfix \u7a97\u53e3\uff0c\u7136\u540e\u6309\u4efb\u610f\u952e\u7ee7\u7eed\u3002"
   pause
   tasklist /FI "IMAGENAME eq Starfix.exe" /NH | find /I "Starfix.exe" >nul
   if not errorlevel 1 (
-    echo  Starfix 仍在运行，这次没有打包。
+    call :say "Starfix \u4ecd\u5728\u8fd0\u884c\uff0c\u8fd9\u6b21\u6ca1\u6709\u6253\u5305\u3002"
     goto :fail
   )
 )
 
 echo.
-echo  开始打包，大约需要一两分钟。
+call :say "\u5f00\u59cb\u6253\u5305\uff0c\u5927\u7ea6\u9700\u8981\u4e00\u4e24\u5206\u949f\u3002"
 echo.
 
 if exist "Starfix.spec" (
   "%PY%" -m PyInstaller --noconfirm --clean "Starfix.spec"
 ) else (
-  "%PY%" -m PyInstaller --noconfirm --clean --onefile --windowed --name Starfix --icon "icon.ico" --add-data "icon.png;." --add-data "icon.ico;." --add-data "index.html;." --add-data "..\css\starmap.css;css" "app.py"
+  "%PY%" -m PyInstaller --noconfirm --clean --onefile --windowed --name Starfix --icon "icon.ico" --add-data "icon.png;." --add-data "icon.ico;." --add-data "index.html;." --add-data "VERSION;." --add-data "..\css\starmap.css;css" "app.py"
 )
 if errorlevel 1 goto :fail
 
 if not exist "dist\Starfix.exe" (
-  echo  打包命令结束了，但是没有找到 dist\Starfix.exe。
+  call :say "\u6253\u5305\u547d\u4ee4\u7ed3\u675f\u4e86\uff0c\u4f46\u662f\u6ca1\u6709\u627e\u5230 dist\Starfix.exe\u3002"
   goto :fail
 )
 
 echo.
-echo  完成。
+call :say "\u5b8c\u6210\u3002"
 echo  %cd%\dist\Starfix.exe
 echo.
 explorer /select,"%cd%\dist\Starfix.exe"
@@ -100,9 +103,17 @@ if not errorlevel 1 (
 )
 exit /b 0
 
+:say
+"%PY%" -c "import sys; print(sys.argv[1].encode('ascii').decode('unicode_escape'))" %1
+exit /b 0
+
 :fail
 echo.
-echo  打包没有完成。
+if defined PY (
+  call :say "\u6253\u5305\u6ca1\u6709\u5b8c\u6210\u3002"
+) else (
+  echo  Build did not finish.
+)
 echo.
 pause
 exit /b 1

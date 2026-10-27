@@ -33,7 +33,7 @@
       <label>Game.log<input id="log"></label>
       <details>
         <summary>手动填写</summary>
-        <label>星图地址<input id="api" value="http://127.0.0.1:8770"></label>
+        <label>星图地址<input id="api" value="https://gugugubear.pythonanywhere.com"></label>
         <label>房间码<input id="room" maxlength="9" placeholder="K7MQ-4R2P"></label>
       </details>
 
@@ -89,7 +89,7 @@
     document.getElementById('place').textContent = place ? (place.code + (place.system ? ' · ' + place.system : '')) : '还没有地点';
     var bits = [s.running ? '正在监视' : '没有监视', s.status || ''];
     if(s.sentAt) bits.push('上次发送 ' + s.sentAt);
-    bits.push(s.logExists ? '日志文件在' : '日志文件还没找到');
+    bits.push(s.logKind === 'empty' ? '日志状态：空内容' : (s.logKind === 'ok' || s.logExists ? '日志状态：正常' : '日志状态：故障'));
     document.getElementById('meta').textContent = bits.filter(Boolean).join(' · ');
     document.getElementById('err').textContent = s.error || '';
     document.getElementById('watch').textContent = s.running ? '停止监视' : '开始监视';

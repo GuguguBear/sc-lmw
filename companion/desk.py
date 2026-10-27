@@ -2,6 +2,7 @@
 # window stays on the taskbar. It leaves the screen only from 后台运行.
 
 import sys
+import time
 import tkinter as tk
 from pathlib import Path
 from tkinter import filedialog
@@ -64,7 +65,7 @@ TEXT = {
         "place_none": "还没有地点", "quit": "退出", "back": "后台运行",
         "tray_show": "打开窗口", "tray_tip": "Starfix 在后台。点图标可以打开。",
         "file_title": "选择 Game.log", "file_log": "日志", "file_all": "全部",
-        "log_ok": "日志在", "log_missing": "找不到日志",
+        "log_ok": "日志状态：正常", "log_missing": "日志状态：故障", "log_empty": "日志状态：空内容",
         "sent": "已发送 {code}", "seen": "日志里看到 {code}", "parsed": "解析到 {code}",
         "watching": "正在监视", "send_failed": "发送失败", "no_place": "最近日志里没有地点", "idle": "没有监视",
         "err_need_link": "先在星图里点「连到这台电脑」，再回到这里确认",
@@ -91,7 +92,7 @@ TEXT = {
         "place_none": "還沒有地點", "quit": "退出", "back": "背景執行",
         "tray_show": "打開視窗", "tray_tip": "Starfix 在背景。點圖示可以打開。",
         "file_title": "選擇 Game.log", "file_log": "日誌", "file_all": "全部",
-        "log_ok": "日誌在", "log_missing": "找不到日誌",
+        "log_ok": "日誌狀態：正常", "log_missing": "日誌狀態：故障", "log_empty": "日誌狀態：空內容",
         "sent": "已發送 {code}", "seen": "日誌裡看到 {code}", "parsed": "解析到 {code}",
         "watching": "正在監視", "send_failed": "發送失敗", "no_place": "最近日誌裡沒有地點", "idle": "沒有監視",
         "err_need_link": "先在星圖裡點「連到這台電腦」，再回到這裡確認",
@@ -118,7 +119,7 @@ TEXT = {
         "place_none": "No place yet", "quit": "Quit", "back": "Background",
         "tray_show": "Show window", "tray_tip": "Starfix is in the background. Click the icon to open it.",
         "file_title": "Choose Game.log", "file_log": "Log", "file_all": "All",
-        "log_ok": "log found", "log_missing": "log missing",
+        "log_ok": "Log status: ok", "log_missing": "Log status: missing", "log_empty": "Log status: empty",
         "sent": "Sent {code}", "seen": "Log shows {code}", "parsed": "Parsed {code}",
         "watching": "Watching", "send_failed": "Send failed", "no_place": "No place in the recent log", "idle": "Not watching",
         "err_need_link": "On the map, choose Connect this computer, then confirm here",
@@ -145,7 +146,7 @@ TEXT = {
         "place_none": "Noch kein Ort", "quit": "Beenden", "back": "Hintergrund",
         "tray_show": "Fenster öffnen", "tray_tip": "Starfix läuft im Hintergrund. Icon anklicken öffnet es.",
         "file_title": "Game.log wählen", "file_log": "Log", "file_all": "Alle",
-        "log_ok": "Log da", "log_missing": "Log fehlt",
+        "log_ok": "Logstatus: in Ordnung", "log_missing": "Logstatus: fehlt", "log_empty": "Logstatus: leer",
         "sent": "Gesendet {code}", "seen": "Log zeigt {code}", "parsed": "Gelesen {code}",
         "watching": "Überwacht", "send_failed": "Senden fehlgeschlagen", "no_place": "Kein Ort im letzten Log", "idle": "Keine Überwachung",
         "err_need_link": "In der Karte „Diesen Computer verbinden“, dann hier bestätigen",
@@ -254,6 +255,40 @@ def theme_scroll(parent, target, colors):
     return bar
 
 
+def _colorref(hex_color):
+    text = str(hex_color or "").lstrip("#")
+    if len(text) != 6:
+        return 0x00121010
+    red = int(text[0:2], 16)
+    green = int(text[2:4], 16)
+    blue = int(text[4:6], 16)
+    return (blue << 16) | (green << 8) | red
+
+
+def hide_window_border(widget, hex_color):
+    # Windows 11 draws a white edge on a borderless window. Paint that edge
+    # with the window color so it disappears.
+    if sys.platform != "win32":
+        return
+    try:
+        import ctypes
+        from ctypes import wintypes
+        widget.update_idletasks()
+        user32 = ctypes.WinDLL("user32", use_last_error=True)
+        user32.GetParent.argtypes = [wintypes.HWND]
+        user32.GetParent.restype = wintypes.HWND
+        hwnd = user32.GetParent(widget.winfo_id()) or widget.winfo_id()
+        dwm = ctypes.WinDLL("dwmapi")
+        color = ctypes.c_uint(_colorref(hex_color))
+        dwm.DwmSetWindowAttribute.argtypes = [
+            wintypes.HWND, ctypes.c_uint, ctypes.POINTER(ctypes.c_uint), ctypes.c_uint,
+        ]
+        dwm.DwmSetWindowAttribute.restype = ctypes.c_long
+        dwm.DwmSetWindowAttribute(hwnd, 34, ctypes.byref(color), ctypes.sizeof(color))
+    except (AttributeError, OSError, tk.TclError, ValueError):
+        pass
+
+
 def _dpi():
     try:
         import ctypes
@@ -266,9 +301,78 @@ def _dpi():
             pass
 
 
+_front = None
+
+
+def _bind_front(fn):
+    global _front
+    _front = fn
+
+
+def request_front():
+    fn = _front
+    if not fn:
+        return False
+    try:
+        fn()
+    except tk.TclError:
+        return False
+    return True
+
+
+def force_foreground(widget):
+    # The second double-click owns the foreground right. Pulse topmost, then
+    # ask Windows to hand that right to the window that is already open.
+    try:
+        widget.deiconify()
+        widget.lift()
+        widget.attributes("-topmost", True)
+        widget.update_idletasks()
+    except tk.TclError:
+        return
+    try:
+        if sys.platform == "win32":
+            import ctypes
+            from ctypes import wintypes
+            user32 = ctypes.WinDLL("user32", use_last_error=True)
+            kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+            user32.GetParent.argtypes = [wintypes.HWND]
+            user32.GetParent.restype = wintypes.HWND
+            user32.ShowWindow.argtypes = [wintypes.HWND, ctypes.c_int]
+            user32.ShowWindow.restype = wintypes.BOOL
+            user32.GetForegroundWindow.restype = wintypes.HWND
+            user32.GetWindowThreadProcessId.argtypes = [wintypes.HWND, ctypes.POINTER(wintypes.DWORD)]
+            user32.GetWindowThreadProcessId.restype = wintypes.DWORD
+            user32.AttachThreadInput.argtypes = [wintypes.DWORD, wintypes.DWORD, wintypes.BOOL]
+            user32.AttachThreadInput.restype = wintypes.BOOL
+            user32.BringWindowToTop.argtypes = [wintypes.HWND]
+            user32.SetForegroundWindow.argtypes = [wintypes.HWND]
+            user32.SetForegroundWindow.restype = wintypes.BOOL
+            kernel32.GetCurrentThreadId.restype = wintypes.DWORD
+            hwnd = user32.GetParent(widget.winfo_id()) or widget.winfo_id()
+            user32.ShowWindow(hwnd, 9)
+            fg = user32.GetForegroundWindow()
+            fg_pid = wintypes.DWORD()
+            fg_tid = user32.GetWindowThreadProcessId(fg, ctypes.byref(fg_pid)) if fg else 0
+            our_tid = kernel32.GetCurrentThreadId()
+            linked = bool(fg_tid and fg_tid != our_tid and user32.AttachThreadInput(our_tid, fg_tid, True))
+            user32.BringWindowToTop(hwnd)
+            user32.SetForegroundWindow(hwnd)
+            if linked:
+                user32.AttachThreadInput(our_tid, fg_tid, False)
+    finally:
+        try:
+            widget.attributes("-topmost", False)
+            widget.focus_force()
+            hide_window_border(widget, str(widget.cget("bg")))
+        except tk.TclError:
+            pass
+
+
 def _status_text(state, lang):
     raw = state.get("status") or ""
-    log = tr(lang, "log_ok" if state.get("logExists") else "log_missing")
+    kind = state.get("logKind") or ("ok" if state.get("logExists") else "missing")
+    log = tr(lang, {"ok": "log_ok", "empty": "log_empty"}.get(kind, "log_missing"))
     if raw.startswith("sent "):
         head = tr(lang, "sent", code=raw[5:])
     elif raw.startswith("seen "):
@@ -301,10 +405,10 @@ class Desktop:
         self._geom = None
         self._zoomed = False
         self._ready = False
-        self._phase = 0
-        self._marquee = 0
         self._linked = False
-        self._link_flash = 0
+        self._link_until = 0
+        self._feed_sig = None
+        self._feed_ids = None
         self._icon_img = None
         self._tray_on = False
         self._tray_hwnd = None
@@ -322,11 +426,12 @@ class Desktop:
                 self.root.iconbitmap(str(ico))
             except tk.TclError:
                 pass
-        self.root.configure(bg=THEMES[self.theme]["accent"])
+        self.root.configure(bg=THEMES[self.theme]["panel"])
         self.root.protocol("WM_DELETE_WINDOW", self.close)
         self.core.RAISE = lambda: self.root.after(0, self._raise)
+        _bind_front(lambda: self.root.after(0, self._raise))
 
-        shell = tk.Frame(self.root, padx=1, pady=1)
+        shell = tk.Frame(self.root, bg=THEMES[self.theme]["panel"])
         shell.pack(fill="both", expand=True)
         self.shell = shell
 
@@ -464,7 +569,7 @@ class Desktop:
         self._paint()
         self._fill(core.public_state(), force=True)
         self.root.after(400, self._tick)
-        self.root.after(90, self._animate)
+        self.root.after(32, self._animate)
         self.root.update_idletasks()
         width, height = 520, self.shell.winfo_reqheight() + 4
         if height < 560:
@@ -497,6 +602,7 @@ class Desktop:
         style = (style & ~0x00000080) | 0x00040000
         user32.SetWindowLongW(hwnd, -20, style)
         user32.SetWindowPos(hwnd, None, 0, 0, 0, 0, 0x0001 | 0x0002 | 0x0004 | 0x0010 | 0x0020)
+        hide_window_border(self.root, self._colors()["panel"])
 
     def _seat_taskbar(self):
         # withdraw() drops the frameless flag. Put it back before the window
@@ -592,8 +698,8 @@ class Desktop:
 
     def _paint(self):
         c = self._colors()
-        self.root.configure(bg=c["accent"])
-        self.shell.configure(bg=c["accent"])
+        self.root.configure(bg=c["panel"])
+        self.shell.configure(bg=c["panel"])
         self.titlebar.configure(bg=c["panel"])
         self.rule.configure(bg=c["panel"])
         self.card.configure(bg=c["panel"])
@@ -609,7 +715,8 @@ class Desktop:
         self.linked.configure(fg=c["ink"])
         self.feed.configure(bg=c["bg"])
         for grip in getattr(self, "_grips", []):
-            grip.configure(bg=c["accent"])
+            grip.configure(bg=c["panel"])
+        hide_window_border(self.root, c["panel"])
         self.log_label.configure(fg=c["accent"])
         self.lang_label.configure(fg=c["accent"])
         self.look.configure(fg=c["accent"])
@@ -648,7 +755,7 @@ class Desktop:
         self._set_entry(self.room, state.get("room"), force)
         linked = bool(state.get("room") and state.get("tokenSet"))
         if linked and not self._linked:
-            self._link_flash = 14
+            self._link_until = time.monotonic() + 1.26
         self._linked = linked
         if linked:
             self.linked.configure(text=tr(self.lang, "linked_on", room=state["room"]))
@@ -769,7 +876,7 @@ class Desktop:
         )
         self._grips = []
         for edge, opts in specs:
-            grip = tk.Frame(self.root, cursor=cursors[edge], bg=self._colors()["accent"])
+            grip = tk.Frame(self.root, cursor=cursors[edge], bg=self._colors()["panel"])
             grip.place(**opts)
             grip.bind("<ButtonPress-1>", lambda event, name=edge: self._resize_start(event, name))
             grip.bind("<B1-Motion>", self._resize_move)
@@ -868,37 +975,27 @@ class Desktop:
     def _animate(self):
         if not self.root.winfo_exists():
             return
-        self._phase = (self._phase + 1) % 60
+        now = time.monotonic()
         c = self._colors()
         width = max(self.rule.winfo_width(), 1)
         span = max(48, width // 4)
-        x = int((self._phase / 60) * (width + span)) - span
+        x = int(((now % 5.4) / 5.4) * (width + span)) - span
         self.rule.delete("sweep")
         self.rule.configure(bg=c["panel"])
         self.rule.create_rectangle(0, 0, width, 3, fill=c["line"], width=0, tags="sweep")
         self.rule.create_rectangle(x, 0, x + span, 3, fill=c["accent"], width=0, tags="sweep")
-        bright = "#ffffff" if c["accent"].lower() in ("#e8eaef", "#d8d4c8") else "#f4fffd"
-        if self._link_flash > 0:
-            on = (self._link_flash % 2) == 0
-            self._link_flash -= 1
-            edge = bright if on else c["accent"]
+        if now < self._link_until:
+            on = int(now / 0.09) % 2 == 0
             self.linked.configure(fg=c["on"] if on else c["accent"], bg=c["accent"] if on else c["panel"])
-            self.root.configure(bg=edge)
-            self.shell.configure(bg=edge)
         elif not self._linked:
-            on = (self._phase // 8) % 2 == 0
+            on = int(now / 0.72) % 2 == 0
             self.linked.configure(fg=c["accent"] if on else c["panel"], bg=c["panel"])
-            edge = c["accent"] if on else c["line"]
-            self.root.configure(bg=edge)
-            self.shell.configure(bg=edge)
         else:
             self.linked.configure(fg=c["on"], bg=c["accent"])
-            self.root.configure(bg=c["accent"])
-            self.shell.configure(bg=c["accent"])
-        self._draw_feed()
-        self.root.after(90, self._animate)
+        self._draw_feed(now)
+        self.root.after(32, self._animate)
 
-    def _draw_feed(self):
+    def _draw_feed(self, now):
         box = self.feed
         if not box.winfo_exists():
             return
@@ -907,37 +1004,74 @@ class Desktop:
         height = max(box.winfo_height(), 2)
         feed = self._feed
         on = bool(feed.get("on"))
-        box.delete("all")
-        box.configure(bg=c["bg"])
-        box.create_rectangle(0, 0, 3, height, fill=c["accent"], width=0)
-        live = "LIVE" if on else "IDLE"
-        pulse = (self._phase // 6) % 2 == 0
-        box.create_text(14, 16, text=live, anchor="w", font=FONT, fill=c["accent"] if (on and pulse) or not on else c["line"])
-        if on:
-            for i in range(6):
-                hot = ((self._phase // 2) + i) % 6 < 3
-                box.create_rectangle(width - 16 - i * 7, 8, width - 12 - i * 7, 22, fill=c["accent"] if hot else c["line"], width=0)
-            y = 6 + (self._phase * 5) % max(1, height - 8)
-            box.create_rectangle(10, y, width - 8, y + 2, fill=c["line"], width=0)
         place = feed.get("place") or ""
         ship = feed.get("ship") or ""
         gear = feed.get("gear") or ""
-        box.create_text(14, 40, text=place, anchor="w", font=FONT, fill=c["ink"])
-        caret = " ▍" if on and pulse else ""
-        box.create_text(14, 60, text=(ship or "—") + caret, anchor="w", font=FONT, fill=c["accent"] if ship else c["muted"])
+        sig = (place, ship, gear, on, width, height, self.theme)
+        if sig != self._feed_sig or not self._feed_ids:
+            self._feed_sig = sig
+            self._build_feed(box, c, width, height, on, place, ship, gear)
+        self._move_feed(box, c, width, height, on, ship, now)
+
+    def _build_feed(self, box, c, width, height, on, place, ship, gear):
+        box.delete("all")
+        box.configure(bg=c["bg"])
+        ids = {
+            "live": box.create_text(14, 16, text="LIVE" if on else "IDLE", anchor="w", font=FONT, fill=c["accent"]),
+            "meters": [],
+            "place": box.create_text(14, 40, text=place, anchor="w", font=FONT, fill=c["ink"]),
+            "ship": box.create_text(14, 60, text=ship or "—", anchor="w", font=FONT, fill=c["accent"] if ship else c["muted"]),
+            "gear": [],
+            "scroll": False,
+        }
+        box.create_rectangle(0, 0, 3, height, fill=c["accent"], width=0)
+        if on:
+            for i in range(6):
+                ids["meters"].append(box.create_rectangle(
+                    width - 16 - i * 7, 8, width - 12 - i * 7, 22, fill=c["line"], width=0
+                ))
+            ids["scan"] = box.create_rectangle(10, 6, width - 8, 8, fill=c["line"], width=0)
         if gear:
             import tkinter.font as tkfont
             measure = tkfont.Font(font=FONT).measure(gear)
             room = max(40, width - 28)
             if on and measure > room:
-                gap = 48
-                self._marquee = (self._marquee + 3) % (measure + gap)
-                shift = self._marquee
-                box.create_text(14 - shift, 80, text=gear + " " * 8 + gear, anchor="w", font=FONT, fill=c["muted"])
+                period = measure + 48
+                ids["scroll"] = True
+                ids["period"] = period
+                ids["gear"].append(box.create_text(14, 80, text=gear, anchor="w", font=FONT, fill=c["muted"]))
+                ids["gear"].append(box.create_text(14 + period, 80, text=gear, anchor="w", font=FONT, fill=c["muted"]))
             else:
-                box.create_text(14, 80, text=gear, anchor="w", font=FONT, fill=c["muted"])
+                ids["gear"].append(box.create_text(14, 80, text=gear, anchor="w", font=FONT, fill=c["muted"]))
         elif on:
-            box.create_text(14, 80, text="· · ·", anchor="w", font=FONT, fill=c["line"])
+            ids["gear"].append(box.create_text(14, 80, text="· · ·", anchor="w", font=FONT, fill=c["line"]))
+        self._feed_ids = ids
+        self._feed_pulse = None
+        self._feed_step = None
+
+    def _move_feed(self, box, c, width, height, on, ship, now):
+        ids = self._feed_ids
+        pulse = int(now / 0.54) % 2 == 0
+        if pulse != self._feed_pulse:
+            self._feed_pulse = pulse
+            box.itemconfig(ids["live"], fill=c["accent"] if (on and pulse) or not on else c["line"])
+            caret = " ▍" if on and pulse else ""
+            box.itemconfig(ids["ship"], text=(ship or "—") + caret)
+        if on and ids["meters"]:
+            step = int(now / 0.18)
+            if step != self._feed_step:
+                self._feed_step = step
+                for i, item in enumerate(ids["meters"]):
+                    hot = (step + i) % 6 < 3
+                    box.itemconfig(item, fill=c["accent"] if hot else c["line"])
+            travel = max(1, height - 8)
+            y = 6 + (now * 55) % travel
+            box.coords(ids["scan"], 10, y, width - 8, y + 2)
+        if ids["scroll"]:
+            period = ids["period"]
+            shift = (now * 34) % period
+            box.coords(ids["gear"][0], 14 - shift, 80)
+            box.coords(ids["gear"][1], 14 - shift + period, 80)
 
     def _tray_hwnd_ready(self):
         if self._tray_hwnd or sys.platform != "win32":
@@ -1101,7 +1235,8 @@ class Desktop:
             self.root.focus_force()
             self._mark_appwindow()
         except tk.TclError:
-            pass
+            return
+        force_foreground(self.root)
 
     def _raise(self):
         self._show()
@@ -1128,7 +1263,7 @@ def accept_terms(lang, theme, version=""):
             root.iconbitmap(str(ico))
         except tk.TclError:
             pass
-    root.configure(bg=colors["accent"])
+    root.configure(bg=colors["panel"])
     agreed = {"ok": False}
     drag = {"x": 0, "y": 0}
     live = {"ok": False}
@@ -1149,7 +1284,7 @@ def accept_terms(lang, theme, version=""):
     def drag_move(event):
         root.geometry("+%d+%d" % (event.x_root - drag["x"], event.y_root - drag["y"]))
 
-    shell = tk.Frame(root, bg=colors["accent"], padx=1, pady=1)
+    shell = tk.Frame(root, bg=colors["panel"])
     shell.pack(fill="both", expand=True)
     bar = tk.Frame(shell, bg=colors["panel"], height=28)
     bar.pack(fill="x")
@@ -1213,13 +1348,27 @@ def accept_terms(lang, theme, version=""):
         max(0, (screen_w - width) // 2),
         max(24, (screen_h - height) // 6),
     ))
+    hide_window_border(root, colors["panel"])
 
     def show_start():
         text.yview_moveto(0)
 
+    def bring():
+        try:
+            root.deiconify()
+            root.lift()
+        except tk.TclError:
+            return
+        force_foreground(root)
+
+    previous = _front
+    _bind_front(lambda: root.after(0, bring))
     root.after_idle(show_start)
     root.after(50, show_start)
-    root.mainloop()
+    try:
+        root.mainloop()
+    finally:
+        _bind_front(previous)
     return agreed["ok"]
 
 
