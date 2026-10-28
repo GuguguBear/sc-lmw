@@ -122,6 +122,10 @@ def init_db():
             con.execute("ALTER TABLE presence ADD COLUMN ship TEXT")
         if "gear" not in cols:
             con.execute("ALTER TABLE presence ADD COLUMN gear TEXT")
+        if "host" not in cols:
+            con.execute("ALTER TABLE presence ADD COLUMN host TEXT")
+        if "travel" not in cols:
+            con.execute("ALTER TABLE presence ADD COLUMN travel TEXT")
 
 
 def clean_nick(raw):
@@ -181,6 +185,82 @@ def clean_gear(raw):
     return json.dumps(gear_items(json.dumps(raw if isinstance(raw, list) else [])), ensure_ascii=False)
 
 
+def clean_host(raw):
+    return "".join(ch for ch in str(raw or "") if ch.isdigit())[:20]
+
+
+def clean_travel(raw):
+    if not isinstance(raw, dict):
+        return ""
+    mode = raw.get("mode")
+    if mode not in ("aim", "jump"):
+        return ""
+
+    def clip(key):
+        text = "".join(ch for ch in str(raw.get(key) or "") if ch >= " " and ch != "\x7f").strip()
+        return text[:80]
+
+    out = {"mode": mode, "from": clip("from"), "to": clip("to"), "to_raw": clip("to_raw")}
+    if not out["to"] and not out["to_raw"]:
+        return ""
+    return json.dumps(out, ensure_ascii=False, separators=(",", ":"))
+
+
+def travel_obj(raw):
+    if not raw:
+        return None
+    if isinstance(raw, str):
+        try:
+            raw = json.loads(raw)
+        except (TypeError, json.JSONDecodeError):
+            return None
+    text = clean_travel(raw)
+    if not text:
+        return None
+    return json.loads(text)
+
+
+def save_presence(con, room, member, body):
+    loc = str(body.get("location") or "")[:80]
+    sys = str(body.get("system") or "")[:40]
+    code_loc = str(body.get("code") or "")[:80]
+    if not loc and not code_loc:
+        return False
+    old = con.execute(
+        "SELECT ship, gear, host, travel FROM presence WHERE room=? AND member=?",
+        (room, member),
+    ).fetchone()
+    if "ship" in body:
+        ship_name = str(body.get("ship") or "")[:80]
+    else:
+        ship_name = (old["ship"] if old and old["ship"] else "") or ""
+    if "gear" in body:
+        worn = clean_gear(body.get("gear"))
+    else:
+        worn = (old["gear"] if old and old["gear"] else "") or "[]"
+    if "server" in body:
+        host_id = clean_host(body.get("server"))
+    else:
+        host_id = (old["host"] if old and old["host"] else "") or ""
+    if "travel" in body:
+        travel = clean_travel(body.get("travel")) if isinstance(body.get("travel"), dict) else ""
+    else:
+        travel = (old["travel"] if old and old["travel"] else "") or ""
+    con.execute(
+        """
+        INSERT INTO presence (room, member, location, system, code, seen, ship, gear, host, travel)
+        VALUES (?,?,?,?,?,?,?,?,?,?)
+        ON CONFLICT(room, member) DO UPDATE SET
+          location=excluded.location, system=excluded.system,
+          code=excluded.code, seen=excluded.seen,
+          ship=excluded.ship, gear=excluded.gear,
+          host=excluded.host, travel=excluded.travel
+        """,
+        (room, member, loc, sys, code_loc, now(), ship_name, worn, host_id, travel),
+    )
+    return True
+
+
 def room_state(con, code, me):
     room = con.execute("SELECT * FROM room WHERE code=?", (code,)).fetchone()
     if not room:
@@ -193,7 +273,7 @@ def room_state(con, code, me):
     role = "captain" if room["captain"] == me["id"] else "member"
     rows = con.execute(
         """
-        SELECT m.id, m.nickname, s.status, p.location, p.system, p.code, p.seen, p.ship, p.gear
+        SELECT m.id, m.nickname, s.status, p.location, p.system, p.code, p.seen, p.ship, p.gear, p.host, p.travel
         FROM membership s
         JOIN member m ON m.id = s.member
         LEFT JOIN presence p ON p.room = s.room AND p.member = s.member
@@ -219,6 +299,8 @@ def room_state(con, code, me):
                 "seen": int(r["seen"]) if r["seen"] else None,
                 "ship": r["ship"] or "",
                 "gear": gear_items(r["gear"]),
+                "server": r["host"] or "",
+                "travel": travel_obj(r["travel"]),
                 "online": bool(r["seen"] and now() - r["seen"] < ONLINE_S),
             }
         )
@@ -312,7 +394,8 @@ def players_json(con, code, me):
                 "system": m["system"],
                 "ship": m.get("ship") or None,
                 "gear": m.get("gear") or [],
-                "travel": None,
+                "server": m.get("server") or "",
+                "travel": m.get("travel"),
             }
         )
     return {"players": out}
@@ -554,35 +637,9 @@ class Handler(BaseHTTPRequestHandler):
                 if not st or st.get("error") or st.get("status") != "member":
                     self.send_json(403, {"error": "forbidden"})
                     return
-                loc = str(body.get("location") or "")[:80]
-                sys = str(body.get("system") or "")[:40]
-                code_loc = str(body.get("code") or "")[:80]
-                if not loc and not code_loc:
+                if not save_presence(con, code, me["id"], body):
                     self.send_json(400, {"error": "location"})
                     return
-                old = con.execute(
-                    "SELECT ship, gear FROM presence WHERE room=? AND member=?",
-                    (code, me["id"]),
-                ).fetchone()
-                if "ship" in body:
-                    ship_name = str(body.get("ship") or "")[:80]
-                else:
-                    ship_name = (old["ship"] if old and old["ship"] else "") or ""
-                if "gear" in body:
-                    worn = clean_gear(body.get("gear"))
-                else:
-                    worn = (old["gear"] if old and old["gear"] else "") or "[]"
-                con.execute(
-                    """
-                    INSERT INTO presence (room, member, location, system, code, seen, ship, gear)
-                    VALUES (?,?,?,?,?,?,?,?)
-                    ON CONFLICT(room, member) DO UPDATE SET
-                      location=excluded.location, system=excluded.system,
-                      code=excluded.code, seen=excluded.seen,
-                      ship=excluded.ship, gear=excluded.gear
-                    """,
-                    (code, me["id"], loc, sys, code_loc, now(), ship_name, worn),
-                )
                 self.send_json(200, {"ok": True})
                 return
             if len(parts) == 4 and parts[3] == "routes":

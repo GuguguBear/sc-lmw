@@ -81,6 +81,12 @@ SHIP_RE = re.compile(
 SELECT_RE = re.compile(r"selected point LOC_RR_S([1-4])_L(\d)\b", re.I)
 START_RE = re.compile(r"Projected Start Location is .*?\b(HUR|CRU|ARC|MIC)\s+L(\d)\b", re.I)
 ARRIVE_RE = re.compile(r"arrived at final destination", re.I)
+# The host id sits on the zone-load line. Startup labels such as shard1 or
+# local_shard are this computer's session, not the shared game server.
+HOST_RE = re.compile(
+    r"\|\s*(?P<host>[A-Za-z0-9_.-]+)\s*\[(?P<host_id>\d{1,20})\]\s*\|\s*Transitioning\b",
+    re.I,
+)
 MAKER_NAME = {
     "AEGS": "Aegis", "ANVL": "Anvil", "CRUS": "Crusader", "MISC": "MISC",
     "ORIG": "Origin", "RSI": "RSI", "DRAK": "Drake", "BANU": "Banu",
@@ -97,6 +103,8 @@ WORN = {}
 WORN_CLS = {}
 SHIP = ""
 DEST = None
+SERVER = ""
+TRAVEL = None
 LAST_SIG = ""
 
 LOCK = threading.Lock()
@@ -230,6 +238,34 @@ def gear_list():
     return ordered[:12]
 
 
+def host_of(line):
+    found = HOST_RE.search(line or "")
+    if not found:
+        return ""
+    return found.group("host_id")
+
+
+def aim_travel(place):
+    if not place:
+        return None
+    label = place.get("location") or ""
+    raw = place.get("code") or ""
+    if not label and not raw:
+        return None
+    return {"mode": "aim", "from": "", "to": label or raw, "to_raw": raw}
+
+
+def jump_travel(found):
+    start = (found.group(1) or "").strip()[:80]
+    token = (found.group(2) or "").strip(".,)")
+    dest, _kind, code = history.destination(token)
+    label = dest or ""
+    raw = code or ""
+    if not label and not raw:
+        return None
+    return {"mode": "jump", "from": start, "to": label or raw, "to_raw": raw}
+
+
 def snapshot(place):
     out = {
         "code": (place or {}).get("code") or "",
@@ -237,22 +273,36 @@ def snapshot(place):
         "system": (place or {}).get("system") or "",
         "ship": SHIP,
         "gear": gear_list(),
+        "travel": dict(TRAVEL) if TRAVEL else None,
     }
+    if SERVER:
+        out["server"] = SERVER
     return out
 
 
 def signature(payload):
     return json.dumps(
-        [payload.get("code"), payload.get("ship"), payload.get("gear")],
+        [
+            payload.get("code"),
+            payload.get("ship"),
+            payload.get("gear"),
+            payload.get("server"),
+            payload.get("travel"),
+        ],
         ensure_ascii=False,
         sort_keys=True,
     )
 
 
 def ingest(line):
-    global SHIP, DEST
+    global SHIP, DEST, SERVER, TRAVEL
     text = line or ""
+    host = host_of(text)
+    if host:
+        SERVER = host
     place = tidy_place(parse_line(text))
+    if TRANS.search(text):
+        TRAVEL = None
     for cls, port in GEAR_RE.findall(text):
         WORN[port] = pretty_item(cls)
         WORN_CLS[port] = cls
@@ -263,27 +313,44 @@ def ingest(line):
     selected = SELECT_RE.search(text)
     if selected:
         DEST = lagrange_place(selected.group(1), selected.group(2))
+        aimed = aim_travel(DEST)
+        if aimed:
+            TRAVEL = aimed
     started = START_RE.search(text)
     if started:
         place = lagrange_place(started.group(1).upper(), started.group(2))
+    jumped = history.JUMP_RE.search(text)
+    if jumped:
+        nxt = jump_travel(jumped)
+        if nxt:
+            TRAVEL = nxt
     if ARRIVE_RE.search(text) and DEST:
         place = DEST
+        TRAVEL = None
     return place
 
 
 def parse_line(line):
-    found = TRANS.search(line or "")
+    text = line or ""
+    found = TRANS.search(text)
+    host = host_of(text)
     if found:
         code = found.group("to_zone")
         system = system_of(code, found.group("to_system"))
-        return {"code": code, "location": code, "system": system}
-    if not HINT.search(line or ""):
+        out = {"code": code, "location": code, "system": system}
+        if host:
+            out["server"] = host
+        return out
+    if not HINT.search(text):
         return None
-    codes = CODE.findall(line or "")
+    codes = CODE.findall(text)
     if not codes:
         return None
     code = codes[-1]
-    return {"code": code, "location": code, "system": system_of(code)}
+    out = {"code": code, "location": code, "system": system_of(code)}
+    if host:
+        out["server"] = host
+    return out
 
 
 def log_kind(path):
@@ -1078,6 +1145,14 @@ if __name__ == "__main__":
         )
         got = parse_line(sample)
         assert got and got["code"] == "RR_HUR_Lorville" and got["system"] == "Stanton", got
+        assert got.get("server") == "1", got
+        assert host_of("[SessionIDManager] shard id: shard1") == ""
+        assert host_of("[Trace] @host_session: 'local_shard'") == ""
+        assert host_of(
+            "Ready | Stanton | pub-sc-alpha-1 [48291] | Transitioning from zone A in Stanton"
+        ) == "48291"
+        loaded = ingest(sample)
+        assert loaded and loaded["code"] == "RR_HUR_Lorville" and SERVER == "1", (loaded, SERVER)
         assert parse_line("ordinary engine line without a place") is None
         worn = ingest(
             "Player[Pilot] Attachment[item_1, rrs_specialist_heavy_core_04_03_01, 1] "
@@ -1106,6 +1181,17 @@ if __name__ == "__main__":
         ingest(ship_line)
         assert SHIP == "Aegis Idris-M", SHIP
         assert DEST and DEST["code"] == "RR_HUR_L2", DEST
+        assert TRAVEL and TRAVEL["mode"] == "aim" and TRAVEL["to_raw"] == "RR_HUR_L2", TRAVEL
+        aimed = snapshot(DEST)
+        assert aimed["travel"]["to"] == "HUR-L2" and aimed["server"] == "1", aimed
+        ingest(
+            "<2026-10-26T00:20:00.000Z> AEGS_Idris_M_903672034572|CSCItemNavigation::CalculateRoute|"
+            "Projected Start Location is 赫 HUR L3 for pilot to destination LOC_RR_S1_L4"
+        )
+        assert TRAVEL["mode"] == "jump" and TRAVEL["to"] == "HUR-L4" and TRAVEL["to_raw"] == "RR_HUR_L4", TRAVEL
+        assert "HUR L3" in TRAVEL["from"]
+        ingest("OnQuantumDriveArrived arrived at final destination")
+        assert TRAVEL is None
         trail = history.new_state()
         bought = history.parse(
             "<2026-10-27T10:53:23.969Z> SendShopBuyRequest shopName[SCShop_LiveFire_Truckstop02-001] "

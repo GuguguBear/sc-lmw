@@ -20,7 +20,7 @@
       route:'标记路线', routeOn:'结束标记', routeHint:'按住 Shift，依次点地点。',
       note:'路线备注', publish:'发布给房间', clear:'清空', comment:'评论', send:'发送', del:'删除',
       mode:'谁可以画路线', modeCaptain:'仅队长', modeMembers:'队员也可以',
-      members:'房间成员', fold:'收起', you:'你', captainTag:'队长',
+      members:'房间成员', server:'服务器', fold:'收起', you:'你', captainTag:'队长',
       find:'搜索昵称或地点', none:'没有匹配的人',
       give:'设为队长', giveShort:'队长', giveLeave:'交给他并离开', dissolve:'解散房间', dissolveLeave:'解散并离开', cancel:'取消',
       handTitle:'离开前先交接', handLead:'把队长交给一位队员，或解散房间。', handSolo:'房间里只有你。离开会解散这个房间。',
@@ -51,7 +51,7 @@
       route:'標記路線', routeOn:'結束標記', routeHint:'按住 Shift，依序點地點。',
       note:'路線備註', publish:'發布給房間', clear:'清空', comment:'評論', send:'送出', del:'刪除',
       mode:'誰可以畫路線', modeCaptain:'僅隊長', modeMembers:'隊員也可以',
-      members:'房間成員', fold:'收起', you:'你', captainTag:'隊長',
+      members:'房間成員', server:'伺服器', fold:'收起', you:'你', captainTag:'隊長',
       find:'搜尋暱稱或地點', none:'沒有符合的人',
       give:'設為隊長', giveShort:'隊長', giveLeave:'交給他並離開', dissolve:'解散房間', dissolveLeave:'解散並離開', cancel:'取消',
       handTitle:'離開前先交接', handLead:'把隊長交給一位隊員，或解散房間。', handSolo:'房間裡只有你。離開會解散這個房間。',
@@ -82,7 +82,7 @@
       route:'Mark route', routeOn:'Stop marking', routeHint:'Hold Shift and click places in order.',
       note:'Route note', publish:'Publish to room', clear:'Clear', comment:'Comment', send:'Send', del:'Delete',
       mode:'Who can draw routes', modeCaptain:'Captain only', modeMembers:'Members too',
-      members:'Room members', fold:'Minimize', you:'you', captainTag:'Captain',
+      members:'Room members', server:'Server', fold:'Minimize', you:'you', captainTag:'Captain',
       find:'Search name or place', none:'No match',
       give:'Make captain', giveShort:'Lead', giveLeave:'Give and leave', dissolve:'Close room', dissolveLeave:'Close and leave', cancel:'Cancel',
       handTitle:'Hand off before leaving', handLead:'Give the captain role to a member, or close the room.', handSolo:'You are the only person here. Leaving closes the room.',
@@ -113,7 +113,7 @@
       route:'Route markieren', routeOn:'Markieren beenden', routeHint:'Shift halten und Orte der Reihe nach anklicken.',
       note:'Notiz zur Route', publish:'Für den Raum veröffentlichen', clear:'Leeren', comment:'Kommentar', send:'Senden', del:'Löschen',
       mode:'Wer Routen zeichnen darf', modeCaptain:'Nur der Captain', modeMembers:'Auch Mitglieder',
-      members:'Im Raum', fold:'Einklappen', you:'du', captainTag:'Captain',
+      members:'Im Raum', server:'Server', fold:'Einklappen', you:'du', captainTag:'Captain',
       find:'Name oder Ort', none:'Niemand passt',
       give:'Zum Captain machen', giveShort:'Capt.', giveLeave:'Geben und gehen', dissolve:'Raum schließen', dissolveLeave:'Schließen und gehen', cancel:'Abbrechen',
       handTitle:'Vor dem Gehen übergeben', handLead:'Captain an ein Mitglied geben, oder den Raum schließen.', handSolo:'Du bist allein. Gehen schließt den Raum.',
@@ -688,7 +688,8 @@
     var fresh = typeof m.seen==='number' && (Date.now()/1000-m.seen)<180;
     var when = typeof m.seen==='number' ? '<time data-seen="'+m.seen+'">'+esc(ageText(m.seen))+'</time>' : '';
     var place = m.location ? '<span>'+esc(placeLabel(m))+'</span>' : '';
-    var inner = '<i class="st-crew-pip'+(fresh?' on':'')+'"></i><b>'+esc(m.nickname)+'</b>'+tags+place+when;
+    var host = m.server ? '<span>'+esc(t('server'))+' '+esc(String(m.server))+'</span>' : '';
+    var inner = '<i class="st-crew-pip'+(fresh?' on':'')+'"></i><b>'+esc(m.nickname)+'</b>'+tags+place+host+when;
     var body = m.location
       ? '<button type="button" class="st-mate has-place" data-mate="'+esc(m.id)+'">'+inner+'</button>'
       : '<div class="st-mate">'+inner+'</div>';
