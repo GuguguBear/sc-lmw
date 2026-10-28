@@ -153,9 +153,10 @@ function stPlayerLoc(p){ const D=ST_DATA; if(!D||!p) return null; const code=Str
   // 1) Klartext-Name des Servers (New Babbage, Levski, Orison ...)
   const byName=D.nameIdx[nm(p.location)]; if(byName&&(!sy||byName.sy===sy)) return byName;
   // 2) Ort hinter dem Unterstrich (Stanton4_NewBabbage, Nyx_Levski)
-  const m1=code.match(/^[A-Za-z]+\d*[a-z]?_(.+)$/); if(m1){ const o=D.tagIdx[m1[1].toLowerCase()]||D.nameIdx[nm(m1[1].replace(/([a-z])([A-Z])/g,'$1 $2'))]; if(o) return o; }
-  // 3) Raststationen und Orbit-Stationen: RR_CRU_L5, RR_CRU_LEO, RR_P2_L4, RR_JP_PyroStanton
-  let m2=code.match(/^RR_(HUR|CRU|ARC|MIC)_L(\d)$/i); if(m2){ const o=D.d.objects.find(x=>x.k==='reststop'&&x.n.toUpperCase().startsWith(m2[1].toUpperCase()+'-L'+m2[2])); if(o) return o; }
+  // Lagrange codes name the hidden asteroid field first. The rest stop at the same point is the mark on the map.
+  let m2=code.match(/^RR_(HUR|CRU|ARC|MIC)_L(\d)$/i); if(m2){ const o=D.d.objects.find(x=>x.k==='reststop'&&!x.h&&x.n.toUpperCase().startsWith(m2[1].toUpperCase()+'-L'+m2[2])); if(o) return o; }
+  const m1=code.match(/^[A-Za-z]+\d*[a-z]?_(.+)$/); if(m1){ const o=D.tagIdx[m1[1].toLowerCase()]||D.nameIdx[nm(m1[1].replace(/([a-z])([A-Z])/g,'$1 $2'))]; if(o&&!o.h) return o; }
+  // 3) Orbit-Stationen: RR_CRU_LEO, RR_P2_L4, RR_JP_PyroStanton
   m2=code.match(/^RR_(HUR|CRU|ARC|MIC)_LEO$/i); if(m2){ const pl=D.tagIdx[ST_ABBR[m2[1].toUpperCase()].toLowerCase()]; const o=pl&&(D.kids[pl.id]||[]).find(x=>x.k==='station'); if(o) return o; }
   // Kennung 'pyroN' tragen auch alle Aussenposten des Planeten: gezielt den PLANETEN nehmen, nicht den ersten Treffer
   const pyPl=n=>D.d.objects.find(x=>x.k==='planet'&&String(x.tag||'').toLowerCase()==='pyro'+n);
@@ -760,7 +761,9 @@ function stantonScene(canvas,sysKey){
   function flyTo(o){ if(!ST_DATA||!o) return; const b=stBodyOf(o); setSys(o.sy);
     if(b.k==='star'){ if(level.t!=='sys') focus(null); } else if(!(level.o&&level.o.id===b.id)) focus(b);
     hl=o.id; const e=entries.find(x=>x.o.id===o.id);
-    if(e&&!e.body) lookAtMarker(e); else if(o.k==='star'){ tgtT.copy(offOf(o.sy)); RT=Math.min(RT,60); } }
+    if(e&&!e.body) lookAtMarker(e);
+    else if(o.k==='star'){ tgtT.copy(offOf(o.sy)); RT=Math.min(RT,60); }
+    else if(level.t==='sys'&&typeof o.x==='number'){ tgtT.copy(Vs(o)); clampT(); RT=Math.min(RT,12); } }
   // Verdeckt? Nur auf Koerper-Ebene: Strahl Kamera->Punkt schneidet die Kugel r=1 im Ursprung
   const tmp=new T.Vector3(), tmp2=new T.Vector3();
   function behind(p){ if(level.t==='sys') return false; const c=camera.position; tmp2.copy(p).sub(c); const L=tmp2.length(); tmp2.divideScalar(L); const b=c.dot(tmp2), disc=b*b-(c.lengthSq()-1); if(disc<0) return false; const t=-b-Math.sqrt(disc); return t>0&&t<L-1e-4; }
