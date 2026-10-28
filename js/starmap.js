@@ -458,22 +458,23 @@ function stantonScene(canvas,sysKey){
   const sunGlowTex=glowTex([[0,'rgba(255,240,180,.95)'],[0.4,'rgba(255,190,90,.4)'],[1,'rgba(255,150,50,0)']]);
   const dotTex=(function(){ const c=document.createElement('canvas');c.width=c.height=32;const x=c.getContext('2d');x.beginPath();x.arc(16,16,11,0,7);x.fillStyle='#fff';x.fill();x.lineWidth=4;x.strokeStyle='rgba(0,0,0,.75)';x.stroke();return new T.CanvasTexture(c); })();
   function iconTex(draw){ const c=document.createElement('canvas'); c.width=c.height=64; const x=c.getContext('2d'); x.lineJoin='round'; x.lineCap='round';
-    const pass=(col,w)=>{ x.strokeStyle=col; x.fillStyle=col; x.lineWidth=w; draw(x,w); }; pass('rgba(0,0,0,.85)',9); pass('#fff',4.5); return new T.CanvasTexture(c); }
-  function poly(x, pts){ x.beginPath(); pts.forEach((p,i)=>i?x.lineTo(p[0],p[1]):x.moveTo(p[0],p[1])); x.closePath(); x.stroke(); }
+    const pass=(col,w)=>{ x.strokeStyle=col; x.fillStyle=col; x.lineWidth=w; draw(x,w); }; pass('rgba(0,0,0,.9)',8); pass('#fff',3.2);
+    const tex=new T.CanvasTexture(c); tex.generateMipmaps=false; tex.minFilter=T.LinearFilter; tex.magFilter=T.LinearFilter; return tex; }
+  function poly(x, pts){ x.beginPath(); pts.forEach((p,i)=>i?x.lineTo(p[0],p[1]):x.moveTo(p[0],p[1])); x.closePath(); x.fill(); x.stroke(); }
   const ICON={
-    station:iconTex(x=>{ x.beginPath(); x.arc(32,32,10,0,7); x.stroke(); x.beginPath(); x.moveTo(6,32); x.lineTo(20,32); x.moveTo(44,32); x.lineTo(58,32); x.stroke(); x.strokeRect(4,24,6,16); x.strokeRect(54,24,6,16); }),
+    station:iconTex(x=>{ x.beginPath(); x.arc(32,32,11,0,7); x.fill(); x.stroke(); x.fillRect(4,24,8,16); x.strokeRect(4,24,8,16); x.fillRect(52,24,8,16); x.strokeRect(52,24,8,16); }),
     rest:iconTex(x=>{ poly(x, [[32,8],[52,20],[52,44],[32,56],[12,44],[12,20]]); }),
-    wikelo:iconTex(x=>{ poly(x, [[32,8],[52,20],[52,44],[32,56],[12,44],[12,20]]); poly(x, [[32,24],[40,32],[32,40],[24,32]]); }),
-    gateway:iconTex(x=>{ x.beginPath(); x.arc(32,32,20,0,7); x.stroke(); x.beginPath(); x.arc(32,32,9,0,7); x.stroke(); x.beginPath(); x.moveTo(32,4); x.lineTo(32,12); x.moveTo(32,52); x.lineTo(32,60); x.stroke(); }),
-    city:iconTex(x=>{ x.strokeRect(8,30,12,26); x.strokeRect(24,12,14,44); x.strokeRect(42,22,14,34); x.beginPath(); x.moveTo(4,57); x.lineTo(60,57); x.stroke(); }),
-    jump:iconTex(x=>{ x.beginPath(); x.moveTo(10,16); x.lineTo(28,32); x.lineTo(10,48); x.moveTo(54,16); x.lineTo(36,32); x.lineTo(54,48); x.stroke(); }),
-    outpost:iconTex(x=>{ x.beginPath(); x.moveTo(18,56); x.lineTo(18,10); x.lineTo(46,22); x.lineTo(34,30); x.lineTo(46,38); x.lineTo(18,30); x.stroke(); }),
-    mine:iconTex(x=>{ x.beginPath(); x.moveTo(12,50); x.lineTo(40,16); x.moveTo(40,16); x.lineTo(54,26); x.lineTo(36,28); x.moveTo(22,40); x.lineTo(34,52); x.stroke(); }),
-    lag:iconTex(x=>{ [[18,42,8],[38,20,10],[48,44,6]].forEach(p=>{ x.beginPath(); x.arc(p[0],p[1],p[2],0,7); x.fill(); x.stroke(); }); }),
-    comm:iconTex(x=>{ x.beginPath(); x.moveTo(32,54); x.lineTo(32,26); x.moveTo(18,22); x.quadraticCurveTo(32,8,46,22); x.moveTo(12,16); x.quadraticCurveTo(32,0,52,16); x.stroke(); x.beginPath(); x.arc(32,54,3,0,7); x.fill(); x.stroke(); }),
-    poi:iconTex(x=>{ x.beginPath(); x.arc(32,32,14,0,7); x.stroke(); x.beginPath(); x.moveTo(32,8); x.lineTo(32,18); x.moveTo(32,46); x.lineTo(32,56); x.moveTo(8,32); x.lineTo(18,32); x.moveTo(46,32); x.lineTo(56,32); x.stroke(); }),
+    wikelo:iconTex(x=>{ poly(x, [[32,8],[52,20],[52,44],[32,56],[12,44],[12,20]]); x.globalCompositeOperation='destination-out'; poly(x, [[32,22],[42,32],[32,42],[22,32]]); x.globalCompositeOperation='source-over'; }),
+    gateway:iconTex(x=>{ x.beginPath(); x.arc(32,32,22,0,7); x.arc(32,32,10,0,7,true); x.fill('evenodd'); x.beginPath(); x.arc(32,32,22,0,7); x.stroke(); }),
+    city:iconTex(x=>{ x.fillRect(8,30,12,26); x.strokeRect(8,30,12,26); x.fillRect(24,12,14,44); x.strokeRect(24,12,14,44); x.fillRect(42,22,14,34); x.strokeRect(42,22,14,34); }),
+    jump:iconTex(x=>{ poly(x, [[8,14],[32,32],[8,50]]); poly(x, [[56,14],[32,32],[56,50]]); }),
+    outpost:iconTex(x=>{ x.fillRect(16,8,5,48); x.strokeRect(16,8,5,48); poly(x, [[21,12],[48,22],[34,30],[48,38],[21,30]]); }),
+    mine:iconTex(x=>{ poly(x, [[14,46],[36,18],[50,28],[28,52]]); poly(x, [[36,18],[54,14],[50,28]]); }),
+    lag:iconTex(x=>{ [[16,44,11],[36,16,13],[50,42,8]].forEach(p=>{ x.beginPath(); x.arc(p[0],p[1],p[2],0,7); x.fill(); x.stroke(); }); }),
+    comm:iconTex(x=>{ x.fillRect(29,22,6,32); x.lineWidth=5; x.beginPath(); x.moveTo(16,24); x.quadraticCurveTo(32,8,48,24); x.moveTo(8,16); x.quadraticCurveTo(32,-2,56,16); x.stroke(); x.beginPath(); x.arc(32,54,5,0,7); x.fill(); x.stroke(); }),
+    poi:iconTex(x=>{ x.lineWidth=6; x.beginPath(); x.arc(32,32,16,0,7); x.stroke(); x.beginPath(); x.arc(32,32,5,0,7); x.fill(); x.fillRect(29,4,6,12); x.fillRect(29,48,6,12); x.fillRect(4,29,12,6); x.fillRect(48,29,12,6); }),
     rock:iconTex(x=>{ poly(x, [[16,40],[22,18],[36,12],[52,24],[56,42],[44,54],[22,52]]); }),
-    belt:iconTex(x=>{ x.beginPath(); x.ellipse(32,32,24,10,0,0,7); x.stroke(); [[16,30],[32,40],[48,28]].forEach(p=>{ x.beginPath(); x.arc(p[0],p[1],3,0,7); x.fill(); x.stroke(); }); })
+    belt:iconTex(x=>{ x.beginPath(); x.ellipse(32,32,24,11,0,0,7); x.lineWidth=6; x.stroke(); [[16,30],[32,40],[48,28]].forEach(p=>{ x.beginPath(); x.arc(p[0],p[1],4,0,7); x.fill(); }); })
   };
   const ICONOF={station:ICON.station,reststop:ICON.rest,wikelo:ICON.wikelo,gateway:ICON.gateway,city:ICON.city,jump:ICON.jump,outpost:ICON.outpost,miningbase:ICON.mine,lagrange:ICON.lag,comm:ICON.comm,poi:ICON.poi,asteroid:ICON.rock,belt:ICON.belt};
   const ICON_BIG={station:1,reststop:1,wikelo:1,gateway:1,city:1,jump:1};
@@ -546,8 +547,9 @@ function stantonScene(canvas,sysKey){
     list.forEach(o=>{ if(!ST_VIS[o.k]) return; if(o.h&&!ST_HID) return; const p=posFn(o); if(!p) return; entries.push({o,p,prio:ST_PRIO[o.k]||0}); (byK[o.k]=byK[o.k]||[]).push(p); });
     Object.keys(byK).forEach(k=>{ const ps=byK[k], a=new Float32Array(ps.length*3); ps.forEach((p,i)=>{a[i*3]=p.x;a[i*3+1]=p.y;a[i*3+2]=p.z;});
       const g=new T.BufferGeometry(); g.setAttribute('position',new T.BufferAttribute(a,3));
-      const ic=ICONOF[k], sz=k==='asteroid'?(isMobile?7:6):(ICON_BIG[k]?(isMobile?22:18):(isMobile?16:14));
-      grp.add(new T.Points(g,new T.PointsMaterial({color:(ST_KIND[k]||{}).c||'#fff',size:sz,sizeAttenuation:false,map:ic||dotTex,transparent:true,alphaTest:0.25}))); }); }
+      const ic=ICONOF[k], sz=k==='asteroid'?(isMobile?8:7):(ICON_BIG[k]?(isMobile?22:18):(isMobile?20:16));
+      const pt=new T.Points(g,new T.PointsMaterial({color:(ST_KIND[k]||{}).c||'#fff',size:sz,sizeAttenuation:false,map:ic||dotTex,transparent:true,alphaTest:0.15,depthWrite:false}));
+      pt.renderOrder=5; grp.add(pt); }); }
   // Dashboard: nur das gewaehlte System, Planeten kreisen. Karte: alle drei Systeme, echte Positionen, Wurmloecher.
   function buildSys(){ const D=ST_DATA, anim=!explore(); sunLight.intensity=0;
     (anim?[D.sys[ST_SYS]||D.sys.stanton]:Object.values(D.sys)).forEach(S=>buildOneSys(S,anim));
