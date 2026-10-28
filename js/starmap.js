@@ -513,10 +513,17 @@ function stantonScene(canvas,sysKey){
   }
   const beaconOn=makeBeacon(true), beaconOff=makeBeacon(false);
   const sunLight=new T.PointLight(0xfff2d0,2.6,0); scene.add(sunLight); scene.add(new T.AmbientLight(0x24304a,0.6));
-  function surf(base,bands){ const c=document.createElement('canvas');c.width=256;c.height=128;const x=c.getContext('2d');x.fillStyle=base;x.fillRect(0,0,256,128);
-    if(bands){ for(let i=0;i<14;i++){ x.fillStyle='rgba('+(60+Math.random()*40|0)+','+(40+Math.random()*30|0)+',10,'+(0.06+Math.random()*0.12)+')'; x.fillRect(0,Math.random()*128,256,3+Math.random()*9); } }
-    else { for(let i=0;i<150;i++){ const rr=2+Math.random()*7,px=Math.random()*256,py=Math.random()*128; x.fillStyle='rgba(0,0,0,'+(0.05+Math.random()*0.12)+')'; x.beginPath();x.arc(px,py,rr,0,7);x.fill(); x.fillStyle='rgba(255,255,255,'+(0.03+Math.random()*0.06)+')'; x.beginPath();x.arc(px-1,py-1,rr*0.6,0,7);x.fill(); } }
-    return new T.CanvasTexture(c); }
+  const BODY_MAP={};
+  function bodyMap(o, base){
+    const big=o.k==='planet'||o.n==='Delamar';
+    const key=o.n+(big?':p':':m');
+    if(BODY_MAP[key]) return BODY_MAP[key];
+    const canvas=SC.paintBody(o.n, base, big&&!isMobile);
+    const tex=new T.CanvasTexture(canvas);
+    const maxA=renderer.capabilities&&renderer.capabilities.getMaxAnisotropy?renderer.capabilities.getMaxAnisotropy():1;
+    tex.anisotropy=Math.min(8, maxA||1);
+    BODY_MAP[key]=tex; return tex;
+  }
   // Unregelmaessige Koerper (Asteroiden wie Delamar): Ikosaeder mit fester Knubbel-Verformung, laenglich gestreckt
   function rockGeo(rad,seed){ const g=new T.SphereGeometry(rad,128,80), P=g.attributes.position, v=new T.Vector3();
     // feste Zufallszahlen aus der Saat, damit der Stein immer gleich aussieht
@@ -531,8 +538,9 @@ function stantonScene(canvas,sysKey){
       v.multiplyScalar(rad*Math.max(0.45,1+n)); v.x*=1.55; v.y*=0.78; v.z*=1.1; P.setXYZ(i,v.x,v.y,v.z); }
     g.computeVertexNormals(); return g; }
   function bodyMesh(o,rad){ const lk=ST_LOOK[o.n]||['#9a9a9a',0], irr=ST_IRREG[o.n];
-    const m=new T.Mesh(irr?rockGeo(rad,irr):new T.SphereGeometry(rad,48,48),new T.MeshStandardMaterial({map:surf(lk[0],lk[1]),roughness:.97,metalness:.02}));
-    if(irr) m.material.color.setScalar(0.72); spin.push(m); return m; }
+    const map=bodyMap(o,lk[0]);
+    const m=new T.Mesh(irr?rockGeo(rad,irr):new T.SphereGeometry(rad,48,48),new T.MeshStandardMaterial({map:map,emissive:0xffffff,emissiveMap:map,emissiveIntensity:o.n==='ArcCorp'?.28:.07,roughness:SC.bodyRough(o.n),metalness:o.n==='ArcCorp'?.08:.02}));
+    spin.push(m); return m; }
   function ringPoints(G,rin,rout,thick,n,color){ const a=new Float32Array(n*3); for(let i=0;i<n;i++){ const rr=rin+Math.random()*(rout-rin), th=Math.random()*6.283; a[i*3]=rr*Math.cos(th); a[i*3+1]=(Math.random()-0.5)*thick; a[i*3+2]=rr*Math.sin(th); }
     const g=new T.BufferGeometry(); g.setAttribute('position',new T.BufferAttribute(a,3)); const p=new T.Points(g,new T.PointsMaterial({color:color,size:1.5,sizeAttenuation:false})); G.add(p); return p; }
   let level={t:'sys',o:null}, grp=null, entries=[], spin=[], animNodes=[], lastEx=null, wormClock=null, wormMouths=[], wormStat=null, sysTick=0, sysGroups=[];
@@ -717,7 +725,7 @@ function stantonScene(canvas,sysKey){
     const lift=ST_IRREG[F.n]?1.22:1.012;
     addMarkers(descendants(F.id,c=>c.k==='moon'),o=>{ const v=rel(o); if(v.length()<lift) v.setLength(lift); return v; });
   }
-  function dispose(g){ g.traverse(x=>{ if(x.geometry) x.geometry.dispose(); if(x.material){ if(x.material.map&&x.material.map!==dotTex&&x.material.map!==sunGlowTex&&x.material.map!==neb&&!Object.values(ICON).includes(x.material.map)) x.material.map.dispose(); x.material.dispose(); } }); }
+  function dispose(g){ const kept=Object.values(BODY_MAP); g.traverse(x=>{ if(x.geometry) x.geometry.dispose(); if(x.material){ if(x.material.map&&x.material.map!==dotTex&&x.material.map!==sunGlowTex&&x.material.map!==neb&&!Object.values(ICON).includes(x.material.map)&&kept.indexOf(x.material.map)<0) x.material.map.dispose(); x.material.dispose(); } }); }
   function rebuild(){ wormClock=null; wormMouths=[]; wormStat=null; if(!ST_DATA) return;
     if(grp){ scene.remove(grp); dispose(grp); } grp=new T.Group(); scene.add(grp); entries=[]; spin=[]; animNodes=[]; sysGroups=[]; lblLayer.innerHTML='';
     camera.near=level.t==='sys'?0.05:0.004; camera.updateProjectionMatrix();
@@ -734,8 +742,9 @@ function stantonScene(canvas,sysKey){
       if(b&&explore()){ tgtT.copy(Vs(b)); tgt.copy(tgtT); R=2.5; RT=7; } else { tgtT.copy(offOf(ST_SYS)); tgt.copy(tgtT); R=Math.min(R*3,120); RT=explore()?30:LV.sys.def; } }
     else { level={t:'body',o}; setSys(o.sy); tgtT.set(0,0,0); tgt.set(0,0,0); R=LV.body.max; RT=LV.body.def; }
     rebuild();
-    // Beim Anflug zum wichtigsten Ort des Koerpers drehen (Stadt/Station, z. B. Levski auf Delamar, Lorville auf Hurston)
-    if(level.t==='body'){ const top=entries.find(e=>!e.body&&e.prio>=2&&e.p.length()<1.6); if(top){ const v=top.p; azT=Math.atan2(v.x,v.z); elT=Math.max(-1.1,Math.min(1.1,Math.asin(v.y/(v.length()||1)))); } } }
+    // Anflug von der Sonnenseite, damit die Oberflaeche zu sehen ist. Liegt der wichtigste Ort
+    // (Stadt/Station) ebenfalls im Tageslicht, bleibt die Blickrichtung in seiner Naehe.
+    if(level.t==='body'){ const F=level.o, sun=new T.Vector3(-F.x,-F.z,F.y).normalize(); const top=entries.find(e=>!e.body&&e.prio>=2&&e.p.length()<1.6); let aim=sun; if(top&&top.p.dot(sun)>0.15) aim=top.p.clone().normalize().lerp(sun,.35).normalize(); azT=Math.atan2(aim.x,aim.z); elT=Math.max(-1.1,Math.min(1.1,Math.asin(Math.max(-1,Math.min(1,aim.y))))); } }
   function setSys(k){ if(!k||k===ST_SYS) return; ST_SYS=k; tintSky(k); if(window.__stCtl&&window.__stCtl.onSys) window.__stCtl.onSys(k); }
   function home(){ hl=null; if(level.t!=='sys'){ level={t:'sys',o:null}; rebuild(); } tgtT.copy(offOf(ST_SYS)); RT=explore()?(isMobile?84:44):LV.sys.def; }
   function goSystem(k){ hl=null; setSys(k); if(level.t!=='sys'){ level={t:'sys',o:null}; rebuild(); } tgtT.copy(offOf(k)); RT=isMobile?84:48; }
