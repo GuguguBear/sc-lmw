@@ -76,6 +76,9 @@ const ST_KIND={
 // ST_KIND.l is the internal (German) key, NEVER shown directly -- kindLabel() translates it live
 // into the current UI language (see kind.* in js/i18n.js).
 function kindLabel(k){ return ST_KIND[k]?_t('kind.'+k):k; }
+const ST_MARK={planet:'mkplanet',moon:'mkmoon',city:'mkcity',station:'mkstation',reststop:'mkrest',gateway:'mkgate',jump:'mkjump',wikelo:'mkwikelo',outpost:'mkout',miningbase:'mkmine',lagrange:'mklag',halo:'mkhalo',comm:'mkcomm',poi:'mkpoi',asteroid:'mkrock',belt:'mkbelt',player:'mklive'};
+function sigil(name,color,motion){ return '<i class="st-mk'+(motion?' '+motion:'')+'" style="color:'+color+'">'+(SC.ico?SC.ico(name):'')+'</i>'; }
+function kindMark(k){ const c=(ST_KIND[k]||{}).c||'#cfe0ee', motion=k==='jump'?'mk-jump':(k==='comm'?'mk-comm':(k==='gateway'?'mk-gate':'')); return sigil(ST_MARK[k]||'mkpoi', c, motion); }
 const ST_K=8, ST_PULL=0.35;
 const ST_IRREG={Delamar:2.7};   // Koerper, die als Asteroid statt Kugel gezeichnet werden (Wert = Form-Saat)
 let ST_SYS='stanton';
@@ -429,22 +432,51 @@ function stantonScene(canvas,sysKey){
   const explore=()=>ROOT.classList.contains('st-explore');
   let isMobile=boxWH().w<700;
   // Himmel (folgt der Kamera, damit er auf jeder Ebene gleich aussieht)
-  const sky=new T.Group(); scene.add(sky); const skyNeb=[];
-  { const N=1900, pos=new Float32Array(N*3); for(let i=0;i<N;i++){ const r=380+Math.random()*900, th=Math.random()*6.283, ph=Math.acos(2*Math.random()-1); pos[i*3]=r*Math.sin(ph)*Math.cos(th); pos[i*3+1]=r*Math.cos(ph); pos[i*3+2]=r*Math.sin(ph)*Math.sin(th); }
-    const g=new T.BufferGeometry(); g.setAttribute('position',new T.BufferAttribute(pos,3)); sky.add(new T.Points(g,new T.PointsMaterial({color:0xffffff,size:1.2,sizeAttenuation:false}))); }
+  const sky=new T.Group(); scene.add(sky); const skyNeb=[]; let skyStars=null, skyGlowTex=null;
   function glowTex(cols){ const c=document.createElement('canvas');c.width=c.height=128;const x=c.getContext('2d');const g=x.createRadialGradient(64,64,0,64,64,64);cols.forEach(s=>g.addColorStop(s[0],s[1]));x.fillStyle=g;x.fillRect(0,0,128,128);return new T.CanvasTexture(c); }
   const neb=glowTex([[0,'rgba(140,100,255,.5)'],[0.5,'rgba(60,120,255,.16)'],[1,'rgba(0,0,0,0)']]);
   [[-220,80,-320,0x8a5aff,300],[300,-60,-380,0x2ec6ff,340],[100,150,-500,0xff5aa0,280],[-320,-120,-240,0x5affc0,240],[260,210,-600,0x9a7aff,360],[-120,-160,-180,0x6a7aff,160],[160,-30,-200,0xff7ac0,140],[40,180,-260,0x4ac6ff,150],[-260,120,-420,0xb06aff,200],[210,90,-300,0x7affd0,150]].forEach(n=>{ const s=new T.Sprite(new T.SpriteMaterial({map:neb,color:n[3],transparent:true,opacity:.38,blending:T.AdditiveBlending,depthWrite:false})); s.position.set(n[0],n[1],n[2]); s.scale.set(n[4],n[4],1); sky.add(s); skyNeb.push(s); });
-  function tintSky(k){ const L=ST_SYSLOOK[k]||ST_SYSLOOK.stanton, pal=L.sky; skyNeb.forEach((s,i)=>{ s.material.color.setHex(pal[i%pal.length]); s.material.opacity=L.skyOp||.38; }); }
+  function skyGlowMap(){ if(skyGlowTex) return skyGlowTex; const c=document.createElement('canvas'); c.width=c.height=64; const x=c.getContext('2d'); const g=x.createRadialGradient(32,32,0,32,32,32); g.addColorStop(0,'rgba(255,255,255,1)'); g.addColorStop(0.22,'rgba(255,255,255,.5)'); g.addColorStop(1,'rgba(255,255,255,0)'); x.fillStyle=g; x.fillRect(0,0,64,64); skyGlowTex=new T.CanvasTexture(c); return skyGlowTex; }
+  function tintSky(k){ const L=ST_SYSLOOK[k]||ST_SYSLOOK.stanton, pal=L.sky; const style=ST_SKY.on?ST_SKY.style:'off'; const show=style==='classic'||style==='dense'||style==='spectrum'||style==='glow'; const mul=style==='dense'?0.4:(style==='glow'?0.75:1); skyNeb.forEach((s,i)=>{ s.visible=show; s.material.color.setHex(pal[i%pal.length]); s.material.opacity=(L.skyOp||.38)*mul; }); }
+  function applySky(){
+    if(skyStars){ sky.remove(skyStars); skyStars.geometry.dispose(); skyStars.material.dispose(); skyStars=null; }
+    const style=ST_SKY.on?ST_SKY.style:'off';
+    tintSky(ST_SYS);
+    if(style==='off') return;
+    let n=1900, size=1.2, spread=900, colors=null, map=null, transparent=false, blending=T.NormalBlending;
+    if(style==='sparse'){ n=380; size=2.6; spread=700; }
+    else if(style==='dense'){ n=5600; size=0.85; spread=1100; }
+    else if(style==='spectrum'){ n=2400; size=1.7; colors=new Float32Array(n*3); }
+    else if(style==='glow'){ n=820; size=9; map=skyGlowMap(); transparent=true; blending=T.AdditiveBlending; }
+    const pos=new Float32Array(n*3);
+    for(let i=0;i<n;i++){ const r=380+Math.random()*spread, th=Math.random()*6.283, ph=Math.acos(2*Math.random()-1); pos[i*3]=r*Math.sin(ph)*Math.cos(th); pos[i*3+1]=r*Math.cos(ph); pos[i*3+2]=r*Math.sin(ph)*Math.sin(th); }
+    if(colors){ const pal=[[1,1,1],[0.72,0.86,1],[1,0.84,0.55],[1,0.62,0.45]]; for(let i=0;i<n;i++){ const p=pal[Math.random()<0.62?0:1+((Math.random()*3)|0)]; colors[i*3]=p[0]; colors[i*3+1]=p[1]; colors[i*3+2]=p[2]; } }
+    const g=new T.BufferGeometry(); g.setAttribute('position',new T.BufferAttribute(pos,3)); if(colors) g.setAttribute('color',new T.BufferAttribute(colors,3));
+    skyStars=new T.Points(g,new T.PointsMaterial({color:0xffffff,size:size,sizeAttenuation:false,vertexColors:!!colors,map:map,transparent:transparent,blending:blending,depthWrite:false}));
+    sky.add(skyStars);
+  }
   const sunGlowTex=glowTex([[0,'rgba(255,240,180,.95)'],[0.4,'rgba(255,190,90,.4)'],[1,'rgba(255,150,50,0)']]);
   const dotTex=(function(){ const c=document.createElement('canvas');c.width=c.height=32;const x=c.getContext('2d');x.beginPath();x.arc(16,16,11,0,7);x.fillStyle='#fff';x.fill();x.lineWidth=4;x.strokeStyle='rgba(0,0,0,.75)';x.stroke();return new T.CanvasTexture(c); })();
   function iconTex(draw){ const c=document.createElement('canvas'); c.width=c.height=64; const x=c.getContext('2d'); x.lineJoin='round'; x.lineCap='round';
     const pass=(col,w)=>{ x.strokeStyle=col; x.fillStyle=col; x.lineWidth=w; draw(x,w); }; pass('rgba(0,0,0,.85)',9); pass('#fff',4.5); return new T.CanvasTexture(c); }
+  function poly(x, pts){ x.beginPath(); pts.forEach((p,i)=>i?x.lineTo(p[0],p[1]):x.moveTo(p[0],p[1])); x.closePath(); x.stroke(); }
   const ICON={
-    station:iconTex((x,w)=>{ x.beginPath(); x.arc(32,32,13,0,7); x.stroke(); x.beginPath(); x.arc(32,32,4+w/4,0,7); x.fill();
-      x.beginPath(); x.moveTo(6,32); x.lineTo(19,32); x.moveTo(45,32); x.lineTo(58,32); x.stroke(); x.strokeRect(4,24,6,16); x.strokeRect(54,24,6,16); }),
-    gateway:iconTex((x,w)=>{ x.beginPath(); x.arc(32,32,22,0,7); x.stroke(); x.beginPath(); x.arc(32,32,13,0,7); x.stroke(); x.beginPath(); x.moveTo(32,4); x.lineTo(32,12); x.moveTo(32,52); x.lineTo(32,60); x.stroke(); }),
-    city:iconTex((x,w)=>{ x.strokeRect(10,30,12,26); x.strokeRect(26,14,12,42); x.strokeRect(42,24,12,32); x.beginPath(); x.moveTo(6,57); x.lineTo(58,57); x.stroke(); })};
+    station:iconTex(x=>{ x.beginPath(); x.arc(32,32,10,0,7); x.stroke(); x.beginPath(); x.moveTo(6,32); x.lineTo(20,32); x.moveTo(44,32); x.lineTo(58,32); x.stroke(); x.strokeRect(4,24,6,16); x.strokeRect(54,24,6,16); }),
+    rest:iconTex(x=>{ poly(x, [[32,8],[52,20],[52,44],[32,56],[12,44],[12,20]]); }),
+    wikelo:iconTex(x=>{ poly(x, [[32,8],[52,20],[52,44],[32,56],[12,44],[12,20]]); poly(x, [[32,24],[40,32],[32,40],[24,32]]); }),
+    gateway:iconTex(x=>{ x.beginPath(); x.arc(32,32,20,0,7); x.stroke(); x.beginPath(); x.arc(32,32,9,0,7); x.stroke(); x.beginPath(); x.moveTo(32,4); x.lineTo(32,12); x.moveTo(32,52); x.lineTo(32,60); x.stroke(); }),
+    city:iconTex(x=>{ x.strokeRect(8,30,12,26); x.strokeRect(24,12,14,44); x.strokeRect(42,22,14,34); x.beginPath(); x.moveTo(4,57); x.lineTo(60,57); x.stroke(); }),
+    jump:iconTex(x=>{ x.beginPath(); x.moveTo(10,16); x.lineTo(28,32); x.lineTo(10,48); x.moveTo(54,16); x.lineTo(36,32); x.lineTo(54,48); x.stroke(); }),
+    outpost:iconTex(x=>{ x.beginPath(); x.moveTo(18,56); x.lineTo(18,10); x.lineTo(46,22); x.lineTo(34,30); x.lineTo(46,38); x.lineTo(18,30); x.stroke(); }),
+    mine:iconTex(x=>{ x.beginPath(); x.moveTo(12,50); x.lineTo(40,16); x.moveTo(40,16); x.lineTo(54,26); x.lineTo(36,28); x.moveTo(22,40); x.lineTo(34,52); x.stroke(); }),
+    lag:iconTex(x=>{ [[18,42,8],[38,20,10],[48,44,6]].forEach(p=>{ x.beginPath(); x.arc(p[0],p[1],p[2],0,7); x.fill(); x.stroke(); }); }),
+    comm:iconTex(x=>{ x.beginPath(); x.moveTo(32,54); x.lineTo(32,26); x.moveTo(18,22); x.quadraticCurveTo(32,8,46,22); x.moveTo(12,16); x.quadraticCurveTo(32,0,52,16); x.stroke(); x.beginPath(); x.arc(32,54,3,0,7); x.fill(); x.stroke(); }),
+    poi:iconTex(x=>{ x.beginPath(); x.arc(32,32,14,0,7); x.stroke(); x.beginPath(); x.moveTo(32,8); x.lineTo(32,18); x.moveTo(32,46); x.lineTo(32,56); x.moveTo(8,32); x.lineTo(18,32); x.moveTo(46,32); x.lineTo(56,32); x.stroke(); }),
+    rock:iconTex(x=>{ poly(x, [[16,40],[22,18],[36,12],[52,24],[56,42],[44,54],[22,52]]); }),
+    belt:iconTex(x=>{ x.beginPath(); x.ellipse(32,32,24,10,0,0,7); x.stroke(); [[16,30],[32,40],[48,28]].forEach(p=>{ x.beginPath(); x.arc(p[0],p[1],3,0,7); x.fill(); x.stroke(); }); })
+  };
+  const ICONOF={station:ICON.station,reststop:ICON.rest,wikelo:ICON.wikelo,gateway:ICON.gateway,city:ICON.city,jump:ICON.jump,outpost:ICON.outpost,miningbase:ICON.mine,lagrange:ICON.lag,comm:ICON.comm,poi:ICON.poi,asteroid:ICON.rock,belt:ICON.belt};
+  const ICON_BIG={station:1,reststop:1,wikelo:1,gateway:1,city:1,jump:1};
   function beaconHex(){ return ({classic:0x37e1ff,compact:0xe8eaef,practical:0xd8d4c8,chassis:0xffb000,scifi:0x00e5cc})[ST_UI_THEME]||0x37e1ff; }
   function makeBeacon(live){
     const c=document.createElement('canvas'); c.width=c.height=128; const x=c.getContext('2d');
@@ -479,7 +511,6 @@ function stantonScene(canvas,sysKey){
     draw(0); return {tex:tex, draw:draw};
   }
   const beaconOn=makeBeacon(true), beaconOff=makeBeacon(false);
-  const ICONOF={station:ICON.station,reststop:ICON.station,wikelo:ICON.station,gateway:ICON.gateway,city:ICON.city};
   const sunLight=new T.PointLight(0xfff2d0,2.6,0); scene.add(sunLight); scene.add(new T.AmbientLight(0x24304a,0.6));
   function surf(base,bands){ const c=document.createElement('canvas');c.width=256;c.height=128;const x=c.getContext('2d');x.fillStyle=base;x.fillRect(0,0,256,128);
     if(bands){ for(let i=0;i<14;i++){ x.fillStyle='rgba('+(60+Math.random()*40|0)+','+(40+Math.random()*30|0)+',10,'+(0.06+Math.random()*0.12)+')'; x.fillRect(0,Math.random()*128,256,3+Math.random()*9); } }
@@ -515,7 +546,8 @@ function stantonScene(canvas,sysKey){
     list.forEach(o=>{ if(!ST_VIS[o.k]) return; if(o.h&&!ST_HID) return; const p=posFn(o); if(!p) return; entries.push({o,p,prio:ST_PRIO[o.k]||0}); (byK[o.k]=byK[o.k]||[]).push(p); });
     Object.keys(byK).forEach(k=>{ const ps=byK[k], a=new Float32Array(ps.length*3); ps.forEach((p,i)=>{a[i*3]=p.x;a[i*3+1]=p.y;a[i*3+2]=p.z;});
       const g=new T.BufferGeometry(); g.setAttribute('position',new T.BufferAttribute(a,3));
-      const ic=ICONOF[k]; grp.add(new T.Points(g,new T.PointsMaterial({color:(ST_KIND[k]||{}).c||'#fff',size:ic?(isMobile?22:20):(k==='asteroid'?4:(isMobile?9:8)),sizeAttenuation:false,map:ic||dotTex,transparent:true,alphaTest:0.3}))); }); }
+      const ic=ICONOF[k], sz=k==='asteroid'?(isMobile?7:6):(ICON_BIG[k]?(isMobile?22:18):(isMobile?16:14));
+      grp.add(new T.Points(g,new T.PointsMaterial({color:(ST_KIND[k]||{}).c||'#fff',size:sz,sizeAttenuation:false,map:ic||dotTex,transparent:true,alphaTest:0.25}))); }); }
   // Dashboard: nur das gewaehlte System, Planeten kreisen. Karte: alle drei Systeme, echte Positionen, Wurmloecher.
   function buildSys(){ const D=ST_DATA, anim=!explore(); sunLight.intensity=0;
     (anim?[D.sys[ST_SYS]||D.sys.stanton]:Object.values(D.sys)).forEach(S=>buildOneSys(S,anim));
@@ -869,9 +901,11 @@ function stantonScene(canvas,sysKey){
     zoom01:()=>{ const L=LV[level.t]; return (Math.log(RT)-Math.log(L.min))/(Math.log(L.max)-Math.log(L.min)); },
     setZoom01:t=>{ const L=LV[level.t]; RT=Math.exp(Math.log(L.min)+t*(Math.log(L.max)-Math.log(L.min))); },
     debug:()=>({R,RT,tgt:tgt.toArray(),tgtT:tgtT.toArray(),level:level.t}), pos:n=>{ const e=entries.find(x=>x.o.n===n); return e?e.p.toArray():null; }, links:()=>(ST_DATA.gal.links||[]).map(l=>({l:l.sa+'-'+l.sb,live:l.live,a:ST_DATA.by[l.a]&&ST_DATA.by[l.a].n,b:ST_DATA.by[l.b]&&ST_DATA.by[l.b].n,pa:ST_DATA.by[l.a]&&Vs(ST_DATA.by[l.a]).toArray().map(v=>+v.toFixed(1)),pb:ST_DATA.by[l.b]&&Vs(ST_DATA.by[l.b]).toArray().map(v=>+v.toFixed(1))})), tubes:()=>wormStat?wormStat.tubes:0, worm:()=>wormStat, aim:(x,y,z,d)=>{ tgtT.set(x,y,z); tgt.copy(tgtT); if(d>0){ RT=d; R=d; } },
+    applySky:applySky,
+    skyInfo:()=>({on:ST_SKY.on, style:ST_SKY.style, points:skyStars?skyStars.geometry.getAttribute('position').count:0, nebula:skyNeb.filter(s=>s.visible).length, size:skyStars?skyStars.material.size:0}),
     reset:()=>{ hl=null; hover=null; hlSet=null; drawHl(); if(level.t!=='sys') focus(null);
       const th=document.querySelector('.cmd'), tk=th&&ST_THEME_SYS[th.getAttribute('data-dtheme')]; if(tk){ ST_SYS=tk; tintSky(tk); } bgScale(); tgtT.copy(offOf(ST_SYS)); RT=LV.sys.def*BGK; }, onLevel:null };
-  tintSky(ST_SYS);
+  applySky();
   stLoad().then(()=>{ bgScale(); tgtT.copy(offOf(ST_SYS)); tgt.copy(tgtT); RT=R=LV.sys.def*BGK; rebuild(); }).catch(()=>{});
   loop();
   return cleanup;
@@ -923,6 +957,19 @@ function readCtrl(){
   ST_PAUSE=!d.spin;
 }
 readCtrl();
+const ST_SKY_KEY='sclmw_sky';
+const ST_SKY_STYLES=['classic','sparse','dense','spectrum','glow'];
+let ST_SKY={on:true, style:'classic'};
+function readSky(){
+  let saved=null; try{ saved=JSON.parse(localStorage.getItem(ST_SKY_KEY)||'null'); }catch(e){}
+  if(saved&&typeof saved==='object'){
+    ST_SKY.on=saved.on!==false;
+    if(ST_SKY_STYLES.indexOf(saved.style)>=0) ST_SKY.style=saved.style;
+  }
+}
+function saveSky(){ try{ localStorage.setItem(ST_SKY_KEY, JSON.stringify({on:ST_SKY.on, style:ST_SKY.style})); }catch(e){} if(window.__stCtl&&window.__stCtl.applySky) window.__stCtl.applySky(); }
+function resetSky(){ ST_SKY={on:true, style:'classic'}; saveSky(); }
+readSky();
 function ctrlSens(kind){ const n=kind==='rot'?ST_CTRL.sensRot:kind==='zoom'?ST_CTRL.sensZoom:ST_CTRL.sensPan; return n>=0.25&&n<=3?n:1; }
 function matchMouse(e, act){ return !!(e&&ST_CTRL&&(ST_CTRL.mouse[act]||[]).some(function(c){ return c.b===e.button&&!!c.shift===!!e.shiftKey&&!!c.ctrl===!!e.ctrlKey&&!!c.alt===!!e.altKey; })); }
 function mouseDragAction(e){ if(matchMouse(e,'pan')) return 'pan'; if(matchMouse(e,'orbit')) return 'orbit'; return null; }
@@ -1014,6 +1061,7 @@ function paintCtrl(){
     '<div class="st-ctrl-sec">'+esc(_t('ctrl.keys'))+'</div>'+ST_KEY_ACTS.map(function(a){ return row('key', a); }).join('')+
     '<div class="st-ctrl-sec">'+esc(_t('ctrl.feel'))+'</div><div class="st-ctrl-flags">'+flag('invertX')+flag('invertY')+flag('invertWheel')+'</div>'+
     slide('sensRot')+slide('sensPan')+slide('sensZoom')+
+    '<div class="st-ctrl-sec">'+esc(_t('sky.title'))+'</div><div class="st-ctrl-flags"><button type="button" class="st-ctrl-flag'+(ST_SKY.on?' on':'')+'" data-sky="toggle">'+esc(_t('sky.title'))+' · '+esc(_t(ST_SKY.on?'ctrl.on':'ctrl.off'))+'</button></div><div class="st-ctrl-flags">'+ST_SKY_STYLES.map(function(id){ return '<button type="button" class="st-ctrl-flag'+(ST_SKY.on&&ST_SKY.style===id?' on':'')+'" data-sky="'+id+'">'+esc(_t('sky.'+id))+'</button>'; }).join('')+'</div>'+
     '<div class="st-ctrl-sec">'+esc(_t('ctrl.more'))+'</div><div class="st-ctrl-flags">'+tog('spin')+tog('hint')+'</div>'+
     '<div class="st-ctrl-row"><button type="button" class="st-ctrl-reset" data-ctrl="reset">'+esc(_t('ctrl.reset'))+'</button></div>';
 }
@@ -1033,14 +1081,15 @@ function openCtrl(){
 }
 function closeCtrl(){ const dlg=$('stCtrlDlg'); ST_CAP=null; capStop(); if(dlg) dlg.hidden=true; }
 function onCtrlClick(e){
-  const t=e.target.closest('[data-rebind],[data-add],[data-clear],[data-flag],[data-ctrl]');
+  const t=e.target.closest('[data-rebind],[data-add],[data-clear],[data-flag],[data-ctrl],[data-sky]');
   if(!t) return;
   e.preventDefault(); e.stopPropagation();
   if(t.hasAttribute('data-clear')){ const kind=t.getAttribute('data-clear'), act=t.getAttribute('data-act'), i=+t.getAttribute('data-i'); const list=kind==='mouse'?ST_CTRL.mouse[act]:ST_CTRL.keys[act]; if(list) list.splice(i,1); ST_CAP=null; capStop(); saveCtrl(); paintCtrl(); return; }
   if(t.hasAttribute('data-rebind')){ beginCapture(t.getAttribute('data-rebind'), t.getAttribute('data-act'), +t.getAttribute('data-i')); return; }
   if(t.hasAttribute('data-add')){ beginCapture(t.getAttribute('data-add'), t.getAttribute('data-act'), -1); return; }
   if(t.hasAttribute('data-flag')){ const k=t.getAttribute('data-flag'); ST_CTRL[k]=!ST_CTRL[k]; if(k==='spin') ST_PAUSE=!ST_CTRL.spin; saveCtrl(); paintCtrl(); return; }
-  if(t.getAttribute('data-ctrl')==='reset'){ ST_CTRL=ctrlDefaults(); ST_PAUSE=!ST_CTRL.spin; ST_CAP=null; capStop(); saveCtrl(); paintCtrl(); }
+  if(t.hasAttribute('data-sky')){ const v=t.getAttribute('data-sky'); if(v==='toggle') ST_SKY.on=!ST_SKY.on; else if(ST_SKY_STYLES.indexOf(v)>=0){ ST_SKY.style=v; ST_SKY.on=true; } saveSky(); paintCtrl(); return; }
+  if(t.getAttribute('data-ctrl')==='reset'){ ST_CTRL=ctrlDefaults(); ST_PAUSE=!ST_CTRL.spin; ST_CAP=null; capStop(); saveCtrl(); resetSky(); paintCtrl(); }
 }
 function onCtrlInput(e){
   const s=e.target.closest('[data-sens]'); if(!s) return;
@@ -1217,8 +1266,9 @@ function enterStExplore(){
   paintPicks();
   const hb=$('stHome'); if(hb) hb.onclick=()=>{ ctl.highlight(null); ctl.home(); };
   const side=$('stSide');
-  const sideTab=t=>{ const open=!side.classList.contains('min'), cur=$('stTabPl').hidden?'leg':'pl';
-    if(open&&cur===t){ side.classList.add('min'); } else { side.classList.remove('min'); $('stTabLeg').hidden=t!=='leg'; $('stTabPl').hidden=t!=='pl'; }
+  const sideTab=t=>{ const open=!side.classList.contains('min'), cur=$('stTabPl').hidden?'leg':'pl', btn=t==='pl'?$('stSidePl'):$('stSideMin');
+    if(open&&cur===t){ side.classList.add('min'); side.classList.remove('st-anchored'); side.__btn=null; side.style.left=side.style.top=side.style.right=side.style.bottom=side.style.width=side.style.maxHeight=''; }
+    else { side.classList.remove('min'); $('stTabLeg').hidden=t!=='leg'; $('stTabPl').hidden=t!=='pl'; side.__btn=btn; placeUnder(side, btn, 320); }
     $('stSideMin').classList.toggle('on',!side.classList.contains('min')&&t==='leg'); $('stSidePl').classList.toggle('on',!side.classList.contains('min')&&t==='pl'); if(t==='pl') stPlList(); };
   $('stSideMin').onclick=()=>sideTab('leg'); $('stSidePl').onclick=()=>sideTab('pl'); $('stPlQ').oninput=()=>stPlList();
   function crumb(lv){ const c=$('stCrumb'); if(!c||!ST_DATA) return; const path=[]; let x=lv&&lv.o; while(x){ path.unshift(x); x=ST_DATA.by[x.p]; }
@@ -1235,15 +1285,16 @@ function enterStExplore(){
   stLoad().then(()=>{ crumb(ctl.level()); stLegend(); plTick(); }).catch(()=>{ ST_DATA_ERR=true; const leg=$('stLegend'); if(leg) leg.innerHTML='<p class="sc-lmw-muted">'+esc(_t('error.data_load_failed'))+'</p>'; plTick(); });
   // Obere Leiste: Reiter + Suche
   const q=$('stQ'); let tmr=null;
-  q.oninput=()=>{ clearTimeout(tmr); tmr=setTimeout(stSearch,120); };
-  q.onfocus=()=>{ if(q.value.trim()||ST_CAT!=='all') stSearch(); };
+  q.oninput=()=>{ clearTimeout(tmr); ST_ANCHOR=q; tmr=setTimeout(stSearch,120); };
+  q.onfocus=()=>{ ST_ANCHOR=q; if(q.value.trim()||ST_CAT!=='all') stSearch(); };
   q.onkeydown=(e)=>{ const box=$('stRes');
     if(e.key==='Escape'){ box.hidden=true; q.blur(); }
     else if(e.key==='ArrowDown'||e.key==='ArrowUp'){ const rs=[...box.querySelectorAll('.st-r')]; if(!rs.length) return; let i=rs.findIndex(r=>r.classList.contains('sel')); rs.forEach(r=>r.classList.remove('sel')); i=Math.max(0,Math.min(rs.length-1,i+(e.key==='ArrowDown'?1:-1))); rs[i].classList.add('sel'); rs[i].scrollIntoView({block:'nearest'}); e.preventDefault(); }
     else if(e.key==='Enter'){ const r=box.hidden?null:(box.querySelector('.st-r.sel')||box.querySelector('.st-r')); if(r) r.click(); } };
   $('stQx').onclick=()=>{ q.value=''; ST_SEC=null; ST_CAT='all'; stCatsMark(); $('stRes').hidden=true; ctl.highlight(null); };
   $('stCats').querySelectorAll('[data-cat]').forEach(b=>b.onclick=()=>{ const c=b.getAttribute('data-cat'); ST_SEC=null;
-    if(ST_CAT===c&&!$('stRes').hidden){ $('stRes').hidden=true; return; } ST_CAT=c; stCatsMark(); stCloseCard(); stSearch(); });
+    if(ST_CAT===c&&!$('stRes').hidden){ $('stRes').hidden=true; return; } ST_CAT=c; ST_ANCHOR=b; stCatsMark(); stCloseCard(); stSearch(); });
+  if(!window.__stPopResize){ window.__stPopResize=function(){ const box=$('stRes'), side=$('stSide'); if(box&&!box.hidden) placeUnder(box, popAnchor(), 440); if(side&&!side.classList.contains('min')&&side.__btn) placeUnder(side, side.__btn, 320); }; window.addEventListener('resize', window.__stPopResize); }
   function spinUI(){ window.__stExRaf=requestAnimationFrame(spinUI); const c=window.__stCtl; if(!c) return; if(dial) dial.setAttribute('transform','rotate('+(-c.getAz()*180/Math.PI)+' 50 50)'); if(zoom&&document.activeElement!==zoom) zoom.value=c.zoom01(); }
   spinUI();
   window.__stExStop=function(){ cancelAnimationFrame(window.__stExRaf); };
@@ -1251,7 +1302,16 @@ function enterStExplore(){
 // ---- Obere Suchleiste: Orte, Erze, Items, Schiffe, Waren, Blueprints, Missionen ----
 const ST_CATS=[['all','cat.all'],['pl','cat.pl'],['loc','cat.loc'],['ore','cat.ore'],['item','cat.item'],['ship','cat.ship'],['ware','cat.ware'],['bp','cat.bp'],['mis','cat.mis']];
 const ST_SEC_IC={'Armor':'🛡️','Clothing':'👕','Undersuits':'🧥','Liveries':'🎨','Personal Weapons':'🔫','Vehicle Weapons':'💥','Systems':'⚙️','Avionics':'📡','Utility':'🔧','Miscellaneous':'📦','Decorations':'🪴','Commodities':'🪙'};
-let ST_CAT='all', ST_SEC=null, ST_TERM=null, ST_ORES=null, ST_ORES_TRIED=false;
+let ST_CAT='all', ST_SEC=null, ST_ANCHOR=null, ST_TERM=null, ST_ORES=null, ST_ORES_TRIED=false;
+function popAnchor(){ if(ST_ANCHOR&&ST_ANCHOR.isConnected) return ST_ANCHOR; const cats=$('stCats'), on=cats&&cats.querySelector('button.on'); return on||$('stQ'); }
+function placeUnder(panel, btn, prefW){ if(!panel||!btn) return; const anchor=btn.closest?(btn.closest('.st-sbox')||btn):btn;
+  const host=panel.offsetParent||ROOT, hr=host.getBoundingClientRect(), map=(ROOT&&ROOT.getBoundingClientRect())||hr, br=anchor.getBoundingClientRect(), gap=6;
+  const maxW=Math.min(prefW||440, Math.max(220, map.width-16));
+  let left=br.left-hr.left, minLeft=(map.left+8)-hr.left, maxLeft=(map.right-8)-hr.left-maxW;
+  if(left>maxLeft) left=Math.max(minLeft, maxLeft); if(left<minLeft) left=minLeft;
+  const top=br.bottom-hr.top+gap, room=map.bottom-br.bottom-gap-28;
+  panel.style.width=maxW+'px'; panel.style.left=left+'px'; panel.style.top=top+'px'; panel.style.right='auto'; panel.style.bottom='auto';
+  panel.style.maxHeight=Math.max(140, Math.min(540, room))+'px'; panel.classList.add('st-anchored'); }
 const stCache=new Map();
 async function stGet(url){ const c=stCache.get(url); if(c&&Date.now()-c.t<300000) return c.d;
   const d=await fetch(url).then(r=>r.json()).then(j=>(j&&j.data)||[]).catch(()=>null); if(d) stCache.set(url,{t:Date.now(),d}); return d||[]; }
@@ -1281,7 +1341,7 @@ function stOreWhere(x){ if(!x.mine.length) return _t('ore.no_location'); const I
 let ST_SGEN=0;
 async function stSearch(){ const box=$('stRes'), qi=$('stQ'); if(!box||!ST_DATA) return; const gen=++ST_SGEN;
   const q=(qi.value||'').trim().toLowerCase(), cat=ST_CAT, all=cat==='all';
-  if(!q&&all){ box.hidden=true; return; } box.hidden=false;
+  if(!q&&all){ box.hidden=true; return; } box.hidden=false; placeUnder(box, popAnchor(), 440);
   if(rootW()<700){ const lp=$('stLoc'); if(lp) lp.remove(); }
   const has=s=>{ if(!q) return true; const a=String(s||'').toLowerCase(); if(a.indexOf(q)>=0) return true; const g=gn(s); return g!==s&&String(g).toLowerCase().indexOf(q)>=0; }, lim=n=>all?5:n;
   const C=await uexCatalog(), M=await stMis(), ORES=await stOres(), BPD=(all||cat==='bp')?await stBps():{bps:{}};
@@ -1292,7 +1352,7 @@ async function stSearch(){ const box=$('stRes'), qi=$('stQ'); if(!box||!ST_DATA)
     if(ST_PL_ERR&&cat==='pl') h+='<p class="st-warn">'+esc(ST_PL_ERR)+'</p>';
     if(L.length) h+=head(_t('cat.pl'),L.length,'pl')+L.slice(0,lim(300)).map(p=>stRow('pl',p.id,p.online?'🟢':'⚪',p.name||p.player,[p.online?_t('status.online'):_t('status.offline_last',{time:stAgo(p.last_seen||p.when)}),p.location&&(playerPlaceName(p)||gn(p.location))+(p.online&&p.when&&!stLocFresh(p)?' ('+stAgo(p.when)+')':''),p.ship&&gn(p.ship)].filter(v=>v&&v!=='—').join(' · '))).join('')+stCut(L.length,lim(300)); else if(cat==='pl'&&!ST_PL_ERR) h+='<p class="sc-lmw-muted" style="padding:10px;font-size:.84rem">'+_t('search.none_players')+'</p>'; }
   if(all||cat==='loc'){ const L=ST_DATA.d.objects.filter(o=>o.k!=='asteroid'&&(!o.h||ST_HID)&&(q?has(o.n):(ST_PRIO[o.k]||0)>=2)).sort((a,b)=>(ST_PRIO[b.k]||0)-(ST_PRIO[a.k]||0)||a.n.localeCompare(b.n));
-    if(L.length) h+=head(_t('cat.loc'),L.length,'loc')+L.slice(0,lim(600)).map(o=>stRow('loc',o.id,'<span class="st-dot" style="background:'+(ST_KIND[o.k]||{}).c+'"></span>',gn(o.n),kindLabel(o.k)+(stBodyOf(o)!==o&&stBodyOf(o).k!=='star'?' · '+gn(stBodyOf(o).n):'')+' · '+stSysName(o))).join('')+stCut(L.length,lim(600)); }
+    if(L.length) h+=head(_t('cat.loc'),L.length,'loc')+L.slice(0,lim(600)).map(o=>stRow('loc',o.id,kindMark(o.k),gn(o.n),kindLabel(o.k)+(stBodyOf(o)!==o&&stBodyOf(o).k!=='star'?' · '+gn(stBodyOf(o).n):'')+' · '+stSysName(o))).join('')+stCut(L.length,lim(600)); }
   if(all||cat==='ore'){ const L=ORES.filter(o=>has(o.n)||o.mine.some(has)||has(o.code));
     if(L.length) h+=head(_t('cat.ore'),L.length,'ore')+L.slice(0,lim(200)).map(o=>stRow('ore',o.n,'⛏️',gn(o.n),stOreWhere(o)+(o.code?' · '+o.code:''))).join('')+stCut(L.length,lim(200)); }
   if(all||cat==='item'){
@@ -1316,7 +1376,8 @@ async function stSearch(){ const box=$('stRes'), qi=$('stQ'); if(!box||!ST_DATA)
   if(gen!==ST_SGEN) return;   // eine neuere Suche laeuft schon, dieses Ergebnis ist veraltet
   box.innerHTML=h||'<p class="sc-lmw-muted" style="padding:10px;font-size:.84rem">'+_t('search.nothing_found')+'</p>';
   const f1=box.querySelector('.st-r'); if(f1) f1.classList.add('sel');
-  box.querySelectorAll('[data-more]').forEach(a=>a.onclick=(e)=>{ e.stopPropagation(); ST_CAT=a.getAttribute('data-more'); stCatsMark(); stSearch(); });
+  box.querySelectorAll('[data-more]').forEach(a=>a.onclick=(e)=>{ e.stopPropagation(); ST_CAT=a.getAttribute('data-more'); stCatsMark(); const b=$('stCats')&&$('stCats').querySelector('[data-cat="'+ST_CAT+'"]'); if(b) ST_ANCHOR=b; stSearch(); });
+  placeUnder(box, popAnchor(), 440);
   box.querySelectorAll('[data-back]').forEach(a=>a.onclick=()=>{ ST_SEC=null; stSearch(); });
   box.querySelectorAll('.st-r').forEach(r=>r.onclick=()=>stPick(r.getAttribute('data-kind'),r.getAttribute('data-key'))); }
 async function stPick(kind,key){ const ctl=window.__stCtl, C=await uexCatalog(), mob=rootW()<700;
@@ -1408,10 +1469,10 @@ function stPlList(){ const box=$('stPlList'), cnt=$('stPlCnt'); const P=ST_PL||[
 function stLegend(){ const box=$('stLegend'); if(!box||!ST_DATA) return; const cnt={}, hid={};
   ST_DATA.d.objects.forEach(o=>{ if(o.h) hid[o.k]=(hid[o.k]||0)+1; else cnt[o.k]=(cnt[o.k]||0)+1; });
   cnt.halo=ST_DATA.d.objects.filter(o=>o.ring).length;
-  const rows=Object.keys(ST_KIND).filter(k=>k!=='star'&&(cnt[k]||hid[k])).map(k=>'<label class="st-lg"><input type="checkbox" data-k="'+k+'"'+(ST_VIS[k]?' checked':'')+'><i style="background:'+ST_KIND[k].c+'"></i>'+esc(kindLabel(k))+'<span>'+(cnt[k]||0)+(hid[k]?' +'+hid[k]:'')+'</span></label>').join('');
+  const rows=Object.keys(ST_KIND).filter(k=>k!=='star'&&(cnt[k]||hid[k])).map(k=>'<label class="st-lg"><input type="checkbox" data-k="'+k+'"'+(ST_VIS[k]?' checked':'')+'>'+kindMark(k)+esc(kindLabel(k))+'<span>'+(cnt[k]||0)+(hid[k]?' +'+hid[k]:'')+'</span></label>').join('');
   const pOn=(ST_PL||[]).filter(p=>p.online).length, pOff=(ST_PL||[]).length-pOn;
-  box.innerHTML='<div class="st-slbl">'+_t('legend.players_heading')+'</div>'+'<label class="st-lg"><input type="checkbox" id="'+ID('stPlOn')+'"'+(ST_PL_ON?' checked':'')+'><i style="background:#4dff9a"></i>'+esc(_t('status.online'))+'<span>'+pOn+'</span></label><label class="st-lg"><input type="checkbox" id="'+ID('stPlOff')+'"'+(ST_PL_OFF?' checked':'')+'><i style="background:#8a93a6"></i>'+esc(_t('status.offline_last_location'))+'<span>'+pOff+'</span></label>'+(ST_PL_ERR?'<p class="st-warn">'+esc(ST_PL_ERR)+'</p>':'')+'<div class="st-slbl">'+_t('legend.show_heading')+'</div>'+rows+
-    '<label class="st-lg st-lg-h"><input type="checkbox" id="'+ID('stHid')+'"'+(ST_HID?' checked':'')+'>'+esc(_t('legend.hidden_places'))+'<span>'+Object.values(hid).reduce((a,b)=>a+b,0)+'</span></label>'+
+  box.innerHTML='<div class="st-slbl">'+_t('legend.players_heading')+'</div>'+'<label class="st-lg"><input type="checkbox" id="'+ID('stPlOn')+'"'+(ST_PL_ON?' checked':'')+'>'+sigil('mklive','#4dff9a','mk-live')+esc(_t('status.online'))+'<span>'+pOn+'</span></label><label class="st-lg"><input type="checkbox" id="'+ID('stPlOff')+'"'+(ST_PL_OFF?' checked':'')+'>'+sigil('mkoff','#8a93a6')+esc(_t('status.offline_last_location'))+'<span>'+pOff+'</span></label>'+(ST_PL_ERR?'<p class="st-warn">'+esc(ST_PL_ERR)+'</p>':'')+'<div class="st-slbl">'+_t('legend.show_heading')+'</div>'+rows+
+    '<label class="st-lg st-lg-h"><input type="checkbox" id="'+ID('stHid')+'"'+(ST_HID?' checked':'')+'>'+sigil('mkhid','#9aa6c0')+esc(_t('legend.hidden_places'))+'<span>'+Object.values(hid).reduce((a,b)=>a+b,0)+'</span></label>'+
     '<p class="st-mnote">'+esc(_t('legend.note',{version:(ST_DATA.d.version||'').replace(/-LIVE.*/,'')}))+'</p>';
   box.querySelectorAll('[data-k]').forEach(c=>c.onchange=()=>{ ST_VIS[c.getAttribute('data-k')]=c.checked; window.__stCtl&&window.__stCtl.rebuild(); });
   const h=$('stHid'); if(h) h.onchange=()=>{ ST_HID=h.checked; window.__stCtl&&window.__stCtl.rebuild(); };
@@ -1480,7 +1541,7 @@ async function openStPanel(o){
   p=document.createElement('div'); p.id=ID('stLoc'); p.className='st-loc';
   const K=ST_KIND[o.k]||{c:'#ccc'}, kl=kindLabel(o.k), par=o.p&&D.by[o.p], b=stBodyOf(o);
   const sub=[kl, b&&b!==o&&b.k!=='star'?gn(b.n):(par&&par!==o&&par.k!=='star'?gn(par.n):null), stSysName(o), gn(o.ju)].filter(Boolean).join(' · ');
-  p.innerHTML='<div class="st-loc-card"><div class="st-loc-h"><span class="st-dot" style="background:'+K.c+'"></span><h3>'+esc(gn(o.n))+'<small>'+esc(sub)+'</small></h3>'+'<button class="st-loc-x" id="'+ID('stLocX')+'">✕</button></div><div class="st-loc-body" id="'+ID('stLocBody')+'"></div></div>';
+  p.innerHTML='<div class="st-loc-card"><div class="st-loc-h">'+kindMark(o.k)+'<h3>'+esc(gn(o.n))+'<small>'+esc(sub)+'</small></h3>'+'<button class="st-loc-x" id="'+ID('stLocX')+'">✕</button></div><div class="st-loc-body" id="'+ID('stLocBody')+'"></div></div>';
   ROOT.appendChild(p); $('stLocX').onclick=()=>p.remove();
   const body=$('stLocBody'); let h='';
   p.__re=()=>openStPanel(o); const isDe=ST_LANG==='de', SY=D.sys[o.sy]||{};

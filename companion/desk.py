@@ -1,5 +1,7 @@
 # Native window for the place watcher. The dark title bar is ours, and the
-# window stays on the taskbar. It leaves the screen only from 后台运行.
+# window stays on the taskbar. It leaves the screen only when the user
+# chooses 后台运行, and it comes back from the tray menu. It does not
+# hide itself.
 
 import sys
 import time
@@ -63,7 +65,7 @@ TEXT = {
         "theme.classic": "经典", "theme.compact": "紧凑", "theme.practical": "实用", "theme.chassis": "机壳", "theme.scifi": "科幻",
         "watch": "开始监视", "watch_stop": "停止监视", "scan": "读最近地点",
         "place_none": "还没有地点", "quit": "退出", "back": "后台运行",
-        "tray_show": "打开窗口", "tray_tip": "Starfix 在后台。点图标可以打开。",
+        "tray_show": "打开窗口", "tray_tip": "Starfix 在后台。左键打开窗口，右键可以操作。",
         "file_title": "选择 Game.log", "file_log": "日志", "file_all": "全部",
         "log_ok": "日志状态：正常", "log_missing": "日志状态：故障", "log_empty": "日志状态：空内容",
         "sent": "已发送 {code}", "seen": "日志里看到 {code}", "parsed": "解析到 {code}",
@@ -90,7 +92,7 @@ TEXT = {
         "theme.classic": "經典", "theme.compact": "緊湊", "theme.practical": "實用", "theme.chassis": "機殼", "theme.scifi": "科幻",
         "watch": "開始監視", "watch_stop": "停止監視", "scan": "讀最近地點",
         "place_none": "還沒有地點", "quit": "退出", "back": "背景執行",
-        "tray_show": "打開視窗", "tray_tip": "Starfix 在背景。點圖示可以打開。",
+        "tray_show": "打開視窗", "tray_tip": "Starfix 在背景。左鍵打開視窗，右鍵可以操作。",
         "file_title": "選擇 Game.log", "file_log": "日誌", "file_all": "全部",
         "log_ok": "日誌狀態：正常", "log_missing": "日誌狀態：故障", "log_empty": "日誌狀態：空內容",
         "sent": "已發送 {code}", "seen": "日誌裡看到 {code}", "parsed": "解析到 {code}",
@@ -117,7 +119,7 @@ TEXT = {
         "theme.classic": "Classic", "theme.compact": "Compact", "theme.practical": "Practical", "theme.chassis": "Chassis", "theme.scifi": "Sci-fi",
         "watch": "Start watch", "watch_stop": "Stop watch", "scan": "Latest place",
         "place_none": "No place yet", "quit": "Quit", "back": "Background",
-        "tray_show": "Show window", "tray_tip": "Starfix is in the background. Click the icon to open it.",
+        "tray_show": "Show window", "tray_tip": "Starfix is in the background. Left click opens the window. Right click opens the menu.",
         "file_title": "Choose Game.log", "file_log": "Log", "file_all": "All",
         "log_ok": "Log status: ok", "log_missing": "Log status: missing", "log_empty": "Log status: empty",
         "sent": "Sent {code}", "seen": "Log shows {code}", "parsed": "Parsed {code}",
@@ -144,7 +146,7 @@ TEXT = {
         "theme.classic": "Klassisch", "theme.compact": "Kompakt", "theme.practical": "Praktisch", "theme.chassis": "Gehäuse", "theme.scifi": "Science-Fiction",
         "watch": "Überwachen", "watch_stop": "Stoppen", "scan": "Letzten Ort",
         "place_none": "Noch kein Ort", "quit": "Beenden", "back": "Hintergrund",
-        "tray_show": "Fenster öffnen", "tray_tip": "Starfix läuft im Hintergrund. Icon anklicken öffnet es.",
+        "tray_show": "Fenster öffnen", "tray_tip": "Starfix läuft im Hintergrund. Linksklick öffnet das Fenster. Rechtsklick öffnet das Menü.",
         "file_title": "Game.log wählen", "file_log": "Log", "file_all": "Alle",
         "log_ok": "Logstatus: in Ordnung", "log_missing": "Logstatus: fehlt", "log_empty": "Logstatus: leer",
         "sent": "Gesendet {code}", "seen": "Log zeigt {code}", "parsed": "Gelesen {code}",
@@ -415,6 +417,11 @@ class Desktop:
         self._tray_proc = None
         self._tray_class = None
         self._tray_hicon = None
+        self._tray_taskbar_msg = 0
+        self._tray_menu_at = 0
+        self._user_background = False
+        self._placing = False
+        self._guard_on = False
         self._resume_frame = False
         _dpi()
         self.root = tk.Tk()
@@ -607,7 +614,9 @@ class Desktop:
     def _seat_taskbar(self):
         # withdraw() drops the frameless flag. Put it back before the window
         # is shown again, in this same step, so it neither stays hidden nor
-        # grows a system title bar.
+        # grows a system title bar. The user did not ask to leave, so the
+        # window is put back even if a step fails.
+        self._placing = True
         try:
             self.root.withdraw()
             self.root.update()
@@ -621,6 +630,19 @@ class Desktop:
                 self.root.deiconify()
             except tk.TclError:
                 pass
+        finally:
+            self._placing = False
+            if not self._user_background:
+                try:
+                    if str(self.root.state()) == "withdrawn":
+                        self.root.overrideredirect(True)
+                        self.root.deiconify()
+                        self.root.lift()
+                except tk.TclError:
+                    pass
+            if not self._guard_on:
+                self._guard_on = True
+                self.root.after(3000, self._tray_guard)
 
     def _on_map(self, _event):
         if not self._resume_frame or str(self.root.state()) != "normal":
@@ -660,12 +682,20 @@ class Desktop:
         self.root.geometry("+%d+%d" % (event.x_root - self._drag[0], event.y_root - self._drag[1]))
 
     def _minimize(self):
+        # The user asked to leave the screen. Keep a taskbar button so the
+        # window can come back. If that fails, stay on screen.
         self._resume_frame = True
         try:
             self.root.overrideredirect(False)
+            self._mark_appwindow()
             self.root.iconify()
         except tk.TclError:
             self._resume_frame = False
+            try:
+                self.root.overrideredirect(True)
+                self.root.deiconify()
+            except tk.TclError:
+                pass
 
     def _toggle_zoom(self):
         if self._zoomed:
@@ -1086,13 +1116,24 @@ class Desktop:
         user32.DefWindowProcW.argtypes = [wintypes.HWND, wintypes.UINT, wintypes.WPARAM, wintypes.LPARAM]
         proc_type = ctypes.WINFUNCTYPE(ctypes.c_ssize_t, wintypes.HWND, wintypes.UINT, wintypes.WPARAM, wintypes.LPARAM)
 
+        user32.RegisterWindowMessageW.argtypes = [wintypes.LPCWSTR]
+        user32.RegisterWindowMessageW.restype = wintypes.UINT
+        self._tray_taskbar_msg = int(user32.RegisterWindowMessageW("TaskbarCreated") or 0)
+
         def proc(hwnd, msg, wparam, lparam):
-            if msg == 0x8000 and int(wparam) == 1:
-                mouse = int(lparam) & 0xFFFF
-                if mouse in (0x0202, 0x0203):
-                    self.root.after(0, self._show)
-                elif mouse == 0x0205:
-                    self.root.after(0, self._tray_menu)
+            try:
+                message = int(msg)
+                if self._tray_taskbar_msg and message == self._tray_taskbar_msg:
+                    self.root.after(0, self._tray_restore)
+                    return 0
+                if message == 0x8000 and int(wparam) == 1:
+                    mouse = int(lparam) & 0xFFFF
+                    if mouse in (0x0202, 0x0203):
+                        self.root.after(0, self._show)
+                    elif mouse in (0x0205, 0x007B):
+                        self.root.after(0, self._tray_menu)
+                    return 0
+            except Exception:
                 return 0
             return user32.DefWindowProcW(hwnd, msg, wparam, lparam)
 
@@ -1127,11 +1168,15 @@ class Desktop:
         ]
         user32.CreateWindowExW.restype = wintypes.HWND
         hwnd = user32.CreateWindowExW(
-            0, "StarfixTray", "Starfix", 0, 0, 0, 0, 0,
-            wintypes.HWND(-3), None, klass.hInstance, None,
+            0x80, "StarfixTray", "Starfix", 0x80000000,
+            -32000, -32000, 1, 1,
+            None, None, klass.hInstance, None,
         )
         if not hwnd:
             return False
+        user32.ShowWindow.argtypes = [wintypes.HWND, ctypes.c_int]
+        user32.ShowWindow.restype = wintypes.BOOL
+        user32.ShowWindow(hwnd, 8)
         self._tray_hwnd = hwnd
         self._tray_class = atom
         return True
@@ -1194,39 +1239,112 @@ class Desktop:
         ctypes.windll.shell32.Shell_NotifyIconW(2, ctypes.byref(data))
         self._tray_on = False
 
+    def _tray_touch(self):
+        if not self._tray_on or not self._tray_hwnd or not self._tray_icon():
+            return False
+        import ctypes
+        data = self._tray_data()
+        return bool(ctypes.windll.shell32.Shell_NotifyIconW(1, ctypes.byref(data)))
+
+    def _tray_restore(self):
+        if not self._user_background:
+            return
+        self._tray_on = False
+        self._tray_add()
+
     def _tray_menu(self):
         if not self._tray_on or not self._tray_hwnd:
             return
+        now = time.time()
+        if now - self._tray_menu_at < 0.4:
+            return
+        self._tray_menu_at = now
         import ctypes
         from ctypes import wintypes
         user32 = ctypes.windll.user32
+        kernel32 = ctypes.windll.kernel32
         user32.CreatePopupMenu.restype = wintypes.HMENU
         user32.AppendMenuW.argtypes = [wintypes.HMENU, wintypes.UINT, ctypes.c_size_t, wintypes.LPCWSTR]
-        user32.TrackPopupMenu.restype = wintypes.BOOL
+        user32.TrackPopupMenu.restype = ctypes.c_int
         user32.TrackPopupMenu.argtypes = [wintypes.HMENU, wintypes.UINT, ctypes.c_int, ctypes.c_int, ctypes.c_int, wintypes.HWND, ctypes.c_void_p]
+        user32.GetCursorPos.argtypes = [ctypes.POINTER(wintypes.POINT)]
+        user32.GetForegroundWindow.restype = wintypes.HWND
+        user32.GetWindowThreadProcessId.argtypes = [wintypes.HWND, ctypes.POINTER(wintypes.DWORD)]
+        user32.GetWindowThreadProcessId.restype = wintypes.DWORD
+        user32.AttachThreadInput.argtypes = [wintypes.DWORD, wintypes.DWORD, wintypes.BOOL]
+        user32.AttachThreadInput.restype = wintypes.BOOL
+        user32.SetForegroundWindow.argtypes = [wintypes.HWND]
+        user32.SetForegroundWindow.restype = wintypes.BOOL
+        kernel32.GetCurrentThreadId.restype = wintypes.DWORD
         menu = user32.CreatePopupMenu()
         user32.AppendMenuW(menu, 0, 1, tr(self.lang, "tray_show"))
+        running = False
+        try:
+            running = bool(self.core.public_state().get("running"))
+        except Exception:
+            running = False
+        user32.AppendMenuW(menu, 0, 3, tr(self.lang, "watch_stop" if running else "watch"))
+        user32.AppendMenuW(menu, 0x800, 0, "")
         user32.AppendMenuW(menu, 0, 2, tr(self.lang, "quit"))
         point = wintypes.POINT()
         user32.GetCursorPos(ctypes.byref(point))
+        fg = user32.GetForegroundWindow()
+        pid = wintypes.DWORD()
+        fg_tid = user32.GetWindowThreadProcessId(fg, ctypes.byref(pid)) if fg else 0
+        tid = kernel32.GetCurrentThreadId()
+        linked = bool(fg_tid and fg_tid != tid and user32.AttachThreadInput(tid, fg_tid, True))
         user32.SetForegroundWindow(self._tray_hwnd)
-        cmd = user32.TrackPopupMenu(menu, 0x0100 | 0x0080 | 0x0020, point.x, point.y, 0, self._tray_hwnd, None)
+        cmd = user32.TrackPopupMenu(
+            menu, 0x0100 | 0x0002 | 0x0080 | 0x0008 | 0x0020,
+            int(point.x), int(point.y), 0, self._tray_hwnd, None,
+        )
         user32.PostMessageW(self._tray_hwnd, 0, 0, 0)
+        if linked:
+            user32.AttachThreadInput(tid, fg_tid, False)
         user32.DestroyMenu(menu)
+        self._tray_menu_at = time.time()
         if cmd == 1:
             self._show()
+        elif cmd == 3:
+            self._toggle_watch()
         elif cmd == 2:
             self.close()
+
+    def _tray_guard(self):
+        try:
+            if self._placing:
+                pass
+            elif self._user_background:
+                if not self._tray_touch():
+                    self._tray_on = False
+                    if not self._tray_add():
+                        self._user_background = False
+                        self._show()
+            else:
+                try:
+                    if str(self.root.state()) == "withdrawn":
+                        self._show()
+                except tk.TclError:
+                    return
+        except Exception:
+            pass
+        try:
+            self.root.after(3000, self._tray_guard)
+        except tk.TclError:
+            pass
 
     def _background(self):
         if not self._tray_add():
             return
+        self._user_background = True
         try:
             self.root.withdraw()
         except tk.TclError:
+            self._user_background = False
             self._tray_remove()
 
     def _show(self):
+        self._user_background = False
         self._tray_remove()
         try:
             self.root.overrideredirect(True)

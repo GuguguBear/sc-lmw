@@ -55,7 +55,26 @@
     bug:'<ellipse cx="12" cy="13" rx="3.2" ry="4"/><path d="M9 10L5.5 7M15 10l3.5-3M8.5 12H4M15.5 12H20M9 16l-3 3.2M15 16l3 3.2"/>',
     sword:'<path d="M12 3v13M8 16h8M12 16v5M9 7h6"/>',
     pill:'<rect x="6" y="8" width="12" height="8" rx="4"/><path d="M12 8v8"/>',
-    home:'<circle cx="12" cy="12" r="3.2"/><path d="M12 2.8V6M12 18v3.2M2.8 12H6M18 12h3.2"/>'
+    home:'<circle cx="12" cy="12" r="3.2"/><path d="M12 2.8V6M12 18v3.2M2.8 12H6M18 12h3.2"/>',
+    mkplanet:'<circle class="f" cx="12" cy="12" r="7"/><path class="cut" d="M5 12h14"/>',
+    mkmoon:'<path class="f" d="M15.2 4.2a7.6 7.6 0 1 0 0 15.6 5.6 5.6 0 0 1 0-15.6z"/>',
+    mkcity:'<path class="f" d="M4 19h16v1.4H4zM5 19V10.2h3.6V19zM9.4 19V5.2h5V19zM15.2 19V8.6H20V19z"/>',
+    mkstation:'<circle class="f" cx="12" cy="12" r="4.2"/><path class="f" d="M2.2 9.2h5.2v5.6H2.2zM16.6 9.2h5.2v5.6h-5.2z"/>',
+    mkrest:'<path class="f" d="M4 15.5L12 4.5l8 11H4z"/>',
+    mkgate:'<circle cx="12" cy="12" r="7" stroke-width="2.6"/><circle class="f" cx="12" cy="12" r="2.2"/>',
+    mkjump:'<path class="f" d="M3 6.5L11 12 3 17.5zM21 6.5L13 12l8 5.5z"/>',
+    mkwikelo:'<path class="f" d="M12 3.2l7.2 4.2v8.4L12 20l-7.2-4.2V7.4z"/>',
+    mkout:'<path class="f" d="M6.2 20V4h1.8v5.2h8.4L13.2 13H8v7z"/>',
+    mkmine:'<path class="f" d="M12 3.2l6.4 10.2H5.6zM10.2 13.4h3.6V20h-3.6z"/>',
+    mklag:'<circle class="f" cx="7.2" cy="15" r="3.1"/><circle class="f" cx="14.4" cy="8.2" r="3.6"/><circle class="f" cx="17.2" cy="15.6" r="2.3"/>',
+    mkhalo:'<ellipse cx="12" cy="12" rx="8.6" ry="3.4" stroke-width="2.6"/>',
+    mkcomm:'<path class="f" d="M10.6 20V10.4h2.8V20zM12 3.2l6.2 6.4H5.8z"/>',
+    mkpoi:'<path class="f" d="M10.2 2.8h3.6V10h7.4v3.6H13.8v7.6h-3.6V13.6H2.8V10h7.4z"/>',
+    mkrock:'<path class="f" d="M6 15.4l2.4-6.6 4.4-2.8 5.6 3.4 1.4 5.4-3.4 4H8.2z"/>',
+    mkbelt:'<ellipse cx="12" cy="12" rx="8.6" ry="3.4" stroke-width="2.4"/><circle class="f" cx="6.2" cy="10.6" r="1.5"/><circle class="f" cx="12" cy="14.6" r="1.5"/><circle class="f" cx="17.6" cy="10.2" r="1.5"/>',
+    mklive:'<path class="f" d="M12 2.8l7.4 9.2L12 21.2 4.6 12z"/>',
+    mkoff:'<path d="M12 4.2l6.2 7.8L12 19.8 5.8 12z" stroke-width="2.4"/>',
+    mkhid:'<path d="M3.2 12S6.6 6.6 12 6.6 20.8 12 20.8 12 17.4 17.4 12 17.4 3.2 12 3.2 12z" stroke-width="2.2"/><path d="M5 5l14 14" stroke-width="2.2"/>'
   };
   function svg(name, extra){
     var body=P[name]||P.box;
