@@ -574,24 +574,25 @@ function stantonScene(canvas,sysKey){
       const g=new T.BufferGeometry(); g.setAttribute('position',new T.BufferAttribute(a,3));
       const live=onl==='1';
       const pt=new T.Points(g,new T.PointsMaterial({color:live?beaconHex():0x8a93a6,size:live?(isMobile?58:68):(isMobile?28:30),sizeAttenuation:false,map:live?beaconOn.tex:beaconOff.tex,transparent:true,alphaTest:0.02,depthTest:false,blending:live?T.AdditiveBlending:T.NormalBlending})); pt.renderOrder=6; pt.userData.beacon=live; pt.userData.sys=sy==='-'?null:sy; if(sy==='-') pt.userData.sys=ST_SYS; plPts.push(pt); grp.add(pt); }); }
-  // Wurmloecher: die Roehre weicht Planeten, Monden, Sternen, Guerteln und Brocken aus,
-  // und der Shader laesst sie langsam kriechen. Farbe laeuft von System A nach System B.
+  // Wurmloecher: eine sanfte Beugung zwischen den Toren, nur Sterne und Planeten werden
+  // knapp ausgespart. Die Roehre selbst kriecht im Shader, ohne die Strecke zu verlaengern.
   const WORM_VERT=[
     'attribute float room; attribute float glow; attribute vec3 side; attribute vec3 lift;',
     'uniform float uTime; uniform float uPhase; uniform float uSpin; uniform float uThrob;',
-    'varying vec2 vUv; varying float vGlow; varying float vNd; varying float vU;',
+    'varying vec2 vUv; varying float vGlow; varying float vNd; varying float vU; varying float vPulse;',
     'void main(){',
     '  vUv=uv; vU=uv.x; vGlow=glow;',
+    '  vPulse=0.0;',
     '  float env=sin(uv.x*3.14159265);',
-    '  float ang=uTime*0.07, cs=cos(ang), sn=sin(ang);',
+    '  float ang=uTime*0.18, cs=cos(ang), sn=sin(ang);',
     '  vec3 s1=side*cs+lift*sn, s2=lift*cs-side*sn;',
-    '  float amp=min(3.4, max(0.0, room-0.9)*0.5)*env;',
-    '  float big=sin(uv.x*5.6+uTime*0.15+uPhase)*amp;',
-    '  float big2=cos(uv.x*3.1-uTime*0.09+uPhase)*amp*0.42;',
-    '  float sp=uTime*0.4+uv.x*12.0+uPhase;',
-    '  float spin=min(uSpin, max(0.0, room-0.4)*0.2)*env;',
-    '  vec3 p=position+s1*big+s2*big2+(s1*cos(sp)+s2*sin(sp))*spin;',
-    '  p+=normal*sin(uv.x*21.0-uTime*1.25+uPhase)*uThrob*env;',
+    '  float amp=min(8.0, max(2.6, room*0.22))*env;',
+    '  float wave=sin(uv.x*20.0-uTime*0.9+uPhase);',
+    '  float wave2=cos(uv.x*11.0-uTime*0.42+uPhase);',
+    '  float pulse=0.5+0.5*sin(uv.x*18.0-uTime*0.9+uPhase);',
+    '  vPulse=pulse*env;',
+    '  vec3 p=position+s1*wave*amp+s2*wave2*amp*0.62;',
+    '  p+=normal*pulse*uThrob;',
     '  vec4 mv=modelViewMatrix*vec4(p,1.0);',
     '  vNd=abs(dot(normalize(normalMatrix*normal), normalize(-mv.xyz)));',
     '  gl_Position=projectionMatrix*mv;',
@@ -599,44 +600,32 @@ function stantonScene(canvas,sysKey){
   ].join('\n');
   const WORM_FRAG=[
     'uniform vec3 uA; uniform vec3 uB; uniform float uTime; uniform float uGain;',
-    'varying vec2 vUv; varying float vGlow; varying float vNd; varying float vU;',
+    'varying vec2 vUv; varying float vGlow; varying float vNd; varying float vU; varying float vPulse;',
     'void main(){',
     '  float u=vU;',
     '  vec3 col=mix(uA,uB,smoothstep(0.08,0.92,u));',
-    '  float streak=exp(-pow((fract(u*3.0-uTime*0.045)-0.16)*5.5,2.0));',
-    '  float vein=exp(-pow((fract(u*1.4-uTime*0.018)-0.5)*3.2,2.0));',
     '  float core=pow(vNd,2.0), rim=pow(1.0-vNd,2.4);',
-    '  vec3 rgb=col*(0.22+core*0.85)+vec3(1.0,0.95,0.86)*(streak*0.5+vein*0.12)+col*rim*0.28;',
+    '  vec3 rgb=col*(0.3+core*0.75)+vec3(1.0,0.94,0.86)*vPulse*0.9+col*rim*0.22;',
     '  float ends=smoothstep(0.0,0.04,u)*smoothstep(1.0,0.96,u);',
-    '  float alpha=uGain*vGlow*(0.16+core*0.5+rim*0.22+streak*0.65)*ends;',
+    '  float alpha=uGain*vGlow*(0.2+core*0.45+rim*0.18+vPulse*0.7)*ends;',
     '  gl_FragColor=vec4(rgb, alpha);',
     '}'
   ].join('\n');
   function buildLinks(){ const D=ST_DATA; wormClock={value:0}; wormMouths=[];
-    const spheres=[], slabs=[];
-    D.d.objects.forEach(function(o){ let r=0;
-      if(o.k==='star') r=(o.sy==='stanton'?1.9:1.3)+3.6;
-      else if(o.k==='planet') r=pSize(o)+2.8;
-      else if(o.k==='moon'){ const par=D.by[o.p]; r=(par&&par.k==='star'?0.16:0.09)+1.6; }
-      else if(o.k==='asteroid') r=2.15;
-      else if(o.k==='lagrange') r=3.05;
-      if(r) spheres.push({p:Vs(o), r:r, tag:o.k+' '+(o.n||'')});
-      if(o.k==='belt'&&o.belt&&D.by[o.p]){ const inner=o.belt.in*1e-6, outer=o.belt.out*1e-6, pad=3.6;
-        slabs.push({c:Vs(D.by[o.p]), inner:Math.min(inner,outer)-pad, outer:Math.max(inner,outer)+pad, half:Math.max(3,(o.belt.depth||0)*1e-6+2.4), tag:'belt '+(o.n||'')}); }
-      if(o.ring&&o.ring.out) slabs.push({c:Vs(o), inner:o.ring.in*1e-6-2.5, outer:o.ring.out*1e-6+2.5, half:2.6, tag:'ring '+(o.n||'')}); });
+    const spheres=[];
+    D.d.objects.forEach(function(o){
+      if(o.k!=='star'&&o.k!=='planet') return;
+      const r=o.k==='star'?(o.sy==='stanton'?1.9:1.3)+1.6:pSize(o)+1.2;
+      spheres.push({p:Vs(o), r:r, tag:o.k+' '+(o.n||'')}); });
     const cen=Object.keys(D.sys).map(k=>offOf(k));
-    function clearanceAt(x,y,z){ let m=64, tag='';
-      for(let i=0;i<spheres.length;i++){ const o=spheres[i], dx=x-o.p.x, dy=y-o.p.y, dz=z-o.p.z, d=Math.hypot(dx,dy,dz)-o.r; if(d<m){ m=d; tag=o.tag; } }
-      for(let i=0;i<slabs.length;i++){ const s=slabs[i], dx=x-s.c.x, dz=z-s.c.z, dy=y-s.c.y, rad=Math.hypot(dx,dz);
-        if(rad>s.inner&&rad<s.outer){ const h=Math.abs(dy)-s.half; if(h<m){ m=h; tag=s.tag; } } }
+    function clearanceAt(x,y,z){ let m=48, tag='';
+      for(let i=0;i<spheres.length;i++){ const o=spheres[i], d=Math.hypot(x-o.p.x,y-o.p.y,z-o.p.z)-o.r; if(d<m){ m=d; tag=o.tag; } }
       clearanceAt.tag=tag; return m; }
-    function pushOut(p){ const pad=1.15;
-      for(let i=0;i<spheres.length;i++){ const o=spheres[i], need=o.r+pad; let dx=p.x-o.p.x, dy=p.y-o.p.y, dz=p.z-o.p.z, d=Math.hypot(dx,dy,dz);
-        if(d<need){ if(d<1e-4){ p.y+=need; continue; } const k=(need-d)/d; p.x+=dx*k; p.y+=dy*k; p.z+=dz*k; } }
-      for(let i=0;i<slabs.length;i++){ const s=slabs[i], dx=p.x-s.c.x, dz=p.z-s.c.z, dy=p.y-s.c.y, rad=Math.hypot(dx,dz), half=s.half+pad;
-        if(rad>s.inner&&rad<s.outer&&dy<half) p.y=s.c.y+half+0.4; } }
+    function pushOut(p){
+      for(let i=0;i<spheres.length;i++){ const o=spheres[i], need=o.r+0.8; let dx=p.x-o.p.x, dy=p.y-o.p.y, dz=p.z-o.p.z, d=Math.hypot(dx,dy,dz);
+        if(d<need){ if(d<1e-4){ p.y+=need; continue; } const k=(need-d)/d; p.x+=dx*k; p.y+=dy*k; p.z+=dz*k; } } }
     function smoothSpine(pts){ const px=pts.map(p=>p.x), py=pts.map(p=>p.y), pz=pts.map(p=>p.z);
-      for(let i=1;i<pts.length-1;i++){ pts[i].x=px[i]*0.55+(px[i-1]+px[i+1])*0.225; pts[i].y=py[i]*0.55+(py[i-1]+py[i+1])*0.225; pts[i].z=pz[i]*0.55+(pz[i-1]+pz[i+1])*0.225; } }
+      for(let i=1;i<pts.length-1;i++){ pts[i].x=px[i]*0.72+(px[i-1]+px[i+1])*0.14; pts[i].y=py[i]*0.72+(py[i-1]+py[i+1])*0.14; pts[i].z=pz[i]*0.72+(pz[i-1]+pz[i+1])*0.14; } }
     function starFade(x,y,z){ let dmin=1e9; for(let i=0;i<cen.length;i++){ const c=cen[i], d=Math.hypot(x-c.x,y-c.y,z-c.z); if(d<dmin) dmin=d; }
       const s=Math.min(1,Math.max(0,(dmin-16)/26)); return 0.45+0.55*s*s*(3-2*s); }
     const stat={tubes:0, minRoom:1e9, links:[]}; wormStat=stat;
@@ -644,29 +633,17 @@ function stantonScene(canvas,sysKey){
       if(!l.live){ const g=new T.BufferGeometry().setFromPoints([pa,pb]); const ln=new T.Line(g,new T.LineDashedMaterial({color:0x8aa0c8,dashSize:6,gapSize:5,transparent:true,opacity:.35})); ln.computeLineDistances(); grp.add(ln); return; }
       const dir=pb.clone().sub(pa), len=dir.length(); dir.normalize();
       const up=Math.abs(dir.y)<0.9?new T.Vector3(0,1,0):new T.Vector3(1,0,0), n1=new T.Vector3().crossVectors(dir,up).normalize(), n2=new T.Vector3().crossVectors(dir,n1).normalize();
-      const N=64, amp=len*0.05, pts=[];
-      for(let i=0;i<=N;i++){ const t=i/N, env=Math.sin(Math.PI*t);
-        pts.push(pa.clone().lerp(pb,t).addScaledVector(n1,Math.sin(t*Math.PI*4)*amp*env).addScaledVector(n2,Math.cos(t*Math.PI*3)*amp*0.55*env)); }
-      const born=pts.map(p=>p.clone());
+      const N=48, amp=Math.min(11, len*0.02), pts=[], chord=[];
+      for(let i=0;i<=N;i++){ const t=i/N, env=Math.sin(Math.PI*t), p=pa.clone().lerp(pb,t);
+        chord.push(p.clone()); pts.push(p.addScaledVector(n2, env*amp)); }
       function lock(){ pts[0].copy(pa); pts[N].copy(pb); }
-      for(let iter=0; iter<10; iter++){
-        for(let i=1;i<N;i++){ pushOut(pts[i]); if(iter<7){ const b=born[i]; let dx=pts[i].x-b.x, dy=pts[i].y-b.y, dz=pts[i].z-b.z, d=Math.hypot(dx,dy,dz);
-          if(d>18){ const k=18/d; pts[i].x=b.x+dx*k; pts[i].y=b.y+dy*k; pts[i].z=b.z+dz*k; } } }
-        lock(); if(iter%2===0){ smoothSpine(pts); lock(); } }
+      function hold(){ for(let i=1;i<N;i++){ let dx=pts[i].x-chord[i].x, dy=pts[i].y-chord[i].y, dz=pts[i].z-chord[i].z, d=Math.hypot(dx,dy,dz);
+        if(d>amp+4){ const k=(amp+4)/d; pts[i].x=chord[i].x+dx*k; pts[i].y=chord[i].y+dy*k; pts[i].z=chord[i].z+dz*k; } } }
+      for(let iter=0; iter<4; iter++){ for(let i=1;i<N;i++) pushOut(pts[i]); hold(); lock(); smoothSpine(pts); hold(); lock(); }
       const curve=new T.CatmullRomCurve3(pts,false,'centripetal'), scratch=new T.Vector3();
-      function bump(i,target,w){ if(i<=0||i>=N) return; const p=pts[i]; p.x+=(target.x-p.x)*w; p.y+=(target.y-p.y)*w; p.z+=(target.z-p.z)*w; }
-      for(let pass=0; pass<8; pass++){ let hit=false;
-        for(let s=1;s<220;s++){ const u=s/220; curve.getPoint(u,scratch); if(clearanceAt(scratch.x,scratch.y,scratch.z)<0.8){ hit=true;
-          const bad=scratch.clone(); pushOut(bad); const i=Math.max(1,Math.min(N-1,Math.round(u*N)));
-          for(let k=-14;k<=14;k++) bump(i+k,bad,Math.exp(-k*k/32)*0.34); } }
-        lock(); smoothSpine(pts); lock(); for(let i=1;i<N;i++) pushOut(pts[i]); lock(); if(!hit) break; }
-      for(let k=0;k<6;k++){ smoothSpine(pts); lock();
-        for(let s=1;s<220;s++){ const u=s/220; curve.getPoint(u,scratch); if(clearanceAt(scratch.x,scratch.y,scratch.z)<0.9){
-          const bad=scratch.clone(); pushOut(bad); const i=Math.max(1,Math.min(N-1,Math.round(u*N)));
-          for(let n=-14;n<=14;n++) bump(i+n,bad,Math.exp(-n*n/32)*0.34); } }
-        lock(); for(let i=1;i<N;i++) pushOut(pts[i]); lock(); }
-      let minRoom=1e9, near='';
-      for(let s=0;s<=320;s++){ curve.getPoint(s/320,scratch); const c=clearanceAt(scratch.x,scratch.y,scratch.z); if(c<minRoom){ minRoom=c; near=clearanceAt.tag||''; } }
+      let minRoom=1e9, near='', bow=0;
+      for(let s=0;s<=200;s++){ const u=s/200; curve.getPoint(u,scratch); const c=clearanceAt(scratch.x,scratch.y,scratch.z); if(c<minRoom){ minRoom=c; near=clearanceAt.tag||''; }
+        const straight=pa.clone().lerp(pb,u); bow=Math.max(bow, scratch.distanceTo(straight)); }
       if(minRoom<stat.minRoom) stat.minRoom=minRoom;
       const seg=180, radS=12, ca=new T.Color((ST_SYSLOOK[l.sa]||ST_SYSLOOK.stanton).dot), cb=new T.Color((ST_SYSLOOK[l.sb]||ST_SYSLOOK.stanton).dot);
       const phase=li*2.1;
@@ -674,7 +651,7 @@ function stantonScene(canvas,sysKey){
         uniforms:{uTime:wormClock, uPhase:{value:phase+ph}, uGain:{value:gain}, uSpin:{value:spin}, uThrob:{value:throb}, uA:{value:ca}, uB:{value:cb}},
         vertexShader:WORM_VERT, fragmentShader:WORM_FRAG, transparent:true, depthWrite:false, depthTest:true, fog:false,
         blending:T.AdditiveBlending, side:T.DoubleSide }); }
-      [[0.2,0.55,0.16,0.035,0],[0.16,0.32,0.16,0.03,0],[0.46,0.2,0,0.07,0],[1.02,0.06,0,0.03,0]].forEach(function(layer){
+      [[0.22,0.62,0,0.16,0],[0.46,0.28,0,0.55,0],[1.05,0.08,0,0.28,0]].forEach(function(layer){
         const geo=new T.TubeGeometry(curve,seg,layer[0],radS,false), count=geo.attributes.position.count, step=radS+1;
         const roomA=new Float32Array(count), glowA=new Float32Array(count), sideA=new Float32Array(count*3), liftA=new Float32Array(count*3);
         for(let i=0;i<=seg;i++){ curve.getPointAt(i/seg,scratch); const room=Math.max(0,clearanceAt(scratch.x,scratch.y,scratch.z)), glow=starFade(scratch.x,scratch.y,scratch.z);
@@ -689,7 +666,7 @@ function stantonScene(canvas,sysKey){
         const sp=new T.Sprite(new T.SpriteMaterial({map:sunGlowTex,color:color,transparent:true,opacity:0.38,blending:T.AdditiveBlending,depthWrite:false}));
         sp.position.copy(p); sp.scale.set(6,6,1); sp.userData={ph:ph+0.8,bs:6,op:0.38}; sp.renderOrder=4; grp.add(sp); wormMouths.push(sp); }
       curve.getPoint(0.5,scratch);
-      stat.links.push({id:l.sa+'-'+l.sb, minRoom:+minRoom.toFixed(2), near:near, mid:[+scratch.x.toFixed(2),+scratch.y.toFixed(2),+scratch.z.toFixed(2)]});
+      stat.links.push({id:l.sa+'-'+l.sb, minRoom:+minRoom.toFixed(2), bow:+bow.toFixed(1), near:near, mid:[+scratch.x.toFixed(2),+scratch.y.toFixed(2),+scratch.z.toFixed(2)]});
       mouth(pa, curve.getTangentAt(0), ca, phase); mouth(pb, curve.getTangentAt(1), cb, phase+1.2); });
     if(!isFinite(stat.minRoom)) stat.minRoom=null; }
   function buildBody(F){ const D=ST_DATA, s=1/F.r;
