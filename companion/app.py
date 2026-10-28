@@ -87,6 +87,11 @@ HOST_RE = re.compile(
     r"\|\s*(?P<host>[A-Za-z0-9_.-]+)\s*\[(?P<host_id>\d{1,20})\]\s*\|\s*Transitioning\b",
     re.I,
 )
+# Matchmaking writes the shared server on the join line. local_shard is not that.
+SHARD_RE = re.compile(
+    r"<Join PU>.*?shard\[(?P<shard>pub_[A-Za-z0-9_]{4,64})\]",
+    re.I,
+)
 MAKER_NAME = {
     "AEGS": "Aegis", "ANVL": "Anvil", "CRUS": "Crusader", "MISC": "MISC",
     "ORIG": "Origin", "RSI": "RSI", "DRAK": "Drake", "BANU": "Banu",
@@ -104,6 +109,7 @@ WORN_CLS = {}
 SHIP = ""
 DEST = None
 SERVER = ""
+SERVER_KIND = ""
 TRAVEL = None
 LAST_SIG = ""
 
@@ -245,6 +251,21 @@ def host_of(line):
     return found.group("host_id")
 
 
+def note_server(line):
+    global SERVER, SERVER_KIND
+    found = SHARD_RE.search(line or "")
+    if found:
+        SERVER = found.group("shard")
+        SERVER_KIND = "shard"
+        return
+    if SERVER_KIND == "shard":
+        return
+    host = host_of(line)
+    if host:
+        SERVER = host
+        SERVER_KIND = "host"
+
+
 def aim_travel(place):
     if not place:
         return None
@@ -295,11 +316,9 @@ def signature(payload):
 
 
 def ingest(line):
-    global SHIP, DEST, SERVER, TRAVEL
+    global SHIP, DEST, TRAVEL
     text = line or ""
-    host = host_of(text)
-    if host:
-        SERVER = host
+    note_server(text)
     place = tidy_place(parse_line(text))
     if TRANS.search(text):
         TRAVEL = None
@@ -1153,6 +1172,11 @@ if __name__ == "__main__":
         ) == "48291"
         loaded = ingest(sample)
         assert loaded and loaded["code"] == "RR_HUR_Lorville" and SERVER == "1", (loaded, SERVER)
+        ingest("<Join PU> address[1.2.3.4] port[8000] shard[pub_ape1a_1_100] locationId[5]")
+        assert SERVER == "pub_ape1a_1_100", SERVER
+        ingest(sample)
+        note_server("[Trace] @host_session: 'local_shard'")
+        assert SERVER == "pub_ape1a_1_100", SERVER
         assert parse_line("ordinary engine line without a place") is None
         worn = ingest(
             "Player[Pilot] Attachment[item_1, rrs_specialist_heavy_core_04_03_01, 1] "
@@ -1183,7 +1207,7 @@ if __name__ == "__main__":
         assert DEST and DEST["code"] == "RR_HUR_L2", DEST
         assert TRAVEL and TRAVEL["mode"] == "aim" and TRAVEL["to_raw"] == "RR_HUR_L2", TRAVEL
         aimed = snapshot(DEST)
-        assert aimed["travel"]["to"] == "HUR-L2" and aimed["server"] == "1", aimed
+        assert aimed["travel"]["to"] == "HUR-L2" and aimed["server"] == "pub_ape1a_1_100", aimed
         ingest(
             "<2026-10-26T00:20:00.000Z> AEGS_Idris_M_903672034572|CSCItemNavigation::CalculateRoute|"
             "Projected Start Location is 赫 HUR L3 for pilot to destination LOC_RR_S1_L4"

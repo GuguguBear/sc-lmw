@@ -186,7 +186,7 @@ def clean_gear(raw):
 
 
 def clean_host(raw):
-    return "".join(ch for ch in str(raw or "") if ch.isdigit())[:20]
+    return "".join(ch for ch in str(raw or "") if ch.isalnum() or ch in "_-")[:80]
 
 
 def clean_travel(raw):
