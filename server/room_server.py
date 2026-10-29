@@ -31,6 +31,7 @@ BLOCK_DIR = {"language", ".cache", ".git", ".test", "__pycache__", "server", "co
 BLOCK_EXT = {".sqlite", ".ini", ".pyc", ".spec"}
 BLOCK_NAME = {"config.json"}
 ONLINE_S = 600
+OPEN_S = 300
 LOCK = threading.Lock()
 
 MIME = {
@@ -48,6 +49,7 @@ MIME = {
     ".md": "text/markdown; charset=utf-8",
     ".txt": "text/plain; charset=utf-8",
     ".woff2": "font/woff2",
+    ".webmanifest": "application/manifest+json",
 }
 
 
@@ -126,6 +128,11 @@ def init_db():
             con.execute("ALTER TABLE presence ADD COLUMN host TEXT")
         if "travel" not in cols:
             con.execute("ALTER TABLE presence ADD COLUMN travel TEXT")
+        room_cols = {row[1] for row in con.execute("PRAGMA table_info(room)")}
+        if "open" not in room_cols:
+            con.execute("ALTER TABLE room ADD COLUMN open INTEGER NOT NULL DEFAULT 0")
+        if "open_at" not in room_cols:
+            con.execute("ALTER TABLE room ADD COLUMN open_at REAL NOT NULL DEFAULT 0")
 
 
 def clean_nick(raw):
@@ -343,9 +350,134 @@ def room_state(con, code, me):
         "status": ship["status"],
         "me": {"id": me["id"], "nickname": me["nickname"]},
         "routeMode": room["route_mode"],
+        "open": room_is_open(room),
+        "openWait": open_wait(room),
         "members": members,
         "routes": routes,
     }
+
+
+def room_is_open(room):
+    try:
+        return int(room["open"] or 0) == 1
+    except (KeyError, IndexError, TypeError, ValueError):
+        return False
+
+
+def open_wait(room):
+    try:
+        at = float(room["open_at"] or 0)
+    except (KeyError, IndexError, TypeError, ValueError):
+        return 0
+    if at <= 0:
+        return 0
+    left = int(at + OPEN_S - now() + 0.999)
+    return left if left > 0 else 0
+
+
+def want_open(raw):
+    if isinstance(raw, bool):
+        return raw
+    if raw in (0, 1):
+        return bool(raw)
+    if isinstance(raw, str) and raw.lower() in ("1", "true", "public"):
+        return True
+    if isinstance(raw, str) and raw.lower() in ("0", "false", "private"):
+        return False
+    return None
+
+
+def set_room_open(con, room, want):
+    want_i = 1 if want else 0
+    if want_i == (1 if room_is_open(room) else 0):
+        return None
+    wait = open_wait(room)
+    if wait > 0:
+        return {"error": "cooldown", "wait": wait}
+    con.execute(
+        "UPDATE room SET open=?, open_at=? WHERE code=?",
+        (want_i, now(), room["code"]),
+    )
+    if want_i:
+        con.execute(
+            "UPDATE membership SET status='member' WHERE room=? AND status='pending'",
+            (room["code"],),
+        )
+    return None
+
+
+def join_status(room, me, existing):
+    if room["captain"] == me["id"] or (existing and existing["status"] == "member") or room_is_open(room):
+        return "member"
+    return "pending"
+
+
+def public_rooms(con):
+    rows = con.execute(
+        """
+        SELECT r.code,
+               (SELECT nickname FROM member WHERE id=r.captain) AS captain,
+               (SELECT COUNT(*) FROM membership s WHERE s.room=r.code AND s.status='member') AS members
+        FROM room r
+        WHERE r.open=1
+        ORDER BY members DESC, r.created ASC
+        LIMIT 100
+        """
+    ).fetchall()
+    return [
+        {"code": r["code"], "captain": r["captain"] or "", "members": int(r["members"])}
+        for r in rows
+    ]
+
+
+def room_brief(con, code):
+    room = con.execute("SELECT code FROM room WHERE code=?", (code,)).fetchone()
+    if not room:
+        return {"code": code, "exists": False, "online": 0, "members": 0}
+    members = con.execute(
+        "SELECT COUNT(*) AS n FROM membership WHERE room=? AND status='member'",
+        (code,),
+    ).fetchone()["n"]
+    online = con.execute(
+        """
+        SELECT COUNT(*) AS n FROM membership s
+        JOIN presence p ON p.room=s.room AND p.member=s.member
+        WHERE s.room=? AND s.status='member' AND p.seen>?
+        """,
+        (code, now() - ONLINE_S),
+    ).fetchone()["n"]
+    return {"code": code, "exists": True, "online": int(online), "members": int(members)}
+
+
+def release_other_rooms(con, me, keep=None):
+    rows = con.execute(
+        "SELECT room, status FROM membership WHERE member=? AND status!='rejected'",
+        (me["id"],),
+    ).fetchall()
+    for row in rows:
+        code = row["room"]
+        if keep and code == keep:
+            continue
+        room = con.execute("SELECT captain FROM room WHERE code=?", (code,)).fetchone()
+        if not room:
+            drop_member(con, code, me["id"])
+            continue
+        if room["captain"] == me["id"] and row["status"] == "member":
+            other = con.execute(
+                """
+                SELECT member FROM membership
+                WHERE room=? AND status='member' AND member!=?
+                ORDER BY created LIMIT 1
+                """,
+                (code, me["id"]),
+            ).fetchone()
+            if other:
+                con.execute("UPDATE room SET captain=? WHERE code=?", (other["member"], code))
+                drop_member(con, code, me["id"])
+            else:
+                wipe_room(con, code)
+        else:
+            drop_member(con, code, me["id"])
 
 
 def wipe_room(con, code):
@@ -487,7 +619,21 @@ class Handler(BaseHTTPRequestHandler):
             if not me:
                 self.send_json(401, {"error": "auth"})
                 return
+            if parts == ["api", "rooms", "lookup"]:
+                raw = body.get("codes") if isinstance(body, dict) else None
+                if not isinstance(raw, list):
+                    raw = []
+                codes = []
+                seen = set()
+                for item in raw[:90]:
+                    code = "".join(ch for ch in str(item or "").upper() if ch.isalnum() or ch == "-")[:12]
+                    if code and code not in seen:
+                        seen.add(code)
+                        codes.append(code)
+                self.send_json(200, {"rooms": [room_brief(con, code) for code in codes]})
+                return
             if parts == ["api", "rooms"]:
+                release_other_rooms(con, me)
                 code = new_code(con)
                 con.execute(
                     "INSERT INTO room (code, captain, route_mode, created) VALUES (?,?,?,?)",
@@ -505,14 +651,12 @@ class Handler(BaseHTTPRequestHandler):
                 if not room:
                     self.send_json(404, {"error": "room"})
                     return
+                release_other_rooms(con, me, keep=code)
                 existing = con.execute(
                     "SELECT status FROM membership WHERE room=? AND member=?",
                     (code, me["id"]),
                 ).fetchone()
-                if room["captain"] == me["id"] or (existing and existing["status"] == "member"):
-                    status = "member"
-                else:
-                    status = "pending"
+                status = join_status(room, me, existing)
                 con.execute(
                     """
                     INSERT INTO membership (room, member, status, created) VALUES (?,?,?,?)
@@ -618,6 +762,22 @@ class Handler(BaseHTTPRequestHandler):
                 ).fetchone()
                 self.send_json(409, {"error": "handoff" if others else "solo"})
                 return
+            if len(parts) == 4 and parts[3] == "open":
+                code = parts[2].upper()
+                room = con.execute("SELECT * FROM room WHERE code=?", (code,)).fetchone()
+                if not room or room["captain"] != me["id"]:
+                    self.send_json(403, {"error": "captain"})
+                    return
+                want = want_open(body.get("open") if isinstance(body, dict) else None)
+                if want is None:
+                    self.send_json(400, {"error": "open"})
+                    return
+                blocked = set_room_open(con, room, want)
+                if blocked:
+                    self.send_json(429, blocked)
+                    return
+                self.send_json(200, room_state(con, code, me))
+                return
             if len(parts) == 4 and parts[3] == "settings":
                 code = parts[2].upper()
                 room = con.execute("SELECT * FROM room WHERE code=?", (code,)).fetchone()
@@ -722,6 +882,10 @@ class Handler(BaseHTTPRequestHandler):
 
     def api_get(self, path):
         parts = [p for p in path.split("/") if p]
+        if parts == ["api", "rooms", "public"]:
+            with LOCK, db() as con:
+                self.send_json(200, {"rooms": public_rooms(con)})
+            return
         with LOCK, db() as con:
             me = self.me(con)
             if not me:

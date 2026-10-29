@@ -1,6 +1,6 @@
 # SC LMW – Star Citizen LiveMap Wiki
 
-**Version 1.0.0** · AGPL-3.0
+**Version 1.1.0** · AGPL-3.0 · Starfix 1.0.5
 
 **English** · [Deutsch](README.de.md) · [简体中文](#简体中文) · [繁體中文](#繁體中文)
 
@@ -12,61 +12,55 @@ Drop it into your org website with one line of HTML, or hand the included prompt
 
 > **Unofficial fan project.** Not endorsed by, sponsored by, or affiliated with Cloud Imperium Games or Roberts Space Industries. Star Citizen® is a trademark of Cloud Imperium Rights LLC. The same notice is shown inside the app.
 
-## What's new
+## What's new in 1.1.0
 
-The same note in four languages. A copy also lives in [docs/WHATS_NEW.md](docs/WHATS_NEW.md).
+The interface is Simplified Chinese, Traditional Chinese, English, and German. The first visit follows the browser. The language button switches live, and that choice stays on this browser. German shows German game labels. Chinese shows Chinese place names. English keeps the English names.
+
+The same note is in [docs/WHATS_NEW.md](docs/WHATS_NEW.md). Starfix, the optional log reader, stays at 1.0.5. Read [companion/README.md](companion/README.md) before you run it.
 
 ### English
 
-- **The page speaks your language.** The first time you open it, it follows your browser. You can switch among Simplified Chinese, Traditional Chinese, English, and German from one button. That choice is remembered on this browser.
-- **German shows German game labels. Chinese shows Chinese place names.** English keeps the English names.
-- **The top of the map is one bar.** System, your place, search, categories, legend, and players sit on a single line. The language, theme, and close buttons are the same size.
-- **Compact is the starting look.** You can still pick Classic, Practical, Chassis, or Sci-fi. Your pick is remembered.
-- **Icons match the map.** Pause, home, and the other small pictures are simple line icons in the theme color.
-- **A team room waits at the door.** Before the map, a short guide asks for a nickname. Use your in-game name so your captain recognizes you. There is no account.
-- **The captain makes the room.** They get a short code, send it to the team, and accept each request. Only people in that room can see each other.
-- **Say where you are.** Open a place on the map, then tap “I am here.” The page does not open your game folder. Or run the bundled Starfix in `companion/` and let it try to read `Game.log`. The source is in the repository. Read [companion/README.md](companion/README.md) before you run it.
-- **Draw a route together.** Turn on route marking, hold Shift, and click places in order. Add a note and publish it. Teammates can comment. The captain decides whether only they can draw, or the whole room can.
-- **Menus use the theme colors.** Lists such as language, theme, and “who can draw” follow the look you picked.
+- **Install the map.** On a phone or tablet, Chrome and Edge can add it to the home screen. On iPhone and iPad, open Share and choose Add to Home Screen. It then opens on its own. After one visit, the page itself still opens when the network is gone. The room list and live prices still need the network.
+- **A small screen keeps the map visible.** Category buttons scroll sideways. On a phone the room panel is a bar until you tap Expand. Buttons are large enough to tap, and the page stays clear of a notch or the home indicator.
+- **The home page uses your theme.** Classic, Compact, Practical, Chassis, and Sci-fi each color the cards. A short note says when Starfix helps, and links to the guide, the published Starfix 1.0.5, and the source.
+- **A room is public or private.** The captain switches it. Public rooms are listed on the home page, busiest first, and anyone can read that list. Joining a public room does not wait for approval. Each switch waits five minutes. A room stays private until the captain opens it.
+- **This browser remembers 90 rooms.** Each line says whether the room still exists and how many people are in it. You are only in one room at a time. Entering another room leaves the previous one.
+- **A teammate stays on one line.** A long place, ship, or server scrolls back and forth. Offline members keep their last place. A click moves the view there, including a Lagrange point. With Starfix 1.0.5 the card can also show the game server and where that pilot is flying.
+- **A shared route leaves the camera where you put it.**
+- **Planets and moons are painted as different worlds.** Place marks stay readable in Pyro and Nyx.
 
 ### Deutsch
 
-- **Die Seite spricht deine Sprache.** Beim ersten Öffnen folgt sie dem Browser. Über einen Knopf wechselst du zwischen vereinfachtem Chinesisch, traditionellem Chinesisch, Englisch und Deutsch. Die Wahl bleibt in diesem Browser gespeichert.
-- **Deutsch zeigt deutsche Spielnamen. Chinesisch zeigt chinesische Ortsnamen.** Englisch bleibt bei den englischen Namen.
-- **Oben ist eine Leiste.** System, Ort, Suche, Kategorien, Legende und Spieler stehen in einer Zeile. Sprache, Darstellung und Schließen sind gleich groß.
-- **Kompakt ist der Start.** Klassisch, Praktisch, Gehäuse und Science-Fiction bleiben wählbar. Die Wahl bleibt gespeichert.
-- **Die Symbole passen zur Karte.** Pause, Heimat und die anderen kleinen Bilder sind schlichte Strich-Icons in der Farbe des Themas.
-- **Ein Teamraum steht vor der Karte.** Eine kurze Anleitung fragt nach einem Namen. Nimm deinen Namen aus dem Spiel, dann erkennt dich der Captain. Ein Konto gibt es nicht.
-- **Der Captain legt den Raum an.** Er bekommt einen kurzen Code, gibt ihn weiter und nimmt jede Anfrage an. Nur dieser Raum sieht einander.
-- **Sag, wo du bist.** Öffne einen Ort auf der Karte und tippe auf „Ich bin hier“. Die Seite öffnet keinen Spielordner. Oder starte das mitgelieferte Starfix in `companion/` und lass es `Game.log` lesen. Der Quelltext liegt im Repository. Lies [companion/README.md](companion/README.md), bevor du es startest.
-- **Zeichnet gemeinsam eine Route.** Schalte das Markieren ein, halte Shift und klicke die Orte der Reihe nach an. Schreib eine Notiz und veröffentliche sie. Das Team kann kommentieren. Der Captain legt fest, ob nur er zeichnet oder der ganze Raum.
-- **Die Menüs tragen die Farben des Themas.** Sprache, Darstellung und „wer zeichnen darf“ sehen aus wie der Rest der Seite.
+- **Die Karte lässt sich installieren.** Auf einem Telefon oder Tablet können Chrome und Edge sie zum Home-Bildschirm hinzufügen. Auf iPhone und iPad öffnest du Teilen und wählst „Zum Home-Bildschirm“. Danach öffnet sie sich allein. Nach einem Besuch öffnet sich die Seite auch ohne Netz. Raumliste und Live-Preise brauchen das Netz weiter.
+- **Auf einem kleinen Bildschirm bleibt die Karte sichtbar.** Die Kategorien lassen sich seitlich schieben. Auf einem Telefon ist der Raum nur eine Leiste, bis du auf Ausklappen tippst. Die Knöpfe sind groß genug für den Daumen, und die Seite hält Abstand zu Kerbe und Home-Anzeige.
+- **Die Startseite trägt dein Thema.** Klassisch, Kompakt, Praktisch, Gehäuse und Science-Fiction färben die Karten. Ein kurzer Text sagt, wann Starfix hilft, und verlinkt die Erklärung, das veröffentlichte Starfix 1.0.5 und den Quelltext.
+- **Ein Raum ist öffentlich oder privat.** Der Captain schaltet das um. Öffentliche Räume stehen auf der Startseite, die vollsten zuerst, und jeder darf die Liste ansehen. Wer einem öffentlichen Raum beitritt, wartet nicht auf Zustimmung. Jeder Wechsel wartet fünf Minuten. Ein Raum bleibt privat, bis der Captain ihn öffnet.
+- **Dieser Browser merkt sich 90 Räume.** Jede Zeile sagt, ob der Raum noch da ist und wie viele Leute darin sind. Du bist immer nur in einem Raum. Wer einen anderen betritt, verlässt den vorigen.
+- **Ein Teammitglied bleibt in einer Zeile.** Ein langer Ort, ein Schiff oder ein Server läuft hin und her. Offline bleibt der letzte Ort stehen. Ein Klick setzt die Ansicht dorthin, auch auf einen Lagrange-Punkt. Mit Starfix 1.0.5 kann die Karte auch den Spielserver und das Flugziel zeigen.
+- **Eine geteilte Route lässt die Kamera, wo du sie hingestellt hast.**
+- **Planeten und Monde sind als verschiedene Welten gemalt.** Die Ortsmarken bleiben in Pyro und Nyx lesbar.
 
 ### 简体中文
 
-- **页面会用你的语言。** 第一次打开时，跟着浏览器语言来。一个按钮里可以换简体中文、繁体中文、英文、德文。选过一次，这个浏览器会记住。
-- **选德文时，游戏里的名称用德文。选中文时，地点名称用中文。** 选英文时，名称保持英文。
-- **顶部合成一条。** 星系、你所在的位置、搜索、分类、图例和玩家排在同一行。语言、主题和关闭按钮一样大。
-- **默认是紧凑外观。** 还可以换成经典、实用、机壳、科幻。选过的外观会被记住。
-- **小图标和星图是同一套线条。** 暂停、回到恒星和其他小图，都用当前主题的颜色来画。
-- **进图之前先看到团队房间。** 页面会请你填一个昵称。用游戏里的名字，队长更容易认出你。不需要注册账号。
-- **队长建立房间。** 队长拿到一串房间码，发给队员，再逐个通过申请。只有这个房间里的人能互相看见。
-- **告诉队友你在哪。** 在星图上点开一个地点，再点「我在这里」。这个网页不会打开你的游戏文件夹。也可以运行仓库里 `companion/` 附带的 Starfix，让它试着读取 `Game.log`。源码就在仓库里，运行前先看 [companion/README.md](companion/README.md)。
-- **一起画路线。** 打开路线标记，按住 Shift，按顺序点地点。写上备注再发布。队员可以留言。队长可以设定只有自己能画，或全房间都能画。
-- **下拉菜单跟着主题走。** 语言、主题，以及「谁可以画路线」，颜色和形状都与当前外观一致。
+- **可以把星图装到主屏幕。** 手机或平板上，Chrome 和 Edge 可以直接安装。iPhone 和 iPad 先点分享，再选「添加到主屏幕」。装好以后它单独打开。访问过一次之后，没网也能打开页面本身。房间列表和实时价格仍然需要网络。
+- **小屏幕上星图仍然留在画面里。** 分类按钮横向滑动。手机上房间先收成一条，点「展开」再打开。按钮够大，方便用手指点。刘海和底部横条不会挡住操作。
+- **首页跟着你选的主题。** 经典、紧凑、实用、机壳、科幻各自给卡片上色。一段短说明告诉你什么时候需要 Starfix，并链到说明、已发布的 Starfix 1.0.5 和源码。
+- **房间可以公开或私人。** 队长来切换。公开房间出现在首页，人多的排在前面，谁都可以看这份列表。进入公开房间不用等队长批准。每次切换之后要等五分钟。房间保持私人，直到队长把它打开。
+- **这个浏览器记住最近 90 个房间。** 每一行都会写这个房间还在不在，以及里面有几个人。同一个人每次只在一个房间里。进入另一个房间时，会先离开上一个。
+- **队员保持一行。** 地点、舰船或服务器太长时，会来回滚动。离线队员保留最后的地点。点一下就把画面移过去，拉格朗日点也一样。开着 Starfix 1.0.5 时，名片上还可以看到游戏服务器，以及这个人正在飞往哪里。
+- **点一条已分享的路线，不会把视角抢走。**
+- **行星和卫星各自有自己的表面。** 派罗和尼克斯里的地点标记仍然看得清。
 
 ### 繁體中文
 
-- **頁面會用你的語言。** 第一次打開時，跟著瀏覽器語言來。一個按鈕裡可以換簡體中文、繁體中文、英文、德文。選過一次，這個瀏覽器會記住。
-- **選德文時，遊戲裡的名稱用德文。選中文時，地點名稱用中文。** 選英文時，名稱保持英文。
-- **頂部合成一條。** 星系、你所在的位置、搜尋、分類、圖例和玩家排在同一行。語言、主題和關閉按鈕一樣大。
-- **預設是緊湊外觀。** 還可以換成經典、實用、機殼、科幻。選過的外觀會被記住。
-- **小圖示和星圖是同一套線條。** 暫停、回到恆星和其他小圖，都用目前主題的顏色來畫。
-- **進圖之前先看到團隊房間。** 頁面會請你填一個暱稱。用遊戲裡的名字，隊長比較容易認出你。不需要註冊帳號。
-- **隊長建立房間。** 隊長拿到一串房間碼，發給隊員，再逐個通過申請。只有這個房間裡的人能互相看見。
-- **告訴隊友你在哪。** 在星圖上點開一個地點，再點「我在這裡」。這個網頁不會打開你的遊戲資料夾。也可以執行倉庫裡 `companion/` 附帶的 Starfix，讓它試著讀取 `Game.log`。源碼就在倉庫裡，執行前先看 [companion/README.md](companion/README.md)。
-- **一起畫路線。** 打開路線標記，按住 Shift，依序點地點。寫上備註再發布。隊員可以留言。隊長可以設定只有自己能畫，或全房間都能畫。
-- **下拉選單跟著主題走。** 語言、主題，以及「誰可以畫路線」，顏色和形狀都與目前外觀一致。
+- **可以把星圖裝到主畫面。** 手機或平板上，Chrome 和 Edge 可以直接安裝。iPhone 和 iPad 先點分享，再選「加入主畫面」。裝好以後它單獨打開。造訪過一次之後，沒有網路也能打開頁面本身。房間列表和即時價格仍然需要網路。
+- **小螢幕上星圖仍然留在畫面裡。** 分類按鈕橫向滑動。手機上房間先收成一條，點「展開」再打開。按鈕夠大，方便用手指點。瀏海和底部橫條不會擋住操作。
+- **首頁跟著你選的主題。** 經典、緊湊、實用、機殼、科幻各自給卡片上色。一段短說明告訴你什麼時候需要 Starfix，並連到說明、已發布的 Starfix 1.0.5 和源碼。
+- **房間可以公開或私人。** 隊長來切換。公開房間出現在首頁，人多的排在前面，誰都可以看這份列表。進入公開房間不用等隊長批准。每次切換之後要等五分鐘。房間保持私人，直到隊長把它打開。
+- **這個瀏覽器記住最近 90 個房間。** 每一行都會寫這個房間還在不在，以及裡面有幾個人。同一個人每次只在一個房間裡。進入另一個房間時，會先離開上一個。
+- **隊員保持一行。** 地點、艦船或伺服器太長時，會來回捲動。離線隊員保留最後的地點。點一下就把畫面移過去，拉格朗日點也一樣。開著 Starfix 1.0.5 時，名片上還可以看到遊戲伺服器，以及這個人正在飛往哪裡。
+- **點一條已分享的路線，不會把視角搶走。**
+- **行星和衛星各自有自己的表面。** 派羅和尼克斯裡的地點標記仍然看得清。
 
 | The room is still there after a refresh | The team room on the Stanton map |
 |---|---|
@@ -92,7 +86,8 @@ The same note in four languages. A copy also lives in [docs/WHATS_NEW.md](docs/W
 - **Go mining.** Find which planets, moons and belts carry the ore you are after.
 - **Run the big loops.** Contested Zones (Checkmate, Orbituary, Ruin Station), the supervisor stations and the Executive Hangar show the full procedure right at the location: a live Executive Hangar timer with the 5 status lights, a Ruin vault door timer you sync once per server, tap-to-start respawn timers, which keycards and boards you get or need, and the route maps. Align & Mine, Storm Breaker (Apex Valakkar), Siege of Orison and Jumptown are explained at their locations too, all linked to each other.
 - **Find loot.** Item view shows which container and location types an item can drop from, ranked from best to rarer chance (optional, built from the Friendly Fire Department game-data export with `--with-loot`).
-- **Works on the phone.** On small screens the controls sit in one dock at the bottom, all buttons are thumb-sized and nothing overlaps.
+- **Install it on a phone or tablet.** Add the site to the home screen. On a narrow screen the categories scroll sideways, the room panel stays a bar until you expand it, and the buttons are large enough to tap.
+- **Keep one team room.** The captain can make it public or leave it private. Public rooms are listed on the home page, busiest first, and do not need approval. This browser remembers the last 90 rooms and shows which ones are still open.
 - **Show off the fleet.** Rotating holographic 3D models of the ships, loaded live from FleetYards, with specs, prices and where to buy or rent.
 - **Put it on stream.** It runs in any browser source, so it works as an overlay or info screen for streams and org meetings.
 - **Make it yours.** Plain HTML, CSS and JavaScript. No framework and no build step for the frontend, easy to restyle and extend.
@@ -103,7 +98,7 @@ You need Python 3 (to build the game data once) and any static web server.
 
 ```sh
 # 1. Get the code
-git clone https://github.com/nico-gordon-gilles/sc-lmw.git
+git clone https://github.com/GuguguBear/sc-lmw.git
 cd sc-lmw
 
 # 2. Build the game data (downloads the community game-data export and reference lists,
@@ -180,7 +175,7 @@ Point `PLAYERS_URL` in `config.js` (or `data-players-url` on the script tag) at 
 Short version to get started:
 
 ```text
-I want to add SC LMW (https://github.com/nico-gordon-gilles/sc-lmw), an open-source
+I want to add SC LMW (https://github.com/GuguguBear/sc-lmw), an open-source
 Star Citizen 3D map, to my website. Read its README.md, docs/AI_INTEGRATION.md and
 docs/PLAYERS_API.md, then: build the data with scripts/build-all.py, embed the map
 (iframe or the sc-lmw.js script tag), and create a players endpoint in my backend that
@@ -211,6 +206,9 @@ Game data and images are not redistributed here. Every user builds them from the
 
 ```
 index.html              standalone page
+manifest.webmanifest    installable app: name, icons, standalone display
+sw.js                   offline shell for this site; room APIs stay on the network
+icons/                  home-screen icons
 config.js               the one file most people edit (PLAYERS_URL, ...)
 players.example.json    five fictional demo pilots
 js/starmap.js           map engine: 3D scene, search, categories, prices, blueprints, missions

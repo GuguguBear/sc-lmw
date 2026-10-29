@@ -1,5 +1,7 @@
 # SC LMW – Star Citizen LiveMap Wiki (Deutsch)
 
+**Version 1.1.0** · AGPL-3.0 · Starfix 1.0.5
+
 > **Inoffizielles Fan-Projekt. Nicht von Cloud Imperium Games oder Roberts Space Industries unterstützt, gesponsert oder mit ihnen verbunden. Star Citizen® ist eine Marke von Cloud Imperium Rights LLC.**
 
 [English](README.md) · Deutsch · [简体中文](README.md#简体中文) · [繁體中文](README.md#繁體中文) · [Was sich geändert hat](docs/WHATS_NEW.md)
@@ -33,7 +35,11 @@ Vollständige Quellenangaben und Lizenzen aller Bausteine stehen in [`CREDITS.md
 
 - **Die großen Loops:** Contested Zones (Checkmate, Orbituary, Ruin Station), die Supervisor-Stationen und der Executive Hangar zeigen den ganzen Ablauf direkt am Ort: Live-Timer des Executive Hangars mit den 5 Lichtern, Tresortür-Timer der Ruin Station (einmal je Server abgleichen), Respawn-Timer zum Antippen, welche Keycards und Boards man bekommt oder braucht, und die Laufroutenkarten. Align & Mine, Storm Breaker (Apex-Valakkar), Siege of Orison und Jumptown stehen ebenfalls an ihren Orten, alles untereinander verlinkt.
 - **Beute finden:** In der Item-Ansicht steht, in welchen Kisten- und Ortsarten ein Item liegen kann, sortiert nach bester Chance (optional, aus den Spieldaten der Friendly Fire Department, mit `--with-loot`).
-- **Am Handy:** Die Bedienung sitzt unten in einem Dock, alle Knöpfe sind daumengroß, nichts überlappt.
+- **Auf Telefon und Tablet installieren.** Die Seite lässt sich zum Home-Bildschirm hinzufügen. Auf einem schmalen Bildschirm gleiten die Kategorien seitlich, der Raum bleibt eine Leiste, bis man ihn ausklappt, und die Knöpfe sind groß genug für den Daumen.
+- **Ein Teamraum zur Zeit.** Der Captain kann ihn öffentlich oder privat stellen. Öffentliche Räume stehen auf der Startseite, die vollsten zuerst, und brauchen keine Zustimmung. Dieser Browser merkt sich die letzten 90 Räume und zeigt, welche noch offen sind.
+
+Neu in 1.1.0, auf Deutsch, Englisch, vereinfachtem und traditionellem Chinesisch: [docs/WHATS_NEW.md](docs/WHATS_NEW.md).
+
 ### Schnellstart
 
 ```sh

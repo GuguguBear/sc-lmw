@@ -5,6 +5,7 @@
   var TOKEN = 'sclmw_room_token';
   var CODE = 'sclmw_room_code';
   var NICK = 'sclmw_room_nick';
+  var HIST = 'sclmw_room_hist';
   var FRAME = 'sclmw_room_frame';
   var CREW = 'sclmw_crew_frame';
   var DICT = {
@@ -20,7 +21,7 @@
       route:'标记路线', routeOn:'结束标记', routeHint:'按住 Shift，依次点地点。',
       note:'路线备注', publish:'发布给房间', clear:'清空', comment:'评论', send:'发送', del:'删除',
       mode:'谁可以画路线', modeCaptain:'仅队长', modeMembers:'队员也可以',
-      members:'房间成员', online:'在线', offline:'离线', server:'服务器', fold:'收起', you:'你', captainTag:'队长',
+      members:'房间成员', online:'在线', offline:'离线', server:'服务器', fold:'收起', unfold:'展开', you:'你', captainTag:'队长',
       find:'搜索昵称或地点', none:'没有匹配的人',
       give:'设为队长', giveShort:'队长', giveLeave:'交给他并离开', dissolve:'解散房间', dissolveLeave:'解散并离开', cancel:'取消',
       handTitle:'离开前先交接', handLead:'把队长交给一位队员，或解散房间。', handSolo:'房间里只有你。离开会解散这个房间。',
@@ -29,6 +30,10 @@
       noPlace:'星图上对不上这个地点。',
       errNet:'房间服务没连上。请在项目目录运行 python server/room_server.py，然后打开 http://127.0.0.1:8770/ 。', published:'已发布的路线', by:'来自',
       yours:'你的房间', switchRoom:'建立或加入别的房间',
+      hist:'最近的房间', histWait:'正在查看', histAlive:'还在', histGone:'已不在', histOnline:'{n} 人', histBack:'返回这个房间',
+      visTitle:'对外', visPublic:'公开', visPrivate:'私人', visLead:'公开后，这个房间会出现在首页，别人可以直接进入。',
+      visCool:'{n}后可再改', visSec:'{n} 秒', visMin:'{n} 分钟',
+      pubTitle:'公开房间', pubEmpty:'现在没有公开房间', pubPeople:'{n} 人',
       resumed:'上次留下的房间', resumedLead:'刷新后仍是这个房间。房间码没有变，可以直接进入星图。',
       freshCreate:'刚建立的房间', freshCreateLead:'把房间码发给队员。他们申请加入后，由你确认。',
       freshJoin:'刚加入的房间', freshJoinLead:'可以直接进入星图。',
@@ -51,7 +56,7 @@
       route:'標記路線', routeOn:'結束標記', routeHint:'按住 Shift，依序點地點。',
       note:'路線備註', publish:'發布給房間', clear:'清空', comment:'評論', send:'送出', del:'刪除',
       mode:'誰可以畫路線', modeCaptain:'僅隊長', modeMembers:'隊員也可以',
-      members:'房間成員', online:'在線', offline:'離線', server:'伺服器', fold:'收起', you:'你', captainTag:'隊長',
+      members:'房間成員', online:'在線', offline:'離線', server:'伺服器', fold:'收起', unfold:'展開', you:'你', captainTag:'隊長',
       find:'搜尋暱稱或地點', none:'沒有符合的人',
       give:'設為隊長', giveShort:'隊長', giveLeave:'交給他並離開', dissolve:'解散房間', dissolveLeave:'解散並離開', cancel:'取消',
       handTitle:'離開前先交接', handLead:'把隊長交給一位隊員，或解散房間。', handSolo:'房間裡只有你。離開會解散這個房間。',
@@ -60,6 +65,10 @@
       noPlace:'星圖上對不上這個地點。',
       errNet:'房間服務沒連上。請在專案目錄執行 python server/room_server.py，然後打開 http://127.0.0.1:8770/ 。', published:'已發布的路線', by:'來自',
       yours:'你的房間', switchRoom:'建立或加入別的房間',
+      hist:'最近的房間', histWait:'正在查看', histAlive:'還在', histGone:'已不在', histOnline:'{n} 人', histBack:'返回這個房間',
+      visTitle:'對外', visPublic:'公開', visPrivate:'私人', visLead:'公開後，這個房間會出現在首頁，別人可以直接進入。',
+      visCool:'{n}後可再改', visSec:'{n} 秒', visMin:'{n} 分鐘',
+      pubTitle:'公開房間', pubEmpty:'現在沒有公開房間', pubPeople:'{n} 人',
       resumed:'上次留下的房間', resumedLead:'重新整理後仍是這個房間。房間碼沒有變，可以直接進入星圖。',
       freshCreate:'剛建立的房間', freshCreateLead:'把房間碼發給隊員。他們申請加入後，由你確認。',
       freshJoin:'剛加入的房間', freshJoinLead:'可以直接進入星圖。',
@@ -82,7 +91,7 @@
       route:'Mark route', routeOn:'Stop marking', routeHint:'Hold Shift and click places in order.',
       note:'Route note', publish:'Publish to room', clear:'Clear', comment:'Comment', send:'Send', del:'Delete',
       mode:'Who can draw routes', modeCaptain:'Captain only', modeMembers:'Members too',
-      members:'Room members', online:'Online', offline:'Offline', server:'Server', fold:'Minimize', you:'you', captainTag:'Captain',
+      members:'Room members', online:'Online', offline:'Offline', server:'Server', fold:'Minimize', unfold:'Expand', you:'you', captainTag:'Captain',
       find:'Search name or place', none:'No match',
       give:'Make captain', giveShort:'Lead', giveLeave:'Give and leave', dissolve:'Close room', dissolveLeave:'Close and leave', cancel:'Cancel',
       handTitle:'Hand off before leaving', handLead:'Give the captain role to a member, or close the room.', handSolo:'You are the only person here. Leaving closes the room.',
@@ -91,6 +100,10 @@
       noPlace:'This place is not on the map.',
       errNet:'Room service is not reachable. Run python server/room_server.py and open http://127.0.0.1:8770/ .', published:'Published routes', by:'by',
       yours:'Your room', switchRoom:'Create or join a different room',
+      hist:'Recent rooms', histWait:'Checking', histAlive:'Open', histGone:'Gone', histOnline:'{n} people', histBack:'Back to this room',
+      visTitle:'Access', visPublic:'Public', visPrivate:'Private', visLead:'A public room is listed on the home page. People can enter directly.',
+      visCool:'Change again in {n}', visSec:'{n}s', visMin:'{n} min',
+      pubTitle:'Public rooms', pubEmpty:'No public rooms right now', pubPeople:'{n} people',
       resumed:'Room from last time', resumedLead:'Refreshing kept this room. The code is unchanged. You can enter the map.',
       freshCreate:'Room just created', freshCreateLead:'Send the code to your team. You confirm them after they apply.',
       freshJoin:'Room just joined', freshJoinLead:'You can enter the map.',
@@ -113,7 +126,7 @@
       route:'Route markieren', routeOn:'Markieren beenden', routeHint:'Shift halten und Orte der Reihe nach anklicken.',
       note:'Notiz zur Route', publish:'Für den Raum veröffentlichen', clear:'Leeren', comment:'Kommentar', send:'Senden', del:'Löschen',
       mode:'Wer Routen zeichnen darf', modeCaptain:'Nur der Captain', modeMembers:'Auch Mitglieder',
-      members:'Im Raum', online:'Online', offline:'Offline', server:'Server', fold:'Einklappen', you:'du', captainTag:'Captain',
+      members:'Im Raum', online:'Online', offline:'Offline', server:'Server', fold:'Einklappen', unfold:'Ausklappen', you:'du', captainTag:'Captain',
       find:'Name oder Ort', none:'Niemand passt',
       give:'Zum Captain machen', giveShort:'Capt.', giveLeave:'Geben und gehen', dissolve:'Raum schließen', dissolveLeave:'Schließen und gehen', cancel:'Abbrechen',
       handTitle:'Vor dem Gehen übergeben', handLead:'Captain an ein Mitglied geben, oder den Raum schließen.', handSolo:'Du bist allein. Gehen schließt den Raum.',
@@ -122,6 +135,10 @@
       noPlace:'Dieser Ort ist nicht auf der Karte.',
       errNet:'Der Raumdienst ist nicht erreichbar. python server/room_server.py starten und http://127.0.0.1:8770/ öffnen.', published:'Veröffentlichte Routen', by:'von',
       yours:'Dein Raum', switchRoom:'Anderen Raum anlegen oder beitreten',
+      hist:'Letzte Räume', histWait:'Prüfung', histAlive:'Offen', histGone:'Weg', histOnline:'{n} Personen', histBack:'Zurück zu diesem Raum',
+      visTitle:'Zugang', visPublic:'Öffentlich', visPrivate:'Privat', visLead:'Ein öffentlicher Raum steht auf der Startseite. Man kann direkt eintreten.',
+      visCool:'Wieder änderbar in {n}', visSec:'{n} s', visMin:'{n} min',
+      pubTitle:'Öffentliche Räume', pubEmpty:'Gerade keine öffentlichen Räume', pubPeople:'{n} Personen',
       resumed:'Raum von zuletzt', resumedLead:'Nach dem Neuladen ist es derselbe Raum. Der Code ist unverändert. Du kannst die Karte öffnen.',
       freshCreate:'Gerade angelegt', freshCreateLead:'Gib den Code an das Team. Du bestätigst die Anfragen.',
       freshJoin:'Gerade beigetreten', freshJoinLead:'Du kannst die Karte öffnen.',
@@ -138,7 +155,7 @@
   function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
   function token(){ try{ return localStorage.getItem(TOKEN)||''; }catch(e){ return ''; } }
   function savedCode(){ try{ return localStorage.getItem(CODE)||''; }catch(e){ return ''; } }
-  var state = null, draft = [], marking = false, note = '', statusMsg = '', selected = '', API = '', entered = false, roomKind = '', linkState = '', linkMiss = 0, leaving = false, crewQ = '';
+  var state = null, draft = [], marking = false, note = '', statusMsg = '', selected = '', API = '', entered = false, roomKind = '', linkState = '', linkMiss = 0, leaving = false, crewQ = '', picking = false, histInfo = {}, histKey = '', pubRooms = null, pubSig = null, pubAt = 0;
 
   function api(path, opt){
     opt = opt || {};
@@ -217,7 +234,22 @@
     try{ localStorage.setItem(key, JSON.stringify(s)); }catch(e){}
     return s;
   }
+  function sheetLayout(){
+    var host = root();
+    var w = host.clientWidth||999, h = host.clientHeight||999;
+    return w<=700 || (w<=900 && h<=500);
+  }
+  function clearFrame(dock){
+    if(!dock) return;
+    dock.style.left = '';
+    dock.style.top = '';
+    dock.style.right = '';
+    dock.style.bottom = '';
+    dock.style.width = '';
+    dock.style.height = '';
+  }
   function applyFrame(dock, key, minW, minH){
+    if(sheetLayout()){ clearFrame(dock); return; }
     var s = readRaw(key || FRAME);
     if(!s || !dock || typeof s.l!=='number' || !(s.w>0) || !(s.h>0)) return;
     minW = minW || 280; minH = minH || 220;
@@ -449,6 +481,124 @@
     var x = box.querySelector('#stSfxX');
     if(x) x.onclick = function(){ box.hidden = true; };
   }
+  function readHist(){
+    try{
+      var list = JSON.parse(localStorage.getItem(HIST)||'[]');
+      if(!Array.isArray(list)) return [];
+      return list.filter(function(x){ return x && x.code; }).slice(0, 90);
+    }catch(e){ return []; }
+  }
+  function rememberHist(code){
+    code = String(code||'').toUpperCase();
+    if(!code) return;
+    var list = readHist().filter(function(x){ return x.code!==code; });
+    list.unshift({code:code, at:Date.now()});
+    try{ localStorage.setItem(HIST, JSON.stringify(list.slice(0, 90))); }catch(e){}
+    histKey = '';
+  }
+  function histLine(code){
+    var info = histInfo[code];
+    if(!info) return t('histWait');
+    if(!info.exists) return t('histGone');
+    return t('histAlive')+' · '+t('histOnline').replace('{n}', String(info.members||0));
+  }
+  function histHtml(){
+    var list = readHist();
+    if(!list.length) return '';
+    return '<div class="st-home-hist"><h2>'+esc(t('hist'))+'</h2><div class="st-home-hist-list">'+
+      list.map(function(x){
+        var cur = state && state.code===x.code ? ' is-cur' : '';
+        return '<button type="button" class="st-past'+cur+'" data-hist="'+esc(x.code)+'"><b>'+esc(x.code)+'</b><span>'+esc(histLine(x.code))+'</span></button>';
+      }).join('')+'</div></div>';
+  }
+  function pullHist(){
+    var list = readHist();
+    var key = list.map(function(x){ return x.code; }).join(',');
+    if(!key || !token()) return;
+    if(key===histKey) return;
+    histKey = key;
+    api('/api/rooms/lookup', {method:'POST', body:{codes:list.map(function(x){ return x.code; })}}).then(function(d){
+      histInfo = {};
+      (d && d.rooms || []).forEach(function(r){ if(r && r.code) histInfo[r.code] = r; });
+      if(document.getElementById('stGate') && !document.getElementById('stGate').hidden) paint();
+    }).catch(function(){});
+  }
+  function bindHist(el){
+    el.querySelectorAll('[data-hist]').forEach(function(b){
+      b.onclick = function(){ enterCode(b.getAttribute('data-hist')); };
+    });
+    pullHist();
+  }
+  function coolLeft(){
+    if(!state || !state.openUntil) return 0;
+    return Math.max(0, Math.ceil((state.openUntil-Date.now())/1000));
+  }
+  function coolLabel(sec){
+    sec = Math.max(0, sec|0);
+    if(sec>=60) return t('visMin').replace('{n}', String(Math.ceil(sec/60)));
+    return t('visSec').replace('{n}', String(sec));
+  }
+  function visHtml(){
+    if(!state || state.role!=='captain' || state.status!=='member') return '';
+    var open = !!state.open;
+    var left = coolLeft();
+    var disPub = (!open && left>0) ? ' disabled' : '';
+    var disPriv = (open && left>0) ? ' disabled' : '';
+    return '<div class="st-vis"><span>'+esc(t('visTitle'))+'</span>'+
+      '<button type="button" data-open="1"'+(open?' class="on"':'')+disPub+'>'+esc(t('visPublic'))+'</button>'+
+      '<button type="button" data-open="0"'+(!open?' class="on"':'')+disPriv+'>'+esc(t('visPrivate'))+'</button>'+
+      (left ? '<em data-cool="'+state.openUntil+'">'+esc(t('visCool').replace('{n}', coolLabel(left)))+'</em>' : '')+
+      '</div><p class="st-room-dim">'+esc(t('visLead'))+'</p>';
+  }
+  function bindOpen(el){
+    el.querySelectorAll('[data-open]').forEach(function(b){
+      b.onclick = function(){
+        var want = b.getAttribute('data-open')==='1';
+        if(!state || !!state.open===want) return;
+        setOpen(want);
+      };
+    });
+  }
+  function setOpen(open){
+    if(!state || state.role!=='captain' || !state.code) return;
+    api('/api/rooms/'+encodeURIComponent(state.code)+'/open', {method:'POST', body:{open:!!open}}).then(function(st){
+      pubAt = 0;
+      take(st);
+    }).catch(fail);
+  }
+  function pubHtml(){
+    if(!pubRooms) return '';
+    var rows = pubRooms.map(function(r){
+      var meta = (r.captain ? esc(r.captain)+' · ' : '')+esc(t('pubPeople').replace('{n}', String(r.members||0)));
+      return '<button type="button" class="st-past" data-pub="'+esc(r.code)+'"><b>'+esc(r.code)+'</b><span>'+meta+'</span></button>';
+    }).join('');
+    return '<section class="st-home-card st-home-pub"><h2>'+esc(t('pubTitle'))+'</h2>'+
+      (rows ? '<div class="st-home-hist-list">'+rows+'</div>' : '<p>'+esc(t('pubEmpty'))+'</p>')+
+      '</section>';
+  }
+  function pullPublic(force){
+    var nowMs = Date.now();
+    if(!force && nowMs-pubAt<4000) return;
+    pubAt = nowMs;
+    fetch((API||'')+'/api/rooms/public', {cache:'no-store'}).then(function(r){
+      if(!r.ok) throw new Error('public');
+      return r.json();
+    }).then(function(d){
+      var next = (d && d.rooms) || [];
+      var sig = next.map(function(r){ return r.code+':'+r.members+':'+(r.captain||''); }).join(',');
+      if(sig===pubSig) return;
+      pubRooms = next;
+      pubSig = sig;
+      var gate = document.getElementById('stGate');
+      if(gate && !gate.hidden) paint();
+    }).catch(function(){});
+  }
+  function bindPub(el){
+    el.querySelectorAll('[data-pub]').forEach(function(b){
+      b.onclick = function(){ enterCode(b.getAttribute('data-pub')); };
+    });
+    pullPublic(false);
+  }
   function paintGate(el){
     if(leaving && state && state.role==='captain' && state.status==='member'){
       el.innerHTML = '<div class="st-home st-home-narrow"><header class="st-home-hero"><div class="st-home-kicker">SC LMW</div><h1>'+esc(t('title'))+'</h1></header><section class="st-home-card">'+handoffHtml()+'</section></div>';
@@ -459,9 +609,9 @@
     try{ nick = localStorage.getItem(NICK)||''; }catch(e){}
     var pre = '';
     try{ pre = new URLSearchParams(location.search).get('room')||''; }catch(e){}
-    if(state && state.code) pre = state.code;
-    var wait = state && state.status==='pending';
-    var member = state && state.status==='member';
+    if(state && state.code && !picking) pre = state.code;
+    var wait = state && state.status==='pending' && !picking;
+    var member = state && state.status==='member' && !picking;
     var kind = roomKind==='create' ? 'create' : roomKind==='join' ? 'join' : 'saved';
     var kindLabel = kind==='create' ? t('freshCreate') : kind==='join' ? t('freshJoin') : t('resumed');
     var kindLead = kind==='create' ? t('freshCreateLead') : kind==='join' ? t('freshJoinLead') : t('resumedLead');
@@ -469,6 +619,7 @@
           '<p class="st-room-kind">'+esc(kindLabel)+'</p>'+
           '<p>'+esc(kindLead)+'</p>'+
           '<p class="st-room-code">'+esc(state.code)+'</p>'+
+          visHtml()+
           '<div class="row"><button type="button" class="act" id="stEnter">'+esc(t('enter'))+'</button>'+
           '<button type="button" id="stGateCopy">'+esc(t('copy'))+'</button></div>'+
           '<button type="button" id="stSwitch" class="st-room-link">'+esc(t('switchRoom'))+'</button>'
@@ -479,15 +630,18 @@
           '<label>'+esc(t('nick'))+'<input id="stRoomNick" maxlength="32" value="'+esc(nick)+'"></label>'+
           '<label>'+esc(t('code'))+'<input id="stRoomCode" maxlength="9" value="'+esc(pre)+'" placeholder="K7MQ-4R2P"></label>'+
           '<div class="row"><button type="button" class="act" id="stRoomCreate">'+esc(t('create'))+'</button>'+
-          '<button type="button" id="stRoomJoin">'+esc(t('join'))+'</button></div>'
+          '<button type="button" id="stRoomJoin">'+esc(t('join'))+'</button></div>'+
+          (state && state.status==='member' ? '<button type="button" id="stHistBack" class="st-room-link">'+esc(t('histBack'))+'</button>' : '')
         )+
-        (statusMsg ? '<p class="st-room-err">'+esc(statusMsg)+'</p>' : '');
+        (statusMsg ? '<p class="st-room-err">'+esc(statusMsg)+'</p>' : '')+
+        histHtml();
     el.innerHTML =
       '<div class="st-home">'+
         '<header class="st-home-hero"><div class="st-home-kicker">SC LMW · '+esc(ti('home.kicker'))+'</div>'+
           '<h1>'+esc(t('title'))+'</h1><p>'+esc(ti('home.lead'))+'</p></header>'+
         '<section class="st-home-card" id="stHomeStarfix">'+starfixFactsHtml()+'</section>'+
         '<section class="st-home-card st-home-join"><h2>'+esc(ti('home.join_h'))+'</h2>'+roomBody+'</section>'+
+        pubHtml()+
       '</div>';
     var c = el.querySelector('#stRoomCreate'), j = el.querySelector('#stRoomJoin');
     if(c) c.onclick = function(){ act('create'); };
@@ -501,7 +655,12 @@
       setTimeout(function(){ if(statusMsg===t('copied')){ statusMsg=''; paint(); } }, 1200);
     };
     var sw = el.querySelector('#stSwitch');
-    if(sw) sw.onclick = askLeave;
+    if(sw) sw.onclick = function(){ picking = true; statusMsg = ''; paint(); };
+    var back = el.querySelector('#stHistBack');
+    if(back) back.onclick = function(){ picking = false; statusMsg = ''; paint(); };
+    bindHist(el);
+    bindOpen(el);
+    bindPub(el);
   }
 
   function paintDock(el){
@@ -513,13 +672,14 @@
         '<button type="button" id="stRoomCopy">'+esc(t('copy'))+'</button>'+
         '<button type="button" id="stRoomLeave">'+esc(t('leave'))+'</button>'+
         (state.role==='captain' ? '<button type="button" id="stDissolve">'+esc(t('dissolve'))+'</button>' : '')+
-        '<button type="button" id="stRoomMin">'+esc(t('fold'))+'</button>'+
+        '<button type="button" id="stRoomMin">'+esc(sheetLayout() && !el.classList.contains('st-sheet-open') ? t('unfold') : t('fold'))+'</button>'+
         '</div></div>'+
       '<div class="st-room-body">'+
       (leaving && state.role==='captain' ? handoffHtml() : '')+
       '<p class="st-room-dim">'+esc(t('locGuide'))+'</p>'+
       '<div class="row"><button type="button" id="stLinkPc">'+esc(t('link'))+'</button></div>'+
       linkNote()+
+      (state.role==='captain' ? visHtml() : '')+
       (state.role==='captain' ? (
         '<div class="st-room-sec"><span>'+esc(t('pending'))+'</span>'+
           (pending.length? pending.map(function(m){
@@ -572,6 +732,11 @@
     el.querySelector('#stRoomLeave').onclick = askLeave;
     el.querySelector('#stRoomMin').onclick = function(ev){
       ev.stopPropagation();
+      if(sheetLayout()){
+        el.classList.toggle('st-sheet-open');
+        paint();
+        return;
+      }
       var box = el.getBoundingClientRect();
       var host = root().getBoundingClientRect();
       var prev = readRaw(FRAME) || {};
@@ -616,6 +781,7 @@
     }; });
     el.querySelectorAll('[data-send]').forEach(function(b){ b.onclick=function(){ sendComment(b.getAttribute('data-send')); }; });
     el.querySelectorAll('[data-del]').forEach(function(b){ b.onclick=function(){ delRoute(b.getAttribute('data-del')); }; });
+    bindOpen(el);
   }
 
   function liveMembers(){
@@ -683,12 +849,34 @@
     if(on.length) html += '<div class="st-crew-sec">'+esc(t('online'))+' '+on.length+'</div>'+on.map(memberRow).join('');
     if(off.length) html += '<div class="st-crew-sec">'+esc(t('offline'))+' '+off.length+'</div>'+off.map(memberRow).join('');
     list.innerHTML = html || '<div class="st-room-dim">'+(q ? esc(t('none')) : '—')+'</div>';
+    rollCrew(list);
     list.querySelectorAll('[data-mate]').forEach(function(b){ b.onclick=function(){ jumpMember(b.getAttribute('data-mate')); }; });
     list.querySelectorAll('[data-cap]').forEach(function(b){ b.onclick=function(){
       api('/api/rooms/'+encodeURIComponent(state.code)+'/captain', {method:'POST', body:{member:b.getAttribute('data-cap')}}).then(take).catch(fail);
     }; });
   }
 
+  function rollCrew(list){
+    if(!list) return;
+    if(!list.__roll && window.ResizeObserver){
+      list.__roll = true;
+      new ResizeObserver(function(){ rollCrew(list); }).observe(list);
+    }
+    list.querySelectorAll('.st-mate-roll').forEach(function(box){
+      var inner = box.firstElementChild;
+      if(!inner) return;
+      inner.style.animation = 'none';
+      var extra = inner.scrollWidth - box.clientWidth;
+      if(extra <= 4){
+        inner.style.animation = '';
+        inner.style.removeProperty('--st-roll');
+        return;
+      }
+      var sec = Math.max(4, extra / 24);
+      inner.style.setProperty('--st-roll', (-extra)+'px');
+      inner.style.animation = 'st-roll '+sec.toFixed(2)+'s ease-in-out infinite alternate';
+    });
+  }
   function ageText(seen){
     if(typeof seen!=='number' || !isFinite(seen)) return '';
     var s = Math.max(0, Math.round(Date.now()/1000 - seen));
@@ -704,6 +892,15 @@
     document.querySelectorAll('.st-mate time[data-seen]').forEach(function(n){
       var next = ageText(+n.getAttribute('data-seen'));
       if(n.textContent!==next) n.textContent = next;
+    });
+    document.querySelectorAll('[data-cool]').forEach(function(n){
+      var left = Math.max(0, Math.ceil((+n.getAttribute('data-cool')-Date.now())/1000));
+      var next = left ? t('visCool').replace('{n}', coolLabel(left)) : '';
+      if(n.textContent!==next) n.textContent = next;
+      if(!left && n.getAttribute('data-cool-done')!=='1'){
+        n.setAttribute('data-cool-done', '1');
+        paint();
+      }
     });
   }
   function isOnline(m){
@@ -739,10 +936,10 @@
     var place = m.location ? esc(placeLabel(m)) : '';
     var host = m.server ? esc(t('server'))+' '+esc(String(m.server)) : '';
     var ship = m.ship ? esc(shipLabel(m.ship)) : '';
-    var inner = on
-      ? '<i class="st-crew-pip on"></i><b>'+esc(m.nickname)+'</b>'+tags+(place?'<span>'+place+'</span>':'')+(host?'<span>'+host+'</span>':'')+when
-      : '<i class="st-crew-pip"></i><span class="st-mate-main"><span class="st-mate-name"><b>'+esc(m.nickname)+'</b>'+tags+'</span>'+
-          ((place||host||ship)?'<span class="st-mate-last">'+[place,host,ship].filter(Boolean).join(' · ')+'</span>':'')+'</span>'+when;
+    var bits = [place, host, ship].filter(Boolean).join(' · ');
+    var inner = '<i class="st-crew-pip'+(on?' on':'')+'"></i>'+
+      '<span class="st-mate-roll"><span><b>'+esc(m.nickname)+'</b>'+tags+
+      (bits?'<span class="st-mate-last">'+bits+'</span>':'')+'</span></span>'+when;
     return '<div class="st-mate-row"><button type="button" class="st-mate'+(m.location?' has-place':'')+(on?'':' is-off')+'" data-mate="'+esc(m.id)+'">'+inner+'</button>'+give+'</div>';
   }
   function handoffHtml(){
@@ -786,6 +983,36 @@
   }
   function rememberNick(n){ try{ localStorage.setItem(NICK, n); }catch(e){} }
 
+  function savedNick(){
+    var typed = nickValue();
+    if(typed) return typed;
+    try{ return localStorage.getItem(NICK)||''; }catch(e){ return ''; }
+  }
+  function enterCode(code){
+    code = String(code||'').toUpperCase();
+    if(!code) return;
+    if(state && state.code===code && state.status==='member'){
+      picking = false;
+      enterMap();
+      return;
+    }
+    var nick = savedNick();
+    if(!nick || nick.length>32){
+      picking = true;
+      statusMsg = t('errNick');
+      paint();
+      var box = document.getElementById('stRoomCode');
+      if(box) box.value = code;
+      return;
+    }
+    statusMsg = '';
+    roomKind = 'join';
+    rememberNick(nick);
+    api('/api/session', {method:'POST', body:{nickname:nick}}).then(function(s){
+      try{ localStorage.setItem(TOKEN, s.token); }catch(e){}
+      return api('/api/rooms/'+encodeURIComponent(code)+'/join', {method:'POST', body:{}});
+    }).then(function(st){ if(st){ picking = false; take(st); } }).catch(fail);
+  }
   function act(kind){
     var nick = nickValue();
     if(!nick || nick.length>32){ statusMsg=t('errNick'); paint(); return; }
@@ -798,7 +1025,7 @@
       var code = codeValue();
       if(!code){ statusMsg=t('errRoom'); paint(); return null; }
       return api('/api/rooms/'+encodeURIComponent(code)+'/join', {method:'POST', body:{}});
-    }).then(function(st){ if(st) take(st); }).catch(fail);
+    }).then(function(st){ if(st){ picking = false; take(st); } }).catch(fail);
   }
 
   function enterMap(){
@@ -809,8 +1036,11 @@
     pullLink();
   }
   function take(st){
+    var prevCode = state && state.code;
+    if(st && typeof st.openWait==='number') st.openUntil = Date.now()+st.openWait*1000;
     state = st;
     statusMsg = '';
+    if(st && st.code && st.code!==prevCode) rememberHist(st.code);
     try{ localStorage.setItem(CODE, st.code); }catch(e){}
     if(st.status!=='member') entered = false;
     if(st.status==='member' && entered) bindPlayers();
@@ -818,6 +1048,11 @@
   }
   function fail(e){
     if(e && e.body && e.body.error==='room') statusMsg = t('errRoom');
+    else if(e && e.body && e.body.error==='cooldown'){
+      var wait = e.body.wait||0;
+      if(state) state.openUntil = Date.now()+wait*1000;
+      statusMsg = t('visCool').replace('{n}', coolLabel(wait));
+    }
     else if(e && e.status===0) statusMsg = t('errNet');
     else statusMsg = t('errNet');
     paint();
@@ -939,6 +1174,28 @@
   function start(){
     ensure();
     paint();
+    if(!window.__stRoomFit){
+      window.__stRoomFit=function(){
+        var host = root();
+        if(host){
+          var nodes = host.querySelectorAll('.st-sys,.st-cats,.st-tabs,.st-sbox');
+          var origin = host.getBoundingClientRect().top, bottom = 0;
+          for(var i=0;i<nodes.length;i++){
+            var st = getComputedStyle(nodes[i]);
+            if(st.display==='none' || st.visibility==='hidden') continue;
+            var r = nodes[i].getBoundingClientRect();
+            if(r.height>1 && r.width>1 && r.bottom>bottom) bottom = r.bottom;
+          }
+          if(bottom>origin) host.style.setProperty('--st-chrome', Math.ceil(bottom-origin)+'px');
+        }
+        var ui = ensure();
+        if(ui.dock && !ui.dock.hidden) applyFrame(ui.dock, FRAME, 280, 220);
+        if(ui.crew && !ui.crew.hidden) applyFrame(ui.crew, CREW, 220, 160);
+      };
+      window.addEventListener('resize', window.__stRoomFit);
+      if(window.ResizeObserver) new ResizeObserver(window.__stRoomFit).observe(root());
+      requestAnimationFrame(window.__stRoomFit);
+    }
     if(!window.__stRoomLang){
       window.__stRoomLang=function(){
         if(document.getElementById('stGate')) paint();
@@ -951,7 +1208,11 @@
       if(!ok){ statusMsg=t('errNet'); paint(); return; }
       var code = savedCode();
       if(token() && code) api('/api/rooms/'+encodeURIComponent(code)).then(function(st){ if(!roomKind) roomKind='saved'; take(st); }).catch(function(){ paint(); });
-      if(!window.__stRoomPoll) window.__stRoomPoll=setInterval(function(){ if(state) refresh(); }, 8000);
+      if(!window.__stRoomPoll) window.__stRoomPoll=setInterval(function(){
+        if(state) refresh();
+        var gate = document.getElementById('stGate');
+        if(gate && !gate.hidden) pullPublic(true);
+      }, 8000);
       if(!window.__stAgeTick) window.__stAgeTick=setInterval(tickAges, 1000);
       if(!window.__stLinkWatch) window.__stLinkWatch=setInterval(pullLink, 2000);
     if(!window.__stDdClose){

@@ -241,6 +241,8 @@ function hideLeader(){ const svg=$('stLeader'), line=$('stLeaderLn'), dot=$('stL
   if(line){ line.setAttribute('x1',0); line.setAttribute('y1',0); line.setAttribute('x2',0); line.setAttribute('y2',0); }
   if(dot){ dot.setAttribute('cx',-40); dot.setAttribute('cy',-40); }
   if(svg){ svg.hidden=true; svg.style.display='none'; } }
+function sheetMode(){ const w=(ROOT&&ROOT.clientWidth)||999, h=(ROOT&&ROOT.clientHeight)||999; return w<=700 || (w<=900 && h<=500); }
+function clearSheet(box){ if(!box) return; box.style.left=''; box.style.top=''; box.style.right=''; box.style.bottom=''; box.style.width=''; box.style.height=''; }
 function clampCall(box, left, top){ const W=ROOT.clientWidth||1, H=ROOT.clientHeight||1, w=box.offsetWidth||300, h=box.offsetHeight||160;
   left=Math.max(8, Math.min(left, W-w-8)); top=Math.max(8, Math.min(top, H-h-8));
   box.style.left=left+'px'; box.style.top=top+'px'; }
@@ -259,7 +261,7 @@ function ensurePilotUi(){ if(!ROOT||$('stCall')) return;
   const ico=document.createElement('button'); ico.type='button'; ico.id=ID('stCallIco'); ico.className='st-float-ico st-call-ico'; ico.hidden=true;
   ROOT.appendChild(svg); ROOT.appendChild(tip); ROOT.appendChild(box); ROOT.appendChild(ico);
   const saved=callStore();
-  if(typeof saved.l==='number'){ box.style.left=saved.l+'px'; box.style.top=saved.t+'px'; box.style.width=saved.w+'px'; box.style.height=saved.h+'px'; ST_CALL_HELD=true; }
+  if(typeof saved.l==='number' && !sheetMode()){ box.style.left=saved.l+'px'; box.style.top=saved.t+'px'; box.style.width=saved.w+'px'; box.style.height=saved.h+'px'; ST_CALL_HELD=true; }
   box.querySelector('.st-call-x').onclick=function(ev){ ev.preventDefault(); ev.stopPropagation(); window.__stPinPlayer(null); };
   box.querySelector('.st-call-min').onclick=function(ev){ ev.preventDefault(); ev.stopPropagation();
     const prev=callStore();
@@ -356,7 +358,8 @@ window.__stLeaderFrame=function(entries, scr, hover){ ensurePilotUi();
   } else { if(ico) ico.hidden=true;
   if(pinned&&pt&&!box.hidden){ const W=ROOT.clientWidth||1, H=ROOT.clientHeight||1;
     svg.setAttribute('viewBox','0 0 '+W+' '+H); svg.setAttribute('width',W); svg.setAttribute('height',H);
-    if(!ST_CALL_HELD&&!ST_CALL_DRAG){ let left=pt.x+36, top=pt.y-28, bw=box.offsetWidth||300, bh=box.offsetHeight||180;
+    if(sheetMode()){ clearSheet(box); }
+    else if(!ST_CALL_HELD&&!ST_CALL_DRAG){ let left=pt.x+36, top=pt.y-28, bw=box.offsetWidth||300, bh=box.offsetHeight||180;
       if(left+bw>W-12) left=Math.max(12, pt.x-bw-36);
       if(top+bh>H-12) top=Math.max(12, H-bh-12);
       if(top<12) top=12; if(left<12) left=12;

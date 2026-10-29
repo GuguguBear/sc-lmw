@@ -2,21 +2,41 @@
 <html lang="en" data-sclmw-theme="compact">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+<script>try{var t=localStorage.getItem('sclmw_ui_theme');if(t)document.documentElement.setAttribute('data-sclmw-theme',t);}catch(e){}window.addEventListener('beforeinstallprompt',function(ev){ev.preventDefault();window.__sclmwInstall=ev;});</script>
 <title>SC LMW – Star Citizen LiveMap Wiki</title>
 <meta name="description" content="Unofficial, standalone 3D star map for Star Citizen (Stanton, Pyro, Nyx): search, live UEX prices, live FleetYards 3D ship models, optional player positions.">
+<meta name="theme-color" content="#070a12">
+<meta name="color-scheme" content="dark">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="SC LMW">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" href="./favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png">
+<link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
 <link rel="stylesheet" href="./css/starmap.css">
 <style>
   /* Minimal page shell: the map itself fills <body> (see SCLMW.mount() below and
      .sc-lmw.st-standalone in starmap.css). This just holds the loading state and the
      mandatory fan-project notice. */
-  html,body{margin:0;height:100%;overflow:hidden;font-family:"Inter","PingFang SC","PingFang TC","Microsoft YaHei","Microsoft JhengHei",system-ui,sans-serif}
+  html,body{margin:0;height:100%;height:100dvh;overflow:hidden;font-family:"Inter","PingFang SC","PingFang TC","Microsoft YaHei","Microsoft JhengHei",system-ui,sans-serif}
+  #pwaHint{position:fixed;left:max(12px, env(safe-area-inset-left));right:max(12px, env(safe-area-inset-right));bottom:calc(12px + env(safe-area-inset-bottom));z-index:120;display:flex;align-items:center;gap:12px;box-sizing:border-box;padding:12px 14px;border:1px solid rgba(120,165,230,.45);background:#0b111e;color:#eef2fb;font-size:14px;line-height:1.45}
+  #pwaHint[hidden]{display:none}
+  #pwaHint p{margin:0;flex:1}
+  #pwaHint button{height:36px;min-height:36px;padding:0 12px;border:1px solid rgba(120,165,230,.45);background:transparent;color:inherit;font:inherit;font-size:13px;font-weight:700;cursor:pointer}
+  html[data-sclmw-theme="compact"] #pwaHint{background:#161b22;border-color:#5c6778;color:#e8eaef}
+  html[data-sclmw-theme="practical"] #pwaHint{background:#121110;border-color:#8a8680;color:#c8c4bc}
+  html[data-sclmw-theme="chassis"] #pwaHint{background:#100c06;border-color:#ffb000;color:#ffb000}
+  html[data-sclmw-theme="scifi"] #pwaHint{background:#041210;border-color:#00e5cc;color:#00e5cc}
   #loading{position:fixed;inset:0;z-index:130;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:#94a2c2;background:#070a12}
   #loading .spin{width:34px;height:34px;border-radius:50%;border:3px solid rgba(120,165,230,.25);border-top-color:#37e1ff;animation:spin 1s linear infinite}
   @keyframes spin{to{transform:rotate(360deg)}}
   #loading.gone{display:none}
-  #fanNotice{position:fixed;left:0;right:0;bottom:0;z-index:110;text-align:center;font-size:12px;line-height:1.4;color:rgba(238,242,251,.55);background:rgba(4,7,13,.72);padding:4px 8px;pointer-events:none}
+  #fanNotice{position:fixed;left:0;right:0;bottom:0;z-index:110;text-align:center;font-size:12px;line-height:1.4;color:rgba(238,242,251,.55);background:rgba(4,7,13,.72);padding:4px max(8px, env(safe-area-inset-right)) calc(4px + env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));pointer-events:none}
   #fanNotice a,#fanNotice button{color:inherit;font:inherit;font-size:12px;text-decoration:underline;pointer-events:auto;background:none;border:0;padding:0;cursor:pointer}
+  @media (pointer:coarse){#fanNotice button,#pwaHint button{min-height:44px;padding:8px 12px}}
   noscript{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:24px;text-align:center;background:#070a12;color:#eef2fb;font-family:system-ui,sans-serif}
   html[data-sclmw-theme="compact"] #loading{background:#0c0e12;color:#e8eaef}
   html[data-sclmw-theme="compact"] #loading .spin{border-color:rgba(180,190,205,.25);border-top-color:#e8eaef}
@@ -51,6 +71,11 @@
   Imperium Games or Roberts Space Industries. Star Citizen® is a trademark of Cloud Imperium
   Rights LLC.</span> · <a href="./CREDITS.md" target="_blank" rel="noopener" data-i18n="page.credits_link">Credits &amp; licenses</a>
   · <button type="button" id="starfixOpen" data-i18n="starfix.open">Starfix</button>
+  · <button type="button" id="pwaInstall" hidden data-i18n="pwa.install">Add to Home Screen</button>
+</div>
+<div id="pwaHint" hidden>
+  <p data-i18n="pwa.ios">Open Share, then choose Add to Home Screen.</p>
+  <button type="button" id="pwaLater" data-i18n="pwa.later">Later</button>
 </div>
 
 <!-- config.js first: everything else reads window.LIVEMAP_CONFIG at call time, not load time.
@@ -83,9 +108,17 @@
       });
     }
     document.addEventListener('sclmw-lang', paintI18n);
+    var themeColor={classic:'#070a12',compact:'#0c0e12',practical:'#0a0a09',chassis:'#080604',scifi:'#000808'};
+    function paintThemeColor(name){
+      var meta=document.querySelector('meta[name="theme-color"]');
+      if(meta) meta.setAttribute('content', themeColor[name]||themeColor.compact);
+    }
     document.addEventListener('sclmw-theme', function(ev){
-      document.documentElement.setAttribute('data-sclmw-theme', (ev&&ev.detail)||'compact');
+      var name=(ev&&ev.detail)||'compact';
+      document.documentElement.setAttribute('data-sclmw-theme', name);
+      paintThemeColor(name);
     });
+    paintThemeColor(document.documentElement.getAttribute('data-sclmw-theme')||'compact');
     try{
       var cfg=window.LIVEMAP_CONFIG||{};
       // Eigenstaendige Seite: mount() auf <body> selbst, mit standalone:true (siehe
@@ -134,6 +167,55 @@
   (function(){ var n=document.getElementById('fanNotice'); if(!n) return;
     function gap(){ document.documentElement.style.setProperty('--sclmw-bottom-gap', Math.ceil(n.getBoundingClientRect().height)+'px'); }
     gap(); if(window.ResizeObserver) new ResizeObserver(gap).observe(n); else window.addEventListener('resize',gap); })();
+</script>
+<script>
+  (function(){
+    var KEY='sclmw_pwa_dismiss';
+    var btn=document.getElementById('pwaInstall');
+    var hint=document.getElementById('pwaHint');
+    var later=document.getElementById('pwaLater');
+    var deferred=window.__sclmwInstall||null;
+    function dismissed(){ try{ return localStorage.getItem(KEY)==='1'; }catch(e){ return false; } }
+    function standalone(){
+      return (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone===true;
+    }
+    function ios(){
+      var ua=navigator.userAgent||'';
+      var pad=navigator.platform==='MacIntel' && navigator.maxTouchPoints>1;
+      return /iPhone|iPad|iPod/i.test(ua) || pad;
+    }
+    function showBtn(){ if(btn && !dismissed() && !standalone()) btn.hidden=false; }
+    if(deferred) showBtn();
+    window.addEventListener('beforeinstallprompt', function(ev){
+      ev.preventDefault();
+      deferred=ev;
+      showBtn();
+    });
+    window.addEventListener('appinstalled', function(){
+      deferred=null;
+      if(btn) btn.hidden=true;
+      if(hint) hint.hidden=true;
+    });
+    if(ios() && !standalone()) showBtn();
+    if(btn) btn.addEventListener('click', function(){
+      if(deferred){
+        deferred.prompt();
+        deferred.userChoice.then(function(){ deferred=null; if(btn) btn.hidden=true; });
+        return;
+      }
+      if(hint) hint.hidden=false;
+    });
+    if(later) later.addEventListener('click', function(){
+      try{ localStorage.setItem(KEY,'1'); }catch(e){}
+      if(btn) btn.hidden=true;
+      if(hint) hint.hidden=true;
+    });
+    if('serviceWorker' in navigator){
+      window.addEventListener('load', function(){
+        navigator.serviceWorker.register('./sw.js', {scope:'./'}).catch(function(){});
+      });
+    }
+  })();
 </script>
 </body>
 </html>
