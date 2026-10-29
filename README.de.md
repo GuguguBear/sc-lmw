@@ -101,9 +101,9 @@ Neuladen. Die Wahl bleibt in diesem Browser gespeichert.
 
 ### Darstellung
 
-Fünf Themen, umschaltbar über den ▣-Knopf neben der Sprache, gemerkt im Browser:
-Klassisch, Kompakt, Praktisch, Gehäuse und Science-Fiction. `THEME` in `config.js`
-ist `'compact'` (Standard), `'classic'`, `'practical'`, `'chassis'` oder `'scifi'`.
+Sechs Themen, umschaltbar über den ▣-Knopf neben der Sprache, gemerkt im Browser:
+Klassisch, Kompakt, Praktisch, Gehäuse, Science-Fiction und Dunst. `THEME` in `config.js`
+ist `'compact'` (Standard), `'classic'`, `'practical'`, `'chassis'`, `'scifi'` oder `'haze'`.
 Die eigene Wahl des Besuchers schlägt diese Vorgabe.
 - `data-lang="de"` am `sc-lmw.js`-Script-Tag (Weg b, direkter Einbau).
 - `mount(el, { lang: 'de' })`, falls du `SCLMW.mount()` selbst aufrufst.

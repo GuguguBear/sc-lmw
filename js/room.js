@@ -25,6 +25,7 @@
       find:'搜索昵称或地点', none:'没有匹配的人',
       give:'设为队长', giveShort:'队长', giveLeave:'交给他并离开', dissolve:'解散房间', dissolveLeave:'解散并离开', cancel:'取消',
       kick:'踢出', kickYes:'确定', kicked:'你已被移出这个房间。', denied:'队长拒绝了这次申请。',
+      cast:'广播', castLead:'发给这个房间里的所有人。', castPh:'写一句给小队的话', castSend:'发送', castFrom:'来自', castClose:'知道了', castSound:'广播音效', castOn:'开', castOff:'关', castEmpty:'先写一点内容。',
       handTitle:'离开前先交接', handLead:'把队长交给一位队员，或解散房间。', handSolo:'房间里只有你。离开会解散这个房间。',
       errNick:'请填写 1 到 32 个字的昵称。', errRoom:'没有这个房间。',
       agoNow:'刚刚', agoSec:'{n} 秒前', agoMin:'{n} 分钟前', agoHour:'{n} 小时前', agoDay:'{n} 天前',
@@ -61,6 +62,7 @@
       find:'搜尋暱稱或地點', none:'沒有符合的人',
       give:'設為隊長', giveShort:'隊長', giveLeave:'交給他並離開', dissolve:'解散房間', dissolveLeave:'解散並離開', cancel:'取消',
       kick:'踢出', kickYes:'確定', kicked:'你已被移出這個房間。', denied:'隊長拒絕了這次申請。',
+      cast:'廣播', castLead:'發給這個房間裡的所有人。', castPh:'寫一句給小隊的話', castSend:'發送', castFrom:'來自', castClose:'知道了', castSound:'廣播音效', castOn:'開', castOff:'關', castEmpty:'先寫一點內容。',
       handTitle:'離開前先交接', handLead:'把隊長交給一位隊員，或解散房間。', handSolo:'房間裡只有你。離開會解散這個房間。',
       errNick:'請填寫 1 到 32 個字的暱稱。', errRoom:'沒有這個房間。',
       agoNow:'剛剛', agoSec:'{n} 秒前', agoMin:'{n} 分鐘前', agoHour:'{n} 小時前', agoDay:'{n} 天前',
@@ -97,6 +99,7 @@
       find:'Search name or place', none:'No match',
       give:'Make captain', giveShort:'Lead', giveLeave:'Give and leave', dissolve:'Close room', dissolveLeave:'Close and leave', cancel:'Cancel',
       kick:'Remove', kickYes:'Confirm', kicked:'You were removed from this room.', denied:'The captain declined this request.',
+      cast:'Broadcast', castLead:'Send this to everyone in the room.', castPh:'A note for the squad', castSend:'Send', castFrom:'From', castClose:'Got it', castSound:'Broadcast sound', castOn:'On', castOff:'Off', castEmpty:'Write something first.',
       handTitle:'Hand off before leaving', handLead:'Give the captain role to a member, or close the room.', handSolo:'You are the only person here. Leaving closes the room.',
       errNick:'Use a nickname of 1 to 32 characters.', errRoom:'No room with that code.',
       agoNow:'Just now', agoSec:'{n}s ago', agoMin:'{n} min ago', agoHour:'{n} h ago', agoDay:'{n} d ago',
@@ -133,6 +136,7 @@
       find:'Name oder Ort', none:'Niemand passt',
       give:'Zum Captain machen', giveShort:'Capt.', giveLeave:'Geben und gehen', dissolve:'Raum schließen', dissolveLeave:'Schließen und gehen', cancel:'Abbrechen',
       kick:'Entfernen', kickYes:'Wirklich', kicked:'Du wurdest aus diesem Raum entfernt.', denied:'Der Captain hat diese Anfrage abgelehnt.',
+      cast:'Durchsage', castLead:'Das geht an alle in diesem Raum.', castPh:'Ein Satz für die Gruppe', castSend:'Senden', castFrom:'Von', castClose:'Verstanden', castSound:'Durchsage-Ton', castOn:'An', castOff:'Aus', castEmpty:'Erst etwas schreiben.',
       handTitle:'Vor dem Gehen übergeben', handLead:'Captain an ein Mitglied geben, oder den Raum schließen.', handSolo:'Du bist allein. Gehen schließt den Raum.',
       errNick:'Nickname mit 1 bis 32 Zeichen.', errRoom:'Diesen Raum gibt es nicht.',
       agoNow:'Gerade', agoSec:'vor {n} s', agoMin:'vor {n} min', agoHour:'vor {n} h', agoDay:'vor {n} d',
@@ -159,7 +163,7 @@
   function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
   function token(){ try{ return localStorage.getItem(TOKEN)||''; }catch(e){ return ''; } }
   function savedCode(){ try{ return localStorage.getItem(CODE)||''; }catch(e){ return ''; } }
-  var state = null, draft = [], marking = false, note = '', statusMsg = '', selected = '', API = '', entered = false, roomKind = '', linkState = '', linkMiss = 0, leaving = false, crewQ = '', picking = false, histInfo = {}, histKey = '', pubRooms = null, pubSig = null, pubAt = 0, alertHold = false, alertSeen = {}, alertFlash = null, alertTimer = 0, kickAsk = '', alertDeny = null;
+  var state = null, draft = [], marking = false, note = '', statusMsg = '', selected = '', API = '', entered = false, roomKind = '', linkState = '', linkMiss = 0, leaving = false, crewQ = '', picking = false, histInfo = {}, histKey = '', pubRooms = null, pubSig = null, pubAt = 0, alertHold = false, alertSeen = {}, alertFlash = null, alertTimer = 0, kickAsk = '', alertDeny = null, castCompose = false, castDraft = '', castErr = '', castIncoming = null, castAudio = null;
 
   function api(path, opt){
     opt = opt || {};
@@ -604,6 +608,21 @@
     });
     pullPublic(false);
   }
+  function rsiHtml(){
+    var lang = (SC.i18n && SC.i18n.getLang) ? SC.i18n.getLang() : 'en';
+    var local = lang==='en' ? '' : '<p>'+esc(ti('home.rsi_local'))+'</p>';
+    return '<section class="st-home-card st-home-rsi">'+
+      '<img class="st-rsi-mark" src="./icons/made-by-the-community.png" alt="Made by the Community" width="168" height="168">'+
+      '<h2>'+esc(ti('home.rsi_h'))+'</h2>'+
+      '<p class="st-rsi-en">This is an unofficial Star Citizen fan site, not affiliated with the Cloud Imperium group of companies. All content on this site not authored by its host or users are property of their respective owners.</p>'+
+      local+
+      '<p class="st-rsi-markline"><b>'+esc(ti('home.rsi_tm'))+'</b> Star Citizen®, Squadron 42®, Roberts Space Industries®, and Cloud Imperium® are registered trademarks of Cloud Imperium Rights LLC and Cloud Imperium Rights Ltd. All rights reserved.</p>'+
+      '<p class="st-home-links">'+
+        '<a href="https://robertsspaceindustries.com/" target="_blank" rel="noopener">'+esc(ti('home.rsi_official'))+'</a>'+
+        '<a href="https://support.robertsspaceindustries.com/hc/en-us/articles/360006895793-Star-Citizen-Fankit-and-Fandom-FAQ" target="_blank" rel="noopener">'+esc(ti('home.rsi_policy'))+'</a>'+
+      '</p></section>';
+  }
+
   function paintGate(el){
     if(leaving && state && state.role==='captain' && state.status==='member'){
       el.innerHTML = '<div class="st-home st-home-narrow"><header class="st-home-hero"><div class="st-home-kicker">SC LMW</div><h1>'+esc(t('title'))+'</h1></header><section class="st-home-card">'+handoffHtml()+'</section></div>';
@@ -644,6 +663,7 @@
       '<div class="st-home">'+
         '<header class="st-home-hero"><div class="st-home-kicker">SC LMW · '+esc(ti('home.kicker'))+'</div>'+
           '<h1>'+esc(t('title'))+'</h1><p>'+esc(ti('home.lead'))+'</p></header>'+
+        rsiHtml()+
         '<section class="st-home-card" id="stHomeStarfix">'+starfixFactsHtml()+'</section>'+
         '<section class="st-home-card st-home-join"><h2>'+esc(ti('home.join_h'))+'</h2>'+roomBody+'</section>'+
         pubHtml()+
@@ -684,6 +704,7 @@
       '<div class="row"><button type="button" id="stLinkPc">'+esc(t('link'))+'</button></div>'+
       linkNote()+
       (state.role==='captain' ? visHtml() : '')+
+      (state.role==='captain' ? '<div class="row"><button type="button" id="stCast">'+esc(t('cast'))+'</button></div>' : '')+
       (state.role==='captain' ? (
         '<div class="st-room-sec"><span>'+esc(t('mode'))+'</span>'+
           '<div class="st-dd" id="stRouteMode"><button type="button" class="st-dd-btn" id="stRouteModeBtn">'+esc(state.routeMode==='members'?t('modeMembers'):t('modeCaptain'))+'</button>'+
@@ -758,6 +779,8 @@
       api('/api/rooms/'+encodeURIComponent(state.code)+'/settings', {method:'POST', body:{routeMode:b.getAttribute('data-mode')}}).then(take).catch(fail);
     }; });
     el.querySelector('#stHere').onclick = here;
+    var castBtn = el.querySelector('#stCast');
+    if(castBtn) castBtn.onclick = function(){ castCompose = true; castErr = ''; paint(); };
     var mark = el.querySelector('#stMark');
     if(mark) mark.onclick = function(){ marking=!marking; if(!marking) window.__stRouteOn=false; selected=''; paint(); };
     el.querySelectorAll('[data-rm]').forEach(function(b){ b.onclick=function(){ draft.splice(+b.getAttribute('data-rm'),1); paint(); }; });
@@ -1049,6 +1072,7 @@
     try{ localStorage.setItem(CODE, st.code); }catch(e){}
     if(st.status!=='member') entered = false;
     if(st.status==='member' && entered) bindPlayers();
+    noteCast(st);
     paint();
   }
   function fail(e){
@@ -1089,6 +1113,91 @@
       (sub ? '<p class="st-alert-sub"><span>'+esc(sub.zh)+'</span><span>'+esc(sub.en)+'</span></p>' : '')+
       body+acts+'</div>';
   }
+  function grabCastDraft(){
+    var area = document.getElementById('stCastBody');
+    if(area) castDraft = area.value;
+  }
+  function castSoundOn(){ return SC.castSound ? !!SC.castSound() : true; }
+  function setCastSound(on){ if(SC.castSound) SC.castSound(!!on); }
+  function castSoundHtml(){
+    var on = castSoundOn();
+    var a = pair('castSound'), b = pair(on?'castOn':'castOff');
+    return '<button type="button" id="stCastSound" class="'+(on?'on':'')+'"><b>'+esc(a.zh+' · '+b.zh)+'</b><em>'+esc(a.en+' · '+b.en)+'</em></button>';
+  }
+  function bindCastSound(box){
+    var b = box.querySelector('#stCastSound');
+    if(!b) return;
+    b.onclick = function(){ grabCastDraft(); setCastSound(!castSoundOn()); paint(); };
+  }
+  function castSeenId(){
+    try{
+      var m = JSON.parse(localStorage.getItem('sclmw_cast_seen')||'{}');
+      return state && state.code ? (m[state.code]||'') : '';
+    }catch(e){ return ''; }
+  }
+  function castMarkSeen(id){
+    try{
+      var m = JSON.parse(localStorage.getItem('sclmw_cast_seen')||'{}');
+      if(state && state.code) m[state.code] = id;
+      localStorage.setItem('sclmw_cast_seen', JSON.stringify(m));
+    }catch(e){}
+  }
+  function castPlayed(id){
+    try{ return !!JSON.parse(sessionStorage.getItem('sclmw_cast_played')||'{}')[id]; }catch(e){ return false; }
+  }
+  function castMarkPlayed(id){
+    try{
+      var m = JSON.parse(sessionStorage.getItem('sclmw_cast_played')||'{}');
+      m[id] = 1;
+      sessionStorage.setItem('sclmw_cast_played', JSON.stringify(m));
+    }catch(e){}
+  }
+  function armCastAudio(){
+    var Ctx = window.AudioContext || window.webkitAudioContext;
+    if(!Ctx) return null;
+    if(!castAudio){ try{ castAudio = new Ctx(); }catch(e){ return null; } }
+    if(castAudio.state==='suspended') castAudio.resume();
+    return castAudio;
+  }
+  function playCastChime(){
+    if(!castSoundOn()) return;
+    var ctx = armCastAudio();
+    if(!ctx) return;
+    var t0 = ctx.currentTime;
+    function tone(freq, start, dur, peak){
+      var o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = 'sine';
+      o.frequency.setValueAtTime(freq, t0+start);
+      g.gain.setValueAtTime(0.0001, t0+start);
+      g.gain.exponentialRampToValueAtTime(peak, t0+start+0.03);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0+start+dur);
+      o.connect(g); g.connect(ctx.destination);
+      o.start(t0+start); o.stop(t0+start+dur+0.02);
+    }
+    tone(494, 0, 0.22, 0.05);
+    tone(740, 0.12, 0.28, 0.04);
+    tone(988, 0.24, 0.36, 0.03);
+  }
+  function noteCast(st){
+    var c = st && st.cast;
+    if(!st || st.status!=='member' || !c || !c.id || c.id===castSeenId()){
+      if(!c || !c.id || (st && c && c.id===castSeenId())) castIncoming = null;
+      return;
+    }
+    var fresh = !castIncoming || castIncoming.id!==c.id;
+    castIncoming = {id:c.id, body:c.body||'', name:c.name||''};
+    if(fresh && !castPlayed(c.id)){ castMarkPlayed(c.id); playCastChime(); }
+  }
+  function sendCast(){
+    grabCastDraft();
+    var body = castDraft.trim();
+    if(!body){ castErr = t('castEmpty'); paint(); return; }
+    castErr = '';
+    api('/api/rooms/'+encodeURIComponent(state.code)+'/broadcast', {method:'POST', body:{body:body}}).then(function(st){
+      castCompose = false; castDraft = '';
+      take(st);
+    }).catch(fail);
+  }
   function paintAlert(){
     var host = root();
     var box = document.getElementById('stAlert');
@@ -1113,6 +1222,36 @@
       box.innerHTML = alertPlate('deny', 'reject', 'denied', codeHtml, '<div class="st-alert-acts"><button type="button" id="stAlertDeny">'+bi('switchRoom')+'</button></div>');
       var denyBtn = box.querySelector('#stAlertDeny');
       if(denyBtn) denyBtn.onclick = function(){ alertDeny = null; paint(); };
+      return;
+    }
+    grabCastDraft();
+    if(castCompose && state && state.role==='captain' && state.status==='member'){
+      var area0 = document.getElementById('stCastBody');
+      if(area0 && document.activeElement===area0 && box.classList.contains('tone-cast') && !castErr){
+        box.hidden = false;
+        return;
+      }
+      box.hidden = false;
+      box.className = 'st-alert tone-cast';
+      var field = '<textarea id="stCastBody" maxlength="120" placeholder="'+esc(t('castPh'))+'">'+esc(castDraft)+'</textarea>'+
+        (castErr ? '<p class="st-alert-sub"><span>'+esc(castErr)+'</span></p>' : '');
+      var acts = '<div class="st-alert-acts"><button type="button" id="stCastSend">'+bi('castSend')+'</button><button type="button" id="stCastCancel">'+bi('cancel')+'</button>'+castSoundHtml()+'</div>';
+      box.innerHTML = alertPlate('cast', 'cast', 'castLead', field, acts);
+      var area = box.querySelector('#stCastBody');
+      if(area) area.oninput = function(){ castDraft = area.value; castErr = ''; };
+      box.querySelector('#stCastSend').onclick = sendCast;
+      box.querySelector('#stCastCancel').onclick = function(){ castCompose = false; castErr = ''; paint(); };
+      bindCastSound(box);
+      return;
+    }
+    if(castIncoming && state && state.status==='member' && castIncoming.id!==castSeenId()){
+      box.hidden = false;
+      box.className = 'st-alert tone-cast';
+      var who = '<p class="st-alert-from"><b>'+esc(pair('castFrom').zh+' '+castIncoming.name)+'</b><em>'+esc(pair('castFrom').en+' '+castIncoming.name)+'</em></p>'+
+        '<p class="st-alert-msg">'+esc(castIncoming.body)+'</p>';
+      box.innerHTML = alertPlate('cast', 'cast', '', who, '<div class="st-alert-acts"><button type="button" id="stCastClose">'+bi('castClose')+'</button>'+castSoundHtml()+'</div>');
+      box.querySelector('#stCastClose').onclick = function(){ castMarkSeen(castIncoming.id); castIncoming = null; paint(); };
+      bindCastSound(box);
       return;
     }
     if(!flash && !waiting && !review){ box.hidden = true; box.innerHTML = ''; return; }
@@ -1225,6 +1364,7 @@
   function localLeave(){
     leaving = false;
     state = null; draft = []; marking = false; note = ''; selected = ''; statusMsg = ''; entered = false; roomKind = ''; linkState = ''; linkMiss = 0;
+    castCompose = false; castDraft = ''; castErr = ''; castIncoming = null;
     try{ localStorage.removeItem(CODE); }catch(e){}
     window.__stRouteOn = false;
     var cfg = window.LIVEMAP_CONFIG || {};
@@ -1302,6 +1442,10 @@
       window.addEventListener('resize', window.__stRoomFit);
       if(window.ResizeObserver) new ResizeObserver(window.__stRoomFit).observe(root());
       requestAnimationFrame(window.__stRoomFit);
+    }
+    if(!window.__stCastArm){
+      window.__stCastArm = true;
+      window.addEventListener('pointerdown', function(){ armCastAudio(); }, true);
     }
     if(!window.__stRoomLang){
       window.__stRoomLang=function(){

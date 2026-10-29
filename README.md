@@ -145,9 +145,9 @@ Choosing German also shows German mission and amenity names. Choosing Chinese sh
 
 ## Appearance
 
-Five interface themes, switched from the ▣ button next to the language control and remembered in the browser: Classic (the original look), Compact, Practical, Chassis and Sci-fi.
+Six interface themes, switched from the ▣ button next to the language control and remembered in the browser: Classic (the original look), Compact, Practical, Chassis, Sci-fi, and Haze.
 
-- `THEME` in `config.js`: `'compact'` (default), `'classic'`, `'practical'`, `'chassis'`, or `'scifi'`.
+- `THEME` in `config.js`: `'compact'` (default), `'classic'`, `'practical'`, `'chassis'`, `'scifi'`, or `'haze'`.
 - `data-theme="chassis"` on the script tag, or `mount(el, { theme: 'chassis' })`.
 - A visitor's own choice wins over this default.
 

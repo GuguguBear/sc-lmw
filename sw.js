@@ -22,6 +22,7 @@ var SHELL = [
   './icons/icon-512.png',
   './icons/icon-maskable-512.png',
   './icons/apple-touch-icon.png',
+  './icons/made-by-the-community.png',
   './vendor/three/three.min.js',
   './vendor/three/examples/OrbitControls.js',
   './vendor/three/examples/GLTFLoader.js',

@@ -17,7 +17,7 @@
  *   data-poll-ms        Abfrage-Intervall in ms / poll interval in ms (Default: 30000)
  *   data-lang           'auto'|'de'|'en'|'zh-Hans'|'zh-Hant' (zh-CN / zh-TW aliases work)
  *                        (Default: config.js LANG, sonst/otherwise 'auto' -- siehe js/i18n.js)
- *   data-theme          'classic'|'compact'|'practical'|'chassis'|'scifi'
+ *   data-theme          'classic'|'compact'|'practical'|'chassis'|'scifi'|'haze'
  *                        (Default: config.js THEME, sonst/otherwise 'compact')
  *
  * See CREDITS.md / LICENSE. Unofficial fan project, not affiliated with CIG/RSI.

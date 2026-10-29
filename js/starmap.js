@@ -954,7 +954,7 @@ function stantonScene(canvas,sysKey){
 const ST_DRAG_KEY='sclmw_drag_invert';
 const ST_CTRL_KEY='sclmw_controls';
 const ST_CTRL_DEFAULT={
-  invertX:false, invertY:false, invertWheel:false, hint:true, spin:true,
+  invertX:false, invertY:false, invertWheel:false, hint:true, spin:true, castSound:true,
   sensRot:1, sensPan:1, sensZoom:1,
   mouse:{
     orbit:[{b:0}],
@@ -982,7 +982,7 @@ function readCtrl(){
   try{ saved=JSON.parse(localStorage.getItem(ST_CTRL_KEY)||'null'); }catch(e){}
   const d=ctrlDefaults();
   if(saved&&typeof saved==='object'){
-    ['invertX','invertY','invertWheel','hint','spin'].forEach(function(k){ if(typeof saved[k]==='boolean') d[k]=saved[k]; });
+    ['invertX','invertY','invertWheel','hint','spin','castSound'].forEach(function(k){ if(typeof saved[k]==='boolean') d[k]=saved[k]; });
     ['sensRot','sensPan','sensZoom'].forEach(function(k){ const n=+saved[k]; if(n>=0.25&&n<=3) d[k]=n; });
     if(saved.mouse) ST_MOUSE_ACTS.forEach(function(a){ if(Array.isArray(saved.mouse[a])) d.mouse[a]=saved.mouse[a].filter(validChord).slice(0,4); });
     if(saved.keys) ST_KEY_ACTS.forEach(function(a){ if(Array.isArray(saved.keys[a])) d.keys[a]=saved.keys[a].filter(function(x){ return typeof x==='string'&&x.length&&x.length<24; }).slice(0,4); });
@@ -994,6 +994,7 @@ function readCtrl(){
   ST_PAUSE=!d.spin;
 }
 readCtrl();
+SC.castSound=function(on){ if(on===undefined) return !!(ST_CTRL&&ST_CTRL.castSound); ST_CTRL.castSound=!!on; saveCtrl(); return ST_CTRL.castSound; };
 const ST_SKY_KEY='sclmw_sky';
 const ST_SKY_STYLES=['classic','sparse','dense','spectrum','glow'];
 let ST_SKY={on:true, style:'classic'};
@@ -1099,7 +1100,7 @@ function paintCtrl(){
     '<div class="st-ctrl-sec">'+esc(_t('ctrl.feel'))+'</div><div class="st-ctrl-flags">'+flag('invertX')+flag('invertY')+flag('invertWheel')+'</div>'+
     slide('sensRot')+slide('sensPan')+slide('sensZoom')+
     '<div class="st-ctrl-sec">'+esc(_t('sky.title'))+'</div><div class="st-ctrl-flags"><button type="button" class="st-ctrl-flag'+(ST_SKY.on?' on':'')+'" data-sky="toggle">'+esc(_t('sky.title'))+' · '+esc(_t(ST_SKY.on?'ctrl.on':'ctrl.off'))+'</button></div><div class="st-ctrl-flags">'+ST_SKY_STYLES.map(function(id){ return '<button type="button" class="st-ctrl-flag'+(ST_SKY.on&&ST_SKY.style===id?' on':'')+'" data-sky="'+id+'">'+esc(_t('sky.'+id))+'</button>'; }).join('')+'</div>'+
-    '<div class="st-ctrl-sec">'+esc(_t('ctrl.more'))+'</div><div class="st-ctrl-flags">'+tog('spin')+tog('hint')+'</div>'+
+    '<div class="st-ctrl-sec">'+esc(_t('ctrl.more'))+'</div><div class="st-ctrl-flags">'+tog('spin')+tog('hint')+tog('castSound')+'</div>'+
     '<div class="st-ctrl-row"><button type="button" class="st-ctrl-reset" data-ctrl="reset">'+esc(_t('ctrl.reset'))+'</button></div>';
 }
 function openCtrl(){
@@ -1187,7 +1188,7 @@ function onLocPick(action){
   if(action==='clear'){ SC.loc.clearCustom(); return; }
   SC.loc.setMode(action);
 }
-const ST_UI_THEMES=['classic','compact','practical','chassis','scifi'];
+const ST_UI_THEMES=['classic','compact','practical','chassis','scifi','haze'];
 const ST_UI_THEME_KEY='sclmw_ui_theme';
 let ST_UI_THEME='compact';
 function normUiTheme(t){ return ST_UI_THEMES.indexOf(t)>=0?t:null; }

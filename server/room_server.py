@@ -117,6 +117,13 @@ def init_db():
               body TEXT NOT NULL,
               created REAL NOT NULL
             );
+            CREATE TABLE IF NOT EXISTS broadcast (
+              id TEXT PRIMARY KEY,
+              room TEXT NOT NULL,
+              author TEXT NOT NULL,
+              body TEXT NOT NULL,
+              created REAL NOT NULL
+            );
             """
         )
         cols = {row[1] for row in con.execute("PRAGMA table_info(presence)")}
@@ -140,6 +147,30 @@ def clean_nick(raw):
     if not s or len(s) > 32:
         return None
     return s
+
+
+def clean_cast(raw):
+    s = " ".join(str(raw or "").replace("\r", " ").replace("\n", " ").split())
+    s = "".join(ch for ch in s if ch >= " " and ch != "\x7f").strip()
+    if not s:
+        return None
+    return s[:120]
+
+
+def latest_cast(con, code):
+    row = con.execute(
+        """
+        SELECT b.id, b.body, b.created, m.nickname
+        FROM broadcast b JOIN member m ON m.id=b.author
+        WHERE b.room=?
+        ORDER BY b.created DESC
+        LIMIT 1
+        """,
+        (code,),
+    ).fetchone()
+    if not row:
+        return None
+    return {"id": row["id"], "body": row["body"], "name": row["nickname"] or "", "at": row["created"]}
 
 
 def new_code(con):
@@ -356,6 +387,7 @@ def room_state(con, code, me):
         "openWait": open_wait(room),
         "members": members,
         "routes": routes,
+        "cast": latest_cast(con, code),
     }
 
 
@@ -487,6 +519,7 @@ def wipe_room(con, code):
         con.execute("DELETE FROM comment WHERE route=?", (rt["id"],))
     con.execute("DELETE FROM route WHERE room=?", (code,))
     con.execute("DELETE FROM presence WHERE room=?", (code,))
+    con.execute("DELETE FROM broadcast WHERE room=?", (code,))
     con.execute("DELETE FROM membership WHERE room=?", (code,))
     con.execute("DELETE FROM room WHERE code=?", (code,))
 
@@ -808,6 +841,31 @@ class Handler(BaseHTTPRequestHandler):
                     self.send_json(400, {"error": "mode"})
                     return
                 con.execute("UPDATE room SET route_mode=? WHERE code=?", (mode, code))
+                self.send_json(200, room_state(con, code, me))
+                return
+            if len(parts) == 4 and parts[3] == "broadcast":
+                code = parts[2].upper()
+                room = con.execute("SELECT * FROM room WHERE code=?", (code,)).fetchone()
+                ship = con.execute(
+                    "SELECT status FROM membership WHERE room=? AND member=?",
+                    (code, me["id"]),
+                ).fetchone()
+                if not room or not ship or ship["status"] != "member" or room["captain"] != me["id"]:
+                    self.send_json(403, {"error": "captain"})
+                    return
+                text = clean_cast(body.get("body") if isinstance(body, dict) else None)
+                if not text:
+                    self.send_json(400, {"error": "empty"})
+                    return
+                bid = secrets.token_hex(8)
+                con.execute(
+                    "INSERT INTO broadcast (id, room, author, body, created) VALUES (?,?,?,?,?)",
+                    (bid, code, me["id"], text, now()),
+                )
+                con.execute(
+                    "DELETE FROM broadcast WHERE room=? AND id!=?",
+                    (code, bid),
+                )
                 self.send_json(200, room_state(con, code, me))
                 return
             if len(parts) == 4 and parts[3] == "presence":

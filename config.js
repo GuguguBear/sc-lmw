@@ -43,9 +43,10 @@ window.LIVEMAP_CONFIG = {
   // is remembered in localStorage and wins over this.
   LANG: 'auto',
 
-  // Interface theme: 'classic' | 'compact' | 'practical' | 'chassis' | 'scifi'.
+  // Interface theme: 'classic' | 'compact' | 'practical' | 'chassis' | 'scifi' | 'haze'.
   // compact is the default. classic is the original look, practical is flat and easier to read,
-  // chassis is a metal instrument case, scifi is a holographic console.
+  // chassis is a metal instrument case, scifi is a holographic console,
+  // haze is the frosted, moving plate used by the squad alerts.
   // data-theme on the script tag, or mount(el,{theme:'chassis'}).
   // The visitor's own choice is remembered in localStorage and wins over this.
   THEME: 'compact'
