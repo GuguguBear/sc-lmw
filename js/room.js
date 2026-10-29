@@ -16,7 +16,7 @@
       s3:'队员申请加入，队长确认后，大家只看得到这个房间。',
       nick:'昵称', create:'建立房间', join:'加入房间', code:'房间码',
       wait:'已提交申请，等待队长确认。', copy:'复制房间码', copied:'已复制',
-      enter:'进入星图', leave:'离开房间', pending:'待确认', approve:'通过', reject:'拒绝',
+      enter:'进入星图', leave:'离开房间', pending:'待确认', approve:'通过', reject:'拒绝', alertLater:'稍后',
       here:'我在这里', hereNeed:'先在星图上点开一个地点。',
       route:'标记路线', routeOn:'结束标记', routeHint:'按住 Shift，依次点地点。',
       note:'路线备注', publish:'发布给房间', clear:'清空', comment:'评论', send:'发送', del:'删除',
@@ -51,7 +51,7 @@
       s3:'隊員申請加入，隊長確認後，大家只看得到這個房間。',
       nick:'暱稱', create:'建立房間', join:'加入房間', code:'房間碼',
       wait:'已送出申請，等待隊長確認。', copy:'複製房間碼', copied:'已複製',
-      enter:'進入星圖', leave:'離開房間', pending:'待確認', approve:'通過', reject:'拒絕',
+      enter:'進入星圖', leave:'離開房間', pending:'待確認', approve:'通過', reject:'拒絕', alertLater:'稍後',
       here:'我在這裡', hereNeed:'先在星圖上點開一個地點。',
       route:'標記路線', routeOn:'結束標記', routeHint:'按住 Shift，依序點地點。',
       note:'路線備註', publish:'發布給房間', clear:'清空', comment:'評論', send:'送出', del:'刪除',
@@ -86,7 +86,7 @@
       s3:'Members apply. After the captain accepts, only this room can see each other.',
       nick:'Nickname', create:'Create room', join:'Join room', code:'Room code',
       wait:'Request sent. Waiting for the captain.', copy:'Copy code', copied:'Copied',
-      enter:'Enter map', leave:'Leave room', pending:'Waiting', approve:'Accept', reject:'Decline',
+      enter:'Enter map', leave:'Leave room', pending:'Waiting', approve:'Accept', reject:'Decline', alertLater:'Later',
       here:'I am here', hereNeed:'Open a place on the map first.',
       route:'Mark route', routeOn:'Stop marking', routeHint:'Hold Shift and click places in order.',
       note:'Route note', publish:'Publish to room', clear:'Clear', comment:'Comment', send:'Send', del:'Delete',
@@ -121,7 +121,7 @@
       s3:'Mitglieder fragen an. Nach dem Ja sieht nur dieser Raum einander.',
       nick:'Nickname', create:'Raum anlegen', join:'Raum beitreten', code:'Raumcode',
       wait:'Anfrage ist raus. Der Captain muss zustimmen.', copy:'Code kopieren', copied:'Kopiert',
-      enter:'Zur Karte', leave:'Raum verlassen', pending:'Offen', approve:'Annehmen', reject:'Ablehnen',
+      enter:'Zur Karte', leave:'Raum verlassen', pending:'Offen', approve:'Annehmen', reject:'Ablehnen', alertLater:'Später',
       here:'Ich bin hier', hereNeed:'Öffne zuerst einen Ort auf der Karte.',
       route:'Route markieren', routeOn:'Markieren beenden', routeHint:'Shift halten und Orte der Reihe nach anklicken.',
       note:'Notiz zur Route', publish:'Für den Raum veröffentlichen', clear:'Leeren', comment:'Kommentar', send:'Senden', del:'Löschen',
@@ -155,7 +155,7 @@
   function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
   function token(){ try{ return localStorage.getItem(TOKEN)||''; }catch(e){ return ''; } }
   function savedCode(){ try{ return localStorage.getItem(CODE)||''; }catch(e){ return ''; } }
-  var state = null, draft = [], marking = false, note = '', statusMsg = '', selected = '', API = '', entered = false, roomKind = '', linkState = '', linkMiss = 0, leaving = false, crewQ = '', picking = false, histInfo = {}, histKey = '', pubRooms = null, pubSig = null, pubAt = 0;
+  var state = null, draft = [], marking = false, note = '', statusMsg = '', selected = '', API = '', entered = false, roomKind = '', linkState = '', linkMiss = 0, leaving = false, crewQ = '', picking = false, histInfo = {}, histKey = '', pubRooms = null, pubSig = null, pubAt = 0, alertHold = false, alertSeen = {}, alertFlash = null, alertTimer = 0;
 
   function api(path, opt){
     opt = opt || {};
@@ -444,6 +444,7 @@
       paint();
     };
     drawSelected();
+    paintAlert();
   }
 
   function ti(k){
@@ -664,7 +665,6 @@
   }
 
   function paintDock(el){
-    var pending = (state.members||[]).filter(function(m){ return m.status==='pending'; });
     var mine = canDraw();
     el.innerHTML =
       '<div class="st-room-h" id="stRoomBar" role="group" aria-label="'+esc(state.code)+'"><b>'+esc(state.code)+'</b>'+
@@ -681,13 +681,6 @@
       linkNote()+
       (state.role==='captain' ? visHtml() : '')+
       (state.role==='captain' ? (
-        '<div class="st-room-sec"><span>'+esc(t('pending'))+'</span>'+
-          (pending.length? pending.map(function(m){
-            return '<div class="st-room-row"><span>'+esc(m.nickname)+'</span>'+
-              '<button type="button" data-ok="'+esc(m.id)+'">'+esc(t('approve'))+'</button>'+
-              '<button type="button" data-no="'+esc(m.id)+'">'+esc(t('reject'))+'</button></div>';
-          }).join('') : '<div class="st-room-dim">—</div>')+
-        '</div>'+
         '<div class="st-room-sec"><span>'+esc(t('mode'))+'</span>'+
           '<div class="st-dd" id="stRouteMode"><button type="button" class="st-dd-btn" id="stRouteModeBtn">'+esc(state.routeMode==='members'?t('modeMembers'):t('modeCaptain'))+'</button>'+
           '<div class="st-dd-list" hidden>'+
@@ -750,8 +743,6 @@
     if(dissolve) dissolve.onclick = function(){ exitRoom({dissolve:true}); };
     var link = el.querySelector('#stLinkPc');
     if(link) link.onclick = linkPc;
-    el.querySelectorAll('[data-ok]').forEach(function(b){ b.onclick=function(){ decide(b.getAttribute('data-ok'),'approve'); }; });
-    el.querySelectorAll('[data-no]').forEach(function(b){ b.onclick=function(){ decide(b.getAttribute('data-no'),'reject'); }; });
     var modeBtn = el.querySelector('#stRouteModeBtn');
     if(modeBtn) modeBtn.onclick = function(e){
       e.stopPropagation();
@@ -1057,8 +1048,90 @@
     else statusMsg = t('errNet');
     paint();
   }
+  function zhDict(){ return DICT[lang()==='zh-Hant'?'zh-Hant':'zh-Hans'] || DICT['zh-Hans']; }
+  function pair(k){ return {zh:(zhDict()[k]||''), en:(DICT.en[k]||'')}; }
+  function bi(k){ var p = pair(k); return '<b>'+esc(p.zh)+'</b><em>'+esc(p.en)+'</em>'; }
+  function pendingList(){ return (state&&state.members||[]).filter(function(m){ return m.status==='pending'; }); }
+  function syncAlert(list){
+    var ids = {}, fresh = false;
+    list.forEach(function(m){ ids[m.id] = 1; if(!alertSeen[m.id]) fresh = true; });
+    alertSeen = ids;
+    if(fresh) alertHold = false;
+  }
+  function armAlert(){
+    clearTimeout(alertTimer);
+    if(!alertFlash) return;
+    alertTimer = setTimeout(function(){ if(alertFlash && alertFlash.until<=Date.now()){ alertFlash = null; paint(); } }, Math.max(40, alertFlash.until-Date.now()));
+  }
+  function alertPlate(tone, titleKey, subKey, body, acts){
+    var title = pair(titleKey), sub = subKey ? pair(subKey) : null;
+    return '<div class="st-alert-plate" role="dialog" aria-label="'+esc(title.zh+' '+title.en)+'">'+
+      '<i class="c tl"></i><i class="c tr"></i><i class="c bl"></i><i class="c br"></i>'+
+      '<div class="st-alert-bar"></div>'+
+      '<div class="st-alert-kicker">'+esc(title.zh)+'</div>'+
+      '<div class="st-alert-en">'+esc(title.en)+'</div>'+
+      (sub ? '<p class="st-alert-sub"><span>'+esc(sub.zh)+'</span><span>'+esc(sub.en)+'</span></p>' : '')+
+      body+acts+'</div>';
+  }
+  function paintAlert(){
+    var host = root();
+    var box = document.getElementById('stAlert');
+    if(!box){
+      box = document.createElement('div');
+      box.id = 'stAlert';
+      box.className = 'st-alert';
+      box.hidden = true;
+      host.appendChild(box);
+    }
+    if(alertFlash && alertFlash.until<=Date.now()) alertFlash = null;
+    var list = pendingList();
+    var captain = !!(state && state.role==='captain' && state.status==='member');
+    if(captain) syncAlert(list); else alertSeen = {};
+    var waiting = !!(state && state.status==='pending' && !picking);
+    var flash = alertFlash;
+    var review = captain && list.length;
+    if(!flash && !waiting && !review){ box.hidden = true; box.innerHTML = ''; return; }
+    if(!flash && review && alertHold){
+      box.hidden = false;
+      box.className = 'st-alert hold tone-review';
+      var badge = pair('pending');
+      box.innerHTML = '<button type="button" class="st-alert-badge"><b>'+esc(badge.zh)+'</b><em>'+esc(badge.en)+'</em><span>'+list.length+'</span></button>';
+      box.querySelector('button').onclick = function(){ alertHold = false; paint(); };
+      return;
+    }
+    var tone = flash ? flash.tone : (waiting ? 'wait' : 'review');
+    var titleKey = flash ? (flash.tone==='ok'?'approve':'reject') : 'pending';
+    var subKey = flash ? '' : (waiting ? (roomKind==='join' ? 'wait' : 'resumedWait') : 's3');
+    var body = '';
+    if(flash) body = '<p class="st-alert-who">'+esc(flash.name||'')+'</p>';
+    else if(waiting) body = '<p class="st-alert-code">'+esc(state.code||'')+'</p>';
+    else body = list.map(function(m){
+      return '<div class="st-alert-row"><span>'+esc(m.nickname)+'</span>'+
+        '<button type="button" class="ok" data-ok="'+esc(m.id)+'">'+bi('approve')+'</button>'+
+        '<button type="button" class="no" data-no="'+esc(m.id)+'">'+bi('reject')+'</button></div>';
+    }).join('');
+    var acts = '';
+    if(waiting) acts = '<div class="st-alert-acts"><button type="button" id="stAlertSwitch">'+bi('switchRoom')+'</button></div>';
+    else if(!flash && review) acts = '<div class="st-alert-acts"><button type="button" id="stAlertLater">'+bi('alertLater')+'</button></div>';
+    box.hidden = false;
+    box.className = 'st-alert tone-'+tone;
+    box.innerHTML = alertPlate(tone, titleKey, subKey, body, acts);
+    box.querySelectorAll('[data-ok]').forEach(function(b){ b.onclick=function(){ decide(b.getAttribute('data-ok'),'approve'); }; });
+    box.querySelectorAll('[data-no]').forEach(function(b){ b.onclick=function(){ decide(b.getAttribute('data-no'),'reject'); }; });
+    var later = box.querySelector('#stAlertLater');
+    if(later) later.onclick = function(){ alertHold = true; paint(); };
+    var sw = box.querySelector('#stAlertSwitch');
+    if(sw) sw.onclick = function(){ picking = true; statusMsg = ''; paint(); };
+    armAlert();
+  }
   function decide(id, action){
-    api('/api/rooms/'+encodeURIComponent(state.code)+'/members/'+encodeURIComponent(id)+'/'+action, {method:'POST', body:{}}).then(take).catch(fail);
+    var name = '';
+    (state&&state.members||[]).forEach(function(m){ if(m.id===id) name = m.nickname||''; });
+    api('/api/rooms/'+encodeURIComponent(state.code)+'/members/'+encodeURIComponent(id)+'/'+action, {method:'POST', body:{}}).then(function(st){
+      alertFlash = {tone:action==='approve'?'ok':'no', name:name, until:Date.now()+2200};
+      alertHold = false;
+      take(st);
+    }).catch(fail);
   }
   function linkNote(){
     if(!state) return '';
