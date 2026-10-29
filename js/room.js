@@ -20,7 +20,7 @@
       route:'标记路线', routeOn:'结束标记', routeHint:'按住 Shift，依次点地点。',
       note:'路线备注', publish:'发布给房间', clear:'清空', comment:'评论', send:'发送', del:'删除',
       mode:'谁可以画路线', modeCaptain:'仅队长', modeMembers:'队员也可以',
-      members:'房间成员', server:'服务器', fold:'收起', you:'你', captainTag:'队长',
+      members:'房间成员', online:'在线', offline:'离线', server:'服务器', fold:'收起', you:'你', captainTag:'队长',
       find:'搜索昵称或地点', none:'没有匹配的人',
       give:'设为队长', giveShort:'队长', giveLeave:'交给他并离开', dissolve:'解散房间', dissolveLeave:'解散并离开', cancel:'取消',
       handTitle:'离开前先交接', handLead:'把队长交给一位队员，或解散房间。', handSolo:'房间里只有你。离开会解散这个房间。',
@@ -51,7 +51,7 @@
       route:'標記路線', routeOn:'結束標記', routeHint:'按住 Shift，依序點地點。',
       note:'路線備註', publish:'發布給房間', clear:'清空', comment:'評論', send:'送出', del:'刪除',
       mode:'誰可以畫路線', modeCaptain:'僅隊長', modeMembers:'隊員也可以',
-      members:'房間成員', server:'伺服器', fold:'收起', you:'你', captainTag:'隊長',
+      members:'房間成員', online:'在線', offline:'離線', server:'伺服器', fold:'收起', you:'你', captainTag:'隊長',
       find:'搜尋暱稱或地點', none:'沒有符合的人',
       give:'設為隊長', giveShort:'隊長', giveLeave:'交給他並離開', dissolve:'解散房間', dissolveLeave:'解散並離開', cancel:'取消',
       handTitle:'離開前先交接', handLead:'把隊長交給一位隊員，或解散房間。', handSolo:'房間裡只有你。離開會解散這個房間。',
@@ -82,7 +82,7 @@
       route:'Mark route', routeOn:'Stop marking', routeHint:'Hold Shift and click places in order.',
       note:'Route note', publish:'Publish to room', clear:'Clear', comment:'Comment', send:'Send', del:'Delete',
       mode:'Who can draw routes', modeCaptain:'Captain only', modeMembers:'Members too',
-      members:'Room members', server:'Server', fold:'Minimize', you:'you', captainTag:'Captain',
+      members:'Room members', online:'Online', offline:'Offline', server:'Server', fold:'Minimize', you:'you', captainTag:'Captain',
       find:'Search name or place', none:'No match',
       give:'Make captain', giveShort:'Lead', giveLeave:'Give and leave', dissolve:'Close room', dissolveLeave:'Close and leave', cancel:'Cancel',
       handTitle:'Hand off before leaving', handLead:'Give the captain role to a member, or close the room.', handSolo:'You are the only person here. Leaving closes the room.',
@@ -113,7 +113,7 @@
       route:'Route markieren', routeOn:'Markieren beenden', routeHint:'Shift halten und Orte der Reihe nach anklicken.',
       note:'Notiz zur Route', publish:'Für den Raum veröffentlichen', clear:'Leeren', comment:'Kommentar', send:'Senden', del:'Löschen',
       mode:'Wer Routen zeichnen darf', modeCaptain:'Nur der Captain', modeMembers:'Auch Mitglieder',
-      members:'Im Raum', server:'Server', fold:'Einklappen', you:'du', captainTag:'Captain',
+      members:'Im Raum', online:'Online', offline:'Offline', server:'Server', fold:'Einklappen', you:'du', captainTag:'Captain',
       find:'Name oder Ort', none:'Niemand passt',
       give:'Zum Captain machen', giveShort:'Capt.', giveLeave:'Geben und gehen', dissolve:'Raum schließen', dissolveLeave:'Schließen und gehen', cancel:'Abbrechen',
       handTitle:'Vor dem Gehen übergeben', handLead:'Captain an ein Mitglied geben, oder den Raum schließen.', handSolo:'Du bist allein. Gehen schließt den Raum.',
@@ -414,9 +414,44 @@
     drawSelected();
   }
 
+  function ti(k){
+    if(SC.i18n && typeof SC.i18n.t==='function') return SC.i18n.t(k);
+    return k;
+  }
+  function starfixFactsHtml(){
+    return '<h2>'+esc(ti('home.need_h'))+'</h2>'+
+      '<p>'+esc(ti('home.need_no'))+'</p>'+
+      '<p>'+esc(ti('home.need_yes'))+'</p>'+
+      '<h2>'+esc(ti('home.know_h'))+'</h2>'+
+      '<ul><li>'+esc(ti('home.know_1'))+'</li><li>'+esc(ti('home.know_2'))+'</li><li>'+esc(ti('home.know_3'))+'</li></ul>'+
+      '<p class="st-home-links">'+
+        '<a href="https://github.com/GuguguBear/sc-lmw/blob/master/companion/README.md" target="_blank" rel="noopener">'+esc(ti('starfix.src_read'))+'</a>'+
+        '<a href="https://github.com/GuguguBear/sc-lmw/releases/tag/starfix-1.0.5" target="_blank" rel="noopener">'+esc(ti('starfix.src_rel'))+'</a>'+
+        '<a href="https://github.com/GuguguBear/sc-lmw/blob/master/companion/app.py" target="_blank" rel="noopener">'+esc(ti('starfix.src_app'))+'</a>'+
+      '</p>';
+  }
+  function openStarfix(){
+    var onMap = !!(entered && state && state.status==='member');
+    if(!onMap){
+      var sec = document.getElementById('stHomeStarfix');
+      if(sec && sec.scrollIntoView) sec.scrollIntoView({block:'start'});
+      return;
+    }
+    var box = document.getElementById('stSfx');
+    if(!box){
+      box = document.createElement('div');
+      box.id = 'stSfx';
+      box.className = 'st-sfx';
+      root().appendChild(box);
+    }
+    box.hidden = false;
+    box.innerHTML = '<div class="st-sfx-h"><b>'+esc(ti('starfix.title'))+'</b><button type="button" id="stSfxX">✕</button></div><div class="st-sfx-b">'+starfixFactsHtml()+'</div>';
+    var x = box.querySelector('#stSfxX');
+    if(x) x.onclick = function(){ box.hidden = true; };
+  }
   function paintGate(el){
     if(leaving && state && state.role==='captain' && state.status==='member'){
-      el.innerHTML = '<div class="st-gate-card"><h1>'+esc(t('title'))+'</h1>'+handoffHtml()+'</div>';
+      el.innerHTML = '<div class="st-home st-home-narrow"><header class="st-home-hero"><div class="st-home-kicker">SC LMW</div><h1>'+esc(t('title'))+'</h1></header><section class="st-home-card">'+handoffHtml()+'</section></div>';
       bindHandoff(el);
       return;
     }
@@ -430,14 +465,7 @@
     var kind = roomKind==='create' ? 'create' : roomKind==='join' ? 'join' : 'saved';
     var kindLabel = kind==='create' ? t('freshCreate') : kind==='join' ? t('freshJoin') : t('resumed');
     var kindLead = kind==='create' ? t('freshCreateLead') : kind==='join' ? t('freshJoinLead') : t('resumedLead');
-    el.innerHTML =
-      '<div class="st-gate-card">'+
-        '<h1>'+esc(t('title'))+'</h1>'+
-        (member || wait ? '' : (
-          '<p>'+esc(t('lead'))+'</p>'+
-          '<ol><li>'+esc(t('s1'))+'</li><li>'+esc(t('s2'))+'</li><li>'+esc(t('s3'))+'</li></ol>'
-        ))+
-        (member ? (
+    var roomBody = member ? (
           '<p class="st-room-kind">'+esc(kindLabel)+'</p>'+
           '<p>'+esc(kindLead)+'</p>'+
           '<p class="st-room-code">'+esc(state.code)+'</p>'+
@@ -451,9 +479,15 @@
           '<label>'+esc(t('nick'))+'<input id="stRoomNick" maxlength="32" value="'+esc(nick)+'"></label>'+
           '<label>'+esc(t('code'))+'<input id="stRoomCode" maxlength="9" value="'+esc(pre)+'" placeholder="K7MQ-4R2P"></label>'+
           '<div class="row"><button type="button" class="act" id="stRoomCreate">'+esc(t('create'))+'</button>'+
-          '<button type="button" class="act" id="stRoomJoin">'+esc(t('join'))+'</button></div>'
-        ))+
-        (statusMsg ? '<p class="st-room-err">'+esc(statusMsg)+'</p>' : '')+
+          '<button type="button" id="stRoomJoin">'+esc(t('join'))+'</button></div>'
+        )+
+        (statusMsg ? '<p class="st-room-err">'+esc(statusMsg)+'</p>' : '');
+    el.innerHTML =
+      '<div class="st-home">'+
+        '<header class="st-home-hero"><div class="st-home-kicker">SC LMW · '+esc(ti('home.kicker'))+'</div>'+
+          '<h1>'+esc(t('title'))+'</h1><p>'+esc(ti('home.lead'))+'</p></header>'+
+        '<section class="st-home-card" id="stHomeStarfix">'+starfixFactsHtml()+'</section>'+
+        '<section class="st-home-card st-home-join"><h2>'+esc(ti('home.join_h'))+'</h2>'+roomBody+'</section>'+
       '</div>';
     var c = el.querySelector('#stRoomCreate'), j = el.querySelector('#stRoomJoin');
     if(c) c.onclick = function(){ act('create'); };
@@ -578,9 +612,6 @@
       var id = b.getAttribute('data-rt');
       if(selected===id){ selected=''; paint(); return; }
       selected = id; marking=false;
-      var rt = (state.routes||[]).filter(function(r){ return r.id===selected; })[0];
-      var ctl = window.__stCtl;
-      if(rt && rt.points[0] && rt.points[0].sy && ctl && ctl.goSystem) ctl.goSystem(rt.points[0].sy);
       paint();
     }; });
     el.querySelectorAll('[data-send]').forEach(function(b){ b.onclick=function(){ sendComment(b.getAttribute('data-send')); }; });
@@ -647,9 +678,11 @@
     if(n) n.textContent = q ? (shown.length+'/'+live.length) : String(live.length);
     var list = el.querySelector('#stCrewList');
     if(!list) return;
-    list.innerHTML = shown.length
-      ? shown.map(memberRow).join('')
-      : '<div class="st-room-dim">'+(q ? esc(t('none')) : '—')+'</div>';
+    var on = shown.filter(isOnline), off = shown.filter(function(m){ return !isOnline(m); });
+    var html = '';
+    if(on.length) html += '<div class="st-crew-sec">'+esc(t('online'))+' '+on.length+'</div>'+on.map(memberRow).join('');
+    if(off.length) html += '<div class="st-crew-sec">'+esc(t('offline'))+' '+off.length+'</div>'+off.map(memberRow).join('');
+    list.innerHTML = html || '<div class="st-room-dim">'+(q ? esc(t('none')) : '—')+'</div>';
     list.querySelectorAll('[data-mate]').forEach(function(b){ b.onclick=function(){ jumpMember(b.getAttribute('data-mate')); }; });
     list.querySelectorAll('[data-cap]').forEach(function(b){ b.onclick=function(){
       api('/api/rooms/'+encodeURIComponent(state.code)+'/captain', {method:'POST', body:{member:b.getAttribute('data-cap')}}).then(take).catch(fail);
@@ -673,10 +706,26 @@
       if(n.textContent!==next) n.textContent = next;
     });
   }
+  function isOnline(m){
+    if(!m) return false;
+    if(typeof m.online==='boolean') return m.online;
+    return typeof m.seen==='number' && (Date.now()/1000-m.seen)<600;
+  }
   function placeLabel(m){
     var raw = m.location || '';
     if(SC.loc && SC.loc.text) return SC.loc.text(raw) || raw;
     return raw;
+  }
+  function shipLabel(raw){
+    if(!raw) return '';
+    if(SC.loc && SC.loc.text) return SC.loc.text(raw) || raw;
+    return raw;
+  }
+  function memberAsPlayer(m){
+    var when = typeof m.seen==='number' ? new Date(m.seen*1000).toISOString() : '';
+    return {id:m.id, name:m.nickname||'', online:isOnline(m), last_seen:when, when:when,
+      code:m.code||'', location:m.location||'', system:m.system||'', ship:m.ship||'',
+      gear:Array.isArray(m.gear)?m.gear:[], server:m.server||'', travel:m.travel||null};
   }
   function memberRow(m){
     var tags = '';
@@ -685,15 +734,16 @@
     if(isCap) tags += '<em class="is-cap">'+esc(t('captainTag'))+'</em>';
     var give = state.role==='captain' && state.me && m.id!==state.me.id
       ? '<button type="button" data-cap="'+esc(m.id)+'" title="'+esc(t('give'))+'">'+esc(t('giveShort'))+'</button>' : '';
-    var fresh = typeof m.seen==='number' && (Date.now()/1000-m.seen)<180;
+    var on = isOnline(m);
     var when = typeof m.seen==='number' ? '<time data-seen="'+m.seen+'">'+esc(ageText(m.seen))+'</time>' : '';
-    var place = m.location ? '<span>'+esc(placeLabel(m))+'</span>' : '';
-    var host = m.server ? '<span>'+esc(t('server'))+' '+esc(String(m.server))+'</span>' : '';
-    var inner = '<i class="st-crew-pip'+(fresh?' on':'')+'"></i><b>'+esc(m.nickname)+'</b>'+tags+place+host+when;
-    var body = m.location
-      ? '<button type="button" class="st-mate has-place" data-mate="'+esc(m.id)+'">'+inner+'</button>'
-      : '<div class="st-mate">'+inner+'</div>';
-    return '<div class="st-mate-row">'+body+give+'</div>';
+    var place = m.location ? esc(placeLabel(m)) : '';
+    var host = m.server ? esc(t('server'))+' '+esc(String(m.server)) : '';
+    var ship = m.ship ? esc(shipLabel(m.ship)) : '';
+    var inner = on
+      ? '<i class="st-crew-pip on"></i><b>'+esc(m.nickname)+'</b>'+tags+(place?'<span>'+place+'</span>':'')+(host?'<span>'+host+'</span>':'')+when
+      : '<i class="st-crew-pip"></i><span class="st-mate-main"><span class="st-mate-name"><b>'+esc(m.nickname)+'</b>'+tags+'</span>'+
+          ((place||host||ship)?'<span class="st-mate-last">'+[place,host,ship].filter(Boolean).join(' · ')+'</span>':'')+'</span>'+when;
+    return '<div class="st-mate-row"><button type="button" class="st-mate'+(m.location?' has-place':'')+(on?'':' is-off')+'" data-mate="'+esc(m.id)+'">'+inner+'</button>'+give+'</div>';
   }
   function handoffHtml(){
     var rest = (state.members||[]).filter(function(m){ return m.status==='member' && state.me && m.id!==state.me.id; });
@@ -720,16 +770,11 @@
   }
   function jumpMember(id){
     var m = (state.members||[]).filter(function(x){ return x.id===id; })[0];
-    var o = m && SC.playerLoc ? SC.playerLoc({code:m.code||'', location:m.location||'', system:m.system||''}) : null;
+    if(!m) return;
+    if(typeof window.stOpenPlayer==='function') window.stOpenPlayer(memberAsPlayer(m));
+    var o = SC.playerLoc ? SC.playerLoc({code:m.code||'', location:m.location||'', system:m.system||''}) : null;
     var ctl = window.__stCtl;
-    if(!o || !ctl || !ctl.flyTo){
-      statusMsg = t('noPlace');
-      paint();
-      setTimeout(function(){ if(statusMsg===t('noPlace')){ statusMsg=''; paint(); } }, 1600);
-      return;
-    }
-    ctl.flyTo(o);
-    if(typeof window.openStPanel==='function') window.openStPanel(o);
+    if(o && ctl && ctl.flyTo) ctl.flyTo(o);
   }
   function nickValue(){
     var el = document.getElementById('stRoomNick');
@@ -895,7 +940,11 @@
     ensure();
     paint();
     if(!window.__stRoomLang){
-      window.__stRoomLang=function(){ if(document.getElementById('stGate')) paint(); };
+      window.__stRoomLang=function(){
+        if(document.getElementById('stGate')) paint();
+        var box = document.getElementById('stSfx');
+        if(box && !box.hidden) openStarfix();
+      };
       document.addEventListener('sclmw-lang', window.__stRoomLang);
     }
     detect().then(function(ok){
@@ -912,5 +961,5 @@
     });
   }
 
-  SC.room = {start:start};
+  SC.room = {start:start, openStarfix:openStarfix};
 })();
