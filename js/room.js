@@ -24,6 +24,7 @@
       members:'房间成员', online:'在线', offline:'离线', server:'服务器', fold:'收起', unfold:'展开', you:'你', captainTag:'队长',
       find:'搜索昵称或地点', none:'没有匹配的人',
       give:'设为队长', giveShort:'队长', giveLeave:'交给他并离开', dissolve:'解散房间', dissolveLeave:'解散并离开', cancel:'取消',
+      kick:'踢出', kickYes:'确定', kicked:'你已被移出这个房间。', denied:'队长拒绝了这次申请。',
       handTitle:'离开前先交接', handLead:'把队长交给一位队员，或解散房间。', handSolo:'房间里只有你。离开会解散这个房间。',
       errNick:'请填写 1 到 32 个字的昵称。', errRoom:'没有这个房间。',
       agoNow:'刚刚', agoSec:'{n} 秒前', agoMin:'{n} 分钟前', agoHour:'{n} 小时前', agoDay:'{n} 天前',
@@ -59,6 +60,7 @@
       members:'房間成員', online:'在線', offline:'離線', server:'伺服器', fold:'收起', unfold:'展開', you:'你', captainTag:'隊長',
       find:'搜尋暱稱或地點', none:'沒有符合的人',
       give:'設為隊長', giveShort:'隊長', giveLeave:'交給他並離開', dissolve:'解散房間', dissolveLeave:'解散並離開', cancel:'取消',
+      kick:'踢出', kickYes:'確定', kicked:'你已被移出這個房間。', denied:'隊長拒絕了這次申請。',
       handTitle:'離開前先交接', handLead:'把隊長交給一位隊員，或解散房間。', handSolo:'房間裡只有你。離開會解散這個房間。',
       errNick:'請填寫 1 到 32 個字的暱稱。', errRoom:'沒有這個房間。',
       agoNow:'剛剛', agoSec:'{n} 秒前', agoMin:'{n} 分鐘前', agoHour:'{n} 小時前', agoDay:'{n} 天前',
@@ -94,6 +96,7 @@
       members:'Room members', online:'Online', offline:'Offline', server:'Server', fold:'Minimize', unfold:'Expand', you:'you', captainTag:'Captain',
       find:'Search name or place', none:'No match',
       give:'Make captain', giveShort:'Lead', giveLeave:'Give and leave', dissolve:'Close room', dissolveLeave:'Close and leave', cancel:'Cancel',
+      kick:'Remove', kickYes:'Confirm', kicked:'You were removed from this room.', denied:'The captain declined this request.',
       handTitle:'Hand off before leaving', handLead:'Give the captain role to a member, or close the room.', handSolo:'You are the only person here. Leaving closes the room.',
       errNick:'Use a nickname of 1 to 32 characters.', errRoom:'No room with that code.',
       agoNow:'Just now', agoSec:'{n}s ago', agoMin:'{n} min ago', agoHour:'{n} h ago', agoDay:'{n} d ago',
@@ -129,6 +132,7 @@
       members:'Im Raum', online:'Online', offline:'Offline', server:'Server', fold:'Einklappen', unfold:'Ausklappen', you:'du', captainTag:'Captain',
       find:'Name oder Ort', none:'Niemand passt',
       give:'Zum Captain machen', giveShort:'Capt.', giveLeave:'Geben und gehen', dissolve:'Raum schließen', dissolveLeave:'Schließen und gehen', cancel:'Abbrechen',
+      kick:'Entfernen', kickYes:'Wirklich', kicked:'Du wurdest aus diesem Raum entfernt.', denied:'Der Captain hat diese Anfrage abgelehnt.',
       handTitle:'Vor dem Gehen übergeben', handLead:'Captain an ein Mitglied geben, oder den Raum schließen.', handSolo:'Du bist allein. Gehen schließt den Raum.',
       errNick:'Nickname mit 1 bis 32 Zeichen.', errRoom:'Diesen Raum gibt es nicht.',
       agoNow:'Gerade', agoSec:'vor {n} s', agoMin:'vor {n} min', agoHour:'vor {n} h', agoDay:'vor {n} d',
@@ -155,7 +159,7 @@
   function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
   function token(){ try{ return localStorage.getItem(TOKEN)||''; }catch(e){ return ''; } }
   function savedCode(){ try{ return localStorage.getItem(CODE)||''; }catch(e){ return ''; } }
-  var state = null, draft = [], marking = false, note = '', statusMsg = '', selected = '', API = '', entered = false, roomKind = '', linkState = '', linkMiss = 0, leaving = false, crewQ = '', picking = false, histInfo = {}, histKey = '', pubRooms = null, pubSig = null, pubAt = 0, alertHold = false, alertSeen = {}, alertFlash = null, alertTimer = 0;
+  var state = null, draft = [], marking = false, note = '', statusMsg = '', selected = '', API = '', entered = false, roomKind = '', linkState = '', linkMiss = 0, leaving = false, crewQ = '', picking = false, histInfo = {}, histKey = '', pubRooms = null, pubSig = null, pubAt = 0, alertHold = false, alertSeen = {}, alertFlash = null, alertTimer = 0, kickAsk = '', alertDeny = null;
 
   function api(path, opt){
     opt = opt || {};
@@ -843,7 +847,14 @@
     rollCrew(list);
     list.querySelectorAll('[data-mate]').forEach(function(b){ b.onclick=function(){ jumpMember(b.getAttribute('data-mate')); }; });
     list.querySelectorAll('[data-cap]').forEach(function(b){ b.onclick=function(){
+      kickAsk = '';
       api('/api/rooms/'+encodeURIComponent(state.code)+'/captain', {method:'POST', body:{member:b.getAttribute('data-cap')}}).then(take).catch(fail);
+    }; });
+    list.querySelectorAll('[data-kick]').forEach(function(b){ b.onclick=function(){ kickAsk = b.getAttribute('data-kick'); paint(); }; });
+    list.querySelectorAll('[data-kick-yes]').forEach(function(b){ b.onclick=function(){
+      var id = b.getAttribute('data-kick-yes');
+      kickAsk = '';
+      api('/api/rooms/'+encodeURIComponent(state.code)+'/members/'+encodeURIComponent(id)+'/kick', {method:'POST', body:{}}).then(take).catch(fail);
     }; });
   }
 
@@ -920,8 +931,11 @@
     if(state.me && m.id===state.me.id) tags += '<em>'+esc(t('you'))+'</em>';
     var isCap = state.captain ? m.id===state.captain : !!(state.role==='captain' && state.me && m.id===state.me.id);
     if(isCap) tags += '<em class="is-cap">'+esc(t('captainTag'))+'</em>';
-    var give = state.role==='captain' && state.me && m.id!==state.me.id
-      ? '<button type="button" data-cap="'+esc(m.id)+'" title="'+esc(t('give'))+'">'+esc(t('giveShort'))+'</button>' : '';
+    var own = state.role==='captain' && state.me && m.id!==state.me.id;
+    var give = own ? '<button type="button" data-cap="'+esc(m.id)+'" title="'+esc(t('give'))+'">'+esc(t('giveShort'))+'</button>' : '';
+    var kick = own ? (kickAsk===m.id
+      ? '<button type="button" class="on" data-kick-yes="'+esc(m.id)+'" title="'+esc(t('kick'))+'">'+esc(t('kickYes'))+'</button>'
+      : '<button type="button" data-kick="'+esc(m.id)+'" title="'+esc(t('kick'))+'">'+esc(t('kick'))+'</button>') : '';
     var on = isOnline(m);
     var when = typeof m.seen==='number' ? '<time data-seen="'+m.seen+'">'+esc(ageText(m.seen))+'</time>' : '';
     var place = m.location ? esc(placeLabel(m)) : '';
@@ -931,7 +945,7 @@
     var inner = '<i class="st-crew-pip'+(on?' on':'')+'"></i>'+
       '<span class="st-mate-roll"><span><b>'+esc(m.nickname)+'</b>'+tags+
       (bits?'<span class="st-mate-last">'+bits+'</span>':'')+'</span></span>'+when;
-    return '<div class="st-mate-row"><button type="button" class="st-mate'+(m.location?' has-place':'')+(on?'':' is-off')+'" data-mate="'+esc(m.id)+'">'+inner+'</button>'+give+'</div>';
+    return '<div class="st-mate-row"><button type="button" class="st-mate'+(m.location?' has-place':'')+(on?'':' is-off')+'" data-mate="'+esc(m.id)+'">'+inner+'</button>'+kick+give+'</div>';
   }
   function handoffHtml(){
     var rest = (state.members||[]).filter(function(m){ return m.status==='member' && state.me && m.id!==state.me.id; });
@@ -1063,9 +1077,11 @@
     if(!alertFlash) return;
     alertTimer = setTimeout(function(){ if(alertFlash && alertFlash.until<=Date.now()){ alertFlash = null; paint(); } }, Math.max(40, alertFlash.until-Date.now()));
   }
+  function alertSkin(){ return '<i class="st-alert-haze"></i><i class="st-alert-grain"></i>'; }
   function alertPlate(tone, titleKey, subKey, body, acts){
     var title = pair(titleKey), sub = subKey ? pair(subKey) : null;
     return '<div class="st-alert-plate" role="dialog" aria-label="'+esc(title.zh+' '+title.en)+'">'+
+      alertSkin()+
       '<i class="c tl"></i><i class="c tr"></i><i class="c bl"></i><i class="c br"></i>'+
       '<div class="st-alert-bar"></div>'+
       '<div class="st-alert-kicker">'+esc(title.zh)+'</div>'+
@@ -1090,12 +1106,21 @@
     var waiting = !!(state && state.status==='pending' && !picking);
     var flash = alertFlash;
     var review = captain && list.length;
+    if(alertDeny && !flash && !waiting && !review){
+      box.hidden = false;
+      box.className = 'st-alert tone-deny';
+      var codeHtml = alertDeny.code ? '<p class="st-alert-code">'+esc(alertDeny.code)+'</p>' : '';
+      box.innerHTML = alertPlate('deny', 'reject', 'denied', codeHtml, '<div class="st-alert-acts"><button type="button" id="stAlertDeny">'+bi('switchRoom')+'</button></div>');
+      var denyBtn = box.querySelector('#stAlertDeny');
+      if(denyBtn) denyBtn.onclick = function(){ alertDeny = null; paint(); };
+      return;
+    }
     if(!flash && !waiting && !review){ box.hidden = true; box.innerHTML = ''; return; }
     if(!flash && review && alertHold){
       box.hidden = false;
       box.className = 'st-alert hold tone-review';
       var badge = pair('pending');
-      box.innerHTML = '<button type="button" class="st-alert-badge"><b>'+esc(badge.zh)+'</b><em>'+esc(badge.en)+'</em><span>'+list.length+'</span></button>';
+      box.innerHTML = '<button type="button" class="st-alert-badge">'+alertSkin()+'<b>'+esc(badge.zh)+'</b><em>'+esc(badge.en)+'</em><span>'+list.length+'</span></button>';
       box.querySelector('button').onclick = function(){ alertHold = false; paint(); };
       return;
     }
@@ -1222,6 +1247,10 @@
       fail(e);
     });
   }
+  function noteDenied(code){
+    alertDeny = {code: code || (state && state.code) || ''};
+    localLeave();
+  }
   function refresh(){
     if(!state || !token()) return Promise.resolve();
     return api('/api/rooms/'+encodeURIComponent(state.code)).then(function(st){
@@ -1230,7 +1259,12 @@
       statusMsg = keep;
       if(keep) paint();
     }).catch(function(e){
-      if(e && (e.status===403 || e.status===404)) localLeave();
+      if(e && e.status===403 && e.body && e.body.error==='rejected'){ noteDenied(); return; }
+      if(e && (e.status===403 || e.status===404)){
+        var removed = e.status===403 && e.body && e.body.error==='forbidden';
+        localLeave();
+        if(removed){ statusMsg = t('kicked'); paint(); }
+      }
     });
   }
 
@@ -1280,7 +1314,7 @@
     detect().then(function(ok){
       if(!ok){ statusMsg=t('errNet'); paint(); return; }
       var code = savedCode();
-      if(token() && code) api('/api/rooms/'+encodeURIComponent(code)).then(function(st){ if(!roomKind) roomKind='saved'; take(st); }).catch(function(){ paint(); });
+      if(token() && code) api('/api/rooms/'+encodeURIComponent(code)).then(function(st){ if(!roomKind) roomKind='saved'; take(st); }).catch(function(e){ if(e && e.status===403 && e.body && e.body.error==='rejected'){ noteDenied(code); return; } paint(); });
       if(!window.__stRoomPoll) window.__stRoomPoll=setInterval(function(){
         if(state) refresh();
         var gate = document.getElementById('stGate');

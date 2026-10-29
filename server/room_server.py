@@ -275,8 +275,10 @@ def room_state(con, code, me):
     ship = con.execute(
         "SELECT * FROM membership WHERE room=? AND member=?", (code, me["id"])
     ).fetchone()
-    if not ship or ship["status"] == "rejected":
+    if not ship:
         return {"error": "forbidden"}
+    if ship["status"] == "rejected":
+        return {"error": "rejected"}
     role = "captain" if room["captain"] == me["id"] else "member"
     rows = con.execute(
         """
@@ -675,6 +677,23 @@ class Handler(BaseHTTPRequestHandler):
                 room = con.execute("SELECT * FROM room WHERE code=?", (code,)).fetchone()
                 if not room or room["captain"] != me["id"]:
                     self.send_json(403, {"error": "captain"})
+                    return
+                if action == "kick":
+                    if mid == me["id"]:
+                        self.send_json(400, {"error": "member"})
+                        return
+                    row = con.execute(
+                        """
+                        SELECT member FROM membership
+                        WHERE room=? AND member=? AND status='member'
+                        """,
+                        (code, mid),
+                    ).fetchone()
+                    if not row:
+                        self.send_json(404, {"error": "member"})
+                        return
+                    drop_member(con, code, mid)
+                    self.send_json(200, room_state(con, code, me))
                     return
                 if action not in ("approve", "reject"):
                     self.send_json(400, {"error": "action"})
