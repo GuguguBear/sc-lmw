@@ -163,7 +163,7 @@
   function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
   function token(){ try{ return localStorage.getItem(TOKEN)||''; }catch(e){ return ''; } }
   function savedCode(){ try{ return localStorage.getItem(CODE)||''; }catch(e){ return ''; } }
-  var state = null, draft = [], marking = false, note = '', statusMsg = '', selected = '', API = '', entered = false, roomKind = '', linkState = '', linkMiss = 0, leaving = false, crewQ = '', picking = false, histInfo = {}, histKey = '', pubRooms = null, pubSig = null, pubAt = 0, alertHold = false, alertSeen = {}, alertFlash = null, alertTimer = 0, kickAsk = '', alertDeny = null, castCompose = false, castDraft = '', castErr = '', castIncoming = null, castAudio = null, ctxAt = null;
+  var state = null, draft = [], marking = false, note = '', statusMsg = '', selected = '', API = '', entered = false, roomKind = '', linkState = '', linkMiss = 0, leaving = false, crewQ = '', picking = false, histInfo = {}, histKey = '', pubRooms = null, pubSig = null, pubAt = 0, alertHold = false, alertSeen = {}, alertFlash = null, alertTimer = 0, kickAsk = '', alertDeny = null, castCompose = false, castDraft = '', castErr = '', castIncoming = null, castAudio = null, ctxAt = null, ctxSig = '';
 
   function api(path, opt){
     opt = opt || {};
@@ -1381,16 +1381,21 @@
   }
   function closeCtx(){
     ctxAt = null;
+    ctxSig = '';
     var menu = document.getElementById('stCtx');
     if(menu) menu.hidden = true;
   }
   function syncCtx(){
     var menu = document.getElementById('stCtx');
     if(!menu) return;
-    if(!ctxAt || !entered || !state || state.status!=='member'){ menu.hidden = true; return; }
+    if(!ctxAt || !entered || !state || state.status!=='member'){ menu.hidden = true; ctxSig = ''; return; }
     var mine = canDraw();
     var cap = state.role==='captain';
     var members = state.routeMode==='members';
+    var sig = [mine?1:0, cap?1:0, members?1:0, marking?1:0, t('here'), t('route'), t('routeOn'), t('mode'), t('modeCaptain'), t('modeMembers')].join('|');
+    if(sig === ctxSig && !menu.hidden && menu.childElementCount) return;
+    var keepOpen = !!menu.querySelector('.st-ctx-sub.st-open');
+    ctxSig = sig;
     menu.innerHTML =
       '<button type="button" class="st-ctx-btn" data-ctx="here">'+esc(t('here'))+'</button>'+
       (mine ? '<button type="button" class="st-ctx-btn'+(marking?' on':'')+'" data-ctx="mark">'+esc(marking?t('routeOn'):t('route'))+'</button>' : '')+
@@ -1401,6 +1406,10 @@
           '<button type="button" class="st-ctx-btn'+(members?' on':'')+'" data-ctx-mode="members">'+esc(t('modeMembers'))+'</button>'+
         '</div></div>' : '');
     menu.hidden = false;
+    if(keepOpen){
+      var sub = menu.querySelector('.st-ctx-sub');
+      if(sub) sub.classList.add('st-open');
+    }
     var host = root().getBoundingClientRect();
     var x = ctxAt.x-host.left, y = ctxAt.y-host.top;
     menu.style.left = '0px';

@@ -839,6 +839,7 @@
 .sc-lmw button.st-hist-row:hover,.sc-lmw button.st-hist-row.is-on{border-color:var(--sclmw-cyan)}
 .sc-lmw button.st-hist-row time{color:var(--sclmw-cyan);font-size:13px;font-weight:700;font-variant-numeric:tabular-nums}
 .sc-lmw button.st-hist-row b{font-size:14px;font-weight:700}
+.sc-lmw button.st-hist-row .st-hist-code{font-family:ui-monospace,"Cascadia Mono","Sarasa Mono SC",monospace;font-size:12px;font-weight:600}
 .sc-lmw button.st-hist-row small{color:var(--sclmw-dim);font-size:13px}
 .sc-lmw[data-theme="compact"] .st-hist,.sc-lmw[data-theme="practical"] .st-hist,.sc-lmw[data-theme="chassis"] .st-hist,.sc-lmw[data-theme="scifi"] .st-hist{border-radius:0}
 /* Single-line labels sit in the middle of their box. The route pill was a

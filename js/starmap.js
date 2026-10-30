@@ -99,6 +99,7 @@ function gnLine(s){
   var bit=gnBit(raw);
   return bit!==raw ? bit : s;
 }
+SC.gnLine=gnLine;
 function translated(s){ if(s==null||s==='') return ''; var hit=gn(s); return (hit && hit!==String(s)) ? hit : ''; }
 function playerPlaceName(p){
   if(!p) return '';
@@ -625,7 +626,7 @@ function stantonScene(canvas,sysKey){
     spin.push(m); return m; }
   function ringPoints(G,rin,rout,thick,n,color){ const a=new Float32Array(n*3); for(let i=0;i<n;i++){ const rr=rin+Math.random()*(rout-rin), th=Math.random()*6.283; a[i*3]=rr*Math.cos(th); a[i*3+1]=(Math.random()-0.5)*thick; a[i*3+2]=rr*Math.sin(th); }
     const g=new T.BufferGeometry(); g.setAttribute('position',new T.BufferAttribute(a,3)); const p=new T.Points(g,new T.PointsMaterial({color:color,size:1.5,sizeAttenuation:false})); G.add(p); return p; }
-  let level={t:'sys',o:null}, grp=null, entries=[], spin=[], animNodes=[], lastEx=null, wormClock=null, wormMouths=[], wormStat=null, sysTick=0, sysGroups=[], bgAmt=0;
+  let level={t:'sys',o:null}, grp=null, entries=[], spin=[], animNodes=[], lastEx=null, wormClock=null, wormMouths=[], wormStat=null, sysTick=0, sysGroups=[], bgAmt=0, spinHold=false;
   const LV={sys:{min:0.8,max:1000,def:isMobile?64:52,bgMin:isMobile?52:46,bgMax:isMobile?82:58}, body:{min:1.35,max:36,def:isMobile?7.5:4.4}};
   let az=0.6, el=isMobile?0.75:0.5, azT=az, elT=el, R=LV.sys.def, RT=R;
   const OFF={}, ZERO=new T.Vector3(); const offOf=k=>OFF[k]||((ST_DATA&&ST_DATA.sys[k])?(OFF[k]=new T.Vector3().fromArray(ST_DATA.sys[k].off)):ZERO);
@@ -879,6 +880,7 @@ function stantonScene(canvas,sysKey){
   const onUI=(e)=> !!(e&&e.target&&e.target.closest&&e.target.closest('.st-loc-card,.st-zoom,.stx,.st-side,.st-crumb,.st-top,.st-room,.st-crew,.st-float-ico,.st-gate,.st-call,.st-sfx,.st-ctrldlg,.st-locdlg,.st-alert,.st-ctx'));
   const clampR=v=>explore()?Math.max(LV[level.t].min,Math.min(LV[level.t].max,v)):Math.max(LV.sys.bgMin*BGK,Math.min(LV.sys.bgMax*BGK,v));
   const canNav=()=>explore()&&level.t==='sys';
+  const canPan=()=>explore()&&(level.t==='sys'||level.t==='body');
   const ray=new T.Raycaster(), ndc=new T.Vector2(), plane=new T.Plane(new T.Vector3(0,1,0),0);
   function clampT(){ if(tgtT.length()>800) tgtT.setLength(800); }
   function groundAt(cx,cy){ const b=boxWH(); ndc.set(cx/(b.w||1)*2-1,-(cy/(b.h||1))*2+1); ray.setFromCamera(ndc,camera); plane.constant=-tgt.y;
@@ -887,7 +889,7 @@ function stantonScene(canvas,sysKey){
   function zoomBy(f,cx,cy){ const nr=clampR(RT*f); if(canNav()&&cx!=null){ const p=groundAt(cx,cy); if(p){ tgtT.add(p.sub(tgtT).multiplyScalar(1-nr/RT)); clampT(); } } RT=nr; }
   // Bildschirmfläche: rechts/links und oben/unten. Die frühere Y-Bewegung lief auf dem Boden
   // in Blickrichtung und schob die Karte in die Tiefe.
-  function pan(dx,dy){ if(!canNav()) return; const feel=ctrlSens('pan'); dx=dx*(ST_DRAG.x?-1:1)*feel; dy=dragDy(dy)*feel;
+  function pan(dx,dy){ if(!canPan()) return; const feel=ctrlSens('pan'); dx=dx*(ST_DRAG.x?-1:1)*feel; dy=dragDy(dy)*feel;
     const s=2*R*Math.tan(camera.fov*Math.PI/360)/(boxWH().h||1);
     camera.updateMatrixWorld(); const e=camera.matrixWorld.elements;
     tgtT.x+=(-dx*e[0]+dy*e[4])*s; tgtT.y+=(-dx*e[1]+dy*e[5])*s; tgtT.z+=(-dx*e[2]+dy*e[6])*s; clampT(); }
@@ -901,7 +903,7 @@ function stantonScene(canvas,sysKey){
   const down=(e)=>{ ROOT.focus&&ROOT.focus({preventScroll:true}); uiDown=onUI(e); if(uiDown) return; if(e.button===1) e.preventDefault();
     const route=!!(window.__stRouteOn&&matchMouse(e,'route'));
     const act=route?null:mouseDragAction(e);
-    if(act==='pan'&&canNav()) panning=true; else if(act==='orbit'||e.button===undefined) dragging=true;
+    if(act==='pan'&&canPan()) panning=true; else if(act==='orbit'||e.button===undefined) dragging=true;
     lastX=e.clientX; lastY=e.clientY; downX=e.clientX; downY=e.clientY; };
   const up=(e)=>{ const wasUI=uiDown, wasPan=panning; uiDown=false; dragging=false; panning=false;
     if(wasUI||!e||(Math.abs(e.clientX-downX)+Math.abs(e.clientY-downY))>=6) return;
@@ -1102,8 +1104,8 @@ function stantonScene(canvas,sysKey){
   function cleanup(){ cancelAnimationFrame(raf); if(blurRT){ blurRT.dispose(); blurRT2.dispose(); blurRT=null; blurRT2=null; } if(blurMat){ blurMat.dispose(); mosaicMat.dispose(); blitMat.dispose(); if(blurQuad&&blurQuad.geometry) blurQuad.geometry.dispose(); blurMat=null; } if(routeLine){ scene.remove(routeLine); routeLine.geometry.dispose(); routeLine.material.dispose(); routeLine=null; } if(typeof clearTrail==='function') clearTrail(); window.__stCtl=null; canvas.removeEventListener('mousedown',down); window.removeEventListener('mouseup',up); window.removeEventListener('mousemove',move); if(ro) ro.disconnect(); else window.removeEventListener('resize',size); canvas.removeEventListener('wheel',wheel); canvas.removeEventListener('contextmenu',ctxm); canvas.removeEventListener('auxclick',aux); ROOT.removeEventListener('keydown',key); canvas.removeEventListener('touchstart',tStart); canvas.removeEventListener('touchmove',touch); canvas.removeEventListener('touchend',touchEnd); if(grp) dispose(grp); lblLayer.remove(); try{ renderer.dispose(); }catch(e){} }
   let loopErr=false;
   function loop(){ if(!canvas.isConnected){ cleanup(); return; } raf=requestAnimationFrame(loop); try{
-    if(!ST_PAUSE&&!dragging&&!panning) azT+=explore()?0.0003:0.00045;
-    if(!ST_PAUSE) spin.forEach(m=>{ m.rotation.y+=0.0012; });
+    if(!ST_PAUSE&&!spinHold&&!dragging&&!panning) azT+=explore()?0.0003:0.00045;
+    if(!ST_PAUSE&&!spinHold) spin.forEach(m=>{ m.rotation.y+=0.0012; });
     const ex=explore(); if(ex!==lastEx){ lastEx=ex; if(ST_DATA&&level.t==='sys') rebuild(); }
     if(!ex){ if(level.t!=='sys') focus(null); tgtT.copy(offOf(ST_SYS)); }
     else if(level.t==='sys'&&ST_DATA&&++sysTick%30===0){ let bk=null,bd=1e9; Object.keys(ST_DATA.sys).forEach(k=>{ const dd=offOf(k).distanceTo(tgtT); if(dd<bd){ bd=dd; bk=k; } }); if(bd<180) setSys(bk); }
@@ -1134,17 +1136,83 @@ function stantonScene(canvas,sysKey){
   function dropMesh(o){ scene.remove(o); if(o.geometry) o.geometry.dispose(); if(o.material){ o.material.map=null; o.material.dispose(); } }
   function clearTrail(){ trailMesh.forEach(dropMesh); trailMesh=[]; }
   function trailPoints(objects){ const pts=[]; (objects||[]).forEach(o=>{ if(o&&typeof o.x==='number') pts.push(Vs(o)); }); return pts; }
+  // Endpoints stay on the places. Samples between them move out of a star or planet
+  // they would otherwise cut through. The shared route line is left alone.
+  function liftSegment(a,b,bodies){
+    const steps=8, raw=[];
+    for(let s=0;s<=steps;s++) raw.push(a.clone().lerp(b,s/steps));
+    for(let s=1;s<steps;s++){
+      const p=raw[s];
+      for(let pass=0;pass<4;pass++){
+        let moved=false;
+        bodies.forEach(body=>{
+          const need=body.r*1.22, dist=p.distanceTo(body.p);
+          if(dist>=need) return;
+          const dir=p.clone().sub(body.p);
+          if(dir.lengthSq()<1e-8) dir.set(0,1,0); else dir.normalize();
+          p.copy(body.p).add(dir.multiplyScalar(need));
+          moved=true;
+        });
+        if(!moved) break;
+      }
+    }
+    raw[0].copy(a); raw[steps].copy(b);
+    return raw;
+  }
+  function liftTrail(pts){
+    const bodies=entries.filter(e=>e&&e.body&&e.p&&e.r>0);
+    if(pts.length<2) return {line:pts.map(p=>p.clone()), segs:[]};
+    const segs=[], line=[];
+    for(let i=0;i<pts.length-1;i++){
+      const seg=liftSegment(pts[i], pts[i+1], bodies);
+      segs.push(seg);
+      if(!line.length) line.push(seg[0]);
+      for(let j=1;j<seg.length;j++) line.push(seg[j]);
+    }
+    return {line, segs};
+  }
+  function pointOnSegs(segs, u){
+    if(!segs.length) return null;
+    const span=segs.length*Math.max(0, Math.min(1, u||0));
+    let i=Math.min(segs.length-1, Math.floor(span));
+    let k=span-i;
+    if(i===segs.length-1) k=Math.min(1, k);
+    const seg=segs[i], f=k*(seg.length-1);
+    let j=Math.min(seg.length-2, Math.floor(f));
+    if(j<0) j=0;
+    return seg[j].clone().lerp(seg[j+1], f-j);
+  }
+  function pathUntil(segs, u){
+    const cur=pointOnSegs(segs, u);
+    if(!cur) return [];
+    const span=segs.length*Math.max(0, Math.min(1, u||0));
+    let i=Math.min(segs.length-1, Math.floor(span));
+    const out=[];
+    for(let s=0;s<i;s++){
+      const seg=segs[s];
+      if(!out.length) out.push(seg[0]);
+      for(let j=1;j<seg.length;j++) out.push(seg[j]);
+    }
+    const seg=segs[i], k=Math.min(1, span-i), f=k*(seg.length-1);
+    let j=Math.min(seg.length-2, Math.floor(f));
+    if(j<0) j=0;
+    if(!out.length) out.push(seg[0].clone());
+    for(let n=1;n<=j;n++) out.push(seg[n]);
+    out.push(cur);
+    return out;
+  }
   function playTrail(objects, u, follow){ clearTrail(); if(!ST_DATA||!objects||!objects.length) return null;
     if(level.t!=='sys') focus(null);
     const pts=trailPoints(objects); if(!pts.length) return null;
     u=Math.max(0, Math.min(1, u||0));
+    const lifted=liftTrail(pts);
     let cur=pts[0];
     if(pts.length>1){
-      const full=new T.Line(new T.BufferGeometry().setFromPoints(pts), new T.LineBasicMaterial({color:0x7fd7ff,transparent:true,opacity:0.35,depthTest:false}));
+      const full=new T.Line(new T.BufferGeometry().setFromPoints(lifted.line), new T.LineBasicMaterial({color:0x7fd7ff,transparent:true,opacity:0.35,depthTest:false}));
       full.renderOrder=7; scene.add(full); trailMesh.push(full);
-      const span=(pts.length-1)*u, i=Math.min(pts.length-2, Math.floor(span)), k=span-i;
-      cur=pts[i].clone().lerp(pts[i+1], k);
-      const past=new T.Line(new T.BufferGeometry().setFromPoints(pts.slice(0, i+1).concat([cur])), new T.LineBasicMaterial({color:0xffb000,depthTest:false}));
+      cur=pointOnSegs(lifted.segs, u)||pts[0];
+      const pastPts=pathUntil(lifted.segs, u);
+      const past=new T.Line(new T.BufferGeometry().setFromPoints(pastPts), new T.LineBasicMaterial({color:0xffb000,depthTest:false}));
       past.renderOrder=8; scene.add(past); trailMesh.push(past);
     }
     const mark=new T.Points(new T.BufferGeometry().setFromPoints([cur]), new T.PointsMaterial({color:0xfff2c4,size:isMobile?40:30,sizeAttenuation:false,map:beaconOn.tex,transparent:true,depthTest:false,blending:T.AdditiveBlending}));
@@ -1158,7 +1226,7 @@ function stantonScene(canvas,sysKey){
     tgtT.copy(c); RT=Math.max(16, Math.min(LV.sys.max*0.85, reach));
     return cur;
   }
-  window.__stCtl={ _cleanup:cleanup, getAz:()=>az, level:()=>level, focus, flyTo, rebuild, home, zoomBy, pan, highlight, showRoute, clearTrail, playTrail, frameTrail, goSystem, galaxy, onSys:null,
+  window.__stCtl={ _cleanup:cleanup, getAz:()=>az, holdSpin:on=>{ spinHold=!!on; }, level:()=>level, focus, flyTo, rebuild, home, zoomBy, pan, highlight, showRoute, clearTrail, playTrail, frameTrail, goSystem, galaxy, onSys:null,
     hitAt:function(cx,cy){ const p=relXY(cx,cy); const hit=nearest(p.x,p.y,isMobile?22:16); return hit&&hit.o&&hit.o.k!=='player'?hit.o:null; },
     setSystem:k=>{ if(!k) return; ST_SYS=k; tintSky(k); if(!explore()&&ST_DATA){ bgScale(); rebuild(); tgtT.copy(offOf(k)); tgt.copy(tgtT); RT=LV.sys.def*BGK; } },
     zoom01:()=>{ const L=LV[level.t]; return (Math.log(RT)-Math.log(L.min))/(Math.log(L.max)-Math.log(L.min)); },

@@ -41,9 +41,61 @@ def request(token, method, url, data=None, headers=None):
         return err.code, err.read()
 
 
-def upload(token, rel, attempts=6):
+# PythonAnywhere serves /js and /css as static files, without a Cache-Control
+# header. Cloudflare then keeps them for hours. index.html is served by the
+# room app with no-cache, so a version on each asset URL makes the next visit
+# ask for a new file. The query is added only to the uploaded copy.
+STAMP = {
+    "index.html": [
+        '"./css/starmap.css"',
+        '"./config.js"',
+        '"./js/i18n.js"',
+        '"./js/icons.js"',
+        '"./js/loc.js"',
+        '"./js/holo.js"',
+        '"./js/guides.js"',
+        '"./js/planet-tex.js"',
+        '"./js/starmap.js"',
+        '"./js/room.js"',
+        '"./js/history.js"',
+        "'./sw.js'",
+    ],
+    "js/sc-lmw.js": [
+        "'css/starmap.css'",
+        "'js/i18n.js'",
+        "'js/icons.js'",
+        "'js/holo.js'",
+        "'js/guides.js'",
+        "'js/starmap.js'",
+        "'js/room.js'",
+    ],
+}
+
+
+def asset_rev():
+    return subprocess.check_output(
+        ["git", "rev-parse", "--short=12", "HEAD"], cwd=ROOT
+    ).decode("utf-8").strip()
+
+
+def stamp_payload(rel, payload, rev):
+    keys = STAMP.get(rel.replace("\\", "/"))
+    if not keys:
+        return payload
+    text = payload.decode("utf-8")
+    for key in keys:
+        quote = key[0]
+        path = key[1:-1]
+        newer = quote + path + "?v=" + rev + quote
+        if key not in text:
+            raise SystemExit("stamp missed %s in %s" % (path, rel))
+        text = text.replace(key, newer)
+    return text.encode("utf-8")
+
+
+def upload(token, rel, rev, attempts=6):
     local = ROOT / rel
-    payload = local.read_bytes()
+    payload = stamp_payload(rel, local.read_bytes(), rev)
     boundary = "----sc-lmw-deploy"
     name = Path(rel).name.replace('"', "")
     body = b"".join([
@@ -89,8 +141,10 @@ def main():
     files = tracked_files()
     if not files:
         raise SystemExit("no tracked files")
+    rev = asset_rev()
+    print("asset rev %s" % rev)
     for rel in files:
-        upload(token, rel)
+        upload(token, rel, rev)
     reload_site(token)
     print(json.dumps({"files": len(files), "domain": DOMAIN}))
 

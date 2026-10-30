@@ -93,6 +93,39 @@
     if(ev.dest) return ev.dest;
     return t('somewhere');
   }
+  function itemFace(raw){
+    var s = String(raw || '').trim();
+    if(!s) return {text:'', code:false};
+    var loc = window.SCLMW && SCLMW.loc;
+    var hit = loc && typeof loc.item === 'function' ? (loc.item(s) || '') : '';
+    if(!hit && loc && typeof loc.text === 'function'){
+      var named = loc.text(s);
+      if(named && named !== s) hit = named;
+    }
+    if(hit) return {text:hit, code:false};
+    return {text:s, code:(s.indexOf('_') >= 0 && s.indexOf(' ') < 0)};
+  }
+  function shopFace(raw){
+    var s = String(raw || '').trim();
+    if(!s) return '';
+    if(window.SCLMW && typeof SCLMW.gnLine === 'function') return SCLMW.gnLine(s);
+    var loc = window.SCLMW && SCLMW.loc;
+    if(loc && typeof loc.text === 'function'){
+      var named = loc.text(s);
+      if(named) return named;
+    }
+    return s;
+  }
+  function rowHtml(ev){
+    if(ev.kind === 'buy' || ev.kind === 'sell'){
+      var face = itemFace(ev.item || '');
+      var token = '\u0001';
+      var parts = fill(ev.kind, {item:token, qty:ev.qty || 0, price:ev.price || 0}).split(token);
+      var itemHtml = face.code ? '<code class="st-hist-code">'+esc(face.text)+'</code>' : esc(face.text);
+      return esc(parts[0] || '') + itemHtml + esc(parts[1] || '');
+    }
+    return esc(sentence(ev));
+  }
   function sentence(ev){
     var ship = ev.ship || '';
     if(ev.kind === 'online') return t('online');
@@ -175,6 +208,10 @@
   }
 
   function ctl(){ return window.__stCtl || null; }
+  function holdMap(on){
+    var map = ctl();
+    if(map && map.holdSpin) map.holdSpin(!!on);
+  }
   function buildStops(){
     stops = [];
     rowAt = {};
@@ -231,6 +268,7 @@
     if(play.raf){ cancelAnimationFrame(play.raf); play.raf = 0; }
     var btn = document.getElementById('stHistPlay');
     if(btn) btn.textContent = t('play');
+    holdMap(false);
   }
   function tick(now){
     if(!play.on) return;
@@ -254,6 +292,7 @@
   function startPlay(){
     if(stops.length < 2) return;
     if(play.index >= stops.length - 1){ play.index = 0; play.frac = 0; }
+    holdMap(true);
     play.on = true;
     play.last = 0;
     var btn = document.getElementById('stHistPlay');
@@ -263,6 +302,7 @@
   }
   function seek(index){
     if(!stops.length) return;
+    holdMap(true);
     play.index = Math.max(0, Math.min(stops.length - 1, index));
     play.frac = 0;
     play.last = 0;
@@ -290,10 +330,11 @@
     var list = rows.map(function(ev, i){
       var text = sentence(ev);
       if(!text) return '';
-      var shop = (ev.kind === 'buy' || ev.kind === 'sell') && ev.shop ? '<small>'+esc(fill('shop', {shop: ev.shop}))+'</small>' : '';
+      var shopName = (ev.kind === 'buy' || ev.kind === 'sell') && ev.shop ? shopFace(ev.shop) : '';
+      var shop = shopName ? '<small>'+esc(fill('shop', {shop: shopName}))+'</small>' : '';
       var on = stops[play.index] && stops[play.index].ev === ev ? ' is-on' : '';
       return '<button type="button" class="st-hist-row'+on+'" data-i="'+i+'">'+
-        '<time>'+esc(when(ev))+'</time><b>'+esc(text)+'</b>'+shop+'</button>';
+        '<time>'+esc(when(ev))+'</time><b>'+rowHtml(ev)+'</b>'+shop+'</button>';
     }).join('');
     var body = list || '<p class="st-hist-empty">'+esc(note || t('empty'))+'</p>';
     var warn = rows.length && stops.length < 2 ? '<p class="st-hist-empty">'+esc(t('nopoint'))+'</p>' : '';

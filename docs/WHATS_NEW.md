@@ -14,6 +14,12 @@ The interface is Simplified Chinese, Traditional Chinese, English, and German. T
 - **A teammate stays on one line.** A long place, ship, or server scrolls back and forth. Offline members keep their last place. A click moves the view there, including a Lagrange point. With Starfix the card can also show the game server and where that pilot is flying.
 - **A shared route leaves the camera where you put it.**
 - **Planets and moons are painted as different worlds.** Place marks stay readable in Pyro and Nyx.
+- **A name in the list opens that pilot.** The crew list and the player list open the same card and dashed line.
+- **Each teammate's server is on the row.** Matching servers are green. A different server is amber.
+- **A place shows what it offers.** The card adds distance from the star, amenities, and terminals, using the game's own names.
+- **Other systems soften while one is in view.** Pull back until all three are visible and they sharpen. The switch is in Controls, under Other, and it starts on.
+- **The top bar is one short strip.** It meets the left and right edges. The category buttons take the space between search and the tools.
+- **The public name and the origin are the same site.** https://sclmw.cltbbs.com/ keeps the address. https://gugugubear.pythonanywhere.com/ serves the same pages. A new Starfix window uses https://sclmw.cltbbs.com.
 
 ## Deutsch
 
@@ -25,6 +31,12 @@ The interface is Simplified Chinese, Traditional Chinese, English, and German. T
 - **Ein Teammitglied bleibt in einer Zeile.** Ein langer Ort, ein Schiff oder ein Server läuft hin und her. Offline bleibt der letzte Ort stehen. Ein Klick setzt die Ansicht dorthin, auch auf einen Lagrange-Punkt. Mit Starfix kann die Karte auch den Spielserver und das Flugziel zeigen.
 - **Eine geteilte Route lässt die Kamera, wo du sie hingestellt hast.**
 - **Planeten und Monde sind als verschiedene Welten gemalt.** Die Ortsmarken bleiben in Pyro und Nyx lesbar.
+- **Ein Name in der Liste öffnet diesen Piloten.** Die Teamliste und die Spielerliste öffnen dieselbe Karte und die gestrichelte Linie.
+- **Der Server jedes Mitglieds steht in der Zeile.** Derselbe Server ist grün. Ein anderer Server ist bernsteinfarben.
+- **Ein Ort zeigt, was er bietet.** Die Karte ergänzt den Abstand zum Stern, die Einrichtungen und die Terminals, mit den Namen aus dem Spiel.
+- **Andere Systeme werden weich, solange eines im Blick ist.** Weit genug herausziehen, bis alle drei sichtbar sind, macht sie wieder scharf. Der Schalter steht unter Steuerung, Sonstiges, und ist zu Beginn an.
+- **Die obere Leiste ist ein kurzer Streifen.** Sie liegt am linken und rechten Rand. Die Kategorien füllen den Platz zwischen Suche und Werkzeugen.
+- **Der öffentliche Name und der Ursprung sind dieselbe Seite.** https://sclmw.cltbbs.com/ behält die Adresse. https://gugugubear.pythonanywhere.com/ liefert dieselben Seiten. Ein neues Starfix-Fenster trägt https://sclmw.cltbbs.com ein.
 
 ## 简体中文
 
@@ -36,6 +48,12 @@ The interface is Simplified Chinese, Traditional Chinese, English, and German. T
 - **队员保持一行。** 地点、舰船或服务器太长时，会来回滚动。离线队员保留最后的地点。点一下就把画面移过去，拉格朗日点也一样。开着 Starfix 时，名片上还可以看到游戏服务器，以及这个人正在飞往哪里。
 - **点一条已分享的路线，不会把视角抢走。**
 - **行星和卫星各自有自己的表面。** 派罗和尼克斯里的地点标记仍然看得清。
+- **列表里点名字就打开这个人。** 队员列表和玩家列表都会打开同一张名片和虚线。
+- **每个队员的服务器写在这一行上。** 同一个服务器是绿色，不同的服务器是琥珀色。
+- **地点会写出它有什么。** 名片加上距恒星的距离、设施和终端，名称用游戏里的原文。
+- **停在一个星系里时，其他星系变柔。** 拉远到三个星系都看得见时，它们重新变清晰。开关在操作设置的「其他」里，一开始是开的。
+- **顶栏是一条较矮的长条。** 左右贴着画面边缘。分类按钮占搜索和工具之间的空位。
+- **对外名称和源站是同一个网站。** https://sclmw.cltbbs.com/ 保持这个地址。https://gugugubear.pythonanywhere.com/ 提供同样的页面。新的 Starfix 窗口填入 https://sclmw.cltbbs.com。
 
 ## 繁體中文
 
@@ -47,3 +65,9 @@ The interface is Simplified Chinese, Traditional Chinese, English, and German. T
 - **隊員保持一行。** 地點、艦船或伺服器太長時，會來回捲動。離線隊員保留最後的地點。點一下就把畫面移過去，拉格朗日點也一樣。開著 Starfix 時，名片上還可以看到遊戲伺服器，以及這個人正在飛往哪裡。
 - **點一條已分享的路線，不會把視角搶走。**
 - **行星和衛星各自有自己的表面。** 派羅和尼克斯裡的地點標記仍然看得清。
+- **列表裡點名字就打開這個人。** 隊員列表和玩家列表都會打開同一張名片和虛線。
+- **每個隊員的伺服器寫在這一行上。** 同一個伺服器是綠色，不同的伺服器是琥珀色。
+- **地點會寫出它有什麼。** 名片加上距恆星的距離、設施和終端，名稱用遊戲裡的原文。
+- **停在一個星系裡時，其他星系變柔。** 拉遠到三個星系都看得見時，它們重新變清晰。開關在操作設定的「其他」裡，一開始是開的。
+- **頂欄是一條較矮的長條。** 左右貼著畫面邊緣。分類按鈕占搜尋和工具之間的空位。
+- **對外名稱和來源站是同一個網站。** https://sclmw.cltbbs.com/ 保持這個地址。https://gugugubear.pythonanywhere.com/ 提供同樣的頁面。新的 Starfix 視窗填入 https://sclmw.cltbbs.com。
