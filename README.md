@@ -1,6 +1,6 @@
 # SC LMW – Star Citizen LiveMap Wiki
 
-**Version 1.1.0** · AGPL-3.0 · Starfix 1.0.5
+**Version 1.1.0** · AGPL-3.0 · Starfix 1.0.6
 
 **English** · [Deutsch](README.de.md) · [简体中文](#简体中文) · [繁體中文](#繁體中文)
 

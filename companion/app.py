@@ -12,6 +12,7 @@
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 import threading
@@ -816,12 +817,23 @@ def unreachable_text():
 def update_ready_text(version):
     lang = _update_lang()
     if lang == "zh-Hant":
-        return "發現新版本 %s。點確定後會下載並替換目前的程式，然後自動重新開啟。" % version
+        return "發現新版本 %s。點確定後開始下載。下載時沒有視窗，完成後會自己重新開啟。" % version
     if lang == "en":
-        return "Version %s is available. Choose OK to download it, replace this copy, and open it again." % version
+        return "Version %s is available. Choose OK to download it. The window stays closed while that runs, then Starfix opens again by itself." % version
     if lang == "de":
-        return "Version %s ist da. Mit OK wird sie geladen, diese Datei ersetzt und danach neu geöffnet." % version
-    return "发现新版本 %s。点确定后会下载并替换当前程序，然后自动重新打开。" % version
+        return "Version %s ist da. Mit OK beginnt der Download. Dabei bleibt das Fenster zu, danach öffnet sich Starfix von selbst." % version
+    return "发现新版本 %s。点确定后开始下载。下载时没有窗口，完成后会自己重新打开。" % version
+
+
+def update_failed_text():
+    lang = _update_lang()
+    if lang == "zh-Hant":
+        return "更新檔已經下載，但沒能換上目前的程式。請關掉 Starfix，再雙擊旁邊的 Starfix.update.exe。"
+    if lang == "en":
+        return "The update downloaded, but this copy could not be replaced. Close Starfix, then double-click Starfix.update.exe beside it."
+    if lang == "de":
+        return "Die Aktualisierung ist geladen, aber diese Datei konnte nicht ersetzt werden. Starfix schließen und dann Starfix.update.exe daneben doppelklicken."
+    return "更新文件已经下载，但没能换上当前程序。请关掉 Starfix，再双击旁边的 Starfix.update.exe。"
 
 
 def _github_json(url):
@@ -885,35 +897,116 @@ def download_release(url, dest):
         raise OSError("github")
 
 
-def swap_and_exit(src, dest):
-    script = Path(os.environ.get("TEMP") or os.environ.get("TMP") or ".") / "starfix-update.ps1"
+def _ps_quote(value):
+    return "'" + str(value).replace("'", "''") + "'"
 
-    def quote(value):
-        return "'" + str(value).replace("'", "''") + "'"
 
-    script.write_text(
+def update_spawn_flags():
+    # Break away from the packaged exe. Otherwise the helper is closed
+    # the moment Starfix exits, and the downloaded file is never swapped in.
+    return 0x01000000 | 0x00000008 | 0x00000200 | 0x08000000
+
+
+def update_script(src, dest, pid, fail_text):
+    return (
+        "$ErrorActionPreference = 'Continue'\n"
         "$src = %s\n$dst = %s\n$procId = %d\n"
-        "$deadline = (Get-Date).AddSeconds(40)\n"
+        "$deadline = (Get-Date).AddSeconds(45)\n"
         "while ((Get-Process -Id $procId -ErrorAction SilentlyContinue) -and ((Get-Date) -lt $deadline)) { Start-Sleep -Milliseconds 200 }\n"
-        "Start-Sleep -Milliseconds 500\n"
-        "try {\n"
-        "  Move-Item -LiteralPath $src -Destination $dst -Force\n"
-        "  Start-Process -FilePath $dst\n"
-        "} catch {\n"
-        "  Add-Type -AssemblyName System.Windows.Forms\n"
-        "  [System.Windows.Forms.MessageBox]::Show('更新文件已经下载，但没能替换当前程序。请关掉 Starfix 后，手动用旁边的 Starfix.update.exe 替换。', 'Starfix')\n"
+        "$moved = $false\n"
+        "foreach ($try in 1..40) {\n"
+        "  try {\n"
+        "    Move-Item -LiteralPath $src -Destination $dst -Force -ErrorAction Stop\n"
+        "    $moved = $true\n"
+        "    break\n"
+        "  } catch { Start-Sleep -Milliseconds 250 }\n"
         "}\n"
-        "Remove-Item -LiteralPath %s -Force -ErrorAction SilentlyContinue\n"
-        % (quote(src), quote(dest), os.getpid(), quote(script)),
-        encoding="utf-8",
+        "if ($moved) {\n"
+        "  Start-Process -FilePath $dst -WorkingDirectory (Split-Path -Parent $dst)\n"
+        "} else {\n"
+        "  Add-Type -AssemblyName System.Windows.Forms\n"
+        "  [System.Windows.Forms.MessageBox]::Show(%s, 'Starfix') | Out-Null\n"
+        "}\n"
+        % (_ps_quote(src), _ps_quote(dest), int(pid), _ps_quote(fail_text))
     )
-    flags = 0x00000200 | 0x08000000
-    subprocess.Popen(
-        ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(script)],
-        creationflags=flags,
-        close_fds=True,
+
+
+def spawn_detached(argv):
+    if sys.platform != "win32":
+        raise OSError("update")
+    cmdline = subprocess.list2cmdline(list(argv))
+    command = (
+        "$created = ([wmiclass]'Win32_Process').Create(%s); "
+        "if (-not $created -or [int]$created.ReturnValue -ne 0) { exit 1 }"
+        % _ps_quote(cmdline)
     )
+    try:
+        done = subprocess.run(
+            ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", command],
+            capture_output=True,
+            creationflags=0x08000000,
+            timeout=30,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        done = None
+    if done is not None and done.returncode == 0:
+        return
+    subprocess.Popen(list(argv), creationflags=update_spawn_flags(), close_fds=True)
+
+
+def swap_and_exit(src, dest):
+    if sys.platform != "win32":
+        tell(update_failed_text())
+        return
+    script = Path(os.environ.get("TEMP") or os.environ.get("TMP") or ".") / "starfix-update.ps1"
+    script.write_text(update_script(src, dest, os.getpid(), update_failed_text()), encoding="utf-8-sig")
+    helper = ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-WindowStyle", "Hidden", "-File", str(script)]
+    try:
+        spawn_detached(helper)
+    except OSError:
+        tell(update_failed_text())
+        return
     os._exit(0)
+
+
+def finish_pending_install():
+    # An older Starfix can download the new exe but not replace itself.
+    # Opening Starfix.update.exe finishes that: copy over Starfix.exe and start it.
+    if sys.platform != "win32" or not frozen():
+        return False
+    me = Path(sys.executable).resolve()
+    if me.name.lower() != "starfix.update.exe":
+        return False
+    dest = me.with_name("Starfix.exe")
+    copied = False
+    for _ in range(40):
+        try:
+            shutil.copy2(me, dest)
+            copied = True
+            break
+        except OSError:
+            time.sleep(0.25)
+    if not copied:
+        tell(update_failed_text())
+        return False
+    try:
+        spawn_detached([str(dest)])
+    except OSError:
+        tell(update_failed_text())
+        return False
+    os._exit(0)
+
+
+def clear_update_file():
+    if not frozen():
+        return
+    me = Path(sys.executable).resolve()
+    if me.name.lower() == "starfix.update.exe":
+        return
+    try:
+        me.with_name("Starfix.update.exe").unlink()
+    except OSError:
+        pass
 
 
 def maybe_update():
@@ -926,6 +1019,7 @@ def maybe_update():
         tell(unreachable_text())
         return
     if not found:
+        clear_update_file()
         return
     dest = Path(sys.executable).resolve()
     src = dest.with_name("Starfix.update.exe")
@@ -1134,6 +1228,7 @@ def main():
     global HTTPD
     if not claim_single_instance():
         return
+    finish_pending_install()
     maybe_update()
     ThreadingHTTPServer.allow_reuse_address = True
     try:
@@ -1188,6 +1283,10 @@ if __name__ == "__main__":
         assert version_tuple("starfix-" + "a" * 40) is None
         assert version_tuple("1.0.1") > version_tuple("1.0.0")
         assert version_tuple(VERSION) is not None
+        script = update_script(r"C:\Starfix\Starfix.update.exe", r"C:\Starfix\Starfix.exe", 99, "failed")
+        assert "Move-Item -LiteralPath $src -Destination $dst -Force" in script, script
+        assert "$procId = 99" in script and "foreach ($try in 1..40)" in script
+        assert update_spawn_flags() & 0x01000000
         assert parse_tasklist_pids('"Starfix.exe","4321","Console","1","12,345 K"\nINFO: none\n') == [4321]
         assert parse_tasklist_pids('"notepad.exe","1","Console","1","1 K"') == []
         assert log_kind("") == "missing"

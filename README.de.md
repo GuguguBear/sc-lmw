@@ -1,6 +1,6 @@
 # SC LMW – Star Citizen LiveMap Wiki (Deutsch)
 
-**Version 1.1.0** · AGPL-3.0 · Starfix 1.0.5
+**Version 1.1.0** · AGPL-3.0 · Starfix 1.0.6
 
 > **Inoffizielles Fan-Projekt. Nicht von Cloud Imperium Games oder Roberts Space Industries unterstützt, gesponsert oder mit ihnen verbunden. Star Citizen® ist eine Marke von Cloud Imperium Rights LLC.**
 

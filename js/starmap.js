@@ -51,6 +51,54 @@ SC.data=()=>ST_DATA; SC.basePath=()=>BASE; SC.flyTo=o=>{ if(window.__stCtl) wind
 const _t=(k,v)=>(SC.i18n?SC.i18n.t(k,v):k), tn=(n,o)=>(SC.i18n?SC.i18n.num(n,o):String(n));
 // Game names (places, ships, items, missions). English stays in the data; js/loc.js swaps in Chinese.
 const gn=s=>SC.loc?SC.loc.text(s):s;
+// UEX writes "Hangar L" and "Pharmacy - Stanton Gateway (Nyx)". The game pack uses
+// "Hangar (L)" and translates the shop and the place separately.
+const ST_NAME_ALIAS={
+  'Hangar S':'Hangar (S)','Hangar M':'Hangar (M)','Hangar L':'Hangar (L)','Hangar XL':'Hangar (XL)',
+  'Landing Pad S':'Landing Pad (S)','Landing Pad M':'Landing Pad (M)','Landing Pad L':'Landing Pad (L)','Landing Pad XL':'Landing Pad (XL)',
+  'Buy Ship Items and Weapons':'Buy Ship Items/Weapons','Buy and Rent Vehicles':'Buy/Rent Vehicles',
+  'Area 18':'Area18','Seraphim':'Seraphim Station',
+  "Ellroy's":"Ellroy's Coffee",'Medical Shop':'Medical_Shop'
+};
+const ST_NAME_OFFICIAL={
+  'Cargo Center':{hans:'货运中心',hant:'貨運中心'}
+};
+function officialName(s){
+  var row=ST_NAME_OFFICIAL[s]; if(!row) return '';
+  var lang=SC.i18n&&SC.i18n.lang;
+  if(lang==='zh-Hans') return row.hans;
+  if(lang==='zh-Hant') return row.hant;
+  return '';
+}
+function gnBit(s){
+  s=String(s||'').trim();
+  if(!s) return s;
+  var z=gn(s);
+  if(z && z!==s) return z;
+  var al=ST_NAME_ALIAS[s];
+  if(al){ z=gn(al); if(z && z!==al) return z; }
+  var off=officialName(s);
+  if(off) return off;
+  var m=s.match(/^(.*)\s+\(([^)]+)\)\s*$/);
+  if(m){
+    var a=gnBit(m[1]), b=gnBit(m[2]);
+    if(a!==m[1].trim() || b!==m[2].trim()) return a+' ('+b+')';
+  }
+  return s;
+}
+function gnLine(s){
+  if(s==null || s==='') return s;
+  var raw=String(s).replace(/\s+[–—-]\s+/g,' - ').replace(/[ \t]+/g,' ').trim();
+  var whole=gn(raw);
+  if(whole && whole!==raw) return whole;
+  if(raw.indexOf(' - ')>=0){
+    var orig=raw.split(' - '), parts=orig.map(gnBit);
+    if(parts.some(function(p,i){ return p!==orig[i].trim(); })) return parts.join(' - ');
+    return s;
+  }
+  var bit=gnBit(raw);
+  return bit!==raw ? bit : s;
+}
 function translated(s){ if(s==null||s==='') return ''; var hit=gn(s); return (hit && hit!==String(s)) ? hit : ''; }
 function playerPlaceName(p){
   if(!p) return '';
@@ -425,7 +473,7 @@ async function stShopHTML(o,box){ const C=await uexCatalog(); const byI={}; C.it
   const rk=x=>x.ship?0:(x.item.s?1:2); all.sort((a,b)=>rk(a)-rk(b)||String(a.ship?'':a.item.s).localeCompare(String(b.ship?'':b.item.s))||(a.ship||a.item).n.localeCompare((b.ship||b.item).n));
   const draw=q=>{ const L=all.filter(x=>{ if(!q) return true; const n=(x.ship||x.item).n||'', s=(x.item||{}).s||''; return n.toLowerCase().indexOf(q)>=0||String(gn(n)).toLowerCase().indexOf(q)>=0||s.toLowerCase().indexOf(q)>=0||String(gn(s)).toLowerCase().indexOf(q)>=0; }); let last='';
     box.querySelector('.st-shop-l').innerHTML=L.slice(0,200).map((x,i)=>{ const sec=x.ship?_t('cat.ship'):(gn(x.item.s)||_t('common.misc2')), hd=sec!==last?'<div class="st-rh">'+esc(sec)+'</div>':''; last=sec;
-      return hd+'<div class="st-pr" data-si="'+all.indexOf(x)+'"><div><b>'+esc(gn((x.ship||x.item).n))+'</b><span>'+esc(gn(x.term))+'</span></div><em>'+uexMoney(x.price)+'</em></div>'; }).join('')+(L.length>200?'<p class="sc-lmw-muted" style="font-size:.78rem">'+_t('shop.more_filter',{n:L.length-200})+'</p>':'');
+      return hd+'<div class="st-pr" data-si="'+all.indexOf(x)+'"><div><b>'+esc(gn((x.ship||x.item).n))+'</b><span>'+esc(gnLine(x.term))+'</span></div><em>'+uexMoney(x.price)+'</em></div>'; }).join('')+(L.length>200?'<p class="sc-lmw-muted" style="font-size:.78rem">'+_t('shop.more_filter',{n:L.length-200})+'</p>':'');
     box.querySelectorAll('[data-si]').forEach(el=>el.onclick=()=>{ const x=all[+el.getAttribute('data-si')]; if(x.ship) stOpenBuy('ship',x.ship); else if(x.item.i) stOpenBuy('item',x.item); }); };
   box.innerHTML='<input class="st-shop-f" placeholder="'+esc(_t('shop.filter_placeholder',{n:all.length}))+'"><div class="st-shop-l"></div>'; box.querySelector('.st-shop-f').oninput=e=>draw(e.target.value.trim().toLowerCase()); draw(''); }
 function stDestLoc(tr){ if(!tr) return null; return stPlayerLoc({code:tr.to_raw||'',location:tr.to||'',system:''}); }
@@ -1440,8 +1488,9 @@ function stPriceRows(rows,field,label,asc){ const T=stTermIdx();
   const L=rows.filter(r=>r[field]>0).sort((a,b)=>asc?a[field]-b[field]:b[field]-a[field]);
   if(!L.length) return {html:'',ids:[]}; const ids=[];
   const html='<div class="st-slbl">'+label+' <span class="st-cnt">'+_t('count.terminals',{n:L.length})+'</span></div>'+L.map(r=>{ const o=T[r.id_terminal]; if(o) ids.push(o.id);
-    const sys=r.star_system_name&&r.star_system_name!=='Stanton'?r.star_system_name:''; const where=o?stBodyOf(o).n:(r.planet_name||r.moon_name||sys||'');
-    return '<div class="st-pr'+(o?'':' nomap')+'"'+(o?' data-oid="'+o.id+'"':'')+' title="'+esc(o?_t('tooltip.show_on_map'):_t('tooltip.not_on_map'))+'"><div><b>'+esc(o?gn(o.n):gn(r.terminal_name||'?'))+'</b><span>'+esc([gn(r.terminal_name),where,sys].filter((v,i,a)=>v&&a.indexOf(v)===i).join(' · '))+'</span></div><em>'+uexMoney(r[field])+'</em></div>'; }).join('');
+    const sys=r.star_system_name&&r.star_system_name!=='Stanton'?gnLine(r.star_system_name):''; const where=gnLine(o?stBodyOf(o).n:(r.planet_name||r.moon_name||''));
+    const title=gnLine(o&&o.n?o.n:(r.terminal_name||'?')); const sub=gnLine(r.terminal_name||'');
+    return '<div class="st-pr'+(o?'':' nomap')+'"'+(o?' data-oid="'+o.id+'"':'')+' title="'+esc(o?_t('tooltip.show_on_map'):_t('tooltip.not_on_map'))+'"><div><b>'+esc(title)+'</b><span>'+esc([sub,where,sys].filter((v,i,a)=>v&&a.indexOf(v)===i).join(' · '))+'</span></div><em>'+uexMoney(r[field])+'</em></div>'; }).join('');
   return {html,ids}; }
 function stWirePrices(body){ body.querySelectorAll('[data-oid]').forEach(el=>el.onclick=()=>{ const o=ST_DATA.by[el.getAttribute('data-oid')]; window.__stCtl.flyTo(o); openStPanel(o); }); }
 async function stOpenBuy(kind,rec){ if(!rec) return;
@@ -1596,7 +1645,7 @@ async function openStPanel(o){
   if(o.k==='gateway'){ const L=(D.gal.links||[]).find(l=>l.a===o.id||l.b===o.id);
     if(L){ const other=D.by[L.a===o.id?L.b:L.a]; if(other) h+='<div class="st-jump">'+_t('jump.gateway_to',{sys:'<b>'+esc(stSysName(other))+'</b>'})+(L.live?'':' <em>'+esc(_t('jump.rsi_only_note'))+'</em>')+'<button class="sc-lmw-btn sm primary" id="'+ID('stJumpGo')+'" data-to="'+other.id+'">'+_t('action.fly_through')+'</button></div>'; } }
   if(desc) h+='<div class="st-desc" id="'+ID('stDesc')+'" title="'+esc(_t('hint.tap_to_expand'))+'">'+esc(desc)+'</div>';
-  if(o.am&&o.am.length) h+='<div class="st-slbl">'+_t('label.amenities')+'</div><div class="st-chips">'+o.am.map(a=>{ const z=gn(a); return '<span>'+esc(z!==a?z:(isDe?(ST_AM_DE[a]||a):a))+'</span>'; }).join('')+'</div>';
+  if(o.am&&o.am.length) h+='<div class="st-slbl">'+_t('label.amenities')+'</div><div class="st-chips">'+o.am.map(a=>{ const z=gnLine(a); return '<span>'+esc(z!==a?z:(isDe?(ST_AM_DE[a]||a):a))+'</span>'; }).join('')+'</div>';
   if(SC.guides) h+=SC.guides.html(o);   // Ablauf, Timer, Karten der grossen Loops / guides for the big loops (js/guides.js)
   if(o.mine&&o.mine.length) h+=stMiningHTML(o.mine);
   if(o.k==='wikelo') h+='<div id="'+ID('stWkBox')+'"></div>';
@@ -1604,7 +1653,7 @@ async function openStPanel(o){
   h+='<div id="'+ID('stMisBox')+'"></div>';
   const comm=(o.terms||[]).filter(t=>t.t==='commodity').slice(0,6);
   if(comm.length) h+='<div class="st-slbl">'+_t('label.commodity_market')+'</div><div id="'+ID('stGoodsBox')+'"><p class="sc-lmw-muted" style="font-size:.85rem">'+_t('status.loading_prices')+'</p></div>';
-  if(o.terms&&o.terms.length) h+='<div class="st-slbl">'+esc(_t('label.terminals',{n:o.terms.length}))+'</div><div class="st-chips">'+o.terms.map(t=>'<span>'+esc(gn(t.n))+'</span>').join('')+'</div>';
+  if(o.terms&&o.terms.length) h+='<div class="st-slbl">'+esc(_t('label.terminals',{n:o.terms.length}))+'</div><div class="st-chips">'+o.terms.map(t=>'<span>'+esc(gnLine(t.n))+'</span>').join('')+'</div>';
   h+='<div class="st-slbl">'+_t('label.search_items_ships')+'</div><input id="'+ID('stCat')+'" placeholder="'+esc(_t('search.item_ship_placeholder'))+'"><div id="'+ID('stCatRes')+'"><p class="sc-lmw-muted" style="font-size:.82rem"></p></div>';
   h+='<div class="st-coord">'+esc(_t('coord.from_star',{dist:stDist(Math.hypot(o.x,o.y,o.z)),x:tn(Math.round(o.x)),y:tn(Math.round(o.y)),z:tn(Math.round(o.z))}))+'<br>'+esc(_t('data.version_prefix',{version:(D.d.version||'').replace(/-LIVE.*/,'')}))+(o.h?esc(_t('note.not_on_starmap')):'')+(o.approx?esc(_t('note.approx_position')):'')+(isDe&&o.dde?esc(_t('note.de_ini_source')):'')+'</div>';
   body.innerHTML=h; if(SC.guides) SC.guides.wire(body,o);
@@ -1651,12 +1700,12 @@ async function uexPriceInto(rec,el,loc){
       const d=await fetch(UEX_BASE+'/vehicles_purchases_prices?id_vehicle='+rec.o.i).then(r=>r.json()); const rows=((d&&d.data)||[]).filter(x=>x.price_buy>0);
       if(!rows.length){ el.textContent=_t('notice.not_buyable_ingame',{pledge:rec.o.msrp?_t('label.also_pledge',{n:rec.o.msrp}):''}); return; }
       const avg=Math.round(rows.reduce((a,b)=>a+b.price_buy,0)/rows.length); const where=rows.map(x=>x.terminal_name).filter(Boolean);
-      el.innerHTML='Ø '+uexMoney(avg)+' '+esc(_t('label.buyable_at',{where:where.slice(0,3).join(', ')||'—'}))+(hereMark(where,loc));
+      el.innerHTML='Ø '+uexMoney(avg)+' '+esc(_t('label.buyable_at',{where:where.slice(0,3).map(gnLine).join(', ')||'—'}))+(hereMark(where,loc));
     } else { if(!rec.o.i){ el.textContent=_t('notice.no_uex_data'); return; }
       const d=await fetch(UEX_BASE+'/items_prices?id_item='+rec.o.i).then(r=>r.json()); const rows=((d&&d.data)||[]).filter(x=>x.price_buy>0).sort((a,b)=>a.price_buy-b.price_buy);
       if(!rows.length){ el.textContent=_t('notice.not_buyable_anywhere'); return; }
       const where=rows.map(x=>x.terminal_name).filter(Boolean);
-      el.innerHTML=esc(_t('label.from_price',{price:uexMoney(rows[0].price_buy)}))+' · '+esc(where.slice(0,3).join(', '))+(hereMark(where,loc));
+      el.innerHTML=esc(_t('label.from_price',{price:uexMoney(rows[0].price_buy)}))+' · '+esc(where.slice(0,3).map(gnLine).join(', '))+(hereMark(where,loc));
     }
   }catch(e){ el.textContent=_t('error.price_load_failed'); }
 }
