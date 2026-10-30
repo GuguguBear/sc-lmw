@@ -740,47 +740,40 @@
     return field;
   }
   var homePrinted = false;
-  function armPrint(el){
-    if(homePrinted || !el) return;
+  function dressPrint(home){
+    if(homePrinted || !home) return;
     homePrinted = true;
     if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    var beam = childByClass(el, 'st-print-beam');
-    if(!beam){
-      beam = document.createElement('div');
-      beam.className = 'st-print-beam';
-      beam.setAttribute('aria-hidden', 'true');
-      el.appendChild(beam);
+    var jobs = home.querySelectorAll('.st-home-hero, .st-home-card');
+    var bands = 6;
+    for(var i = 0; i < jobs.length; i++){
+      var job = jobs[i];
+      job.classList.add('st-job');
+      job.style.setProperty('--job', String(i));
+      var veil = document.createElement('div');
+      veil.className = 'st-job-veil';
+      veil.setAttribute('aria-hidden', 'true');
+      for(var b = 0; b < bands; b++){
+        var slice = document.createElement('span');
+        var laser = document.createElement('i');
+        laser.style.setProperty('--b', String(bands - 1 - b));
+        slice.appendChild(laser);
+        veil.appendChild(slice);
+      }
+      job.appendChild(veil);
     }
-    el.classList.add('st-printing');
-    var done = false;
-    function finish(){
-      if(done) return;
-      done = true;
-      el.classList.remove('st-printing');
-      if(beam.parentNode) beam.parentNode.removeChild(beam);
-    }
-    beam.addEventListener('animationend', finish);
-    setTimeout(finish, 5000);
+    setTimeout(function(){
+      var veils = home.querySelectorAll('.st-job-veil');
+      for(var v = 0; v < veils.length; v++) if(veils[v].parentNode) veils[v].parentNode.removeChild(veils[v]);
+      var done = home.querySelectorAll('.st-job');
+      for(var d = 0; d < done.length; d++) done[d].classList.remove('st-job');
+    }, 1200);
   }
   var mapShown = false;
   function armMapPrint(){
-    var el = root();
-    if(!el) return;
-    if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    var beam = document.createElement('div');
-    beam.className = 'st-print-beam';
-    beam.setAttribute('aria-hidden', 'true');
-    el.appendChild(beam);
-    el.classList.add('st-map-printing');
-    var done = false;
-    function finish(){
-      if(done) return;
-      done = true;
-      el.classList.remove('st-map-printing');
-      if(beam.parentNode) beam.parentNode.removeChild(beam);
-    }
-    beam.addEventListener('animationend', finish);
-    setTimeout(finish, 5000);
+    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if(!window.__stPrint){ setTimeout(armMapPrint, 50); return; }
+    window.__stPrint(!!reduce);
   }
   function mountHome(el, narrow){
     ensureHomeField(el);
@@ -790,13 +783,13 @@
       el.appendChild(home);
     }
     home.className = narrow ? 'st-home st-home-narrow' : 'st-home';
-    armPrint(el);
     return home;
   }
   function paintGate(el){
     if(leaving && state && state.role==='captain' && state.status==='member'){
       var hand = mountHome(el, true);
       hand.innerHTML = '<header class="st-home-hero"><div class="st-home-kicker">SC LMW</div><h1>'+esc(t('title'))+'</h1></header><section class="st-home-card">'+handoffHtml()+'</section>';
+      dressPrint(hand);
       bindHandoff(el);
       return;
     }
@@ -842,6 +835,7 @@
         '<section class="st-home-card" id="stHomeStarfix">'+starfixFactsHtml()+'</section>'+
         '<section class="st-home-card st-home-join"><h2>'+esc(ti('home.join_h'))+'</h2>'+roomBody+'</section>'+
         pubHtml();
+    dressPrint(home);
     var c = el.querySelector('#stRoomCreate'), j = el.querySelector('#stRoomJoin');
     if(c) c.onclick = function(){ act('create'); };
     if(j) j.onclick = function(){ act('join'); };
