@@ -649,9 +649,108 @@
       '</p></section>';
   }
 
+  function childByClass(el, cls){
+    for(var i = 0; i < el.children.length; i++){
+      if(el.children[i].classList.contains(cls)) return el.children[i];
+    }
+    return null;
+  }
+  function runHomeCode(canvas){
+    if(!canvas || canvas.__stCode) return;
+    canvas.__stCode = true;
+    var ctx = canvas.getContext('2d');
+    if(!ctx) return;
+    var reduce = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+    var glyphs = '0123456789ABCDEF';
+    var cols = [];
+    function size(){
+      var parent = canvas.parentNode;
+      if(!parent) return;
+      var w = parent.clientWidth, h = parent.clientHeight;
+      var dpr = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = Math.max(1, Math.floor(w * dpr));
+      canvas.height = Math.max(1, Math.floor(h * dpr));
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      cols = [];
+      var n = Math.max(1, Math.ceil(w / 18));
+      for(var i = 0; i < n; i++) cols.push(Math.random() * h);
+      canvas.__stStill = false;
+    }
+    size();
+    if(window.ResizeObserver){
+      var ro = new ResizeObserver(size);
+      ro.observe(canvas.parentNode);
+    }
+    function frame(){
+      var parent = canvas.parentNode;
+      if(!parent || !parent.isConnected) return;
+      var gate = parent.parentNode;
+      if(gate && gate.hidden){
+        requestAnimationFrame(frame);
+        return;
+      }
+      var w = parent.clientWidth, h = parent.clientHeight;
+      var ink = '#39e7ff';
+      if(gate){
+        var read = getComputedStyle(gate).getPropertyValue('--sclmw-cyan');
+        if(read && read.trim()) ink = read.trim();
+      }
+      ctx.font = '14px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
+      ctx.textBaseline = 'top';
+      if(reduce){
+        if(!canvas.__stStill){
+          canvas.__stStill = true;
+          ctx.clearRect(0, 0, w, h);
+          for(var y = 8; y < h; y += 28){
+            for(var x = 0; x < cols.length; x += 2){
+              ctx.globalAlpha = 0.22;
+              ctx.fillStyle = ink;
+              ctx.fillText(glyphs.charAt((x + y) % glyphs.length), x * 18, y);
+            }
+          }
+        }
+      }else{
+        ctx.clearRect(0, 0, w, h);
+        for(var i = 0; i < cols.length; i++){
+          for(var k = 0; k < 8; k++){
+            ctx.globalAlpha = k === 0 ? 0.9 : 0.28;
+            ctx.fillStyle = ink;
+            ctx.fillText(glyphs.charAt((i * 7 + k + ((cols[i] / 16) | 0)) % glyphs.length), i * 18, cols[i] - k * 16);
+          }
+          cols[i] += 1.05 + (i % 3) * 0.25;
+          if(cols[i] > h + 24) cols[i] = -40;
+        }
+        ctx.globalAlpha = 1;
+      }
+      requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+  }
+  function ensureHomeField(el){
+    var field = childByClass(el, 'st-home-field');
+    if(field) return field;
+    field = document.createElement('div');
+    field.className = 'st-home-field';
+    field.setAttribute('aria-hidden', 'true');
+    field.innerHTML = '<canvas class="st-home-code"></canvas><div class="st-home-grid"></div>';
+    el.insertBefore(field, el.firstChild);
+    runHomeCode(field.querySelector('canvas'));
+    return field;
+  }
+  function mountHome(el, narrow){
+    ensureHomeField(el);
+    var home = childByClass(el, 'st-home');
+    if(!home){
+      home = document.createElement('div');
+      el.appendChild(home);
+    }
+    home.className = narrow ? 'st-home st-home-narrow' : 'st-home';
+    return home;
+  }
   function paintGate(el){
     if(leaving && state && state.role==='captain' && state.status==='member'){
-      el.innerHTML = '<div class="st-home st-home-narrow"><header class="st-home-hero"><div class="st-home-kicker">SC LMW</div><h1>'+esc(t('title'))+'</h1></header><section class="st-home-card">'+handoffHtml()+'</section></div>';
+      var hand = mountHome(el, true);
+      hand.innerHTML = '<header class="st-home-hero"><div class="st-home-kicker">SC LMW</div><h1>'+esc(t('title'))+'</h1></header><section class="st-home-card">'+handoffHtml()+'</section>';
       bindHandoff(el);
       return;
     }
@@ -689,15 +788,14 @@
         )+
         (statusMsg ? '<p class="st-room-err">'+esc(statusMsg)+'</p>' : '')+
         histHtml();
-    el.innerHTML =
-      '<div class="st-home">'+
+    var home = mountHome(el, false);
+    home.innerHTML =
         '<header class="st-home-hero"><div class="st-home-kicker">SC LMW · '+esc(ti('home.kicker'))+'</div>'+
           '<h1>'+esc(t('title'))+'</h1><p>'+esc(ti('home.lead'))+'</p></header>'+
         rsiHtml()+
         '<section class="st-home-card" id="stHomeStarfix">'+starfixFactsHtml()+'</section>'+
         '<section class="st-home-card st-home-join"><h2>'+esc(ti('home.join_h'))+'</h2>'+roomBody+'</section>'+
-        pubHtml()+
-      '</div>';
+        pubHtml();
     var c = el.querySelector('#stRoomCreate'), j = el.querySelector('#stRoomJoin');
     if(c) c.onclick = function(){ act('create'); };
     if(j) j.onclick = function(){ act('join'); };
