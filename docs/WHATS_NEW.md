@@ -23,7 +23,7 @@ The interface is Simplified Chinese, Traditional Chinese, English, and German. T
 - **Haze is the default look.** The home page is a flat instrument plate: hairline frames, a dim star field, and one slow sweep. A choice already saved in the browser stays.
 - **The captain can move to a new browser.** Creating a room shows a recovery code. Only the captain can open it again. Room code plus that code takes the captain role. If that browser has been polling within two minutes, the previous captain stays as a member. Otherwise that empty seat is removed. After seven days without a room poll, the captain role passes to the earliest member. If nobody else remains, the room is deleted. Opening another room with the same browser still leaves the previous room immediately, and the earliest member becomes captain.
 - **Each part is printed by its own lasers.** Every home card, and then each planet, is built by several lines that stay on that part. Staying on the page does not run it again. Reduced motion shows them at once.
-- **The home page stays a compact plate.** The cards sit together in the middle. A tilted grid moves behind them, and the cards are frosted glass. A long note scrolls inside its own card.
+- **The home cards use the height left on the screen.** Joining a room, the recovery code, and entering the map stay in view. A tilted grid moves behind the frosted cards.
 
 ## Deutsch
 
@@ -44,7 +44,7 @@ The interface is Simplified Chinese, Traditional Chinese, English, and German. T
 - **Haze ist die Vorgabe.** Die Startseite ist eine flache Instrumententafel: feine Rahmen, ein schwaches Sternfeld und ein langsamer Sweep. Eine schon gespeicherte Wahl bleibt.
 - **Der Captain kann in einen neuen Browser wechseln.** Beim Anlegen erscheint ein Wiederherstellungscode. Nur der Captain kann ihn erneut öffnen. Raumcode und dieser Code übernehmen den Captain. Hat dieser Browser in den letzten zwei Minuten abgefragt, bleibt der vorige Captain als Mitglied. Sonst wird der leere Platz entfernt. Nach sieben Tagen ohne Raumabfrage geht der Captain an das früheste Mitglied. Bleibt niemand sonst, wird der Raum gelöscht. Wer mit demselben Browser einen anderen Raum öffnet, verlässt den vorigen sofort, und das früheste Mitglied wird Captain.
 - **Jedes Teil wird von eigenen Lasern gedruckt.** Jede Karte der Startseite, und danach jeder Planet, wird von mehreren Linien aufgebaut, die an diesem Teil bleiben. Wer auf der Seite bleibt, sieht es nicht noch einmal. Bei reduzierter Bewegung sind sie sofort da.
-- **Die Startseite bleibt eine kompakte Tafel.** Die Karten sitzen zusammen in der Mitte. Dahinter läuft ein geneigtes Gitter, und die Karten sind Milchglas. Ein langer Hinweis rollt in der eigenen Karte.
+- **Die Karten nutzen die Höhe, die der Bildschirm noch hat.** Beitreten, der Wiederherstellungscode und der Einstieg in die Karte bleiben sichtbar. Dahinter läuft ein geneigtes Gitter, und die Karten sind Milchglas.
 
 ## 简体中文
 
@@ -65,7 +65,7 @@ The interface is Simplified Chinese, Traditional Chinese, English, and German. T
 - **默认外观是气雾。** 首页是一块扁平的仪表板：细线边框、很淡的星点，以及一道很慢的扫光。浏览器里已经保存的主题会留下。
 - **队长可以换到新的浏览器。** 建立房间时会给出恢复码，之后只有队长能再打开它。房间码加上这组码就能接管队长。旧浏览器两分钟内还在轮询时，原来的队长留在房间里当队员；否则这个空位会被删掉。连续七天没有轮询房间时，队长交给最早加入的队员。如果已经没有其他队员，房间会被删掉。同一个人用原来的浏览器另开房间，会马上离开旧房间，队长立刻交给最早加入的队员。
 - **每个部件由自己的几道激光打印。** 首页的每一块卡片，以及进入星图后的每一颗星球，都由几道只留在这个部件上的光线分工完成。留在页面上时不会再来一次。系统开了减少动态效果时，它们直接出现。
-- **首页收成居中的一块。** 卡片聚在中间。后面是一块倾斜、往前走的网格，卡片是毛玻璃。较长的说明在自己的卡片里滚动。
+- **首页三列用满屏幕剩下的高度。** 进入房间、恢复码和进入星图留在这一屏里。后面是倾斜、往前走的网格，卡片是毛玻璃。
 
 ## 繁體中文
 
@@ -86,4 +86,4 @@ The interface is Simplified Chinese, Traditional Chinese, English, and German. T
 - **預設外觀是氣霧。** 首頁是一塊扁平的儀表板：細線邊框、很淡的星點，以及一道很慢的掃光。瀏覽器裡已經保存的主題會留下。
 - **隊長可以換到新的瀏覽器。** 建立房間時會給出恢復碼，之後只有隊長能再打開它。房間碼加上這組碼就能接管隊長。舊瀏覽器兩分鐘內還在輪詢時，原來的隊長留在房間裡當隊員；否則這個空位會被刪掉。連續七天沒有輪詢房間時，隊長交給最早加入的隊員。如果已經沒有其他隊員，房間會被刪掉。同一個人用原來的瀏覽器另開房間，會馬上離開舊房間，隊長立刻交給最早加入的隊員。
 - **每個部件由自己的幾道雷射打印。** 首頁的每一塊卡片，以及進入星圖後的每一顆星球，都由幾道只留在這個部件上的光線分工完成。留在頁面上時不會再來一次。系統開了減少動態效果時，它們直接出現。
-- **首頁收成居中的一塊。** 卡片聚在中間。後面是一塊傾斜、往前走的網格，卡片是毛玻璃。較長的說明在自己的卡片裡捲動。
+- **首頁三列用滿螢幕剩下的高度。** 進入房間、恢復碼和進入星圖留在這一屏裡。後面是傾斜、往前走的網格，卡片是毛玻璃。

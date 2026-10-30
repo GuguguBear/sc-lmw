@@ -591,14 +591,14 @@
 .sc-lmw .st-job-veil i::before{content:"";position:absolute;left:0;right:0;top:0;height:6px;background:linear-gradient(to bottom, color-mix(in srgb, var(--sclmw-cyan) 55%, transparent), transparent)}
 .sc-lmw .st-job-veil i::after{content:"";position:absolute;left:0;right:0;top:0;height:2px;background:linear-gradient(90deg, transparent, #e9fdff 12%, var(--sclmw-cyan) 50%, #e9fdff 88%, transparent);box-shadow:0 0 8px 1px color-mix(in srgb, var(--sclmw-cyan) 80%, transparent)}
 @keyframes st-band{to{transform:translate3d(0,-100%,0)}}
-.sc-lmw .st-home{position:relative;z-index:1;flex:0 1 auto;align-self:center;width:min(1040px,100%);max-height:100%;min-height:0;margin:0;display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr) minmax(220px,.82fr);grid-template-rows:auto auto auto;gap:10px;align-items:start;align-content:start;overflow:auto}
+.sc-lmw .st-home{position:relative;z-index:1;flex:1 1 auto;align-self:center;width:min(1360px,100%);height:100%;max-height:100%;min-height:0;margin:0;display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr) minmax(240px,.9fr);grid-template-rows:auto minmax(0,1fr) auto;gap:10px;align-items:stretch;align-content:stretch;overflow:hidden}
 .sc-lmw .st-home-narrow{grid-template-columns:minmax(0,560px);grid-template-rows:auto;justify-content:center;align-content:start}
 .sc-lmw .st-home-narrow>.st-home-hero,.sc-lmw .st-home-narrow>.st-home-card{grid-column:1;grid-row:auto;overflow:visible}
 .sc-lmw .st-home-hero{grid-column:1 / -1;grid-row:1;position:relative;padding:8px 10px;border-bottom:1px solid var(--sclmw-line);background:color-mix(in srgb, var(--sclmw-bg) 50%, transparent);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
-.sc-lmw .st-home-rsi{grid-column:1;grid-row:2;position:relative;display:grid;grid-template-columns:minmax(0,1fr) 120px;column-gap:12px;align-items:start;max-height:min(320px,40vh);overflow:auto}
+.sc-lmw .st-home-rsi{grid-column:1;grid-row:2;position:relative;display:grid;grid-template-columns:minmax(0,1fr) 120px;column-gap:12px;align-items:start;min-height:0;height:100%;overflow:auto}
 .sc-lmw .st-home-rsi h2,.sc-lmw .st-home-rsi p{grid-column:1;max-width:none}
 .sc-lmw .st-gate .st-home-rsi h2{font-size:16px}
-.sc-lmw .st-gate .st-home-rsi p{margin:0 0 8px;font-size:15px;line-height:1.55;color:var(--sclmw-ink)}
+.sc-lmw .st-gate .st-home-rsi p{margin:0 0 6px;font-size:14px;line-height:1.45;color:var(--sclmw-ink)}
 .sc-lmw .st-home-rsi .st-rsi-mark{grid-column:2;grid-row:1 / span 6;width:120px;height:auto;opacity:1;justify-self:end}
 .sc-lmw .st-home-links{display:flex;flex-wrap:wrap;gap:8px 16px;margin:4px 0 0}
 .sc-lmw .st-gate .st-home-rsi .st-home-links a{color:var(--sclmw-cyan);font-size:15px;line-height:1.4;text-decoration:underline}
@@ -608,18 +608,18 @@
 .sc-lmw .st-home-card,.sc-lmw .st-gate .st-gate-card{width:auto;margin:0;overflow:visible;box-sizing:border-box;padding:12px 14px;border:1px solid var(--sclmw-line2);background:color-mix(in srgb, var(--sclmw-panel) 72%, transparent);border-radius:0;box-shadow:none;color:var(--sclmw-ink);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
 .sc-lmw .st-home-card.st-home-rsi,
 .sc-lmw .st-home-card#stHomeStarfix,
-.sc-lmw .st-home-card.st-home-join{max-height:min(320px,40vh);overflow:auto}
+.sc-lmw .st-home-card.st-home-join{height:100%;min-height:0;max-height:none;overflow:auto}
 .sc-lmw .st-home h2{margin:0 0 6px;font-size:12px;line-height:1.3;letter-spacing:.08em;color:var(--sclmw-cyan);font-weight:650}
-.sc-lmw .st-home p+h2,.sc-lmw .st-home ul+h2{margin-top:10px}
+.sc-lmw .st-home p+h2,.sc-lmw .st-home ul+h2{margin-top:8px}
 .sc-lmw .st-home ul{margin:0;padding-left:1.2em}
-.sc-lmw .st-home li{margin:0 0 6px;font-size:14px;line-height:1.5;color:var(--sclmw-muted)}
+.sc-lmw .st-home li{margin:0 0 4px;font-size:14px;line-height:1.4;color:var(--sclmw-muted)}
 .sc-lmw .st-home-links{display:flex;flex-wrap:wrap;gap:8px 16px;margin:14px 0 0}
 .sc-lmw .st-home-links a{color:var(--sclmw-cyan);font-size:14px;line-height:1.4}
 .sc-lmw .st-home button.act{color:var(--sclmw-bg);background:var(--sclmw-cyan);border-color:var(--sclmw-cyan)}
-.sc-lmw #stHomeStarfix{grid-column:2;grid-row:2;max-height:min(320px,40vh);overflow:auto}
-.sc-lmw .st-home-join{grid-column:3;grid-row:2;max-height:min(320px,40vh);overflow:auto}
+.sc-lmw #stHomeStarfix{grid-column:2;grid-row:2;min-height:0;height:100%;overflow:auto}
+.sc-lmw .st-home-join{grid-column:3;grid-row:2;min-height:0;height:100%;overflow:auto}
 .sc-lmw .st-home-pub{grid-column:1 / -1;grid-row:3}
-.sc-lmw .st-home-pub .st-home-hist-list{max-height:min(140px, 20vh)}
+.sc-lmw .st-home-pub .st-home-hist-list{max-height:min(72px, 12vh)}
 .sc-lmw .st-home-hist{margin-top:16px}
 .sc-lmw .st-vis{display:flex;align-items:center;gap:8px;margin-top:12px}
 .sc-lmw .st-vis span{flex:0 0 auto;color:var(--sclmw-cyan);font-size:13px;font-weight:700}
@@ -656,7 +656,7 @@
 @media (max-width:860px){
   .sc-lmw .st-gate{justify-content:flex-start;align-items:stretch;overflow:auto;padding:20px 16px calc(var(--sclmw-bottom-gap, 32px) + 20px)}
   .sc-lmw .st-home,.sc-lmw .st-home-narrow{display:grid;grid-template-columns:1fr;grid-template-rows:none;width:100%;height:auto;max-height:none;overflow:visible;flex:0 0 auto;align-items:start}
-  .sc-lmw .st-home-card.st-home-rsi,.sc-lmw .st-home-card#stHomeStarfix,.sc-lmw .st-home-card.st-home-join,.sc-lmw .st-home-hero,.sc-lmw .st-home-pub{grid-column:1;grid-row:auto;overflow:visible;max-height:none;min-height:0}
+  .sc-lmw .st-home-card.st-home-rsi,.sc-lmw .st-home-card#stHomeStarfix,.sc-lmw .st-home-card.st-home-join,.sc-lmw .st-home-hero,.sc-lmw .st-home-pub{grid-column:1;grid-row:auto;height:auto;overflow:visible;max-height:none;min-height:0}
 }
 .sc-lmw .st-gate .st-room-kind{margin:12px 0 4px;color:var(--sclmw-cyan);font-size:14px;font-weight:700;letter-spacing:.04em}
 .sc-lmw .st-gate .st-room-code{margin:4px 0 0;font-size:28px;letter-spacing:.14em;font-weight:700}
@@ -979,7 +979,6 @@ html{-webkit-text-size-adjust:100%}
   .sc-lmw .st-cats,.sc-lmw .st-tools{flex:1 1 100%;min-width:0}
   .sc-lmw .st-cats,.sc-lmw .st-tabs{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
   .sc-lmw .st-tabs{width:100%;min-width:0;flex-shrink:1}
-  .sc-lmw .st-home{width:min(1040px,100%)}
 }
 @media (min-width:701px){
   .sc-lmw.st-explore .st-top{top:0;left:0;right:0;gap:0}
