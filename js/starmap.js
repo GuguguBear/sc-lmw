@@ -625,7 +625,7 @@ function stantonScene(canvas,sysKey){
   function armBodyPrint(mesh, rad, irr){
     const extent=rad*(irr?1.4:1.02);
     mesh.userData.printExtent=extent;
-    mesh.userData.printDelay=(printSerial%6)*55; printSerial+=1;
+    mesh.userData.printDelay=(printSerial%6)*180; printSerial+=1;
     mesh.userData.printHead=(printT0&&!printLive)?1.5:-1.2;
     const mat=mesh.material;
     if(!mat.userData.printHook){
@@ -633,7 +633,7 @@ function stantonScene(canvas,sysKey){
       mat.onBeforeCompile=function(shader){
         shader.uniforms.uHead=printU.uHead; shader.uniforms.uRad=printU.uRad;
         shader.vertexShader=shader.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vPrintPos;').replace('#include <begin_vertex>','#include <begin_vertex>\nvPrintPos=vec3(position);');
-        shader.fragmentShader=shader.fragmentShader.replace('#include <common>','#include <common>\nvarying vec3 vPrintPos;\nuniform float uHead;\nuniform float uRad;').replace('#include <dithering_fragment>','#include <dithering_fragment>\nfloat ny=vPrintPos.y/max(uRad,0.0001);\nfloat d=uHead-ny;\nif(d<0.0)discard;\nfloat g=smoothstep(0.055,0.0,abs(d));\ng+=0.82*smoothstep(0.04,0.0,abs(d-0.2));\ng+=0.66*smoothstep(0.035,0.0,abs(d-0.4));\ng+=0.5*smoothstep(0.03,0.0,abs(d-0.6));\ngl_FragColor.rgb+=vec3(0.28,0.92,1.0)*g;\n');
+        shader.fragmentShader=shader.fragmentShader.replace('#include <common>','#include <common>\nvarying vec3 vPrintPos;\nuniform float uHead;\nuniform float uRad;').replace('#include <dithering_fragment>','#include <dithering_fragment>\nfloat ny=vPrintPos.y/max(uRad,0.0001);\nfloat d=uHead-ny;\nif(d<0.0)discard;\nfloat g=smoothstep(0.16,0.0,abs(d));\ng+=0.95*smoothstep(0.11,0.0,abs(d-0.24));\ng+=0.8*smoothstep(0.09,0.0,abs(d-0.48));\ng+=0.65*smoothstep(0.08,0.0,abs(d-0.72));\ngl_FragColor.rgb+=vec3(0.55,1.0,1.0)*g;\n');
       };
     }
     mesh.onBeforeRender=function(){ printU.uHead.value=mesh.userData.printHead; printU.uRad.value=mesh.userData.printExtent; };
@@ -644,7 +644,7 @@ function stantonScene(canvas,sysKey){
     const now=performance.now(); let busy=false;
     for(let i=0;i<printBodies.length;i++){
       const mesh=printBodies[i];
-      const t=(now-printT0-(mesh.userData.printDelay||0))/780;
+      const t=(now-printT0-(mesh.userData.printDelay||0))/2100;
       if(t<1) busy=true;
       const k=t<0?0:(t>1?1:t);
       mesh.userData.printHead=-1.2+k*2.7;

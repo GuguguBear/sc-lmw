@@ -657,86 +657,14 @@
     }
     return null;
   }
-  function runHomeCode(canvas){
-    if(!canvas || canvas.__stCode) return;
-    canvas.__stCode = true;
-    var ctx = canvas.getContext('2d');
-    if(!ctx) return;
-    var reduce = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
-    var glyphs = '0123456789ABCDEF';
-    var cols = [];
-    function size(){
-      var parent = canvas.parentNode;
-      if(!parent) return;
-      var w = parent.clientWidth, h = parent.clientHeight;
-      var dpr = Math.min(window.devicePixelRatio || 1, 2);
-      canvas.width = Math.max(1, Math.floor(w * dpr));
-      canvas.height = Math.max(1, Math.floor(h * dpr));
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      cols = [];
-      var n = Math.max(1, Math.ceil(w / 18));
-      for(var i = 0; i < n; i++) cols.push(Math.random() * h);
-      canvas.__stStill = false;
-    }
-    size();
-    if(window.ResizeObserver){
-      var ro = new ResizeObserver(size);
-      ro.observe(canvas.parentNode);
-    }
-    function frame(){
-      var parent = canvas.parentNode;
-      if(!parent || !parent.isConnected) return;
-      var gate = parent.parentNode;
-      if(gate && gate.hidden){
-        requestAnimationFrame(frame);
-        return;
-      }
-      var w = parent.clientWidth, h = parent.clientHeight;
-      var ink = '#39e7ff';
-      if(gate){
-        var read = getComputedStyle(gate).getPropertyValue('--sclmw-cyan');
-        if(read && read.trim()) ink = read.trim();
-      }
-      ctx.font = '14px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
-      ctx.textBaseline = 'top';
-      if(reduce){
-        if(!canvas.__stStill){
-          canvas.__stStill = true;
-          ctx.clearRect(0, 0, w, h);
-          for(var y = 8; y < h; y += 28){
-            for(var x = 0; x < cols.length; x += 2){
-              ctx.globalAlpha = 0.22;
-              ctx.fillStyle = ink;
-              ctx.fillText(glyphs.charAt((x + y) % glyphs.length), x * 18, y);
-            }
-          }
-        }
-      }else{
-        ctx.clearRect(0, 0, w, h);
-        for(var i = 0; i < cols.length; i++){
-          for(var k = 0; k < 8; k++){
-            ctx.globalAlpha = k === 0 ? 0.9 : 0.28;
-            ctx.fillStyle = ink;
-            ctx.fillText(glyphs.charAt((i * 7 + k + ((cols[i] / 16) | 0)) % glyphs.length), i * 18, cols[i] - k * 16);
-          }
-          cols[i] += 1.05 + (i % 3) * 0.25;
-          if(cols[i] > h + 24) cols[i] = -40;
-        }
-        ctx.globalAlpha = 1;
-      }
-      requestAnimationFrame(frame);
-    }
-    requestAnimationFrame(frame);
-  }
   function ensureHomeField(el){
     var field = childByClass(el, 'st-home-field');
     if(field) return field;
     field = document.createElement('div');
     field.className = 'st-home-field';
     field.setAttribute('aria-hidden', 'true');
-    field.innerHTML = '<canvas class="st-home-code"></canvas><div class="st-home-grid"></div>';
+    field.innerHTML = '<div class="st-home-floor"><div class="st-home-grid"></div></div>';
     el.insertBefore(field, el.firstChild);
-    runHomeCode(field.querySelector('canvas'));
     return field;
   }
   var homePrinted = false;
@@ -745,7 +673,7 @@
     homePrinted = true;
     if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     var jobs = home.querySelectorAll('.st-home-hero, .st-home-card');
-    var bands = 6;
+    var bands = 4;
     for(var i = 0; i < jobs.length; i++){
       var job = jobs[i];
       job.classList.add('st-job');
@@ -762,12 +690,17 @@
       }
       job.appendChild(veil);
     }
+    var wait = (Math.max(jobs.length, 1) - 1) * 160 + (bands - 1) * 90 + 1400;
+    requestAnimationFrame(function(){
+      requestAnimationFrame(function(){ home.classList.add('st-job-go'); });
+    });
     setTimeout(function(){
+      home.classList.remove('st-job-go');
       var veils = home.querySelectorAll('.st-job-veil');
       for(var v = 0; v < veils.length; v++) if(veils[v].parentNode) veils[v].parentNode.removeChild(veils[v]);
       var done = home.querySelectorAll('.st-job');
       for(var d = 0; d < done.length; d++) done[d].classList.remove('st-job');
-    }, 1200);
+    }, wait);
   }
   var mapShown = false;
   function armMapPrint(){
