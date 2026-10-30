@@ -820,12 +820,12 @@ def unreachable_text():
 def update_ready_text(version):
     lang = _update_lang()
     if lang == "zh-Hant":
-        return "發現新版本 %s。點確定後開始下載。下載時沒有視窗，完成後會自己重新開啟。" % version
+        return "發現新版本 %s。點確定後開始下載，視窗會顯示裝載進度，完成後會自己重新開啟。" % version
     if lang == "en":
-        return "Version %s is available. Choose OK to download it. The window stays closed while that runs, then Starfix opens again by itself." % version
+        return "Version %s is available. Choose OK to download it. A window shows the load, then Starfix opens again by itself." % version
     if lang == "de":
-        return "Version %s ist da. Mit OK beginnt der Download. Dabei bleibt das Fenster zu, danach öffnet sich Starfix von selbst." % version
-    return "发现新版本 %s。点确定后开始下载。下载时没有窗口，完成后会自己重新打开。" % version
+        return "Version %s ist da. Mit OK beginnt der Download. Ein Fenster zeigt den Ladevorgang, danach öffnet sich Starfix von selbst." % version
+    return "发现新版本 %s。点确定后开始下载，窗口会显示装载进度，完成后会自己重新打开。" % version
 
 
 def update_failed_text():
@@ -881,11 +881,17 @@ def newer_release():
     return {"version": "%d.%d.%d" % theirs, "url": url}
 
 
-def download_release(url, dest):
+def download_release(url, dest, on_progress=None):
     req = urllib.request.Request(url, headers={"User-Agent": "Starfix/" + VERSION})
     total = 0
     try:
         with urllib.request.urlopen(req, timeout=120) as resp, dest.open("wb") as out:
+            try:
+                expected = int(resp.headers.get("Content-Length") or 0)
+            except (TypeError, ValueError):
+                expected = 0
+            if on_progress:
+                on_progress(0, expected)
             while True:
                 chunk = resp.read(64 * 1024)
                 if not chunk:
@@ -894,6 +900,8 @@ def download_release(url, dest):
                 if total > 80_000_000:
                     raise OSError("github")
                 out.write(chunk)
+                if on_progress:
+                    on_progress(total, expected)
     except (urllib.error.URLError, TimeoutError, OSError):
         raise OSError("github")
     if total < 1_000_000:
@@ -910,34 +918,108 @@ def update_spawn_flags():
     return 0x01000000 | 0x00000008 | 0x00000200 | 0x08000000
 
 
-def update_script(src, dest, pid, fail_text):
+def next_exe_name(current_name, version):
+    # A copy named Starfix 1.0.6.exe stays that name unless the version in the
+    # filename is replaced. Starfix.exe keeps its name.
+    if re.search(r"\d+\.\d+\.\d+", str(current_name)):
+        return re.sub(r"\d+\.\d+\.\d+", version, str(current_name), count=1)
+    return str(current_name)
+
+
+def update_script(src, dest, pid, fail_text, version):
+    # Windows PowerShell's Move-Item -Force does not replace an existing file,
+    # so the old program stayed in place and the next launch asked again.
+    final = str(Path(dest).with_name(next_exe_name(Path(dest).name, version)))
     return (
         "$ErrorActionPreference = 'Continue'\n"
-        "$src = %s\n$dst = %s\n$procId = %d\n"
+        "$src = %s\n$dst = %s\n$final = %s\n$procId = %d\n"
         "$deadline = (Get-Date).AddSeconds(45)\n"
         "while ((Get-Process -Id $procId -ErrorAction SilentlyContinue) -and ((Get-Date) -lt $deadline)) { Start-Sleep -Milliseconds 200 }\n"
+        "Start-Sleep -Milliseconds 600\n"
         "$moved = $false\n"
-        "foreach ($try in 1..40) {\n"
+        "foreach ($try in 1..120) {\n"
         "  try {\n"
-        "    Move-Item -LiteralPath $src -Destination $dst -Force -ErrorAction Stop\n"
+        "    [System.IO.File]::Copy($src, $final, $true)\n"
         "    $moved = $true\n"
         "    break\n"
         "  } catch { Start-Sleep -Milliseconds 250 }\n"
         "}\n"
         "if ($moved) {\n"
-        "  Start-Process -FilePath $dst -WorkingDirectory (Split-Path -Parent $dst)\n"
+        "  if ($final -ne $dst) { Remove-Item -LiteralPath $dst -Force -ErrorAction SilentlyContinue }\n"
+        "  Remove-Item -LiteralPath $src -Force -ErrorAction SilentlyContinue\n"
+        "  Start-Process -FilePath $final -WorkingDirectory (Split-Path -Parent $final)\n"
         "} else {\n"
         "  Add-Type -AssemblyName System.Windows.Forms\n"
         "  [System.Windows.Forms.MessageBox]::Show(%s, 'Starfix') | Out-Null\n"
         "}\n"
-        % (_ps_quote(src), _ps_quote(dest), int(pid), _ps_quote(fail_text))
+        % (_ps_quote(src), _ps_quote(dest), _ps_quote(final), int(pid), _ps_quote(fail_text))
     )
+
+
+def _create_breakaway(cmdline):
+    import ctypes
+    from ctypes import wintypes
+    kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+
+    class STARTUPINFO(ctypes.Structure):
+        _fields_ = [
+            ("cb", wintypes.DWORD),
+            ("lpReserved", wintypes.LPWSTR),
+            ("lpDesktop", wintypes.LPWSTR),
+            ("lpTitle", wintypes.LPWSTR),
+            ("dwX", wintypes.DWORD),
+            ("dwY", wintypes.DWORD),
+            ("dwXSize", wintypes.DWORD),
+            ("dwYSize", wintypes.DWORD),
+            ("dwXCountChars", wintypes.DWORD),
+            ("dwYCountChars", wintypes.DWORD),
+            ("dwFillAttribute", wintypes.DWORD),
+            ("dwFlags", wintypes.DWORD),
+            ("wShowWindow", wintypes.WORD),
+            ("cbReserved2", wintypes.WORD),
+            ("lpReserved2", ctypes.POINTER(ctypes.c_byte)),
+            ("hStdInput", wintypes.HANDLE),
+            ("hStdOutput", wintypes.HANDLE),
+            ("hStdError", wintypes.HANDLE),
+        ]
+
+    class PROCESS_INFORMATION(ctypes.Structure):
+        _fields_ = [
+            ("hProcess", wintypes.HANDLE),
+            ("hThread", wintypes.HANDLE),
+            ("dwProcessId", wintypes.DWORD),
+            ("dwThreadId", wintypes.DWORD),
+        ]
+
+    kernel32.CreateProcessW.argtypes = [
+        wintypes.LPCWSTR, wintypes.LPWSTR, ctypes.c_void_p, ctypes.c_void_p,
+        wintypes.BOOL, wintypes.DWORD, ctypes.c_void_p, wintypes.LPCWSTR,
+        ctypes.POINTER(STARTUPINFO), ctypes.POINTER(PROCESS_INFORMATION),
+    ]
+    kernel32.CreateProcessW.restype = wintypes.BOOL
+    kernel32.CloseHandle.argtypes = [wintypes.HANDLE]
+    kernel32.CloseHandle.restype = wintypes.BOOL
+    info = STARTUPINFO()
+    info.cb = ctypes.sizeof(info)
+    proc = PROCESS_INFORMATION()
+    buf = ctypes.create_unicode_buffer(cmdline)
+    ok = kernel32.CreateProcessW(
+        None, buf, None, None, False, update_spawn_flags(), None, None,
+        ctypes.byref(info), ctypes.byref(proc),
+    )
+    if not ok:
+        return False
+    kernel32.CloseHandle(proc.hProcess)
+    kernel32.CloseHandle(proc.hThread)
+    return True
 
 
 def spawn_detached(argv):
     if sys.platform != "win32":
         raise OSError("update")
     cmdline = subprocess.list2cmdline(list(argv))
+    if _create_breakaway(cmdline):
+        return
     command = (
         "$created = ([wmiclass]'Win32_Process').Create(%s); "
         "if (-not $created -or [int]$created.ReturnValue -ne 0) { exit 1 }"
@@ -957,12 +1039,15 @@ def spawn_detached(argv):
     subprocess.Popen(list(argv), creationflags=update_spawn_flags(), close_fds=True)
 
 
-def swap_and_exit(src, dest):
+def swap_and_exit(src, dest, version):
     if sys.platform != "win32":
         tell(update_failed_text())
         return
     script = Path(os.environ.get("TEMP") or os.environ.get("TMP") or ".") / "starfix-update.ps1"
-    script.write_text(update_script(src, dest, os.getpid(), update_failed_text()), encoding="utf-8-sig")
+    script.write_text(
+        update_script(src, dest, os.getpid(), update_failed_text(), version),
+        encoding="utf-8-sig",
+    )
     helper = ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-WindowStyle", "Hidden", "-File", str(script)]
     try:
         spawn_detached(helper)
@@ -980,9 +1065,17 @@ def finish_pending_install():
     me = Path(sys.executable).resolve()
     if me.name.lower() != "starfix.update.exe":
         return False
-    dest = me.with_name("Starfix.exe")
+    folder = me.parent
+    versioned = [
+        path for path in folder.glob("Starfix*.exe")
+        if path.name.lower() != "starfix.update.exe" and re.search(r"\d+\.\d+\.\d+", path.name)
+    ]
+    if versioned:
+        dest = folder / next_exe_name(versioned[0].name, VERSION)
+    else:
+        dest = folder / "Starfix.exe"
     copied = False
-    for _ in range(40):
+    for _ in range(120):
         try:
             shutil.copy2(me, dest)
             copied = True
@@ -992,6 +1085,13 @@ def finish_pending_install():
     if not copied:
         tell(update_failed_text())
         return False
+    for old in versioned:
+        if old.resolve() == dest.resolve():
+            continue
+        try:
+            old.unlink()
+        except OSError:
+            pass
     try:
         spawn_detached([str(dest)])
     except OSError:
@@ -1027,16 +1127,36 @@ def maybe_update():
     dest = Path(sys.executable).resolve()
     src = dest.with_name("Starfix.update.exe")
     tell(update_ready_text(found["version"]))
+    prog = None
     try:
-        download_release(found["url"], src)
+        prog = desk.open_update_progress(CFG.get("theme"), _update_lang(), found["version"])
+    except Exception:
+        prog = None
+
+    def tick(done, expected):
+        if prog:
+            prog.set_progress(done, expected)
+            prog.pump()
+
+    try:
+        download_release(found["url"], src, tick)
     except OSError:
+        if prog:
+            prog.close()
         try:
             src.unlink()
         except OSError:
             pass
         tell(unreachable_text())
         return
-    swap_and_exit(src, dest)
+    if prog:
+        prog.set_phase("swap")
+        end = time.time() + 0.7
+        while time.time() < end:
+            prog.pump()
+            time.sleep(0.03)
+        prog.close()
+    swap_and_exit(src, dest, found["version"])
 
 
 def raise_window():
@@ -1289,9 +1409,12 @@ if __name__ == "__main__":
         assert origin_allowed("https://gugugubear.pythonanywhere.com")
         assert origin_allowed("https://sclmw.cltbbs.com/")
         assert not origin_allowed("https://evil.example")
-        script = update_script(r"C:\Starfix\Starfix.update.exe", r"C:\Starfix\Starfix.exe", 99, "failed")
-        assert "Move-Item -LiteralPath $src -Destination $dst -Force" in script, script
-        assert "$procId = 99" in script and "foreach ($try in 1..40)" in script
+        assert next_exe_name("Starfix 1.0.6.exe", "1.0.8") == "Starfix 1.0.8.exe"
+        assert next_exe_name("Starfix.exe", "1.0.8") == "Starfix.exe"
+        script = update_script(r"C:\Starfix\Starfix 1.0.6.exe", r"C:\Starfix\Starfix 1.0.6.exe", 99, "failed", "1.0.8")
+        assert "[System.IO.File]::Copy($src, $final, $true)" in script, script
+        assert "Starfix 1.0.8.exe" in script and "Move-Item -LiteralPath $src -Destination $dst -Force" not in script
+        assert "$procId = 99" in script and "foreach ($try in 1..120)" in script
         assert update_spawn_flags() & 0x01000000
         assert parse_tasklist_pids('"Starfix.exe","4321","Console","1","12,345 K"\nINFO: none\n') == [4321]
         assert parse_tasklist_pids('"notepad.exe","1","Console","1","1 K"') == []

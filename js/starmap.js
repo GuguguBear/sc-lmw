@@ -1407,6 +1407,7 @@ function enterStExplore(){
     '<button class="stx" id="'+ID('stExX')+'" title="'+esc(_t('ui.leave_map'))+'">'+(SC.ico?SC.ico('close'):'')+'</button>'+
     '<div class="st-top" id="'+ID('stTop')+'"><div class="st-top-row"><div class="st-sys" id="'+ID('stSysSel')+'">'+[['stanton','Stanton'],['pyro','Pyro'],['nyx','Nyx']].map(s=>'<button data-sys="'+s[0]+'"><i style="background:'+ST_SYSLOOK[s[0]].dot+'"></i>'+s[1]+'</button>').join('')+'<button data-sys="all" title="'+esc(_t('system.all_title'))+'">'+(SC.ico?SC.ico('star'):'')+'</button></div><div class="st-crumb" id="'+ID('stCrumb')+'"></div>'+
       '<div class="st-sbox"><input id="'+ID('stQ')+'" placeholder="'+esc(_t('search.placeholder'))+'" autocomplete="off" enterkeyhint="search"><button id="'+ID('stQx')+'" title="'+esc(_t('ui.clear'))+'">'+(SC.ico?SC.ico('close'):'')+'</button></div>'+
+      '<div class="st-zoom"><button class="st-pause" id="'+ID('stPause')+'" title="'+esc(_t('action.pause_rotation'))+'">'+(SC.ico?SC.ico('pause'):'')+'</button><button class="st-pause" id="'+ID('stHome')+'" title="'+esc(_t('action.home_title'))+'">'+(SC.ico?SC.ico('home'):'')+'</button><span>'+(SC.ico?SC.ico('sat'):'')+'</span><input type="range" id="'+ID('stZoom')+'" min="0" max="1" step="0.001"><span>'+(SC.ico?SC.ico('scope'):'')+'</span></div>'+
       '<div class="st-dockslot" id="'+ID('stDockSlot')+'" hidden></div>'+
       '<div class="st-cats" id="'+ID('stCats')+'">'+ST_CATS.map(c=>'<button data-cat="'+c[0]+'"'+(ST_CAT===c[0]?' class="on"':'')+'>'+esc(_t(c[1]))+'</button>').join('')+'</div>'+
       '<div class="st-tools"><div class="st-tabs"><button id="'+ID('stSideMin')+'">'+esc(_t('tabs.legend'))+' ▸</button><button id="'+ID('stSidePl')+'"><span id="'+ID('stSidePlLbl')+'">'+esc(_t('tabs.players'))+'</span> <span id="'+ID('stPlCnt')+'"></span></button><button type="button" class="st-sq" id="'+ID('stUiLang')+'" title="'+esc(_t('uilang.title'))+'">'+uiLangMark()+'</button><button type="button" class="st-sq" id="'+ID('stTheme')+'" title="'+esc(_t('theme.title'))+'">'+(SC.ico?SC.ico('theme'):'')+'</button><button type="button" class="st-sq" id="'+ID('stDrag')+'" title="'+esc(_t('drag.title'))+'">'+(SC.ico?SC.ico('drag'):'')+'</button><button type="button" class="st-sq" id="'+ID('stLocBtn')+'" title="'+esc(_t('loc.title'))+'">文</button></div>'+
@@ -1426,8 +1427,7 @@ function enterStExplore(){
       '</g>'+
       '<polygon points="50,1 45,10 55,10" fill="#ffd76a"/>'+
     '</svg></div>'+
-    '<div class="st-hint" id="'+ID('stHint')+'">'+esc(_t('hint.controls'))+'</div>'+
-    '<div class="st-zoom"><button class="st-pause" id="'+ID('stPause')+'" title="'+esc(_t('action.pause_rotation'))+'">'+(SC.ico?SC.ico('pause'):'')+'</button><button class="st-pause" id="'+ID('stHome')+'" title="'+esc(_t('action.home_title'))+'">'+(SC.ico?SC.ico('home'):'')+'</button><span>'+(SC.ico?SC.ico('sat'):'')+'</span><input type="range" id="'+ID('stZoom')+'" min="0" max="1" step="0.001"><span>'+(SC.ico?SC.ico('scope'):'')+'</span></div>';
+    '<div class="st-hint" id="'+ID('stHint')+'">'+esc(_t('hint.controls'))+'</div>';
   ROOT.appendChild(ui);
   const zoom=$('stZoom'), dial=$('stComDial'), pause=$('stPause');
   if(zoom){ zoom.value=ctl.zoom01(); zoom.oninput=()=>ctl.setZoom01(parseFloat(zoom.value)); }

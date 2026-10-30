@@ -26,6 +26,7 @@ companion/config.json
 companion/history.jsonl
 companion/build/
 companion/dist/
+companion/file_version.txt
 companion/dist-next/
 companion/*.spec
 

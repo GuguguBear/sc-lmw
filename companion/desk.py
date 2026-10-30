@@ -73,6 +73,8 @@ TEXT = {
         "err_need_link": "先在星图里点「连到这台电脑」，再回到这里确认",
         "err_nolog": "找不到这份日志", "err_room": "房间码不对", "err_token": "令牌不对",
         "err_addr": "地址不对", "err_nopair": "没有待确认的连接", "err_http": "房间服务返回",
+        "update_title": "正在更新", "update_lead": "正在把 {version} 装进程序",
+        "update_bytes": "{done} / {total}", "update_swap": "正在换上新版本", "update_unknown": "正在下载",
     },
     "zh-Hant": {
         "title": "Starfix",
@@ -100,6 +102,8 @@ TEXT = {
         "err_need_link": "先在星圖裡點「連到這台電腦」，再回到這裡確認",
         "err_nolog": "找不到這份日誌", "err_room": "房間碼不對", "err_token": "令牌不對",
         "err_addr": "地址不對", "err_nopair": "沒有待確認的連接", "err_http": "房間服務返回",
+        "update_title": "正在更新", "update_lead": "正在把 {version} 裝進程式",
+        "update_bytes": "{done} / {total}", "update_swap": "正在換上新版本", "update_unknown": "正在下載",
     },
     "en": {
         "title": "Starfix",
@@ -127,6 +131,8 @@ TEXT = {
         "err_need_link": "On the map, choose Connect this computer, then confirm here",
         "err_nolog": "Cannot find this log", "err_room": "Room code is not valid", "err_token": "Token is not valid",
         "err_addr": "Address is not valid", "err_nopair": "Nothing is waiting to confirm", "err_http": "Room service returned",
+        "update_title": "Updating", "update_lead": "Loading {version} into the program",
+        "update_bytes": "{done} / {total}", "update_swap": "Replacing this copy", "update_unknown": "Downloading",
     },
     "de": {
         "title": "Starfix",
@@ -154,6 +160,8 @@ TEXT = {
         "err_need_link": "In der Karte „Diesen Computer verbinden“, dann hier bestätigen",
         "err_nolog": "Dieses Log wurde nicht gefunden", "err_room": "Raumcode ungültig", "err_token": "Token ungültig",
         "err_addr": "Adresse ungültig", "err_nopair": "Nichts wartet auf Bestätigung", "err_http": "Raumdienst antwortete",
+        "update_title": "Aktualisierung", "update_lead": "{version} wird ins Programm geladen",
+        "update_bytes": "{done} / {total}", "update_swap": "Diese Datei wird ersetzt", "update_unknown": "Download",
     },
 }
 ERR_MAP = {
@@ -1488,6 +1496,205 @@ def accept_terms(lang, theme, version=""):
     finally:
         _bind_front(previous)
     return agreed["ok"]
+
+
+def _byte_text(n):
+    n = max(0, int(n or 0))
+    if n >= 1_000_000:
+        return "%.1f MB" % (n / 1_000_000)
+    if n >= 1000:
+        return "%d KB" % (n // 1000)
+    return "%d B" % n
+
+
+class UpdateProgress:
+    """Download window. Crates slide into a container as bytes arrive."""
+
+    SLOTS = 8
+
+    def __init__(self, theme, lang, version):
+        self.colors = THEMES.get(theme) or THEMES["scifi"]
+        self.lang = lang if lang in TEXT else "en"
+        self.version = version
+        self.frac = 0.0
+        self.shown = 0.0
+        self.done = 0
+        self.total = 0
+        self.phase = "load"
+        self.tick = 0
+        self.alive = True
+        _dpi()
+        c = self.colors
+        root = tk.Tk()
+        self.root = root
+        root.overrideredirect(True)
+        root.title("Starfix")
+        root.configure(bg=c["panel"])
+        root.attributes("-topmost", True)
+        ico = _asset("icon.ico")
+        if ico:
+            try:
+                root.iconbitmap(str(ico))
+            except tk.TclError:
+                pass
+        drag = {"x": 0, "y": 0}
+
+        def drag_start(event):
+            drag["x"] = event.x_root - root.winfo_x()
+            drag["y"] = event.y_root - root.winfo_y()
+
+        def drag_move(event):
+            root.geometry("+%d+%d" % (event.x_root - drag["x"], event.y_root - drag["y"]))
+
+        shell = tk.Frame(root, bg=c["panel"])
+        shell.pack(fill="both", expand=True)
+        bar = tk.Frame(shell, bg=c["panel"], height=28)
+        bar.pack(fill="x")
+        bar.pack_propagate(False)
+        self.lamp = tk.Canvas(bar, width=14, height=14, highlightthickness=0, bd=0, bg=c["panel"])
+        self.lamp.pack(side="left", padx=(10, 0))
+        title = tk.Label(bar, text=tr(self.lang, "update_title"), font=FONT, bg=c["panel"], fg=c["ink"])
+        title.pack(side="left", padx=8)
+        for widget in (bar, title, self.lamp):
+            widget.bind("<ButtonPress-1>", drag_start)
+            widget.bind("<B1-Motion>", drag_move)
+        body = tk.Frame(shell, bg=c["panel"], padx=12, pady=8)
+        body.pack(fill="both", expand=True)
+        self.lead = tk.Label(body, text=tr(self.lang, "update_lead", version=version), font=FONT, bg=c["panel"], fg=c["ink"], anchor="w")
+        self.lead.pack(fill="x")
+        self.canvas = tk.Canvas(body, width=436, height=132, highlightthickness=0, bd=0, bg=c["bg"])
+        self.canvas.pack(fill="x", pady=(8, 0))
+        self.meta = tk.Label(body, text=tr(self.lang, "update_unknown"), font=FONT, bg=c["panel"], fg=c["muted"], anchor="w")
+        self.meta.pack(fill="x", pady=(6, 0))
+        root.update_idletasks()
+        width, height = 460, 214
+        screen_w = root.winfo_screenwidth()
+        screen_h = root.winfo_screenheight()
+        root.geometry("%dx%d+%d+%d" % (
+            width, height,
+            max(0, (screen_w - width) // 2),
+            max(24, (screen_h - height) // 3),
+        ))
+        hide_window_border(root, c["panel"])
+        self._paint()
+        root.after(33, self._loop)
+        try:
+            root.update()
+            force_foreground(root)
+        except tk.TclError:
+            self.alive = False
+
+    def set_progress(self, done, total):
+        self.done = max(0, int(done or 0))
+        self.total = max(0, int(total or 0))
+        if self.total > 0:
+            self.frac = max(0.0, min(1.0, self.done / self.total))
+        self._sync_text()
+
+    def set_phase(self, phase):
+        self.phase = phase
+        if phase == "swap":
+            self.frac = 1.0
+        self._sync_text()
+
+    def pump(self):
+        if not self.alive:
+            return
+        try:
+            self.root.update()
+        except tk.TclError:
+            self.alive = False
+
+    def close(self):
+        self.alive = False
+        try:
+            self.root.destroy()
+        except tk.TclError:
+            pass
+
+    def _sync_text(self):
+        if not self.alive:
+            return
+        try:
+            if self.phase == "swap":
+                self.lead.configure(text=tr(self.lang, "update_swap"))
+                self.meta.configure(text=self.version)
+            elif self.total > 0:
+                self.lead.configure(text=tr(self.lang, "update_lead", version=self.version))
+                self.meta.configure(text=tr(self.lang, "update_bytes", done=_byte_text(self.done), total=_byte_text(self.total)))
+            else:
+                self.lead.configure(text=tr(self.lang, "update_lead", version=self.version))
+                self.meta.configure(text=tr(self.lang, "update_unknown") + "  " + _byte_text(self.done))
+        except tk.TclError:
+            self.alive = False
+
+    def _loop(self):
+        if not self.alive:
+            return
+        self.tick += 1
+        target = self.SLOTS if self.phase == "swap" else self.frac * self.SLOTS
+        if self.total <= 0 and self.phase != "swap":
+            target = (self.tick % 48) / 48 * self.SLOTS
+        self.shown += (target - self.shown) * 0.22
+        if abs(target - self.shown) < 0.02:
+            self.shown = target
+        try:
+            self._paint()
+            self.root.after(33, self._loop)
+        except tk.TclError:
+            self.alive = False
+
+    def _paint(self):
+        c = self.colors
+        cv = self.canvas
+        cv.delete("all")
+        left, top, right, bottom = 8, 18, 428, 118
+        cv.create_rectangle(left, top, right, bottom, outline=c["accent"], width=2)
+        for edge in ((left, top), (right, top), (left, bottom), (right, bottom)):
+            ox = -7 if edge[0] == left else 7
+            oy = -7 if edge[1] == top else 7
+            cv.create_line(edge[0], edge[1], edge[0] + ox, edge[1], fill=c["accent"], width=2)
+            cv.create_line(edge[0], edge[1], edge[0], edge[1] + oy, fill=c["accent"], width=2)
+        rib = (self.tick // 2) % 10
+        x = left + 10
+        while x < right - 16:
+            shade = c["accent"] if (x // 14) % 10 == rib else c["line"]
+            cv.create_line(x, top + 4, x, bottom - 4, fill=shade)
+            x += 14
+        door = right - 18
+        cv.create_rectangle(door, top + 4, right - 4, bottom - 4, outline=c["accent"], fill=c["panel"])
+        cv.create_line(door + 7, top + 10, door + 7, bottom - 10, fill=c["accent"])
+        bay_w, bay_h, gap = 36, 44, 6
+        home0 = left + 12
+        seats = self.shown
+        whole = int(seats)
+        part = seats - whole
+        for i in range(self.SLOTS):
+            hx = home0 + i * (bay_w + gap)
+            hy = top + 28
+            if i < whole:
+                self._crate(hx, hy, bay_w, bay_h, 1)
+            elif i == whole and part > 0.01 and i < self.SLOTS:
+                start = door - bay_w - 4
+                self._crate(start + (hx - start) * part, hy - (1 - part) * 10, bay_w, bay_h, part)
+        sweep = left + ((self.tick * 6) % (right - left - 8))
+        cv.create_line(sweep, top + 2, sweep, bottom - 2, fill=c["accent"])
+        self.lamp.delete("all")
+        lit = c["accent"] if (self.tick // 8) % 2 == 0 else c["line"]
+        self.lamp.create_oval(2, 2, 12, 12, outline=lit, fill=lit)
+
+    def _crate(self, x, y, w, h, alpha):
+        c = self.colors
+        cv = self.canvas
+        cv.create_rectangle(x, y, x + w, y + h, outline=c["accent"], fill=c["panel"], width=2)
+        cv.create_line(x + 4, y + h * 0.45, x + w - 4, y + h * 0.45, fill=c["accent"])
+        cv.create_line(x + w * 0.5, y + 4, x + w * 0.5, y + h - 4, fill=c["line"])
+        if alpha < 0.95:
+            cv.create_rectangle(x, y - 6, x + w, y - 2, outline=c["accent"], fill=c["bg"])
+
+
+def open_update_progress(theme, lang, version):
+    return UpdateProgress(theme, lang, version)
 
 
 def open_window(core):

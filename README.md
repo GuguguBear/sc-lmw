@@ -1,66 +1,171 @@
 # SC LMW – Star Citizen LiveMap Wiki
 
-**Version 1.1.0** · AGPL-3.0 · Starfix 1.0.7
+**Version 1.1.0** · AGPL-3.0 · Starfix 1.0.8
 
-**English** · [Deutsch](README.de.md) · [简体中文](#简体中文) · [繁體中文](#繁體中文)
+**English** · [Deutsch](README.de.md) · [简体中文](README.zh-Hans.md) · [繁體中文](README.zh-Hant.md)
 
-**Website / 网站 / 網站：** https://gugugubear.pythonanywhere.com/
+A free, open-source 3D map of Star Citizen: Stanton, Pyro and Nyx, with search, live trade prices, ship models, team rooms, and an optional log reader that runs only on your computer.
 
-**Your whole 'verse on one screen.** A free, open-source 3D map of Star Citizen: every system, planet, moon, station and jump point, a search that knows where to find every ore, item, ship, commodity, blueprint and mission, live trade prices, holographic 3D ships, and your own org's pilots flying around on it in real time.
+> **Unofficial fan project.** Not endorsed by, sponsored by, or affiliated with Cloud Imperium Games or Roberts Space Industries. Star Citizen®, Squadron 42®, Roberts Space Industries®, and Cloud Imperium® are registered trademarks of Cloud Imperium Rights LLC and Cloud Imperium Rights Ltd. The site shows this notice on the home page and in the footer. Keep it visible if you embed the map.
 
-Drop it into your org website with one line of HTML, or hand the included prompt to an AI and let it do the wiring for you.
+## Websites for this copy
 
-> **Unofficial fan project.** Not endorsed by, sponsored by, or affiliated with Cloud Imperium Games or Roberts Space Industries. Star Citizen® is a trademark of Cloud Imperium Rights LLC. The same notice is shown inside the app.
+| | Address | What it is |
+|---|---|---|
+| Public name | https://sclmw.cltbbs.com/ | The address visitors should use. The browser stays on this name. |
+| Origin | https://gugugubear.pythonanywhere.com/ | The PythonAnywhere app. Same pages, reached directly. Also the deploy target. |
 
-## What's new in 1.1.0
+`sclmw.cltbbs.com` is a reverse proxy, not a redirect and not a CNAME to the origin. Cloudflare zone `cltbbs.com`, Worker `sclmw-proxy`, custom hostname `sclmw.cltbbs.com`. The Worker fetches `https://gugugubear.pythonanywhere.com` with that host's `Host` header, and rewrites a `Location` that would reveal the origin. This repository does not contain the Worker script. Change the origin by editing the Worker's `ORIGIN` constant and uploading the script again.
 
-The interface is Simplified Chinese, Traditional Chinese, English, and German. The first visit follows the browser. The language button switches live, and that choice stays on this browser. German shows German game labels. Chinese shows Chinese place names. English keeps the English names.
+Both addresses serve one application. Room calls and map files use relative paths, so a page opened on either name stays there. Starfix 1.0.8 accepts a pairing from either name. See [companion/README.md](companion/README.md).
 
-The same note is in [docs/WHATS_NEW.md](docs/WHATS_NEW.md). Starfix, the optional log reader, stays at 1.0.5. Read [companion/README.md](companion/README.md) before you run it.
+Cloudflare can keep a static file for several hours. A check on 30 Oct 2026 showed `js/starmap.js` on the public name with `cache-control: max-age=14400` and `cf-cache-status: HIT`, while the origin already had the newer file. After a deploy, the origin updates when the Action finishes. The public name can lag until that cache expires. Room API responses from [server/room_server.py](server/room_server.py) send `Cache-Control: no-store`. The page shell is not a private document. Login state is a bearer token in `localStorage`, not a cookie.
 
-### English
+## What to know before you change anything
 
-- **Install the map.** On a phone or tablet, Chrome and Edge can add it to the home screen. On iPhone and iPad, open Share and choose Add to Home Screen. It then opens on its own. After one visit, the page itself still opens when the network is gone. The room list and live prices still need the network.
-- **A small screen keeps the map visible.** Category buttons scroll sideways. On a phone the room panel is a bar until you tap Expand. Buttons are large enough to tap, and the page stays clear of a notch or the home indicator.
-- **The home page uses your theme.** Classic, Compact, Practical, Chassis, and Sci-fi each color the cards. A short note says when Starfix helps, and links to the guide, the published Starfix 1.0.5, and the source.
-- **A room is public or private.** The captain switches it. Public rooms are listed on the home page, busiest first, and anyone can read that list. Joining a public room does not wait for approval. Each switch waits five minutes. A room stays private until the captain opens it.
-- **This browser remembers 90 rooms.** Each line says whether the room still exists and how many people are in it. You are only in one room at a time. Entering another room leaves the previous one.
-- **A teammate stays on one line.** A long place, ship, or server scrolls back and forth. Offline members keep their last place. A click moves the view there, including a Lagrange point. With Starfix 1.0.5 the card can also show the game server and where that pilot is flying.
-- **A shared route leaves the camera where you put it.**
-- **Planets and moons are painted as different worlds.** Place marks stay readable in Pyro and Nyx.
+- The website never reads the game folder. Only Starfix, on the computer where you start it, opens the one log file you choose.
+- `data/` is built on a machine and is not in git. A push does not upload it and does not replace the copy already on the server. Rebuild steps are below.
+- Do not commit `companion/config.json`, `server/*.sqlite`, `data/loc.json`, `.env`, or a PythonAnywhere token. The deploy secret is `PA_API_TOKEN` in the GitHub Actions secrets.
+- A fourth star system does not appear by itself. [scripts/systems-build.py](scripts/systems-build.py) lists Stanton, Pyro and Nyx. The page buttons match that list.
+- Chinese place names come from a local game Language folder through `python scripts/loc-build.py`. That step is not part of `scripts/build-all.py`. The generated `data/loc.json` stays off git.
+- Shop and facility labels on the map use the game's own strings where those strings exist. Names without an official shop title stay in English.
+- Interface text is at least 12px. Starfix's own window stays at 9pt. See [css/starmap.css](css/starmap.css) and [companion/desk.py](companion/desk.py).
 
-### Deutsch
+## Using the map
 
-- **Die Karte lässt sich installieren.** Auf einem Telefon oder Tablet können Chrome und Edge sie zum Home-Bildschirm hinzufügen. Auf iPhone und iPad öffnest du Teilen und wählst „Zum Home-Bildschirm“. Danach öffnet sie sich allein. Nach einem Besuch öffnet sich die Seite auch ohne Netz. Raumliste und Live-Preise brauchen das Netz weiter.
-- **Auf einem kleinen Bildschirm bleibt die Karte sichtbar.** Die Kategorien lassen sich seitlich schieben. Auf einem Telefon ist der Raum nur eine Leiste, bis du auf Ausklappen tippst. Die Knöpfe sind groß genug für den Daumen, und die Seite hält Abstand zu Kerbe und Home-Anzeige.
-- **Die Startseite trägt dein Thema.** Klassisch, Kompakt, Praktisch, Gehäuse und Science-Fiction färben die Karten. Ein kurzer Text sagt, wann Starfix hilft, und verlinkt die Erklärung, das veröffentlichte Starfix 1.0.5 und den Quelltext.
-- **Ein Raum ist öffentlich oder privat.** Der Captain schaltet das um. Öffentliche Räume stehen auf der Startseite, die vollsten zuerst, und jeder darf die Liste ansehen. Wer einem öffentlichen Raum beitritt, wartet nicht auf Zustimmung. Jeder Wechsel wartet fünf Minuten. Ein Raum bleibt privat, bis der Captain ihn öffnet.
-- **Dieser Browser merkt sich 90 Räume.** Jede Zeile sagt, ob der Raum noch da ist und wie viele Leute darin sind. Du bist immer nur in einem Raum. Wer einen anderen betritt, verlässt den vorigen.
-- **Ein Teammitglied bleibt in einer Zeile.** Ein langer Ort, ein Schiff oder ein Server läuft hin und her. Offline bleibt der letzte Ort stehen. Ein Klick setzt die Ansicht dorthin, auch auf einen Lagrange-Punkt. Mit Starfix 1.0.5 kann die Karte auch den Spielserver und das Flugziel zeigen.
-- **Eine geteilte Route lässt die Kamera, wo du sie hingestellt hast.**
-- **Planeten und Monde sind als verschiedene Welten gemalt.** Die Ortsmarken bleiben in Pyro und Nyx lesbar.
+Open the public name or the origin. The home page is the team room: create a room, join with a code, or enter a public room. One browser is in one room at a time. The captain sets public or private, approves people, removes a member, and can broadcast. Public rooms are listed on the home page.
 
-### 简体中文
+On the map, search sits in the top bar. The zoom slider is on that same bar, to the right of the search box, and uses the bar's height. Category buttons are beside it. Right-click a place for "I am here" and for drawing a route when the room allows it.
 
-- **可以把星图装到主屏幕。** 手机或平板上，Chrome 和 Edge 可以直接安装。iPhone 和 iPad 先点分享，再选「添加到主屏幕」。装好以后它单独打开。访问过一次之后，没网也能打开页面本身。房间列表和实时价格仍然需要网络。
-- **小屏幕上星图仍然留在画面里。** 分类按钮横向滑动。手机上房间先收成一条，点「展开」再打开。按钮够大，方便用手指点。刘海和底部横条不会挡住操作。
-- **首页跟着你选的主题。** 经典、紧凑、实用、机壳、科幻各自给卡片上色。一段短说明告诉你什么时候需要 Starfix，并链到说明、已发布的 Starfix 1.0.5 和源码。
-- **房间可以公开或私人。** 队长来切换。公开房间出现在首页，人多的排在前面，谁都可以看这份列表。进入公开房间不用等队长批准。每次切换之后要等五分钟。房间保持私人，直到队长把它打开。
-- **这个浏览器记住最近 90 个房间。** 每一行都会写这个房间还在不在，以及里面有几个人。同一个人每次只在一个房间里。进入另一个房间时，会先离开上一个。
-- **队员保持一行。** 地点、舰船或服务器太长时，会来回滚动。离线队员保留最后的地点。点一下就把画面移过去，拉格朗日点也一样。开着 Starfix 1.0.5 时，名片上还可以看到游戏服务器，以及这个人正在飞往哪里。
-- **点一条已分享的路线，不会把视角抢走。**
-- **行星和卫星各自有自己的表面。** 派罗和尼克斯里的地点标记仍然看得清。
+**Blur other systems** is on by default. While you look at one system up close, the others go soft and cannot be clicked. Pull back until all three systems are in view and they sharpen again. The switch is under Settings, in Other: `ctrl.blurBg` in [js/i18n.js](js/i18n.js), stored with the other controls in `localStorage` key `sclmw_controls`.
 
-### 繁體中文
+Click a name in the crew list or the player list to open that pilot's card and the dashed line. The card shows the log fields plus, when the place is on the map, distance from the star, amenities and terminals. The crew list shows each person's server so the captain can see who shares one.
 
-- **可以把星圖裝到主畫面。** 手機或平板上，Chrome 和 Edge 可以直接安裝。iPhone 和 iPad 先點分享，再選「加入主畫面」。裝好以後它單獨打開。造訪過一次之後，沒有網路也能打開頁面本身。房間列表和即時價格仍然需要網路。
-- **小螢幕上星圖仍然留在畫面裡。** 分類按鈕橫向滑動。手機上房間先收成一條，點「展開」再打開。按鈕夠大，方便用手指點。瀏海和底部橫條不會擋住操作。
-- **首頁跟著你選的主題。** 經典、緊湊、實用、機殼、科幻各自給卡片上色。一段短說明告訴你什麼時候需要 Starfix，並連到說明、已發布的 Starfix 1.0.5 和源碼。
-- **房間可以公開或私人。** 隊長來切換。公開房間出現在首頁，人多的排在前面，誰都可以看這份列表。進入公開房間不用等隊長批准。每次切換之後要等五分鐘。房間保持私人，直到隊長把它打開。
-- **這個瀏覽器記住最近 90 個房間。** 每一行都會寫這個房間還在不在，以及裡面有幾個人。同一個人每次只在一個房間裡。進入另一個房間時，會先離開上一個。
-- **隊員保持一行。** 地點、艦船或伺服器太長時，會來回捲動。離線隊員保留最後的地點。點一下就把畫面移過去，拉格朗日點也一樣。開著 Starfix 1.0.5 時，名片上還可以看到遊戲伺服器，以及這個人正在飛往哪裡。
-- **點一條已分享的路線，不會把視角搶走。**
-- **行星和衛星各自有自己的表面。** 派羅和尼克斯裡的地點標記仍然看得清。
+Themes: Classic, Compact, Practical, Chassis, Sci-fi, and Haze. Compact is the default. The visitor's own choice is kept in the browser. Haze is the cyan instrument look (`data-theme="haze"`).
+
+The 1.1.0 interface notes are in [docs/WHATS_NEW.md](docs/WHATS_NEW.md). They are not a list of every later change. The Starfix version those notes were written beside is no longer current. Use `companion/VERSION`.
+
+## Starfix
+
+Optional. The map works without it: right-click and choose "I am here".
+
+Starfix reads `Game.log` on that computer and, after you confirm, posts the place code to the room. It does not attach to the game, read memory, or upload the log. Read [companion/README.md](companion/README.md) before you run the source.
+
+Published build: [Starfix 1.0.8](https://github.com/GuguguBear/sc-lmw/releases/tag/starfix-1.0.8). The program compares `companion/VERSION` with GitHub Releases named `starfix-X.Y.Z`. Pushing `companion/**` or [.github/workflows/starfix-release.yml](.github/workflows/starfix-release.yml) to `master` builds the exe when that tag does not exist yet. [companion/write_version_info.py](companion/write_version_info.py) writes the Windows version resource from the same number.
+
+On update, a window in the theme you already chose shows crates loading into a container. When the download finishes, a helper copies the new file over the one you started. `Move-Item -Force` in Windows PowerShell does not replace an existing exe, so the helper uses `System.IO.File.Copy`. If the file you launched is named like `Starfix 1.0.6.exe`, the new file is `Starfix 1.0.8.exe` and the old name is removed. A file that is just `Starfix.exe` keeps that name.
+
+A build from before this copy step can download `Starfix.update.exe` and still leave the old program in place. Close Starfix, then double-click `Starfix.update.exe` beside it. That file copies itself into place and starts the new one. From 1.0.8 on, the progress window and the copy run from the update you confirm.
+
+Starfix allows these page origins, plus `http://127.0.0.1` and `http://localhost`:
+
+- `https://gugugubear.pythonanywhere.com`
+- `https://sclmw.cltbbs.com`
+
+Pairing from a page stores that page's origin as the API base. An older install keeps the PythonAnywhere address until you pair again. Both addresses work once the proxy is in front.
+
+## Deploy this copy
+
+A push to `master` starts [.github/workflows/deploy.yml](.github/workflows/deploy.yml). The job checks out the repo and runs [scripts/deploy_pythonanywhere.py](scripts/deploy_pythonanywhere.py).
+
+That script:
+
+1. Reads `PA_API_TOKEN` from the environment. On GitHub that is the Actions secret of the same name. Create the token on the PythonAnywhere account page.
+2. Lists files with `git ls-files`. Untracked and gitignored files are not uploaded.
+3. Uploads those files to `/home/GuguguBear/sc-lmw` on `www.pythonanywhere.com` for user `GuguguBear`.
+4. Reloads the web app `gugugubear.pythonanywhere.com`.
+
+It does not delete extra files on the server, and it does not replace `data/` or the room database that already live there. After a data rebuild, copy the new JSON onto the server yourself.
+
+The public name is not registered by this script. DNS and the Worker stay in Cloudflare. Shipping a webpage update is: commit, push `master`, wait until the Action "Update the live site" succeeds, then remember the public name may still serve cached JS and CSS for a few hours.
+
+Pull requests are the normal path on GitHub. An admin push to `master` can bypass that ruleset. The bypass message is expected for that kind of push.
+
+## Run a copy yourself
+
+Python 3. No Node build for the site.
+
+```sh
+git clone https://github.com/GuguguBear/sc-lmw.git
+cd sc-lmw
+python scripts/build-all.py
+python -m http.server 8000
+```
+
+Open http://localhost:8000/ . The map ships with demo pilots until you point it at a room or a players URL. Run `build-all.py` again after the community game-data export updates.
+
+| Flag | Effect |
+|---|---|
+| `--with-de` | German in-game strings. See [scripts/README_DE_INI.md](scripts/README_DE_INI.md). |
+| `--with-loot` | Loot locations from the Friendly Fire Department export. Not stored in git. |
+
+Prices and ship models are loaded live from UEX and FleetYards. They are not in the build.
+
+## Put it on another site
+
+**iframe**
+
+```html
+<iframe src="https://sclmw.cltbbs.com/"
+        style="width:100%;height:640px;border:0" allow="fullscreen"></iframe>
+```
+
+**One script tag.** The map stays inside the element. It does not style your `body`.
+
+```html
+<div id="sc-lmw" style="height:640px"></div>
+<script src="https://your-site.example/sc-lmw/js/sc-lmw.js"
+        data-base="https://your-site.example/sc-lmw/"
+        data-players-url="https://your-site.example/api/players"></script>
+```
+
+Examples: [examples/iframe.html](examples/iframe.html), [examples/embed.html](examples/embed.html). A prompt for an assistant is in [docs/AI_INTEGRATION.md](docs/AI_INTEGRATION.md). The pilot JSON contract is [docs/PLAYERS_API.md](docs/PLAYERS_API.md). This deployment's team rooms are the service in [server/room_server.py](server/room_server.py), started beside the site. `PLAYERS_URL` in [config.js](config.js) is the other way: your own list of pilots.
+
+### Interface language (German/English)
+
+`LANG` in `config.js` (`auto`, `de`, `en`, `zh-Hans`, `zh-Hant`), or `data-lang` on the script, or `SCLMW.mount(el, { lang: 'zh-Hans' })`. The first visit follows the browser. A button switches live and the choice stays. The same setting covers Simplified Chinese and Traditional Chinese.
+
+Theme: `THEME` in `config.js` (`compact`, `classic`, `practical`, `chassis`, `scifi`, `haze`), or `data-theme`, or `mount(el, { theme })`. A visitor's choice wins.
+
+## Where the data comes from
+
+| What | Source | How |
+|---|---|---|
+| Places, ores, items, blueprints, missions | Community `scunpacked-data` export | `scripts/build-all.py`. Not committed. |
+| Chinese names | Local game Language files | `scripts/loc-build.py`. Not committed. |
+| Trade prices | [UEX](https://uexcorp.space) | Live in the browser. |
+| Ship specs and models | [FleetYards](https://fleetyards.net) | Live in the browser. Credited in the app. |
+| 3D engine | [three.js](https://threejs.org) r128 (MIT) | `vendor/three/` |
+| Team on this site | Room service | [server/room_server.py](server/room_server.py) |
+| Your own pilots | `PLAYERS_URL` | Optional. [docs/PLAYERS_API.md](docs/PLAYERS_API.md) |
+
+Game files are not redistributed. Attribution: [CREDITS.md](CREDITS.md).
+
+Guides and timers: [starcitizen.tools](https://starcitizen.tools), [exec.xyxyll.com](https://exec.xyxyll.com) via `scripts/exec-build.py`, [exectimer.com](https://exectimer.com). Loot only with `--with-loot`.
+
+## Layout
+
+```
+index.html                 this site's page
+config.js                  PLAYERS_URL, language, theme, poll interval
+manifest.webmanifest       installable app
+sw.js                      offline shell; /api/ stays on the network
+js/starmap.js              map, search, blur, pilot card
+js/room.js                 home page, rooms, crew, broadcast
+js/i18n.js                 de / en / zh-Hans / zh-Hant
+js/history.js              personal log playback, on this computer
+css/starmap.css            everything under .sc-lmw
+server/room_server.py      room API used by the live site
+companion/                 Starfix. See companion/README.md
+scripts/deploy_pythonanywhere.py
+.github/workflows/deploy.yml
+.github/workflows/starfix-release.yml
+docs/PLAYERS_API.md
+docs/AI_INTEGRATION.md
+docs/WHATS_NEW.md          notes for site 1.1.0
+```
+
+## Screens
 
 | The room is still there after a refresh | The team room on the Stanton map |
 |---|---|
@@ -74,160 +179,6 @@ The same note is in [docs/WHATS_NEW.md](docs/WHATS_NEW.md). Starfix, the optiona
 |---|---|
 | ![Stanton with a place panel and the team room](docs/img/05-stanton-place.png) | ![Pyro with a place panel and the team room](docs/img/06-pyro.png) |
 
----
-
-## What you can do with it
-
-- **Run your org like a fleet command.** See who is online and where they are: Levski, Orison, a Pyro rest stop or halfway through a quantum jump. Five pilots at the same station collapse into one clean marker ("Levski · 5 pilots, 2 online"); tap it for the list.
-- **Find anything in seconds.** Type "Quantanium", "Arrow", "Laranite", "P4-AR" or "Lorville" and the map flies you there. The search covers locations, ores, items, ships, commodities, blueprints and missions.
-- **Plan trade runs.** Open any terminal and see live buy and sell prices from UEX, straight from the source, no API key needed.
-- **Hunt blueprints.** Every blueprint in the game data with its full crafting recipe (parts, resources, minimum quality), and which missions reward it.
-- **Scout missions.** See which mission types are offered where and by whom, and which blueprints they can reward.
-- **Go mining.** Find which planets, moons and belts carry the ore you are after.
-- **Run the big loops.** Contested Zones (Checkmate, Orbituary, Ruin Station), the supervisor stations and the Executive Hangar show the full procedure right at the location: a live Executive Hangar timer with the 5 status lights, a Ruin vault door timer you sync once per server, tap-to-start respawn timers, which keycards and boards you get or need, and the route maps. Align & Mine, Storm Breaker (Apex Valakkar), Siege of Orison and Jumptown are explained at their locations too, all linked to each other.
-- **Find loot.** Item view shows which container and location types an item can drop from, ranked from best to rarer chance (optional, built from the Friendly Fire Department game-data export with `--with-loot`).
-- **Install it on a phone or tablet.** Add the site to the home screen. On a narrow screen the categories scroll sideways, the room panel stays a bar until you expand it, and the buttons are large enough to tap.
-- **Keep one team room.** The captain can make it public or leave it private. Public rooms are listed on the home page, busiest first, and do not need approval. This browser remembers the last 90 rooms and shows which ones are still open.
-- **Show off the fleet.** Rotating holographic 3D models of the ships, loaded live from FleetYards, with specs, prices and where to buy or rent.
-- **Put it on stream.** It runs in any browser source, so it works as an overlay or info screen for streams and org meetings.
-- **Make it yours.** Plain HTML, CSS and JavaScript. No framework and no build step for the frontend, easy to restyle and extend.
-
-## Install in 3 steps
-
-You need Python 3 (to build the game data once) and any static web server.
-
-```sh
-# 1. Get the code
-git clone https://github.com/GuguguBear/sc-lmw.git
-cd sc-lmw
-
-# 2. Build the game data (downloads the community game-data export and reference lists,
-#    writes ./data/*.json; this takes a few minutes and needs internet access)
-python3 scripts/build-all.py
-
-# 3. Serve it and open http://localhost:8000/
-python3 -m http.server 8000
-```
-
-That's it. You will see the map with five fictional demo pilots. Re-run step 2 after a game patch to refresh the data.
-
-Optional: `python3 scripts/build-all.py --with-de` adds the German in-game texts (community translation, CC BY-NC-SA, see `scripts/README_DE_INI.md`).
-
-## Put it on your website
-
-**Option A: iframe (simplest, one line).** Upload the folder to your web host, then:
-
-```html
-<iframe src="https://your-site.example/sc-lmw/index.html"
-        style="width:100%;height:640px;border:0" allow="fullscreen"></iframe>
-```
-
-**Option B: directly in your page.** A container and one script tag:
-
-```html
-<div id="sc-lmw" style="height:640px"></div>
-<script src="https://your-site.example/sc-lmw/js/sc-lmw.js"
-        data-base="https://your-site.example/sc-lmw/"
-        data-players-url="https://your-site.example/api/players"></script>
-```
-
-The map stays inside its box. It never styles your `body`, fonts or layout, uses one global name (`window.SCLMW`), scales with its container and works from any domain or sub-folder. Both ways are tested against a deliberately "hostile" guest page: see [`examples/iframe.html`](examples/iframe.html) and [`examples/embed.html`](examples/embed.html).
-
-## Interface language
-
-The interface — buttons, panels, search, legend, error messages, time phrases, number format — is available in German, English, Simplified Chinese and Traditional Chinese. It follows the visitor's browser language (`zh-TW` / `zh-HK` / `zh-MO` → Traditional Chinese, other `zh*` → Simplified Chinese, `de*` → German, otherwise English). The language button opens the list and switches live, without a reload. The choice is remembered in that browser. You can also set it explicitly:
-
-- `LANG` in `config.js`: `'auto'` (default), `'de'`, `'en'`, `'zh-Hans'`, or `'zh-Hant'`. `zh` / `zh-CN` / `zh-SG` count as Simplified, `zh-TW` / `zh-HK` / `zh-MO` as Traditional.
-- `data-lang="zh-Hans"` on the `sc-lmw.js` script tag (direct-embed method).
-- `mount(el, { lang: 'zh-Hans' })` if you call `SCLMW.mount()` yourself.
-
-Choosing German also shows German mission and amenity names. Choosing Chinese shows Chinese place names. English keeps the English names. Details for visitors are in [docs/WHATS_NEW.md](docs/WHATS_NEW.md).
-
-## Appearance
-
-Six interface themes, switched from the ▣ button next to the language control and remembered in the browser: Classic (the original look), Compact, Practical, Chassis, Sci-fi, and Haze.
-
-- `THEME` in `config.js`: `'compact'` (default), `'classic'`, `'practical'`, `'chassis'`, `'scifi'`, or `'haze'`.
-- `data-theme="chassis"` on the script tag, or `mount(el, { theme: 'chassis' })`.
-- A visitor's own choice wins over this default.
-
-## Show your own pilots
-
-Point `PLAYERS_URL` in `config.js` (or `data-players-url` on the script tag) at a small endpoint of yours that returns JSON like this:
-
-```json
-{
-  "players": [
-    { "id": "pilot-1", "name": "Pilot Alpha", "online": true,
-      "last_seen": "2026-09-28T09:58:00Z",
-      "code": "Nyx_Levski", "location": "Levski", "system": "Nyx",
-      "ship": "Drake Cutlass Black" }
-  ]
-}
-```
-
-`code` is the location code Star Citizen writes into its `Game.log`. The map resolves it to the right station, city, outpost or rest stop by itself. Where that data comes from is up to you: a Discord bot, a companion app your members run, or a form on your site. The full contract, including travel destinations, the optional `when` field, refresh interval (`PLAYERS_POLL_MS`) and custom headers, is in [`docs/PLAYERS_API.md`](docs/PLAYERS_API.md).
-
-## Let an AI build it into your site
-
-[`docs/AI_INTEGRATION.md`](docs/AI_INTEGRATION.md) contains a complete, copy-paste prompt (English and German) for Claude, ChatGPT or any coding assistant. It explains your setup to the AI: copying the files, building the data, choosing iframe or direct embed, creating a players endpoint (with ready examples for Node/Express, Python/Flask and PHP), CORS, keeping the fan-project notice visible, and your AGPL obligations. Paste it, add one line about your own site, and the AI can do the rest without asking back.
-
-Short version to get started:
-
-```text
-I want to add SC LMW (https://github.com/GuguguBear/sc-lmw), an open-source
-Star Citizen 3D map, to my website. Read its README.md, docs/AI_INTEGRATION.md and
-docs/PLAYERS_API.md, then: build the data with scripts/build-all.py, embed the map
-(iframe or the sc-lmw.js script tag), and create a players endpoint in my backend that
-returns the JSON format from PLAYERS_API.md. Keep the "unofficial fan project" notice
-visible. My site is: <describe your stack and where the map should appear>.
-```
-
-## Where the data comes from
-
-| What | Source | How |
-|---|---|---|
-| Locations, ores, items, blueprints, missions | community `scunpacked-data` export of the game files | built locally by `scripts/`, **not shipped** in this repo |
-| Trade prices | [UEX Corp](https://uexcorp.space) API | fetched live in the browser |
-| Ship specs and 3D models | [FleetYards](https://fleetyards.net) | fetched live in the browser, credited in the app |
-| 3D engine | [three.js](https://threejs.org) r128 (MIT) | included under `vendor/three/` |
-| Your pilots | your own `PLAYERS_URL` | optional |
-
-Game data and images are not redistributed here. Every user builds them from the original sources. RSI star-map images are intentionally not downloaded. Full attribution: [`CREDITS.md`](CREDITS.md).
-
-**Guides and optional extras**
-
-- Gameplay procedures and route maps: [starcitizen.tools](https://starcitizen.tools) (maps and photos CC BY-SA 4.0, see `img/guides/` and CREDITS.md).
-- Executive Hangar cycle: [exec.xyxyll.com](https://exec.xyxyll.com) (MIT). `scripts/exec-build.py` refreshes it into `data/exec.json` (run by `build-all.py`; without it the map uses built-in values).
-- Respawn times: [exectimer.com](https://exectimer.com).
-- Loot locations: [Friendly Fire Department](https://thefriendlyfiredepartment.org) game-data export, only with `python3 scripts/build-all.py --with-loot`. Not redistributed in this repository.
-
-## Project layout
-
-```
-index.html              standalone page
-manifest.webmanifest    installable app: name, icons, standalone display
-sw.js                   offline shell for this site; room APIs stay on the network
-icons/                  home-screen icons
-config.js               the one file most people edit (PLAYERS_URL, ...)
-players.example.json    five fictional demo pilots
-js/starmap.js           map engine: 3D scene, search, categories, prices, blueprints, missions
-js/holo.js              FleetYards 3D ship models
-js/i18n.js              interface language (de / en / zh-Hans / zh-Hant)
-js/sc-lmw.js            one-script-tag loader for embedding
-css/starmap.css         styles under .sc-lmw; themes classic, compact, practical, chassis, scifi
-vendor/three/           three.js r128 + loaders (MIT)
-scripts/                data build pipeline (Python)
-examples/               iframe and direct-embed examples
-docs/                   players API, AI integration prompt, screenshots
-companion/              optional local Starfix. Source you can read. See companion/README.md
-server/                 optional room service. The page does not read the game folder
-```
-
-## Show us what you build
-
-Fork it, restyle it, add features, run it for your org. If you build something with it, we would love to see it: open an issue on this repository and tell us. No obligation, just curiosity.
-
 ## License
 
-**AGPL-3.0** (see [`LICENSE`](LICENSE)). You may use, change and share it freely. If you run a **modified** version on a server that other people use, you must make your modified source code available to them as well. Third-party code and data keep their own licenses, see [`CREDITS.md`](CREDITS.md).
+**AGPL-3.0.** See [LICENSE](LICENSE). If you run a modified version as a network service, you must offer that modified source to its users. Third-party code and data keep their own licenses. See [CREDITS.md](CREDITS.md).

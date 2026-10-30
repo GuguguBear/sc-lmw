@@ -469,7 +469,7 @@
       '<ul><li>'+esc(ti('home.know_1'))+'</li><li>'+esc(ti('home.know_2'))+'</li><li>'+esc(ti('home.know_3'))+'</li></ul>'+
       '<p class="st-home-links">'+
         '<a href="https://github.com/GuguguBear/sc-lmw/blob/master/companion/README.md" target="_blank" rel="noopener">'+esc(ti('starfix.src_read'))+'</a>'+
-        '<a href="https://github.com/GuguguBear/sc-lmw/releases/tag/starfix-1.0.7" target="_blank" rel="noopener">'+esc(ti('starfix.src_rel'))+'</a>'+
+        '<a href="https://github.com/GuguguBear/sc-lmw/releases/tag/starfix-1.0.8" target="_blank" rel="noopener">'+esc(ti('starfix.src_rel'))+'</a>'+
         '<a href="https://github.com/GuguguBear/sc-lmw/blob/master/companion/app.py" target="_blank" rel="noopener">'+esc(ti('starfix.src_app'))+'</a>'+
       '</p>';
   }
