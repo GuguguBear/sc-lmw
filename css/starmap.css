@@ -100,6 +100,9 @@
 .sc-lmw .st-lbls{position:absolute;inset:0;pointer-events:none;overflow:hidden}
 .sc-lmw .st-lbl{position:absolute;left:0;top:0;white-space:nowrap;font-family:"Chakra Petch","Inter",sans-serif;font-size:.66rem;letter-spacing:.05em;color:#dfe8f5;text-shadow:0 0 3px #000,0 0 7px #000,0 0 12px #000;transform:translate(-9999px,0);will-change:transform}
 .sc-lmw .st-lbl.dim{opacity:.28}
+.sc-lmw .st-lbl.far{filter:blur(var(--st-far, 8px));opacity:.4}
+.sc-lmw .st-lbl.far.dim{opacity:.18}
+.sc-lmw .st-lbl.far.hl{filter:none;opacity:1}
 .sc-lmw .st-lg-note{margin:8px 0 2px;font-size:12px;line-height:1.45;color:var(--sclmw-dim)}
 .sc-lmw .st-lbl.p3{font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.14em}
 .sc-lmw .st-lbl.p2{font-size:.72rem;font-weight:600}
@@ -746,6 +749,9 @@
 .sc-lmw .st-crew .st-mate.has-place b{flex:1 1 42%;max-width:48%}
 .sc-lmw .st-crew .st-mate span{flex:1 1 34%;min-width:0;font-size:12px}
 .sc-lmw .st-crew .st-mate time{flex:0 0 auto;font-size:12px;font-weight:600}
+.sc-lmw .st-crew .st-mate .st-mate-host{flex:0 0 auto;margin-left:6px;font-style:normal;font-size:12px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--sclmw-dim);white-space:nowrap}
+.sc-lmw .st-crew .st-mate .st-mate-host.is-same{color:#4dff9a}
+.sc-lmw .st-crew .st-mate .st-mate-host.is-other{color:#ffb020}
 .sc-lmw .st-crew-sec{padding:4px 8px 0;color:var(--sclmw-cyan);font-size:12px;font-weight:700;letter-spacing:.04em}
 .sc-lmw .st-crew .st-mate span.st-mate-roll{flex:1 1 auto;min-width:0;overflow:hidden;white-space:nowrap}
 .sc-lmw .st-crew .st-mate .st-mate-roll>span{display:inline-block;width:max-content;max-width:none;white-space:nowrap;vertical-align:middle;flex:none}
@@ -807,6 +813,10 @@
 .sc-lmw .st-call-when b{color:var(--sclmw-cyan);font-variant-numeric:tabular-nums}
 .sc-lmw .st-call-ship{margin-top:10px;padding:7px 8px;border:1px solid color-mix(in srgb, var(--sclmw-cyan) 45%, transparent);background:color-mix(in srgb, var(--sclmw-cyan) 10%, transparent);color:var(--sclmw-cyan);font-size:13px;font-weight:700}
 .sc-lmw .st-call-ship.is-empty{color:var(--sclmw-muted);font-weight:400;border-style:dashed}
+.sc-lmw .st-call-place:empty{display:none}
+.sc-lmw .st-call-dist{margin:8px 0 0;color:var(--sclmw-muted);font-size:12px}
+.sc-lmw .st-call-sec{margin:10px 0 4px;color:var(--sclmw-cyan);font-size:12px;font-weight:700}
+.sc-lmw .st-call .st-chips span{font-size:12px}
 .sc-lmw .st-call-gear{margin-top:8px}
 .sc-lmw .st-call-gear p{margin:0;color:var(--sclmw-muted);font-size:13px}
 .sc-lmw[data-theme="compact"] .st-call,.sc-lmw[data-theme="practical"] .st-call,.sc-lmw[data-theme="chassis"] .st-call,.sc-lmw[data-theme="scifi"] .st-call{border-radius:0}

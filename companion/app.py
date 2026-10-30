@@ -62,9 +62,12 @@ CONFIG = DATA / "config.json"
 history.open_store(DATA / "history.jsonl")
 HOST = "127.0.0.1"
 PORT = 8780
-# The star map calls this port from the live site or from a page on this
+# The star map calls this port from a live site or from a page on this
 # computer. Any other website must not read the log path or change the room.
-LIVE_ORIGIN = "https://gugugubear.pythonanywhere.com"
+LIVE_ORIGINS = (
+    "https://gugugubear.pythonanywhere.com",
+    "https://sclmw.cltbbs.com",
+)
 
 TRANS = re.compile(
     r"Transitioning from zone (?P<from_zone>[\w.-]+) in (?P<from_system>[\w.-]+) "
@@ -614,7 +617,7 @@ def set_running(on):
 def origin_allowed(origin):
     if not origin:
         return True
-    if origin == LIVE_ORIGIN:
+    if origin.rstrip("/") in LIVE_ORIGINS:
         return True
     parsed = urlparse(origin)
     host = (parsed.hostname or "").lower()
@@ -1283,6 +1286,9 @@ if __name__ == "__main__":
         assert version_tuple("starfix-" + "a" * 40) is None
         assert version_tuple("1.0.1") > version_tuple("1.0.0")
         assert version_tuple(VERSION) is not None
+        assert origin_allowed("https://gugugubear.pythonanywhere.com")
+        assert origin_allowed("https://sclmw.cltbbs.com/")
+        assert not origin_allowed("https://evil.example")
         script = update_script(r"C:\Starfix\Starfix.update.exe", r"C:\Starfix\Starfix.exe", 99, "failed")
         assert "Move-Item -LiteralPath $src -Destination $dst -Force" in script, script
         assert "$procId = 99" in script and "foreach ($try in 1..40)" in script

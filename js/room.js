@@ -469,7 +469,7 @@
       '<ul><li>'+esc(ti('home.know_1'))+'</li><li>'+esc(ti('home.know_2'))+'</li><li>'+esc(ti('home.know_3'))+'</li></ul>'+
       '<p class="st-home-links">'+
         '<a href="https://github.com/GuguguBear/sc-lmw/blob/master/companion/README.md" target="_blank" rel="noopener">'+esc(ti('starfix.src_read'))+'</a>'+
-        '<a href="https://github.com/GuguguBear/sc-lmw/releases/tag/starfix-1.0.6" target="_blank" rel="noopener">'+esc(ti('starfix.src_rel'))+'</a>'+
+        '<a href="https://github.com/GuguguBear/sc-lmw/releases/tag/starfix-1.0.7" target="_blank" rel="noopener">'+esc(ti('starfix.src_rel'))+'</a>'+
         '<a href="https://github.com/GuguguBear/sc-lmw/blob/master/companion/app.py" target="_blank" rel="noopener">'+esc(ti('starfix.src_app'))+'</a>'+
       '</p>';
   }
@@ -855,7 +855,7 @@
     var q = crewQ.trim().toLowerCase();
     var shown = live.filter(function(m){
       if(!q) return true;
-      return ((m.nickname||'')+' '+(m.location||'')+' '+placeLabel(m)).toLowerCase().indexOf(q)!==-1;
+      return ((m.nickname||'')+' '+(m.location||'')+' '+placeLabel(m)+' '+(m.server||'')).toLowerCase().indexOf(q)!==-1;
     }).sort(function(a,b){
       var d = memberRank(a)-memberRank(b);
       return d || ((b.seen||0)-(a.seen||0));
@@ -865,9 +865,10 @@
     var list = el.querySelector('#stCrewList');
     if(!list) return;
     var on = shown.filter(isOnline), off = shown.filter(function(m){ return !isOnline(m); });
+    var split = serverSplit(on);
     var html = '';
-    if(on.length) html += '<div class="st-crew-sec">'+esc(t('online'))+' '+on.length+'</div>'+on.map(memberRow).join('');
-    if(off.length) html += '<div class="st-crew-sec">'+esc(t('offline'))+' '+off.length+'</div>'+off.map(memberRow).join('');
+    if(on.length) html += '<div class="st-crew-sec">'+esc(t('online'))+' '+on.length+(split.mixed?' · '+esc(t('server'))+' '+split.kinds:'')+'</div>'+on.map(function(m){ return memberRow(m, split); }).join('');
+    if(off.length) html += '<div class="st-crew-sec">'+esc(t('offline'))+' '+off.length+'</div>'+off.map(function(m){ return memberRow(m, split); }).join('');
     list.innerHTML = html || '<div class="st-room-dim">'+(q ? esc(t('none')) : '—')+'</div>';
     rollCrew(list);
     list.querySelectorAll('[data-mate]').forEach(function(b){ b.onclick=function(){ jumpMember(b.getAttribute('data-mate')); }; });
@@ -954,7 +955,36 @@
       code:m.code||'', location:m.location||'', system:m.system||'', ship:m.ship||'',
       gear:Array.isArray(m.gear)?m.gear:[], server:m.server||'', travel:m.travel||null};
   }
-  function memberRow(m){
+  function serverSplit(list){
+    var counts = {};
+    (list||[]).forEach(function(m){
+      if(!m.server) return;
+      var k = String(m.server);
+      counts[k] = (counts[k]||0)+1;
+    });
+    var keys = Object.keys(counts);
+    if(!keys.length) return {top:'', mixed:false, kinds:0};
+    var ref = '';
+    (list||[]).forEach(function(m){
+      if(ref || !m.server) return;
+      if(state.captain && m.id===state.captain) ref = String(m.server);
+    });
+    if(!ref){
+      (list||[]).forEach(function(m){
+        if(ref || !m.server) return;
+        if(state.me && m.id===state.me.id) ref = String(m.server);
+      });
+    }
+    var top = ref && counts[ref] ? ref : keys[0];
+    var n = counts[top]||0;
+    keys.forEach(function(k){ if(counts[k]>n){ top=k; n=counts[k]; } });
+    return {top:top, mixed:keys.length>1, kinds:keys.length};
+  }
+  function hostShort(id){
+    var s = String(id);
+    return s.length>8 ? '…'+s.slice(-7) : s;
+  }
+  function memberRow(m, split){
     var tags = '';
     if(state.me && m.id===state.me.id) tags += '<em>'+esc(t('you'))+'</em>';
     var isCap = state.captain ? m.id===state.captain : !!(state.role==='captain' && state.me && m.id===state.me.id);
@@ -967,12 +997,17 @@
     var on = isOnline(m);
     var when = typeof m.seen==='number' ? '<time data-seen="'+m.seen+'">'+esc(ageText(m.seen))+'</time>' : '';
     var place = m.location ? esc(placeLabel(m)) : '';
-    var host = m.server ? esc(t('server'))+' '+esc(String(m.server)) : '';
     var ship = m.ship ? esc(shipLabel(m.ship)) : '';
-    var bits = [place, host, ship].filter(Boolean).join(' · ');
+    var bits = [place, ship].filter(Boolean).join(' · ');
+    var host = '<span class="st-mate-host" title="'+esc(t('server'))+'">—</span>';
+    if(m.server){
+      var same = split && split.top && String(m.server)===split.top;
+      var tone = split && split.mixed ? (same?' is-same':' is-other') : (split && split.top ? ' is-same' : '');
+      host = '<span class="st-mate-host'+tone+'" title="'+esc(t('server'))+' '+esc(String(m.server))+'">'+esc(hostShort(m.server))+'</span>';
+    }
     var inner = '<i class="st-crew-pip'+(on?' on':'')+'"></i>'+
       '<span class="st-mate-roll"><span><b>'+esc(m.nickname)+'</b>'+tags+
-      (bits?'<span class="st-mate-last">'+bits+'</span>':'')+'</span></span>'+when;
+      (bits?'<span class="st-mate-last">'+bits+'</span>':'')+'</span></span>'+host+when;
     return '<div class="st-mate-row'+(kickAsk===m.id?' st-kick-ask':'')+'"><button type="button" class="st-mate'+(m.location?' has-place':'')+(on?'':' is-off')+'" data-mate="'+esc(m.id)+'">'+inner+'</button>'+kick+give+'</div>';
   }
   function handoffHtml(){
