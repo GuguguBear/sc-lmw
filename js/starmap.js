@@ -620,47 +620,10 @@ function stantonScene(canvas,sysKey){
       pits.forEach(C=>{ const x=(1-v.dot(C.d))/C.r; if(x<1) n-=C.dep*(1-x*x); });         // Krater
       v.multiplyScalar(rad*Math.max(0.45,1+n)); v.x*=1.55; v.y*=0.78; v.z*=1.1; P.setXYZ(i,v.x,v.y,v.z); }
     g.computeVertexNormals(); return g; }
-  let printBodies=[], printSerial=0, printT0=0, printLive=false;
-  const printU={uHead:{value:1.5}, uRad:{value:1}};
-  function armBodyPrint(mesh, rad, irr){
-    const extent=rad*(irr?1.4:1.02);
-    mesh.userData.printExtent=extent;
-    mesh.userData.printDelay=(printSerial%6)*180; printSerial+=1;
-    mesh.userData.printHead=(printT0&&!printLive)?1.5:-1.2;
-    const mat=mesh.material;
-    if(!mat.userData.printHook){
-      mat.userData.printHook=true;
-      mat.onBeforeCompile=function(shader){
-        shader.uniforms.uHead=printU.uHead; shader.uniforms.uRad=printU.uRad;
-        shader.vertexShader=shader.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vPrintPos;').replace('#include <begin_vertex>','#include <begin_vertex>\nvPrintPos=vec3(position);');
-        shader.fragmentShader=shader.fragmentShader.replace('#include <common>','#include <common>\nvarying vec3 vPrintPos;\nuniform float uHead;\nuniform float uRad;').replace('#include <dithering_fragment>','#include <dithering_fragment>\nfloat ny=vPrintPos.y/max(uRad,0.0001);\nfloat d=uHead-ny;\nif(d<0.0)discard;\nfloat g=smoothstep(0.16,0.0,abs(d));\ng+=0.95*smoothstep(0.11,0.0,abs(d-0.24));\ng+=0.8*smoothstep(0.09,0.0,abs(d-0.48));\ng+=0.65*smoothstep(0.08,0.0,abs(d-0.72));\ngl_FragColor.rgb+=vec3(0.55,1.0,1.0)*g;\n');
-      };
-    }
-    mesh.onBeforeRender=function(){ printU.uHead.value=mesh.userData.printHead; printU.uRad.value=mesh.userData.printExtent; };
-    printBodies.push(mesh);
-  }
-  function tickPrint(){
-    if(!printLive) return;
-    const now=performance.now(); let busy=false;
-    for(let i=0;i<printBodies.length;i++){
-      const mesh=printBodies[i];
-      const t=(now-printT0-(mesh.userData.printDelay||0))/2100;
-      if(t<1) busy=true;
-      const k=t<0?0:(t>1?1:t);
-      mesh.userData.printHead=-1.2+k*2.7;
-    }
-    if(!busy&&now-printT0>400) printLive=false;
-  }
-  window.__stPrint=function(skip){
-    printT0=performance.now();
-    if(skip){ printLive=false; printBodies.forEach(mesh=>{ mesh.userData.printHead=1.5; }); return; }
-    printLive=true;
-    printBodies.forEach(mesh=>{ mesh.userData.printHead=-1.2; });
-  };
   function bodyMesh(o,rad){ const lk=ST_LOOK[o.n]||['#9a9a9a',0], irr=ST_IRREG[o.n];
     const map=bodyMap(o,lk[0]);
     const m=new T.Mesh(irr?rockGeo(rad,irr):new T.SphereGeometry(rad,48,48),new T.MeshStandardMaterial({map:map,emissive:0xffffff,emissiveMap:map,emissiveIntensity:o.n==='ArcCorp'?.28:.07,roughness:SC.bodyRough(o.n),metalness:o.n==='ArcCorp'?.08:.02}));
-    spin.push(m); armBodyPrint(m,rad,!!irr); return m; }
+    spin.push(m); return m; }
   function ringPoints(G,rin,rout,thick,n,color){ const a=new Float32Array(n*3); for(let i=0;i<n;i++){ const rr=rin+Math.random()*(rout-rin), th=Math.random()*6.283; a[i*3]=rr*Math.cos(th); a[i*3+1]=(Math.random()-0.5)*thick; a[i*3+2]=rr*Math.sin(th); }
     const g=new T.BufferGeometry(); g.setAttribute('position',new T.BufferAttribute(a,3)); const p=new T.Points(g,new T.PointsMaterial({color:color,size:1.5,sizeAttenuation:false})); G.add(p); return p; }
   let level={t:'sys',o:null}, grp=null, entries=[], spin=[], animNodes=[], lastEx=null, wormClock=null, wormMouths=[], wormStat=null, sysTick=0, sysGroups=[], bgAmt=0, spinHold=false;
@@ -685,7 +648,7 @@ function stantonScene(canvas,sysKey){
   function buildOneSys(S,anim){ const G0=grp, sg=new T.Group(); sg.userData.sys=S.k; G0.add(sg); sysGroups.push(sg); grp=sg; const e0=entries.length;
     try{ buildOneSysInner(S,anim); } finally { grp=G0; for(let i=e0;i<entries.length;i++) entries[i].sys=S.k; } }
   function buildOneSysInner(S,anim){ const D=ST_DATA, star=S.star, c0=offOf(S.k), look=ST_SYSLOOK[S.k]||ST_SYSLOOK.stanton, sr=S.k==='stanton'?1.9:1.3;
-    const sun=new T.Mesh(new T.SphereGeometry(sr,48,48),new T.MeshBasicMaterial({color:look.star})); sun.position.copy(c0); grp.add(sun); spin.push(sun); armBodyPrint(sun,sr,false);
+    const sun=new T.Mesh(new T.SphereGeometry(sr,48,48),new T.MeshBasicMaterial({color:look.star})); sun.position.copy(c0); grp.add(sun); spin.push(sun);
     const gl=new T.Sprite(new T.SpriteMaterial({map:sunGlowTex,color:look.glow,transparent:true,blending:T.AdditiveBlending,depthWrite:false})); gl.scale.set(sr*7,sr*7,1); gl.position.copy(c0); grp.add(gl);
     const L=new T.PointLight(look.light,2.6,260,1); L.position.copy(c0); grp.add(L);
     entries.push({o:star,p:c0.clone(),body:true,r:sr,prio:3});
@@ -850,7 +813,7 @@ function stantonScene(canvas,sysKey){
     addMarkers(descendants(F.id,c=>c.k==='moon'),o=>{ const v=rel(o); if(v.length()<lift) v.setLength(lift); return v; });
   }
   function dispose(g){ const kept=Object.values(BODY_MAP); g.traverse(x=>{ if(x.geometry) x.geometry.dispose(); if(x.material){ if(x.material.map&&x.material.map!==dotTex&&x.material.map!==sunGlowTex&&x.material.map!==neb&&!Object.values(ICON).includes(x.material.map)&&kept.indexOf(x.material.map)<0) x.material.map.dispose(); x.material.dispose(); } }); }
-  function rebuild(){ wormClock=null; wormMouths=[]; wormStat=null; printBodies=[]; printSerial=0; if(!ST_DATA) return;
+  function rebuild(){ wormClock=null; wormMouths=[]; wormStat=null; if(!ST_DATA) return;
     if(grp){ scene.remove(grp); dispose(grp); } grp=new T.Group(); scene.add(grp); entries=[]; spin=[]; animNodes=[]; sysGroups=[]; lblLayer.innerHTML='';
     camera.near=level.t==='sys'?0.05:0.004; camera.updateProjectionMatrix();
     if(level.t==='sys') buildSys(); else buildBody(level.o);
@@ -1146,7 +1109,6 @@ function stantonScene(canvas,sysKey){
     const ex=explore(); if(ex!==lastEx){ lastEx=ex; if(ST_DATA&&level.t==='sys') rebuild(); }
     if(!ex){ if(level.t!=='sys') focus(null); tgtT.copy(offOf(ST_SYS)); }
     else if(level.t==='sys'&&ST_DATA&&++sysTick%30===0){ let bk=null,bd=1e9; Object.keys(ST_DATA.sys).forEach(k=>{ const dd=offOf(k).distanceTo(tgtT); if(dd<bd){ bd=dd; bk=k; } }); if(bd<180) setSys(bk); }
-    tickPrint();
     if(wormClock) wormClock.value=performance.now()*0.001;
     if(wormMouths.length) wormMouths.forEach(function(m){ const t=wormClock?wormClock.value:0, s=1+0.045*Math.sin(t*0.55+m.userData.ph); m.scale.set(m.userData.bs*s,m.userData.bs*s,m.userData.bs); if(m.material) m.material.opacity=m.userData.op*(0.78+0.22*(0.5+0.5*Math.sin(t*0.62+m.userData.ph))); });
     beaconOn.draw(performance.now());
@@ -2080,7 +2042,6 @@ function mount(el, opts){
   // data-lang/config.js LANG > browser language.
   if(SC.i18n) SC.i18n.init({lang:opts.lang});
   syncGameLang();
-  if(SC.loc) SC.loc.sync();
   if(typeof el==='string') el=document.querySelector(el);
   if(!el) throw new Error('SCLMW.mount: Container-Element nicht gefunden / container element not found: '+el);
   if(ROOT&&ROOT!==el) unmount();
@@ -2097,20 +2058,30 @@ function mount(el, opts){
   if(opts.pollMs!=null) window.LIVEMAP_CONFIG.PLAYERS_POLL_MS=opts.pollMs;
   var canvas=$('stCanvas');
   if(!canvas){ canvas=document.createElement('canvas'); canvas.id=ID('stCanvas'); canvas.className='st-canvas'; ROOT.appendChild(canvas); }
-  function boot(){
-    // stantonScene() setzt window.__stCtl SELBST (Seiteneffekt) und gibt nur die
-    // cleanup()-Funktion zurueck -- die duerfen wir window.__stCtl nicht ueberschreiben lassen,
-    // sonst verliert enterStExplore() den echten Kontroll-Objekt (Bug: "ctl.zoom01 is not a
-    // function", gefunden beim Playwright-Test).
-    // stantonScene() sets window.__stCtl ITSELF (side effect) and only returns the cleanup()
-    // function -- must not let that overwrite window.__stCtl, or enterStExplore() loses the
-    // real control object (bug: "ctl.zoom01 is not a function", found via the Playwright test).
-    window.__stClean=stantonScene(canvas,'stanton');
-    if(!window.__stCtl){ setTimeout(boot,50); return; }
-    if(opts.standalone) ROOT.classList.add('st-standalone');
-    enterStExplore();
+  // Die Startseite braucht die Karte nicht. three.js, das Ortsnamenpaket und der Szenenaufbau
+  // blockieren den Hauptthread; das passiert erst, wenn jemand die Karte oeffnet.
+  // The home page does not need the map. three.js, the place-name pack and the scene build
+  // block the main thread; that waits until someone opens the map.
+  var sceneArm=null;
+  function armScene(){
+    if(sceneArm) return sceneArm;
+    var done, fail;
+    sceneArm=new Promise(function(ok, no){ done=ok; fail=no; });
+    function boot(){
+      try{ window.__stClean=stantonScene(canvas,'stanton'); }
+      catch(e){ fail(e); return; }
+      if(!window.__stCtl){ setTimeout(boot,50); return; }
+      if(opts.standalone) ROOT.classList.add('st-standalone');
+      try{ enterStExplore(); }catch(e){ fail(e); return; }
+      done();
+    }
+    var locP=(SC.loc&&SC.loc.ready)?SC.loc.ready():Promise.resolve();
+    var threeP=SC.loadThreeCore?SC.loadThreeCore():(SC.loadThree?SC.loadThree():Promise.resolve());
+    Promise.all([locP, threeP]).then(boot).catch(boot);
+    return sceneArm;
   }
-  if(SC.loadThree) SC.loadThree().then(boot).catch(boot); else boot();
+  SC.armScene=armScene;
+  if(!SC.room) armScene();
   return {unmount:unmount};
 }
 function unmount(){

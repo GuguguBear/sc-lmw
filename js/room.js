@@ -444,8 +444,6 @@
     var dockMini = !!(readRaw(FRAME) && readRaw(FRAME).mini);
     var crewMini = !!(readRaw(CREW) && readRaw(CREW).mini);
     ui.gate.hidden = onMap;
-    if(onMap && !mapShown){ mapShown = true; armMapPrint(); }
-    if(!onMap) mapShown = false;
     ui.dock.hidden = !onMap || dockMini;
     ui.dockIco.hidden = !onMap || !dockMini;
     ui.dockIco.textContent = state && state.code ? state.code : '';
@@ -667,47 +665,6 @@
     el.insertBefore(field, el.firstChild);
     return field;
   }
-  var homePrinted = false;
-  function dressPrint(home){
-    if(homePrinted || !home) return;
-    homePrinted = true;
-    if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    var jobs = home.querySelectorAll('.st-home-hero, .st-home-card');
-    var bands = 4;
-    for(var i = 0; i < jobs.length; i++){
-      var job = jobs[i];
-      job.classList.add('st-job');
-      job.style.setProperty('--job', String(i));
-      var veil = document.createElement('div');
-      veil.className = 'st-job-veil';
-      veil.setAttribute('aria-hidden', 'true');
-      for(var b = 0; b < bands; b++){
-        var slice = document.createElement('span');
-        var laser = document.createElement('i');
-        laser.style.setProperty('--b', String(bands - 1 - b));
-        slice.appendChild(laser);
-        veil.appendChild(slice);
-      }
-      job.appendChild(veil);
-    }
-    var wait = (Math.max(jobs.length, 1) - 1) * 160 + (bands - 1) * 90 + 1400;
-    requestAnimationFrame(function(){
-      requestAnimationFrame(function(){ home.classList.add('st-job-go'); });
-    });
-    setTimeout(function(){
-      home.classList.remove('st-job-go');
-      var veils = home.querySelectorAll('.st-job-veil');
-      for(var v = 0; v < veils.length; v++) if(veils[v].parentNode) veils[v].parentNode.removeChild(veils[v]);
-      var done = home.querySelectorAll('.st-job');
-      for(var d = 0; d < done.length; d++) done[d].classList.remove('st-job');
-    }, wait);
-  }
-  var mapShown = false;
-  function armMapPrint(){
-    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if(!window.__stPrint){ setTimeout(armMapPrint, 50); return; }
-    window.__stPrint(!!reduce);
-  }
   function mountHome(el, narrow){
     ensureHomeField(el);
     var home = childByClass(el, 'st-home');
@@ -722,7 +679,6 @@
     if(leaving && state && state.role==='captain' && state.status==='member'){
       var hand = mountHome(el, true);
       hand.innerHTML = '<header class="st-home-hero"><div class="st-home-kicker">SC LMW</div><h1>'+esc(t('title'))+'</h1></header><section class="st-home-card">'+handoffHtml()+'</section>';
-      dressPrint(hand);
       bindHandoff(el);
       return;
     }
@@ -768,7 +724,6 @@
         '<section class="st-home-card" id="stHomeStarfix">'+starfixFactsHtml()+'</section>'+
         '<section class="st-home-card st-home-join"><h2>'+esc(ti('home.join_h'))+'</h2>'+roomBody+'</section>'+
         pubHtml();
-    dressPrint(home);
     var c = el.querySelector('#stRoomCreate'), j = el.querySelector('#stRoomJoin');
     if(c) c.onclick = function(){ act('create'); };
     if(j) j.onclick = function(){ act('join'); };
@@ -780,7 +735,7 @@
     };
     bindRecover(el, 'stGateRecover');
     var enter = el.querySelector('#stEnter');
-    if(enter) enter.onclick = enterMap;
+    if(enter){ enter.onclick = enterMap; markEnterWait(); }
     var copy = el.querySelector('#stGateCopy');
     if(copy) copy.onclick = function(){
       if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(state.code);
@@ -1247,8 +1202,32 @@
     }).then(function(st){ if(st){ picking = false; take(st); } }).catch(fail);
   }
 
+  var mapArming = false;
+  function markEnterWait(){
+    var btn = document.getElementById('stEnter');
+    if(!btn || !mapArming) return;
+    btn.disabled = true;
+    if(window.SCLMW && window.SCLMW.i18n) btn.textContent = window.SCLMW.i18n.t('page.loading');
+  }
   function enterMap(){
     if(!state || state.status!=='member') return;
+    if(mapArming) return;
+    var arm = window.SCLMW && window.SCLMW.armScene;
+    if(arm && !window.__stCtl){
+      mapArming = true;
+      markEnterWait();
+      arm().then(function(){
+        mapArming = false;
+        entered = true;
+        bindPlayers();
+        paint();
+        pullLink();
+      }).catch(function(){
+        mapArming = false;
+        paint();
+      });
+      return;
+    }
     entered = true;
     bindPlayers();
     paint();

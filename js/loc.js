@@ -188,14 +188,11 @@
   }
 
   function boot(){
-    var want=resolved()||mode==='custom';
-    var packP=want?ensurePack():Promise.resolve(null);
-    var userP=idbGet('ini').catch(function(){ return null; }).then(function(row){
+    return idbGet('ini').catch(function(){ return null; }).then(function(row){
       if(row&&row.text){ userText=row.text; userName=row.name||'global.ini'; }
-    });
-    return Promise.all([packP, userP]).then(function(){
-      if(!userText){ if(want){ rebuild(); notify(); } return; }
-      return mapFromIni(userText).then(function(got){
+    }).then(function(){
+      if(!userText) return;
+      return ensurePack().then(function(){ return mapFromIni(userText); }).then(function(got){
         if(got.applied) custom={map:got.map, cls:got.cls||{}, name:userName, lines:got.lines, applied:got.applied};
         rebuild(); notify();
       });
@@ -213,6 +210,7 @@
     mode:function(){ return mode; },
     resolved:resolved,
     stats:function(){ return {ready:!!pack, mode:mode, resolved:resolved(), custom:custom?custom.applied:0, customName:custom?custom.name:'', hasFile:!!userText}; },
+    ready:function(){ if(!resolved()&&mode!=='custom') return Promise.resolve(null); return ensurePack().then(function(){ rebuild(); return pack; }); },
     sync:function(){ var want=resolved(); if(want&&!pack){ ensurePack().then(function(){ rebuild(); notify(); }); return; } rebuild(); },
     setMode:function(m){
       if(['auto','hans','hant','off','custom'].indexOf(m)<0) return;
