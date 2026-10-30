@@ -691,7 +691,7 @@
     bindPub(el);
   }
 
-  function dockBar(){
+  function roomOps(){
     var cap = state && state.role==='captain' && state.status==='member';
     var open = !!(state && state.open);
     var left = coolLeft();
@@ -704,22 +704,13 @@
       '</span>'+
       '<button type="button" id="stCast">'+esc(t('cast'))+'</button>'
     ) : '';
-    return '<div class="st-dockbar">'+
-      '<button type="button" id="stLinkPc">'+esc(t('link'))+'</button>'+
-      vis+'</div>';
+    return '<button type="button" id="stLinkPc">'+esc(t('link'))+'</button>'+vis;
   }
   function mountDockBar(){
     var slot = document.getElementById('sclmw-stDockSlot');
     if(!slot) return;
-    var onMap = !!(entered && state && state.status==='member');
-    if(!onMap){ slot.hidden = true; slot.innerHTML = ''; return; }
-    slot.hidden = false;
-    slot.innerHTML = dockBar();
-    var link = slot.querySelector('#stLinkPc');
-    if(link) link.onclick = linkPc;
-    var castBtn = slot.querySelector('#stCast');
-    if(castBtn) castBtn.onclick = function(){ castCompose = true; castErr = ''; paint(); };
-    bindOpen(slot);
+    slot.hidden = true;
+    slot.innerHTML = '';
   }
   window.__stDockMount = mountDockBar;
 
@@ -732,7 +723,8 @@
         '<button type="button" id="stRoomLeave">'+esc(t('leave'))+'</button>'+
         (state.role==='captain' ? '<button type="button" id="stDissolve">'+esc(t('dissolve'))+'</button>' : '')+
         '<button type="button" id="stRoomMin">'+esc(sheetLayout() && !el.classList.contains('st-sheet-open') ? t('unfold') : t('fold'))+'</button>'+
-        '</div></div>'+
+        '</div>'+
+        '<div class="st-room-ops">'+roomOps()+'</div></div>'+
       '<div class="st-room-body">'+
       (leaving && state.role==='captain' ? handoffHtml() : '')+
       '<p class="st-room-dim">'+esc(t('locGuide'))+'</p>'+
