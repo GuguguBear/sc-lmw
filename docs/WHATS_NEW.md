@@ -22,6 +22,7 @@ The interface is Simplified Chinese, Traditional Chinese, English, and German. T
 - **The public name and the origin are the same site.** https://sclmw.cltbbs.com/ keeps the address. https://gugugubear.pythonanywhere.com/ serves the same pages. A new Starfix window uses https://sclmw.cltbbs.com.
 - **Haze is the default look.** The home page is a flat instrument plate: hairline frames, a dim star field, and one slow sweep. A choice already saved in the browser stays.
 - **The captain can move to a new browser.** Creating a room shows a recovery code. Only the captain can open it again. Room code plus that code takes the captain role. If that browser has been polling within two minutes, the previous captain stays as a member. Otherwise that empty seat is removed. After seven days without a room poll, the captain role passes to the earliest member. If nobody else remains, the room is deleted. Opening another room with the same browser still leaves the previous room immediately, and the earliest member becomes captain.
+- **The home page and the star map print in.** A scan line rises once. The cards appear behind it, and after you enter, the planets and orbits do too. Staying on the page does not run it again. Reduced motion shows them at once.
 
 ## Deutsch
 
@@ -41,6 +42,7 @@ The interface is Simplified Chinese, Traditional Chinese, English, and German. T
 - **Der öffentliche Name und der Ursprung sind dieselbe Seite.** https://sclmw.cltbbs.com/ behält die Adresse. https://gugugubear.pythonanywhere.com/ liefert dieselben Seiten. Ein neues Starfix-Fenster trägt https://sclmw.cltbbs.com ein.
 - **Haze ist die Vorgabe.** Die Startseite ist eine flache Instrumententafel: feine Rahmen, ein schwaches Sternfeld und ein langsamer Sweep. Eine schon gespeicherte Wahl bleibt.
 - **Der Captain kann in einen neuen Browser wechseln.** Beim Anlegen erscheint ein Wiederherstellungscode. Nur der Captain kann ihn erneut öffnen. Raumcode und dieser Code übernehmen den Captain. Hat dieser Browser in den letzten zwei Minuten abgefragt, bleibt der vorige Captain als Mitglied. Sonst wird der leere Platz entfernt. Nach sieben Tagen ohne Raumabfrage geht der Captain an das früheste Mitglied. Bleibt niemand sonst, wird der Raum gelöscht. Wer mit demselben Browser einen anderen Raum öffnet, verlässt den vorigen sofort, und das früheste Mitglied wird Captain.
+- **Startseite und Sternkarte werden eingescannt.** Eine Linie steigt einmal nach oben. Die Karten erscheinen dahinter, und nach dem Betreten auch Planeten und Bahnen. Wer auf der Seite bleibt, sieht es nicht noch einmal. Bei reduzierter Bewegung sind sie sofort da.
 
 ## 简体中文
 
@@ -60,6 +62,7 @@ The interface is Simplified Chinese, Traditional Chinese, English, and German. T
 - **对外名称和源站是同一个网站。** https://sclmw.cltbbs.com/ 保持这个地址。https://gugugubear.pythonanywhere.com/ 提供同样的页面。新的 Starfix 窗口填入 https://sclmw.cltbbs.com。
 - **默认外观是气雾。** 首页是一块扁平的仪表板：细线边框、很淡的星点，以及一道很慢的扫光。浏览器里已经保存的主题会留下。
 - **队长可以换到新的浏览器。** 建立房间时会给出恢复码，之后只有队长能再打开它。房间码加上这组码就能接管队长。旧浏览器两分钟内还在轮询时，原来的队长留在房间里当队员；否则这个空位会被删掉。连续七天没有轮询房间时，队长交给最早加入的队员。如果已经没有其他队员，房间会被删掉。同一个人用原来的浏览器另开房间，会马上离开旧房间，队长立刻交给最早加入的队员。
+- **首页和星图被扫出来。** 一道扫描线从下往上走一次。卡片跟在光线后面出现，进入星图后星球和轨道也一样。留在页面上时不会再扫。系统开了减少动态效果时，它们直接出现。
 
 ## 繁體中文
 
@@ -79,3 +82,4 @@ The interface is Simplified Chinese, Traditional Chinese, English, and German. T
 - **對外名稱和來源站是同一個網站。** https://sclmw.cltbbs.com/ 保持這個地址。https://gugugubear.pythonanywhere.com/ 提供同樣的頁面。新的 Starfix 視窗填入 https://sclmw.cltbbs.com。
 - **預設外觀是氣霧。** 首頁是一塊扁平的儀表板：細線邊框、很淡的星點，以及一道很慢的掃光。瀏覽器裡已經保存的主題會留下。
 - **隊長可以換到新的瀏覽器。** 建立房間時會給出恢復碼，之後只有隊長能再打開它。房間碼加上這組碼就能接管隊長。舊瀏覽器兩分鐘內還在輪詢時，原來的隊長留在房間裡當隊員；否則這個空位會被刪掉。連續七天沒有輪詢房間時，隊長交給最早加入的隊員。如果已經沒有其他隊員，房間會被刪掉。同一個人用原來的瀏覽器另開房間，會馬上離開舊房間，隊長立刻交給最早加入的隊員。
+- **首頁和星圖被掃出來。** 一道掃描線從下往上走一次。卡片跟在光線後面出現，進入星圖後星球和軌道也一樣。留在頁面上時不會再掃。系統開了減少動態效果時，它們直接出現。

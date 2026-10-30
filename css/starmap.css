@@ -581,6 +581,15 @@
 .sc-lmw .st-gate{position:absolute;inset:0;z-index:90;display:flex;flex-direction:column;overflow:hidden;box-sizing:border-box;padding:16px 20px calc(var(--sclmw-bottom-gap, 32px) + 12px);background:var(--sclmw-bg);color:var(--sclmw-ink);pointer-events:auto}
 .sc-lmw .st-gate[hidden],.sc-lmw .st-room[hidden]{display:none}
 .sc-lmw .st-home-field{position:absolute;inset:0;z-index:0;overflow:hidden;pointer-events:none}
+.sc-lmw .st-gate.st-printing .st-home{clip-path:inset(100% 0 0 0);pointer-events:none;animation:st-print-reveal 4.6s linear forwards}
+.sc-lmw .st-print-beam{position:absolute;left:0;right:0;z-index:4;height:2px;pointer-events:none;background:linear-gradient(90deg, transparent, var(--sclmw-cyan) 12%, #f4feff 50%, var(--sclmw-cyan) 88%, transparent);box-shadow:0 0 18px 3px color-mix(in srgb, var(--sclmw-cyan) 80%, transparent), 0 0 48px 14px color-mix(in srgb, var(--sclmw-cyan) 38%, transparent);animation:st-print-beam 4.6s linear forwards}
+.sc-lmw .st-print-beam::before{content:"";position:absolute;left:4%;right:4%;bottom:0;height:120px;background:linear-gradient(to top, color-mix(in srgb, var(--sclmw-cyan) 55%, transparent), transparent 72%);filter:blur(4px)}
+.sc-lmw.st-map-printing .st-canvas,
+.sc-lmw.st-map-printing .st-lbls{clip-path:inset(100% 0 0 0);animation:st-print-reveal 4.6s linear forwards}
+.sc-lmw.st-map-printing .st-canvas{pointer-events:none}
+.sc-lmw.st-map-printing > .st-print-beam{z-index:1}
+@keyframes st-print-reveal{from{clip-path:inset(100% 0 0 0)}to{clip-path:inset(0 0 0 0)}}
+@keyframes st-print-beam{from{top:100%;opacity:1}90%{opacity:1}to{top:0;opacity:0}}
 .sc-lmw .st-home-code{position:absolute;inset:0;width:100%;height:100%;display:block;filter:blur(2px);opacity:.9}
 .sc-lmw .st-home-grid{position:absolute;inset:-64px;background-image:linear-gradient(color-mix(in srgb, var(--sclmw-cyan) 18%, transparent) 1px, transparent 1px),linear-gradient(90deg, color-mix(in srgb, var(--sclmw-cyan) 18%, transparent) 1px, transparent 1px);background-size:64px 64px;animation:st-home-grid 24s linear infinite}
 .sc-lmw .st-home{position:relative;z-index:1;flex:1 1 auto;min-height:0;width:100%;margin:0;display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr) minmax(260px,.9fr);grid-template-rows:auto minmax(0,1fr) auto;gap:10px;align-items:stretch;overflow:auto}
@@ -1187,7 +1196,14 @@ html{-webkit-text-size-adjust:100%}
 @media (prefers-reduced-motion:reduce){
   .sc-lmw[data-theme="haze"] :is(.st-room,.st-side,.st-loc-card)::after,
   .sc-lmw[data-theme="haze"] .st-home-hero::after,
-  .sc-lmw .st-home-grid{animation:none}
+  .sc-lmw .st-home-grid,
+  .sc-lmw .st-gate.st-printing .st-home,
+  .sc-lmw.st-map-printing .st-canvas,
+  .sc-lmw.st-map-printing .st-lbls,
+  .sc-lmw .st-print-beam{animation:none}
+  .sc-lmw .st-gate.st-printing .st-home,
+  .sc-lmw.st-map-printing .st-canvas,
+  .sc-lmw.st-map-printing .st-lbls{clip-path:none;pointer-events:auto}
 }
 .sc-lmw .st-dockbar{display:flex;flex-wrap:wrap;align-items:stretch;margin-top:10px;border:1px solid var(--sclmw-line2)}
 .sc-lmw .st-dockbar .st-seg{display:flex;flex:0 0 auto}

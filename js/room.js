@@ -444,6 +444,8 @@
     var dockMini = !!(readRaw(FRAME) && readRaw(FRAME).mini);
     var crewMini = !!(readRaw(CREW) && readRaw(CREW).mini);
     ui.gate.hidden = onMap;
+    if(onMap && !mapShown){ mapShown = true; armMapPrint(); }
+    if(!onMap) mapShown = false;
     ui.dock.hidden = !onMap || dockMini;
     ui.dockIco.hidden = !onMap || !dockMini;
     ui.dockIco.textContent = state && state.code ? state.code : '';
@@ -737,6 +739,49 @@
     runHomeCode(field.querySelector('canvas'));
     return field;
   }
+  var homePrinted = false;
+  function armPrint(el){
+    if(homePrinted || !el) return;
+    homePrinted = true;
+    if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    var beam = childByClass(el, 'st-print-beam');
+    if(!beam){
+      beam = document.createElement('div');
+      beam.className = 'st-print-beam';
+      beam.setAttribute('aria-hidden', 'true');
+      el.appendChild(beam);
+    }
+    el.classList.add('st-printing');
+    var done = false;
+    function finish(){
+      if(done) return;
+      done = true;
+      el.classList.remove('st-printing');
+      if(beam.parentNode) beam.parentNode.removeChild(beam);
+    }
+    beam.addEventListener('animationend', finish);
+    setTimeout(finish, 5000);
+  }
+  var mapShown = false;
+  function armMapPrint(){
+    var el = root();
+    if(!el) return;
+    if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    var beam = document.createElement('div');
+    beam.className = 'st-print-beam';
+    beam.setAttribute('aria-hidden', 'true');
+    el.appendChild(beam);
+    el.classList.add('st-map-printing');
+    var done = false;
+    function finish(){
+      if(done) return;
+      done = true;
+      el.classList.remove('st-map-printing');
+      if(beam.parentNode) beam.parentNode.removeChild(beam);
+    }
+    beam.addEventListener('animationend', finish);
+    setTimeout(finish, 5000);
+  }
   function mountHome(el, narrow){
     ensureHomeField(el);
     var home = childByClass(el, 'st-home');
@@ -745,6 +790,7 @@
       el.appendChild(home);
     }
     home.className = narrow ? 'st-home st-home-narrow' : 'st-home';
+    armPrint(el);
     return home;
   }
   function paintGate(el){
