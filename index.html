@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="en" data-sclmw-theme="compact">
+<html lang="en" data-sclmw-theme="haze">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
 <script>try{var t=localStorage.getItem('sclmw_ui_theme');if(t)document.documentElement.setAttribute('data-sclmw-theme',t);}catch(e){}window.addEventListener('beforeinstallprompt',function(ev){ev.preventDefault();window.__sclmwInstall=ev;});</script>
 <title>SC LMW – Star Citizen LiveMap Wiki</title>
 <meta name="description" content="Unofficial, standalone 3D star map for Star Citizen (Stanton, Pyro, Nyx): search, live UEX prices, live FleetYards 3D ship models, optional player positions.">
-<meta name="theme-color" content="#070a12">
+<meta name="theme-color" content="#020814">
 <meta name="color-scheme" content="dark">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -117,14 +117,14 @@
     var themeColor={classic:'#070a12',compact:'#0c0e12',practical:'#0a0a09',chassis:'#080604',scifi:'#000808',haze:'#020814'};
     function paintThemeColor(name){
       var meta=document.querySelector('meta[name="theme-color"]');
-      if(meta) meta.setAttribute('content', themeColor[name]||themeColor.compact);
+      if(meta) meta.setAttribute('content', themeColor[name]||themeColor.haze);
     }
     document.addEventListener('sclmw-theme', function(ev){
-      var name=(ev&&ev.detail)||'compact';
+      var name=(ev&&ev.detail)||'haze';
       document.documentElement.setAttribute('data-sclmw-theme', name);
       paintThemeColor(name);
     });
-    paintThemeColor(document.documentElement.getAttribute('data-sclmw-theme')||'compact');
+    paintThemeColor(document.documentElement.getAttribute('data-sclmw-theme')||'haze');
     try{
       var cfg=window.LIVEMAP_CONFIG||{};
       // Eigenstaendige Seite: mount() auf <body> selbst, mit standalone:true (siehe

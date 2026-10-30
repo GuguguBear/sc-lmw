@@ -75,7 +75,7 @@ reasonable choice and note what you chose.
                                   visitor's own choice (the interface has its own language
                                   switch) is remembered in their browser and wins over this.
          data-theme              'classic'|'compact'|'practical'|'chassis'|'scifi'|'haze'
-                                  (default: config.js THEME, else 'compact'). The visitor's
+                                  (default: config.js THEME, else 'haze'). The visitor's
                                   own choice wins over this.
        If you need programmatic control (mount/unmount at a chosen time,
        change options later), call `window.SCLMW.mount(el, opts)` /
@@ -231,7 +231,7 @@ mehrdeutig -- triff dann die vernünftigste Wahl und vermerke sie.
                                    Sprach-Umschalter) wird in dessen Browser gemerkt und
                                    schlaegt diese Vorgabe.
          data-theme               'classic'|'compact'|'practical'|'chassis'|'scifi'|'haze'
-                                   (Standard: THEME aus config.js, sonst 'compact'). Die
+                                   (Standard: THEME aus config.js, sonst 'haze'). Die
                                    eigene Wahl des Besuchers schlaegt diese Vorgabe.
        Brauchst du programmatische Kontrolle (mounten/entmounten zu einem
        gewaehlten Zeitpunkt, Optionen spaeter aendern), ruf statt des

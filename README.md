@@ -41,7 +41,7 @@ On the map, search sits in the top bar. The zoom slider is on that same bar, to 
 
 Click a name in the crew list or the player list to open that pilot's card and the dashed line. The card shows the log fields plus, when the place is on the map, distance from the star, amenities and terminals. The crew list shows each person's server so the captain can see who shares one.
 
-Themes: Classic, Compact, Practical, Chassis, Sci-fi, and Haze. Compact is the default. The visitor's own choice is kept in the browser. Haze is the cyan instrument look (`data-theme="haze"`).
+Themes: Classic, Compact, Practical, Chassis, Sci-fi, and Haze. Haze is the default. The visitor's own choice is kept in the browser. Haze is the cyan instrument look (`data-theme="haze"`).
 
 The 1.1.0 interface notes are in [docs/WHATS_NEW.md](docs/WHATS_NEW.md). They are not a list of every later change. The Starfix version those notes were written beside is no longer current. Use `companion/VERSION`.
 

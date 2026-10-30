@@ -41,7 +41,7 @@ Auf der Karte sitzt die Suche in der oberen Leiste. Der Zoom-Regler liegt in der
 
 Ein Name in der Teamliste oder in der Spielerliste öffnet die Karte dieser Person und die gestrichelte Linie. Die Karte zeigt die Logfelder und, wenn der Ort auf der Karte liegt, den Abstand zum Stern, Einrichtungen und Terminals. Die Teamliste zeigt den Server jeder Person, damit der Captain sieht, wer denselben teilt.
 
-Themen: Klassisch, Kompakt, Praktisch, Gehäuse, Science-Fiction und Dunst (Haze). Kompakt ist die Vorgabe. Die eigene Wahl bleibt im Browser. Haze ist die cyanfarbene Instrumentenansicht (`data-theme="haze"`).
+Themen: Klassisch, Kompakt, Praktisch, Gehäuse, Science-Fiction und Dunst (Haze). Haze ist die Vorgabe. Die eigene Wahl bleibt im Browser. Haze ist die cyanfarbene Instrumentenansicht (`data-theme="haze"`).
 
 Die Hinweise zur Oberfläche 1.1.0 stehen in [docs/WHATS_NEW.md](docs/WHATS_NEW.md). Das ist nicht die Liste jeder späteren Änderung. Die Starfix-Version neben diesen Hinweisen ist nicht mehr die aktuelle. Es gilt `companion/VERSION`.
 

@@ -18,7 +18,7 @@
  *   data-lang           'auto'|'de'|'en'|'zh-Hans'|'zh-Hant' (zh-CN / zh-TW aliases work)
  *                        (Default: config.js LANG, sonst/otherwise 'auto' -- siehe js/i18n.js)
  *   data-theme          'classic'|'compact'|'practical'|'chassis'|'scifi'|'haze'
- *                        (Default: config.js THEME, sonst/otherwise 'compact')
+ *                        (Default: config.js THEME, sonst/otherwise 'haze')
  *
  * See CREDITS.md / LICENSE. Unofficial fan project, not affiliated with CIG/RSI.
  */

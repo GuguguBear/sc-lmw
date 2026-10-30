@@ -561,7 +561,7 @@ function stantonScene(canvas,sysKey){
   };
   const ICONOF={station:ICON.station,reststop:ICON.rest,wikelo:ICON.wikelo,gateway:ICON.gateway,city:ICON.city,jump:ICON.jump,outpost:ICON.outpost,miningbase:ICON.mine,lagrange:ICON.lag,comm:ICON.comm,poi:ICON.poi,asteroid:ICON.rock,belt:ICON.belt};
   const ICON_BIG={station:1,reststop:1,wikelo:1,gateway:1,city:1,jump:1};
-  function beaconHex(){ return ({classic:0x37e1ff,compact:0xe8eaef,practical:0xd8d4c8,chassis:0xffb000,scifi:0x00e5cc})[ST_UI_THEME]||0x37e1ff; }
+  function beaconHex(){ return ({classic:0x37e1ff,compact:0xe8eaef,practical:0xd8d4c8,chassis:0xffb000,scifi:0x00e5cc,haze:0x39e7ff})[ST_UI_THEME]||0x37e1ff; }
   function makeBeacon(live){
     const c=document.createElement('canvas'); c.width=c.height=128; const x=c.getContext('2d');
     const tex=new T.CanvasTexture(c); tex.generateMipmaps=false; tex.minFilter=T.LinearFilter; tex.magFilter=T.LinearFilter;
@@ -1484,11 +1484,11 @@ function onLocPick(action){
 }
 const ST_UI_THEMES=['classic','compact','practical','chassis','scifi','haze'];
 const ST_UI_THEME_KEY='sclmw_ui_theme';
-let ST_UI_THEME='compact';
+let ST_UI_THEME='haze';
 function normUiTheme(t){ return ST_UI_THEMES.indexOf(t)>=0?t:null; }
 function readUiTheme(given){
   let saved=null; try{ saved=localStorage.getItem(ST_UI_THEME_KEY); }catch(e){}
-  return normUiTheme(saved)||normUiTheme(given)||normUiTheme(window.LIVEMAP_CONFIG&&window.LIVEMAP_CONFIG.THEME)||'compact';
+  return normUiTheme(saved)||normUiTheme(given)||normUiTheme(window.LIVEMAP_CONFIG&&window.LIVEMAP_CONFIG.THEME)||'haze';
 }
 function syncLangAttr(){
   if(!ROOT||!SC.i18n) return;
@@ -1504,7 +1504,7 @@ function paintPicks(){
   if(tp) tp.innerHTML=ST_UI_THEMES.map(id=>'<button type="button" data-ui-theme="'+id+'"'+(ST_UI_THEME===id?' class="on"':'')+'>'+esc(_t('theme.'+id))+'</button>').join('');
 }
 function applyUiTheme(t, persist){
-  t=normUiTheme(t)||'compact'; ST_UI_THEME=t;
+  t=normUiTheme(t)||'haze'; ST_UI_THEME=t;
   if(ROOT) ROOT.setAttribute('data-theme', t);
   if(persist){ try{ localStorage.setItem(ST_UI_THEME_KEY, t); }catch(e){} }
   try{ document.dispatchEvent(new CustomEvent('sclmw-theme',{detail:t})); }catch(e){}

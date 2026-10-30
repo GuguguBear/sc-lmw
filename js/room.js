@@ -486,8 +486,8 @@
   }
   function starfixFactsHtml(){
     return '<h2>'+esc(ti('home.need_h'))+'</h2>'+
+      '<ul><li>'+esc(ti('home.gain_1'))+'</li><li>'+esc(ti('home.gain_2'))+'</li><li>'+esc(ti('home.gain_3'))+'</li></ul>'+
       '<p>'+esc(ti('home.need_no'))+'</p>'+
-      '<p>'+esc(ti('home.need_yes'))+'</p>'+
       '<h2>'+esc(ti('home.know_h'))+'</h2>'+
       '<ul><li>'+esc(ti('home.know_1'))+'</li><li>'+esc(ti('home.know_2'))+'</li><li>'+esc(ti('home.know_3'))+'</li></ul>'+
       '<p class="st-home-links">'+
