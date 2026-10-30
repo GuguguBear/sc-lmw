@@ -621,6 +621,7 @@
       '<p class="st-rsi-markline"><b>'+esc(ti('home.rsi_tm'))+'</b> Star Citizen®, Squadron 42®, Roberts Space Industries®, and Cloud Imperium® are registered trademarks of Cloud Imperium Rights LLC and Cloud Imperium Rights Ltd. All rights reserved.</p>'+
       '<p class="st-home-links">'+
         '<a href="https://robertsspaceindustries.com/" target="_blank" rel="noopener">'+esc(ti('home.rsi_official'))+'</a>'+
+        '<a href="https://www.robertsspaceindustries.com/enlist?referral=STAR-SYHL-2MV5" target="_blank" rel="noopener">'+esc(ti('home.rsi_invite'))+'</a>'+
         '<a href="https://support.robertsspaceindustries.com/hc/en-us/articles/360006895793-Star-Citizen-Fankit-and-Fandom-FAQ" target="_blank" rel="noopener">'+esc(ti('home.rsi_policy'))+'</a>'+
       '</p></section>';
   }
@@ -1366,9 +1367,12 @@
     menu.innerHTML =
       '<button type="button" class="st-ctx-btn" data-ctx="here">'+esc(t('here'))+'</button>'+
       (mine ? '<button type="button" class="st-ctx-btn'+(marking?' on':'')+'" data-ctx="mark">'+esc(marking?t('routeOn'):t('route'))+'</button>' : '')+
-      (cap ? '<div class="st-ctx-h">'+esc(t('mode'))+'</div>'+
-        '<button type="button" class="st-ctx-btn'+(!members?' on':'')+'" data-ctx-mode="captain">'+esc(t('modeCaptain'))+'</button>'+
-        '<button type="button" class="st-ctx-btn'+(members?' on':'')+'" data-ctx-mode="members">'+esc(t('modeMembers'))+'</button>' : '');
+      (cap ? '<div class="st-ctx-sub">'+
+        '<button type="button" class="st-ctx-btn" data-ctx="mode" aria-haspopup="menu" title="'+esc(members?t('modeMembers'):t('modeCaptain'))+'">'+esc(t('mode'))+'<i class="st-ctx-caret"></i></button>'+
+        '<div class="st-ctx-pop" role="menu">'+
+          '<button type="button" class="st-ctx-btn'+(!members?' on':'')+'" data-ctx-mode="captain">'+esc(t('modeCaptain'))+'</button>'+
+          '<button type="button" class="st-ctx-btn'+(members?' on':'')+'" data-ctx-mode="members">'+esc(t('modeMembers'))+'</button>'+
+        '</div></div>' : '');
     menu.hidden = false;
     var host = root().getBoundingClientRect();
     var x = ctxAt.x-host.left, y = ctxAt.y-host.top;
@@ -1379,6 +1383,28 @@
     var maxY = Math.max(8, host.height-h-36);
     menu.style.left = Math.max(8, Math.min(x, maxX))+'px';
     menu.style.top = Math.max(8, Math.min(y, maxY))+'px';
+    placeCtxPop();
+  }
+  function placeCtxPop(){
+    var pop = document.querySelector('#stCtx .st-ctx-pop');
+    var sub = pop && pop.parentNode;
+    if(!pop || !sub) return;
+    pop.classList.remove('st-flip');
+    pop.classList.remove('st-drop');
+    pop.style.display = 'block';
+    pop.style.visibility = 'hidden';
+    var host = root().getBoundingClientRect();
+    var edge = sub.getBoundingClientRect();
+    var pw = pop.offsetWidth, ph = pop.offsetHeight;
+    pop.style.display = '';
+    pop.style.visibility = '';
+    var roomR = host.right-edge.right, roomL = edge.left-host.left;
+    if(roomR<pw+8 && roomL>=pw+8) pop.classList.add('st-flip');
+    else if(roomR<pw+8 && roomL<pw+8) pop.classList.add('st-drop');
+    if(edge.top+ph>host.bottom-8 && !pop.classList.contains('st-drop')){
+      pop.style.top = 'auto';
+      pop.style.bottom = '0px';
+    }
   }
   function openCtx(x, y){
     if(!entered || !state || state.status!=='member') return;
@@ -1406,6 +1432,11 @@
       selected = '';
       closeCtx();
       paint();
+      return;
+    }
+    if(act==='mode'){
+      var sub = b.closest('.st-ctx-sub');
+      if(sub) sub.classList.toggle('st-open');
       return;
     }
     if(mode && state && state.role==='captain'){

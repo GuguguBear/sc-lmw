@@ -30,7 +30,7 @@
   html[data-sclmw-theme="practical"] #pwaHint{background:#121110;border-color:#8a8680;color:#c8c4bc}
   html[data-sclmw-theme="chassis"] #pwaHint{background:#100c06;border-color:#ffb000;color:#ffb000}
   html[data-sclmw-theme="scifi"] #pwaHint{background:#041210;border-color:#00e5cc;color:#00e5cc}
-  html[data-sclmw-theme="haze"] #pwaHint{background:rgba(8,14,28,.72);border-color:rgba(92,225,255,.7);color:#eef6ff;backdrop-filter:blur(16px) saturate(1.4)}
+  html[data-sclmw-theme="haze"] #pwaHint{background:#031424;border-color:#39e7ff;color:#e7fbff}
   #loading{position:fixed;inset:0;z-index:130;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:#94a2c2;background:#070a12}
   #loading .spin{width:34px;height:34px;border-radius:50%;border:3px solid rgba(120,165,230,.25);border-top-color:#37e1ff;animation:spin 1s linear infinite}
   @keyframes spin{to{transform:rotate(360deg)}}
@@ -51,11 +51,9 @@
   html[data-sclmw-theme="scifi"] #loading{background:#000808;color:#00e5cc}
   html[data-sclmw-theme="scifi"] #loading .spin{border-color:rgba(0,229,204,.2);border-top-color:#00e5cc}
   html[data-sclmw-theme="scifi"] #fanNotice{background:#000606;color:rgba(0,229,204,.8)}
-  html[data-sclmw-theme="haze"] #loading{background:#05060e;color:#5ce1ff}
-  html[data-sclmw-theme="haze"] #loading .spin{border-color:rgba(92,225,255,.22);border-top-color:#5ce1ff}
-  html[data-sclmw-theme="haze"] #fanNotice{background:rgba(5,8,16,.62);color:rgba(238,246,255,.82);border-top:1px solid rgba(92,225,255,.45);backdrop-filter:blur(16px) saturate(1.4);animation:hazeBar 5.5s ease-in-out infinite}
-  @keyframes hazeBar{0%,100%{box-shadow:0 -8px 24px rgba(92,225,255,.12)}50%{box-shadow:0 -12px 32px rgba(192,132,255,.28)}}
-  @media (prefers-reduced-motion:reduce){html[data-sclmw-theme="haze"] #fanNotice{animation:none}}
+  html[data-sclmw-theme="haze"] #loading{background:#020814;color:#39e7ff}
+  html[data-sclmw-theme="haze"] #loading .spin{border-color:rgba(57,231,255,.25);border-top-color:#39e7ff}
+  html[data-sclmw-theme="haze"] #fanNotice{background:#020814;color:rgba(180,240,255,.86);border-top:1px solid #39e7ff}
 </style>
 </head>
 <body>
@@ -76,6 +74,7 @@
   <span data-i18n="page.fan_notice">SC LMW 1.0 · Unofficial fan project. Not endorsed by, sponsored by, or affiliated with Cloud
   Imperium Games or Roberts Space Industries. Star Citizen® is a trademark of Cloud Imperium
   Rights LLC.</span> · <a href="https://robertsspaceindustries.com/" target="_blank" rel="noopener">robertsspaceindustries.com</a>
+  · <a href="https://www.robertsspaceindustries.com/enlist?referral=STAR-SYHL-2MV5" target="_blank" rel="noopener" data-i18n="home.rsi_invite">My game invite</a>
   · <a href="./CREDITS.md" target="_blank" rel="noopener" data-i18n="page.credits_link">Credits &amp; licenses</a>
   · <button type="button" id="starfixOpen" data-i18n="starfix.open">Starfix</button>
   · <button type="button" id="pwaInstall" hidden data-i18n="pwa.install">Add to Home Screen</button>
@@ -115,7 +114,7 @@
       });
     }
     document.addEventListener('sclmw-lang', paintI18n);
-    var themeColor={classic:'#070a12',compact:'#0c0e12',practical:'#0a0a09',chassis:'#080604',scifi:'#000808',haze:'#05060e'};
+    var themeColor={classic:'#070a12',compact:'#0c0e12',practical:'#0a0a09',chassis:'#080604',scifi:'#000808',haze:'#020814'};
     function paintThemeColor(name){
       var meta=document.querySelector('meta[name="theme-color"]');
       if(meta) meta.setAttribute('content', themeColor[name]||themeColor.compact);
