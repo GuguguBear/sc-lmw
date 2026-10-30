@@ -20,6 +20,7 @@ The interface is Simplified Chinese, Traditional Chinese, English, and German. T
 - **Other systems soften while one is in view.** Pull back until all three are visible and they sharpen. The switch is in Controls, under Other, and it starts on.
 - **The top bar is one short strip.** It meets the left and right edges. The category buttons take the space between search and the tools.
 - **The public name and the origin are the same site.** https://sclmw.cltbbs.com/ keeps the address. https://gugugubear.pythonanywhere.com/ serves the same pages. A new Starfix window uses https://sclmw.cltbbs.com.
+- **The captain can move to a new browser.** Creating a room shows a recovery code. Only the captain can open it again. Room code plus that code takes the captain role. If that browser has been polling within two minutes, the previous captain stays as a member. Otherwise that empty seat is removed. After seven days without a room poll, the captain role passes to the earliest member. If nobody else remains, the room is deleted. Opening another room with the same browser still leaves the previous room immediately, and the earliest member becomes captain.
 
 ## Deutsch
 
@@ -37,6 +38,7 @@ The interface is Simplified Chinese, Traditional Chinese, English, and German. T
 - **Andere Systeme werden weich, solange eines im Blick ist.** Weit genug herausziehen, bis alle drei sichtbar sind, macht sie wieder scharf. Der Schalter steht unter Steuerung, Sonstiges, und ist zu Beginn an.
 - **Die obere Leiste ist ein kurzer Streifen.** Sie liegt am linken und rechten Rand. Die Kategorien füllen den Platz zwischen Suche und Werkzeugen.
 - **Der öffentliche Name und der Ursprung sind dieselbe Seite.** https://sclmw.cltbbs.com/ behält die Adresse. https://gugugubear.pythonanywhere.com/ liefert dieselben Seiten. Ein neues Starfix-Fenster trägt https://sclmw.cltbbs.com ein.
+- **Der Captain kann in einen neuen Browser wechseln.** Beim Anlegen erscheint ein Wiederherstellungscode. Nur der Captain kann ihn erneut öffnen. Raumcode und dieser Code übernehmen den Captain. Hat dieser Browser in den letzten zwei Minuten abgefragt, bleibt der vorige Captain als Mitglied. Sonst wird der leere Platz entfernt. Nach sieben Tagen ohne Raumabfrage geht der Captain an das früheste Mitglied. Bleibt niemand sonst, wird der Raum gelöscht. Wer mit demselben Browser einen anderen Raum öffnet, verlässt den vorigen sofort, und das früheste Mitglied wird Captain.
 
 ## 简体中文
 
@@ -54,6 +56,7 @@ The interface is Simplified Chinese, Traditional Chinese, English, and German. T
 - **停在一个星系里时，其他星系变柔。** 拉远到三个星系都看得见时，它们重新变清晰。开关在操作设置的「其他」里，一开始是开的。
 - **顶栏是一条较矮的长条。** 左右贴着画面边缘。分类按钮占搜索和工具之间的空位。
 - **对外名称和源站是同一个网站。** https://sclmw.cltbbs.com/ 保持这个地址。https://gugugubear.pythonanywhere.com/ 提供同样的页面。新的 Starfix 窗口填入 https://sclmw.cltbbs.com。
+- **队长可以换到新的浏览器。** 建立房间时会给出恢复码，之后只有队长能再打开它。房间码加上这组码就能接管队长。旧浏览器两分钟内还在轮询时，原来的队长留在房间里当队员；否则这个空位会被删掉。连续七天没有轮询房间时，队长交给最早加入的队员。如果已经没有其他队员，房间会被删掉。同一个人用原来的浏览器另开房间，会马上离开旧房间，队长立刻交给最早加入的队员。
 
 ## 繁體中文
 
@@ -71,3 +74,4 @@ The interface is Simplified Chinese, Traditional Chinese, English, and German. T
 - **停在一個星系裡時，其他星系變柔。** 拉遠到三個星系都看得見時，它們重新變清晰。開關在操作設定的「其他」裡，一開始是開的。
 - **頂欄是一條較矮的長條。** 左右貼著畫面邊緣。分類按鈕占搜尋和工具之間的空位。
 - **對外名稱和來源站是同一個網站。** https://sclmw.cltbbs.com/ 保持這個地址。https://gugugubear.pythonanywhere.com/ 提供同樣的頁面。新的 Starfix 視窗填入 https://sclmw.cltbbs.com。
+- **隊長可以換到新的瀏覽器。** 建立房間時會給出恢復碼，之後只有隊長能再打開它。房間碼加上這組碼就能接管隊長。舊瀏覽器兩分鐘內還在輪詢時，原來的隊長留在房間裡當隊員；否則這個空位會被刪掉。連續七天沒有輪詢房間時，隊長交給最早加入的隊員。如果已經沒有其他隊員，房間會被刪掉。同一個人用原來的瀏覽器另開房間，會馬上離開舊房間，隊長立刻交給最早加入的隊員。

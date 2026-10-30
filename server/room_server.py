@@ -32,6 +32,9 @@ BLOCK_EXT = {".sqlite", ".ini", ".pyc", ".spec"}
 BLOCK_NAME = {"config.json"}
 ONLINE_S = 600
 OPEN_S = 300
+# Captain absence follows room polls, not the ten-minute location dot.
+CAPTAIN_GONE_S = 7 * 24 * 3600
+POLL_LIVE_S = 120
 LOCK = threading.Lock()
 
 MIME = {
@@ -140,6 +143,12 @@ def init_db():
             con.execute("ALTER TABLE room ADD COLUMN open INTEGER NOT NULL DEFAULT 0")
         if "open_at" not in room_cols:
             con.execute("ALTER TABLE room ADD COLUMN open_at REAL NOT NULL DEFAULT 0")
+        if "recover" not in room_cols:
+            con.execute("ALTER TABLE room ADD COLUMN recover TEXT")
+        mem_cols = {row[1] for row in con.execute("PRAGMA table_info(membership)")}
+        if "touched" not in mem_cols:
+            con.execute("ALTER TABLE membership ADD COLUMN touched REAL")
+            con.execute("UPDATE membership SET touched=? WHERE touched IS NULL", (now(),))
 
 
 def clean_nick(raw):
@@ -180,6 +189,81 @@ def new_code(con):
         if not con.execute("SELECT 1 FROM room WHERE code=?", (code,)).fetchone():
             return code
     raise RuntimeError("code")
+
+
+def new_recover():
+    raw = "".join(secrets.choice(ALPH) for _ in range(12))
+    return raw[:4] + "-" + raw[4:8] + "-" + raw[8:]
+
+
+def clean_recover(raw):
+    chars = [ch for ch in str(raw or "").upper() if ch in ALPH]
+    if len(chars) != 12:
+        return ""
+    raw = "".join(chars)
+    return raw[:4] + "-" + raw[4:8] + "-" + raw[8:]
+
+
+def touch_member(con, code, mid):
+    con.execute(
+        "UPDATE membership SET touched=? WHERE room=? AND member=?",
+        (now(), code, mid),
+    )
+
+
+def earliest_member(con, code, skip):
+    return con.execute(
+        """
+        SELECT member FROM membership
+        WHERE room=? AND status='member' AND member!=?
+        ORDER BY created LIMIT 1
+        """,
+        (code, skip or ""),
+    ).fetchone()
+
+
+def settle_room(con, code):
+    """Hand the room on after the captain's browser has been gone for seven days.
+
+    A room poll refreshes that clock. The ten-minute location flag does not.
+    With other confirmed members, the earliest one becomes captain and the
+    previous captain stays in the room. With nobody else, the room is removed.
+    """
+    room = con.execute("SELECT * FROM room WHERE code=?", (code,)).fetchone()
+    if not room:
+        return False
+    cap = con.execute(
+        """
+        SELECT touched, created FROM membership
+        WHERE room=? AND member=? AND status='member'
+        """,
+        (code, room["captain"]),
+    ).fetchone()
+    if not cap:
+        other = earliest_member(con, code, room["captain"])
+        if other:
+            con.execute("UPDATE room SET captain=? WHERE code=?", (other["member"], code))
+            return True
+        wipe_room(con, code)
+        return False
+    stamp = cap["touched"] if cap["touched"] is not None else cap["created"]
+    if stamp is None or now() - float(stamp) < CAPTAIN_GONE_S:
+        return True
+    other = earliest_member(con, code, room["captain"])
+    if other:
+        con.execute("UPDATE room SET captain=? WHERE code=?", (other["member"], code))
+        return True
+    wipe_room(con, code)
+    return False
+
+
+def ensure_recover(con, room):
+    current = room["recover"] if "recover" in room.keys() else ""
+    if current:
+        return current
+    secret = new_recover()
+    con.execute("UPDATE room SET recover=? WHERE code=?", (secret, room["code"]))
+    return secret
 
 
 def bearer(header):
@@ -376,7 +460,7 @@ def room_state(con, code, me):
                     "comments": comments,
                 }
             )
-    return {
+    state = {
         "code": code,
         "role": role,
         "captain": room["captain"],
@@ -389,6 +473,9 @@ def room_state(con, code, me):
         "routes": routes,
         "cast": latest_cast(con, code),
     }
+    if role == "captain" and ship["status"] == "member":
+        state["recover"] = ensure_recover(con, room)
+    return state
 
 
 def room_is_open(room):
@@ -447,6 +534,8 @@ def join_status(room, me, existing):
 
 
 def public_rooms(con):
+    for row in con.execute("SELECT code FROM room WHERE open=1"):
+        settle_room(con, row["code"])
     rows = con.execute(
         """
         SELECT r.code,
@@ -465,6 +554,8 @@ def public_rooms(con):
 
 
 def room_brief(con, code):
+    if not settle_room(con, code):
+        return {"code": code, "exists": False, "online": 0, "members": 0}
     room = con.execute("SELECT code FROM room WHERE code=?", (code,)).fetchone()
     if not room:
         return {"code": code, "exists": False, "online": 0, "members": 0}
@@ -670,18 +761,22 @@ class Handler(BaseHTTPRequestHandler):
             if parts == ["api", "rooms"]:
                 release_other_rooms(con, me)
                 code = new_code(con)
+                stamp = now()
                 con.execute(
-                    "INSERT INTO room (code, captain, route_mode, created) VALUES (?,?,?,?)",
-                    (code, me["id"], "captain", now()),
+                    "INSERT INTO room (code, captain, route_mode, created, recover) VALUES (?,?,?,?,?)",
+                    (code, me["id"], "captain", stamp, new_recover()),
                 )
                 con.execute(
-                    "INSERT INTO membership (room, member, status, created) VALUES (?,?,?,?)",
-                    (code, me["id"], "member", now()),
+                    "INSERT INTO membership (room, member, status, created, touched) VALUES (?,?,?,?,?)",
+                    (code, me["id"], "member", stamp, stamp),
                 )
                 self.send_json(200, room_state(con, code, me))
                 return
             if len(parts) == 4 and parts[0] == "api" and parts[1] == "rooms" and parts[3] == "join":
                 code = parts[2].upper()
+                if not settle_room(con, code):
+                    self.send_json(404, {"error": "room"})
+                    return
                 room = con.execute("SELECT * FROM room WHERE code=?", (code,)).fetchone()
                 if not room:
                     self.send_json(404, {"error": "room"})
@@ -692,13 +787,57 @@ class Handler(BaseHTTPRequestHandler):
                     (code, me["id"]),
                 ).fetchone()
                 status = join_status(room, me, existing)
+                stamp = now()
                 con.execute(
                     """
-                    INSERT INTO membership (room, member, status, created) VALUES (?,?,?,?)
-                    ON CONFLICT(room, member) DO UPDATE SET status=excluded.status
+                    INSERT INTO membership (room, member, status, created, touched) VALUES (?,?,?,?,?)
+                    ON CONFLICT(room, member) DO UPDATE SET
+                      status=excluded.status, touched=excluded.touched
                     """,
-                    (code, me["id"], status, now()),
+                    (code, me["id"], status, stamp, stamp),
                 )
+                self.send_json(200, room_state(con, code, me))
+                return
+            if len(parts) == 4 and parts[0] == "api" and parts[1] == "rooms" and parts[3] == "recover":
+                code = parts[2].upper()
+                if not settle_room(con, code):
+                    self.send_json(404, {"error": "room"})
+                    return
+                room = con.execute("SELECT * FROM room WHERE code=?", (code,)).fetchone()
+                if not room:
+                    self.send_json(404, {"error": "room"})
+                    return
+                secret = clean_recover(body.get("recover"))
+                stored = room["recover"] or ""
+                if (
+                    not secret
+                    or not stored
+                    or len(secret) != len(stored)
+                    or not secrets.compare_digest(secret, stored)
+                ):
+                    self.send_json(403, {"error": "recover"})
+                    return
+                if room["captain"] != me["id"]:
+                    release_other_rooms(con, me, keep=code)
+                    old_id = room["captain"]
+                    old = con.execute(
+                        "SELECT touched FROM membership WHERE room=? AND member=? AND status='member'",
+                        (code, old_id),
+                    ).fetchone()
+                    stamp = now()
+                    con.execute(
+                        """
+                        INSERT INTO membership (room, member, status, created, touched) VALUES (?,?,?,?,?)
+                        ON CONFLICT(room, member) DO UPDATE SET
+                          status='member', touched=excluded.touched
+                        """,
+                        (code, me["id"], "member", stamp, stamp),
+                    )
+                    con.execute("UPDATE room SET captain=? WHERE code=?", (me["id"], code))
+                    if old and old_id != me["id"]:
+                        idle_for = now() - float(old["touched"] or 0)
+                        if idle_for > POLL_LIVE_S:
+                            drop_member(con, code, old_id)
                 self.send_json(200, room_state(con, code, me))
                 return
             if (
@@ -969,7 +1108,12 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_json(401, {"error": "auth"})
                 return
             if len(parts) == 3 and parts[:2] == ["api", "rooms"]:
-                st = room_state(con, parts[2].upper(), me)
+                code = parts[2].upper()
+                touch_member(con, code, me["id"])
+                if not settle_room(con, code):
+                    self.send_json(404, {"error": "room"})
+                    return
+                st = room_state(con, code, me)
                 if not st:
                     self.send_json(404, {"error": "room"})
                 elif st.get("error"):

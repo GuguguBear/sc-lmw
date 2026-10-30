@@ -667,6 +667,10 @@
 .sc-lmw .st-room-edge.sw{left:0;bottom:0;width:12px;height:12px;cursor:nesw-resize}
 .sc-lmw .st-room-edge.se{right:0;bottom:0;width:16px;height:16px;cursor:nwse-resize}
 .sc-lmw .st-room-edge.se::after{content:"";position:absolute;right:3px;bottom:3px;width:8px;height:8px;border-right:2px solid var(--sclmw-muted);border-bottom:2px solid var(--sclmw-muted)}
+.sc-lmw .st-recover{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:8px 0}
+.sc-lmw .st-recover span{flex:1 1 100%;color:var(--sclmw-muted);font-size:12px;line-height:1.45}
+.sc-lmw .st-recover b{font-size:16px;letter-spacing:.12em;font-weight:700}
+.sc-lmw .st-recover input{height:32px;min-height:32px;box-sizing:border-box;padding:0 8px;font-size:14px;letter-spacing:.08em}
 .sc-lmw .st-room-h b{font-size:16px;letter-spacing:.06em;white-space:nowrap;margin-right:auto}
 .sc-lmw .st-room-acts{display:flex;flex-wrap:wrap;justify-content:flex-end;align-items:center;gap:8px;margin-left:auto}
 .sc-lmw #stRoom .st-room-ops{flex:1 1 100%;display:flex;flex-wrap:wrap;justify-content:flex-end;align-items:center;gap:8px}
@@ -903,6 +907,7 @@ html{-webkit-text-size-adjust:100%}
   .sc-lmw .st-home p+h2,.sc-lmw .st-home ul+h2{margin-top:10px}
   .sc-lmw .st-gate .st-room-code{font-size:22px;letter-spacing:.08em}
   .sc-lmw .st-gate button:not(.st-room-link),.sc-lmw .st-vis button{height:44px;min-height:44px}
+  .sc-lmw .st-recover input,.sc-lmw .st-recover button{height:44px;min-height:44px}
   .sc-lmw .st-room:not(.st-crew){
     left:8px;right:8px;top:auto;width:auto;height:auto;max-height:none;
     bottom:calc(64px + var(--sclmw-bottom-gap, 0px));

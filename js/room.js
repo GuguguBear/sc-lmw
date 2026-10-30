@@ -15,6 +15,7 @@
       s2:'队长建立房间，把房间码发给队员。',
       s3:'队员申请加入，队长确认后，大家只看得到这个房间。',
       nick:'昵称', create:'建立房间', join:'加入房间', code:'房间码',
+      recover:'恢复码', recoverLead:'这组码只给你。换浏览器或清掉网站数据后，用房间码和它接管队长。请另外抄下来。', recoverCopy:'复制恢复码', recoverGo:'接管队长', recoverPh:'ABCD-EFGH-JKLM', errRecover:'恢复码不对。',
       wait:'已提交申请，等待队长确认。', copy:'复制房间码', copied:'已复制',
       enter:'进入星图', leave:'离开房间', pending:'待确认', approve:'通过', reject:'拒绝', alertLater:'稍后',
       here:'我在这里', hereNeed:'右键要落在一个地点上。',
@@ -37,7 +38,7 @@
       visCool:'{n}后可再改', visSec:'{n} 秒', visMin:'{n} 分钟',
       pubTitle:'公开房间', pubEmpty:'现在没有公开房间', pubPeople:'{n} 人',
       resumed:'上次留下的房间', resumedLead:'刷新后仍是这个房间。房间码没有变，可以直接进入星图。',
-      freshCreate:'刚建立的房间', freshCreateLead:'把房间码发给队员。他们申请加入后，由你确认。',
+      freshCreate:'刚建立的房间', freshCreateLead:'把房间码发给队员。恢复码只留给自己，换浏览器时用来接管队长。',
       freshJoin:'刚加入的房间', freshJoinLead:'可以直接进入星图。',
       resumedWait:'上次提交的申请还在等队长确认。',
       link:'连到这台电脑', linkSent:'已经发给本机的 Starfix。回到那个窗口，点确认。',
@@ -52,6 +53,7 @@
       s2:'隊長建立房間，把房間碼發給隊員。',
       s3:'隊員申請加入，隊長確認後，大家只看得到這個房間。',
       nick:'暱稱', create:'建立房間', join:'加入房間', code:'房間碼',
+      recover:'恢復碼', recoverLead:'這組碼只給你。換瀏覽器或清掉網站資料後，用房間碼和它接管隊長。請另外抄下來。', recoverCopy:'複製恢復碼', recoverGo:'接管隊長', recoverPh:'ABCD-EFGH-JKLM', errRecover:'恢復碼不對。',
       wait:'已送出申請，等待隊長確認。', copy:'複製房間碼', copied:'已複製',
       enter:'進入星圖', leave:'離開房間', pending:'待確認', approve:'通過', reject:'拒絕', alertLater:'稍後',
       here:'我在這裡', hereNeed:'右鍵要落在一個地點上。',
@@ -74,7 +76,7 @@
       visCool:'{n}後可再改', visSec:'{n} 秒', visMin:'{n} 分鐘',
       pubTitle:'公開房間', pubEmpty:'現在沒有公開房間', pubPeople:'{n} 人',
       resumed:'上次留下的房間', resumedLead:'重新整理後仍是這個房間。房間碼沒有變，可以直接進入星圖。',
-      freshCreate:'剛建立的房間', freshCreateLead:'把房間碼發給隊員。他們申請加入後，由你確認。',
+      freshCreate:'剛建立的房間', freshCreateLead:'把房間碼發給隊員。恢復碼只留給自己，換瀏覽器時用來接管隊長。',
       freshJoin:'剛加入的房間', freshJoinLead:'可以直接進入星圖。',
       resumedWait:'上次送出的申請還在等隊長確認。',
       link:'連到這台電腦', linkSent:'已經發給本機的 Starfix。回到那個視窗，點確認。',
@@ -89,6 +91,7 @@
       s2:'The captain creates a room and shares the code.',
       s3:'Members apply. After the captain accepts, only this room can see each other.',
       nick:'Nickname', create:'Create room', join:'Join room', code:'Room code',
+      recover:'Recovery code', recoverLead:'This code is only for you. After a new browser or cleared site data, use it with the room code to take the captain role. Copy it somewhere else.', recoverCopy:'Copy recovery code', recoverGo:'Take captain', recoverPh:'ABCD-EFGH-JKLM', errRecover:'That recovery code does not match.',
       wait:'Request sent. Waiting for the captain.', copy:'Copy code', copied:'Copied',
       enter:'Enter map', leave:'Leave room', pending:'Waiting', approve:'Accept', reject:'Decline', alertLater:'Later',
       here:'I am here', hereNeed:'Right-click a place on the map.',
@@ -111,7 +114,7 @@
       visCool:'Change again in {n}', visSec:'{n}s', visMin:'{n} min',
       pubTitle:'Public rooms', pubEmpty:'No public rooms right now', pubPeople:'{n} people',
       resumed:'Room from last time', resumedLead:'Refreshing kept this room. The code is unchanged. You can enter the map.',
-      freshCreate:'Room just created', freshCreateLead:'Send the code to your team. You confirm them after they apply.',
+      freshCreate:'Room just created', freshCreateLead:'Send the room code to your team. Keep the recovery code. It takes the captain role on a new browser.',
       freshJoin:'Room just joined', freshJoinLead:'You can enter the map.',
       resumedWait:'Your earlier request is still waiting for the captain.',
       link:'Connect this computer', linkSent:'Sent to Starfix on this computer. Go back to that window and confirm.',
@@ -126,6 +129,7 @@
       s2:'Der Captain legt einen Raum an und gibt den Code weiter.',
       s3:'Mitglieder fragen an. Nach dem Ja sieht nur dieser Raum einander.',
       nick:'Nickname', create:'Raum anlegen', join:'Raum beitreten', code:'Raumcode',
+      recover:'Wiederherstellungscode', recoverLead:'Dieser Code ist nur für dich. Nach einem neuen Browser oder gelöschten Websitedaten übernimmst du damit zusammen mit dem Raumcode den Captain. Kopiere ihn extra.', recoverCopy:'Code kopieren', recoverGo:'Captain übernehmen', recoverPh:'ABCD-EFGH-JKLM', errRecover:'Der Wiederherstellungscode stimmt nicht.',
       wait:'Anfrage ist raus. Der Captain muss zustimmen.', copy:'Code kopieren', copied:'Kopiert',
       enter:'Zur Karte', leave:'Raum verlassen', pending:'Offen', approve:'Annehmen', reject:'Ablehnen', alertLater:'Später',
       here:'Ich bin hier', hereNeed:'Der Rechtsklick muss auf einem Ort liegen.',
@@ -148,7 +152,7 @@
       visCool:'Wieder änderbar in {n}', visSec:'{n} s', visMin:'{n} min',
       pubTitle:'Öffentliche Räume', pubEmpty:'Gerade keine öffentlichen Räume', pubPeople:'{n} Personen',
       resumed:'Raum von zuletzt', resumedLead:'Nach dem Neuladen ist es derselbe Raum. Der Code ist unverändert. Du kannst die Karte öffnen.',
-      freshCreate:'Gerade angelegt', freshCreateLead:'Gib den Code an das Team. Du bestätigst die Anfragen.',
+      freshCreate:'Gerade angelegt', freshCreateLead:'Gib den Raumcode an das Team. Den Wiederherstellungscode behältst du. Damit übernimmst du den Captain in einem neuen Browser.',
       freshJoin:'Gerade beigetreten', freshJoinLead:'Du kannst die Karte öffnen.',
       resumedWait:'Deine frühere Anfrage wartet noch auf den Captain.',
       link:'Diesen Computer verbinden', linkSent:'An Starfix auf diesem Computer gesendet. Dort bestätigen.',
@@ -163,7 +167,7 @@
   function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
   function token(){ try{ return localStorage.getItem(TOKEN)||''; }catch(e){ return ''; } }
   function savedCode(){ try{ return localStorage.getItem(CODE)||''; }catch(e){ return ''; } }
-  var state = null, draft = [], marking = false, note = '', statusMsg = '', selected = '', API = '', entered = false, roomKind = '', linkState = '', linkMiss = 0, leaving = false, crewQ = '', picking = false, histInfo = {}, histKey = '', pubRooms = null, pubSig = null, pubAt = 0, alertHold = false, alertSeen = {}, alertFlash = null, alertTimer = 0, kickAsk = '', alertDeny = null, castCompose = false, castDraft = '', castErr = '', castIncoming = null, castAudio = null, ctxAt = null, ctxSig = '';
+  var state = null, draft = [], marking = false, note = '', statusMsg = '', selected = '', API = '', entered = false, roomKind = '', linkState = '', linkMiss = 0, leaving = false, crewQ = '', picking = false, histInfo = {}, histKey = '', pubRooms = null, pubSig = null, pubAt = 0, alertHold = false, alertSeen = {}, alertFlash = null, alertTimer = 0, kickAsk = '', alertDeny = null, castCompose = false, castDraft = '', castErr = '', castIncoming = null, castAudio = null, ctxAt = null, ctxSig = '', recoverDraft = '', recoverFocus = '';
 
   function api(path, opt){
     opt = opt || {};
@@ -419,7 +423,22 @@
     return state.routeMode==='members' || state.role==='captain';
   }
 
+  function noteRecoverFocus(){
+    var ids = ['stRoomRecover', 'stGateRecoverIn', 'stDockRecoverIn'];
+    for(var i = 0; i < ids.length; i++){
+      var el = document.getElementById(ids[i]);
+      if(!el) continue;
+      if(document.activeElement === el){
+        recoverDraft = el.value;
+        recoverFocus = ids[i];
+        return;
+      }
+      if(el.value) recoverDraft = el.value;
+    }
+    recoverFocus = '';
+  }
   function paint(){
+    noteRecoverFocus();
     var ui = ensure();
     var onMap = !!(entered && state && state.status==='member');
     var dockMini = !!(readRaw(FRAME) && readRaw(FRAME).mini);
@@ -455,6 +474,10 @@
     drawSelected();
     paintAlert();
     syncCtx();
+    if(recoverFocus){
+      var again = document.getElementById(recoverFocus);
+      if(again) again.focus();
+    }
   }
 
   function ti(k){
@@ -646,18 +669,22 @@
           '<p class="st-room-kind">'+esc(kindLabel)+'</p>'+
           '<p>'+esc(kindLead)+'</p>'+
           '<p class="st-room-code">'+esc(state.code)+'</p>'+
+          recoverHtml('stGateRecover')+
           visHtml()+
           '<div class="row"><button type="button" class="act" id="stEnter">'+esc(t('enter'))+'</button>'+
           '<button type="button" id="stGateCopy">'+esc(t('copy'))+'</button></div>'+
           '<button type="button" id="stSwitch" class="st-room-link">'+esc(t('switchRoom'))+'</button>'
         ) : wait ? (
           '<p class="st-room-kind">'+esc(kind==='join' ? t('wait') : t('resumedWait'))+'</p>'+
-          '<p class="st-room-code">'+esc(state.code)+'</p>'
+          '<p class="st-room-code">'+esc(state.code)+'</p>'+
+          recoverHtml('stGateRecover')
         ) : (
           '<label>'+esc(t('nick'))+'<input id="stRoomNick" maxlength="32" value="'+esc(nick)+'"></label>'+
           '<label>'+esc(t('code'))+'<input id="stRoomCode" maxlength="9" value="'+esc(pre)+'" placeholder="K7MQ-4R2P"></label>'+
+          '<label>'+esc(t('recover'))+'<input id="stRoomRecover" maxlength="14" value="'+esc(recoverDraft)+'" placeholder="'+esc(t('recoverPh'))+'" autocomplete="off"></label>'+
           '<div class="row"><button type="button" class="act" id="stRoomCreate">'+esc(t('create'))+'</button>'+
-          '<button type="button" id="stRoomJoin">'+esc(t('join'))+'</button></div>'+
+          '<button type="button" id="stRoomJoin">'+esc(t('join'))+'</button>'+
+          '<button type="button" id="stRoomRecoverGo">'+esc(t('recoverGo'))+'</button></div>'+
           (state && state.status==='member' ? '<button type="button" id="stHistBack" class="st-room-link">'+esc(t('histBack'))+'</button>' : '')
         )+
         (statusMsg ? '<p class="st-room-err">'+esc(statusMsg)+'</p>' : '')+
@@ -674,6 +701,13 @@
     var c = el.querySelector('#stRoomCreate'), j = el.querySelector('#stRoomJoin');
     if(c) c.onclick = function(){ act('create'); };
     if(j) j.onclick = function(){ act('join'); };
+    var recIn = el.querySelector('#stRoomRecover');
+    if(recIn) recIn.oninput = function(){ recoverDraft = recIn.value; };
+    var recGo = el.querySelector('#stRoomRecoverGo');
+    if(recGo) recGo.onclick = function(){
+      reclaimFrom(nickValue() || savedNick(), codeValue(), recIn ? recIn.value : recoverDraft);
+    };
+    bindRecover(el, 'stGateRecover');
     var enter = el.querySelector('#stEnter');
     if(enter) enter.onclick = enterMap;
     var copy = el.querySelector('#stGateCopy');
@@ -726,6 +760,7 @@
         '</div>'+
         '<div class="st-room-ops">'+roomOps()+'</div></div>'+
       '<div class="st-room-body">'+
+      recoverHtml('stDockRecover')+
       (leaving && state.role==='captain' ? handoffHtml() : '')+
       '<p class="st-room-dim">'+esc(t('locGuide'))+'</p>'+
       linkNote()+
@@ -754,6 +789,7 @@
       (statusMsg ? '<p class="st-room-err">'+esc(statusMsg)+'</p>' : '')+
       '</div>'+
       edgeHtml();
+    bindRecover(el, 'stDockRecover');
     el.querySelector('#stRoomCopy').onclick = function(){
       var text = state.code;
       if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text);
@@ -1050,6 +1086,50 @@
     return (el ? el.value : '').toUpperCase().replace(/[^A-Z0-9-]/g,'');
   }
   function rememberNick(n){ try{ localStorage.setItem(NICK, n); }catch(e){} }
+  function recoverHtml(where){
+    if(state && state.role==='captain' && state.status==='member' && state.recover){
+      return '<div class="st-recover"><span>'+esc(t('recoverLead'))+'</span><b>'+esc(state.recover)+'</b><button type="button" id="'+where+'Copy">'+esc(t('recoverCopy'))+'</button></div>';
+    }
+    if(!state || state.role==='captain') return '';
+    return '<div class="st-recover"><span>'+esc(t('recover'))+'</span><input id="'+where+'In" maxlength="14" value="'+esc(recoverDraft)+'" placeholder="'+esc(t('recoverPh'))+'" autocomplete="off"><button type="button" id="'+where+'Go">'+esc(t('recoverGo'))+'</button></div>';
+  }
+  function bindRecover(rootEl, where){
+    var copy = rootEl.querySelector('#'+where+'Copy');
+    if(copy) copy.onclick = function(){
+      var text = state && state.recover || '';
+      if(text && navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text);
+      statusMsg = t('copied');
+      paint();
+      setTimeout(function(){ if(statusMsg===t('copied')){ statusMsg=''; paint(); } }, 1200);
+    };
+    var input = rootEl.querySelector('#'+where+'In');
+    if(input) input.oninput = function(){ recoverDraft = input.value; };
+    var go = rootEl.querySelector('#'+where+'Go');
+    if(go) go.onclick = function(){
+      var nick = savedNick() || (state && state.me && state.me.nickname) || '';
+      var code = (state && state.code) || '';
+      reclaimFrom(nick, code, input ? input.value : recoverDraft);
+    };
+  }
+  function reclaimFrom(nick, code, secret){
+    nick = String(nick || '').trim();
+    code = String(code || '').toUpperCase().replace(/[^A-Z0-9-]/g, '');
+    secret = String(secret || '').trim();
+    if(!nick || nick.length>32){ statusMsg = t('errNick'); paint(); return; }
+    if(!code){ statusMsg = t('errRoom'); paint(); return; }
+    if(!secret){ statusMsg = t('errRecover'); paint(); return; }
+    rememberNick(nick);
+    roomKind = 'join';
+    api('/api/session', {method:'POST', body:{nickname:nick}}).then(function(s){
+      try{ localStorage.setItem(TOKEN, s.token); }catch(e){}
+      return api('/api/rooms/'+encodeURIComponent(code)+'/recover', {method:'POST', body:{recover:secret}});
+    }).then(function(st){
+      if(!st) return;
+      recoverDraft = '';
+      picking = false;
+      take(st);
+    }).catch(fail);
+  }
 
   function savedNick(){
     var typed = nickValue();
@@ -1122,6 +1202,7 @@
       if(state) state.openUntil = Date.now()+wait*1000;
       statusMsg = t('visCool').replace('{n}', coolLabel(wait));
     }
+    else if(e && e.body && e.body.error==='recover') statusMsg = t('errRecover');
     else if(e && e.status===0) statusMsg = t('errNet');
     else statusMsg = t('errNet');
     paint();
