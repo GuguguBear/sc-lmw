@@ -814,7 +814,7 @@ function stantonScene(canvas,sysKey){
     if(window.__stLeaderFrame) window.__stLeaderFrame(entries, scr, hover); }
   size();
   let raf=0, dragging=false, panning=false, lastX=0, lastY=0, downX=0, downY=0, uiDown=false;
-  const onUI=(e)=> !!(e&&e.target&&e.target.closest&&e.target.closest('.st-loc-card,.st-zoom,.stx,.st-side,.st-crumb,.st-top,.st-room,.st-crew,.st-float-ico,.st-gate,.st-call,.st-sfx,.st-ctrldlg,.st-locdlg,.st-alert'));
+  const onUI=(e)=> !!(e&&e.target&&e.target.closest&&e.target.closest('.st-loc-card,.st-zoom,.stx,.st-side,.st-crumb,.st-top,.st-room,.st-crew,.st-float-ico,.st-gate,.st-call,.st-sfx,.st-ctrldlg,.st-locdlg,.st-alert,.st-ctx'));
   const clampR=v=>explore()?Math.max(LV[level.t].min,Math.min(LV[level.t].max,v)):Math.max(LV.sys.bgMin*BGK,Math.min(LV.sys.bgMax*BGK,v));
   const canNav=()=>explore()&&level.t==='sys';
   const ray=new T.Raycaster(), ndc=new T.Vector2(), plane=new T.Plane(new T.Vector3(0,1,0),0);
@@ -934,6 +934,7 @@ function stantonScene(canvas,sysKey){
     return cur;
   }
   window.__stCtl={ _cleanup:cleanup, getAz:()=>az, level:()=>level, focus, flyTo, rebuild, home, zoomBy, pan, highlight, showRoute, clearTrail, playTrail, frameTrail, goSystem, galaxy, onSys:null,
+    hitAt:function(cx,cy){ const p=relXY(cx,cy); const hit=nearest(p.x,p.y,isMobile?22:16); return hit&&hit.o&&hit.o.k!=='player'?hit.o:null; },
     setSystem:k=>{ if(!k) return; ST_SYS=k; tintSky(k); if(!explore()&&ST_DATA){ bgScale(); rebuild(); tgtT.copy(offOf(k)); tgt.copy(tgtT); RT=LV.sys.def*BGK; } },
     zoom01:()=>{ const L=LV[level.t]; return (Math.log(RT)-Math.log(L.min))/(Math.log(L.max)-Math.log(L.min)); },
     setZoom01:t=>{ const L=LV[level.t]; RT=Math.exp(Math.log(L.min)+t*(Math.log(L.max)-Math.log(L.min))); },
@@ -1263,6 +1264,7 @@ function enterStExplore(){
     '<button class="stx" id="'+ID('stExX')+'" title="'+esc(_t('ui.leave_map'))+'">'+(SC.ico?SC.ico('close'):'')+'</button>'+
     '<div class="st-top" id="'+ID('stTop')+'"><div class="st-top-row"><div class="st-sys" id="'+ID('stSysSel')+'">'+[['stanton','Stanton'],['pyro','Pyro'],['nyx','Nyx']].map(s=>'<button data-sys="'+s[0]+'"><i style="background:'+ST_SYSLOOK[s[0]].dot+'"></i>'+s[1]+'</button>').join('')+'<button data-sys="all" title="'+esc(_t('system.all_title'))+'">'+(SC.ico?SC.ico('star'):'')+'</button></div><div class="st-crumb" id="'+ID('stCrumb')+'"></div>'+
       '<div class="st-sbox"><input id="'+ID('stQ')+'" placeholder="'+esc(_t('search.placeholder'))+'" autocomplete="off" enterkeyhint="search"><button id="'+ID('stQx')+'" title="'+esc(_t('ui.clear'))+'">'+(SC.ico?SC.ico('close'):'')+'</button></div>'+
+      '<div class="st-dockslot" id="'+ID('stDockSlot')+'" hidden></div>'+
       '<div class="st-cats" id="'+ID('stCats')+'">'+ST_CATS.map(c=>'<button data-cat="'+c[0]+'"'+(ST_CAT===c[0]?' class="on"':'')+'>'+esc(_t(c[1]))+'</button>').join('')+'</div>'+
       '<div class="st-tools"><div class="st-tabs"><button id="'+ID('stSideMin')+'">'+esc(_t('tabs.legend'))+' ▸</button><button id="'+ID('stSidePl')+'"><span id="'+ID('stSidePlLbl')+'">'+esc(_t('tabs.players'))+'</span> <span id="'+ID('stPlCnt')+'"></span></button><button type="button" class="st-sq" id="'+ID('stUiLang')+'" title="'+esc(_t('uilang.title'))+'">'+uiLangMark()+'</button><button type="button" class="st-sq" id="'+ID('stTheme')+'" title="'+esc(_t('theme.title'))+'">'+(SC.ico?SC.ico('theme'):'')+'</button><button type="button" class="st-sq" id="'+ID('stDrag')+'" title="'+esc(_t('drag.title'))+'">'+(SC.ico?SC.ico('drag'):'')+'</button><button type="button" class="st-sq" id="'+ID('stLocBtn')+'" title="'+esc(_t('loc.title'))+'">文</button></div>'+
       '<div class="st-pick" id="'+ID('stLangPick')+'" hidden></div><div class="st-pick st-pick-themes" id="'+ID('stThemePick')+'" hidden></div><div class="st-pick st-pick-loc" id="'+ID('stLocPick')+'" hidden></div></div></div>'+
@@ -1336,6 +1338,7 @@ function enterStExplore(){
   function spinUI(){ window.__stExRaf=requestAnimationFrame(spinUI); const c=window.__stCtl; if(!c) return; if(dial) dial.setAttribute('transform','rotate('+(-c.getAz()*180/Math.PI)+' 50 50)'); if(zoom&&document.activeElement!==zoom) zoom.value=c.zoom01(); }
   spinUI();
   window.__stExStop=function(){ cancelAnimationFrame(window.__stExRaf); };
+  if(window.__stDockMount) window.__stDockMount();
 }
 // ---- Obere Suchleiste: Orte, Erze, Items, Schiffe, Waren, Blueprints, Missionen ----
 const ST_CATS=[['all','cat.all'],['pl','cat.pl'],['loc','cat.loc'],['ore','cat.ore'],['item','cat.item'],['ship','cat.ship'],['ware','cat.ware'],['bp','cat.bp'],['mis','cat.mis']];

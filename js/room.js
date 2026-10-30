@@ -10,14 +10,14 @@
   var CREW = 'sclmw_crew_frame';
   var DICT = {
     'zh-Hans': {
-      title:'团队房间', lead:'这个网页不读取游戏目录。你在星图上点开地点，再点「我在这里」，队友就能看到。',
+      title:'团队房间', lead:'这个网页不读取游戏目录。在星图上右键，选「我在这里」，队友就能看到。',
       s1:'填写昵称。建议用游戏里的名字，方便队长认出你。',
       s2:'队长建立房间，把房间码发给队员。',
       s3:'队员申请加入，队长确认后，大家只看得到这个房间。',
       nick:'昵称', create:'建立房间', join:'加入房间', code:'房间码',
       wait:'已提交申请，等待队长确认。', copy:'复制房间码', copied:'已复制',
       enter:'进入星图', leave:'离开房间', pending:'待确认', approve:'通过', reject:'拒绝', alertLater:'稍后',
-      here:'我在这里', hereNeed:'先在星图上点开一个地点。',
+      here:'我在这里', hereNeed:'右键要落在一个地点上。',
       route:'标记路线', routeOn:'结束标记', routeHint:'按住 Shift，依次点地点。',
       note:'路线备注', publish:'发布给房间', clear:'清空', comment:'评论', send:'发送', del:'删除',
       mode:'谁可以画路线', modeCaptain:'仅队长', modeMembers:'队员也可以',
@@ -44,17 +44,17 @@
       linkWait:'请在 Starfix 窗口点确认。',
       linkOn:'已连上房间',
       linkOff:'本机的 Starfix 没开。先双击 Starfix，等窗口出现后再点一次。',
-      locGuide:'你可以手动标位置，也可以用附带程序试着自动读日志。手动：在星图上点开地点，再点「我在这里」。自动：项目自带 Starfix，源码都在 companion/，可以先读完再运行。它只读本机 Game.log，不进游戏、不读内存、不改游戏文件。打开后点「连到这台电脑」，回窗口确认。网页本身不读游戏目录。RSI 条款没有书面允许读日志，开不开由你决定。'
+      locGuide:'你可以手动标位置，也可以用附带程序试着自动读日志。手动：在星图上右键，选「我在这里」。自动：项目自带 Starfix，源码都在 companion/，可以先读完再运行。它只读本机 Game.log，不进游戏、不读内存、不改游戏文件。打开后点「连到这台电脑」，回窗口确认。网页本身不读游戏目录。RSI 条款没有书面允许读日志，开不开由你决定。'
     },
     'zh-Hant': {
-      title:'團隊房間', lead:'這個網頁不讀取遊戲資料夾。你在星圖上點開地點，再點「我在這裡」，隊友就能看到。',
+      title:'團隊房間', lead:'這個網頁不讀取遊戲資料夾。在星圖上右鍵，選「我在這裡」，隊友就能看到。',
       s1:'填寫暱稱。建議用遊戲裡的名字，方便隊長認出你。',
       s2:'隊長建立房間，把房間碼發給隊員。',
       s3:'隊員申請加入，隊長確認後，大家只看得到這個房間。',
       nick:'暱稱', create:'建立房間', join:'加入房間', code:'房間碼',
       wait:'已送出申請，等待隊長確認。', copy:'複製房間碼', copied:'已複製',
       enter:'進入星圖', leave:'離開房間', pending:'待確認', approve:'通過', reject:'拒絕', alertLater:'稍後',
-      here:'我在這裡', hereNeed:'先在星圖上點開一個地點。',
+      here:'我在這裡', hereNeed:'右鍵要落在一個地點上。',
       route:'標記路線', routeOn:'結束標記', routeHint:'按住 Shift，依序點地點。',
       note:'路線備註', publish:'發布給房間', clear:'清空', comment:'評論', send:'送出', del:'刪除',
       mode:'誰可以畫路線', modeCaptain:'僅隊長', modeMembers:'隊員也可以',
@@ -81,17 +81,17 @@
       linkWait:'請在 Starfix 視窗點確認。',
       linkOn:'已連上房間',
       linkOff:'本機的 Starfix 沒開。先雙擊 Starfix，等視窗出現後再點一次。',
-      locGuide:'你可以手動標位置，也可以用附帶程式試著自動讀日誌。手動：在星圖上點開地點，再點「我在這裡」。自動：專案自帶 Starfix，源碼都在 companion/，可以先讀完再執行。它只讀本機 Game.log，不進遊戲、不讀記憶體、不改遊戲檔案。打開後點「連到這台電腦」，回視窗確認。網頁本身不讀遊戲資料夾。RSI 條款沒有書面允許讀日誌，開不開由你決定。'
+      locGuide:'你可以手動標位置，也可以用附帶程式試著自動讀日誌。手動：在星圖上右鍵，選「我在這裡」。自動：專案自帶 Starfix，源碼都在 companion/，可以先讀完再執行。它只讀本機 Game.log，不進遊戲、不讀記憶體、不改遊戲檔案。打開後點「連到這台電腦」，回視窗確認。網頁本身不讀遊戲資料夾。RSI 條款沒有書面允許讀日誌，開不開由你決定。'
     },
     en: {
-      title:'Team room', lead:'This page does not read the game folder. Open a place on the map, then choose “I am here”.',
+      title:'Team room', lead:'This page does not read the game folder. Right-click the map and choose “I am here”.',
       s1:'Pick a nickname. Your in-game name makes you easy to recognize.',
       s2:'The captain creates a room and shares the code.',
       s3:'Members apply. After the captain accepts, only this room can see each other.',
       nick:'Nickname', create:'Create room', join:'Join room', code:'Room code',
       wait:'Request sent. Waiting for the captain.', copy:'Copy code', copied:'Copied',
       enter:'Enter map', leave:'Leave room', pending:'Waiting', approve:'Accept', reject:'Decline', alertLater:'Later',
-      here:'I am here', hereNeed:'Open a place on the map first.',
+      here:'I am here', hereNeed:'Right-click a place on the map.',
       route:'Mark route', routeOn:'Stop marking', routeHint:'Hold Shift and click places in order.',
       note:'Route note', publish:'Publish to room', clear:'Clear', comment:'Comment', send:'Send', del:'Delete',
       mode:'Who can draw routes', modeCaptain:'Captain only', modeMembers:'Members too',
@@ -118,17 +118,17 @@
       linkWait:'Confirm in the Starfix window.',
       linkOn:'Connected to',
       linkOff:'Starfix is not running. Double-click Starfix, wait for its window, then click again.',
-      locGuide:'You can mark your place by hand, or try the bundled program to read the game log. By hand: open a place on the map, then choose “I am here.” Automatic: this project includes Starfix. All of its source is in companion/. Read it before you run it. It only reads Game.log on this computer. It does not enter the game, read memory, or change game files. Open it, choose “Connect this computer,” then confirm in its window. This page does not read the game folder. The RSI terms do not permit reading the log in writing. You decide.'
+      locGuide:'You can mark your place by hand, or try the bundled program to read the game log. By hand: right-click the map and choose “I am here.” Automatic: this project includes Starfix. All of its source is in companion/. Read it before you run it. It only reads Game.log on this computer. It does not enter the game, read memory, or change game files. Open it, choose “Connect this computer,” then confirm in its window. This page does not read the game folder. The RSI terms do not permit reading the log in writing. You decide.'
     },
     de: {
-      title:'Teamraum', lead:'Diese Seite liest keinen Spielordner. Öffne einen Ort auf der Karte und wähle „Ich bin hier“.',
+      title:'Teamraum', lead:'Diese Seite liest keinen Spielordner. Rechtsklick auf der Karte, dann „Ich bin hier“.',
       s1:'Nickname eintragen. Der Name aus dem Spiel hilft dem Captain.',
       s2:'Der Captain legt einen Raum an und gibt den Code weiter.',
       s3:'Mitglieder fragen an. Nach dem Ja sieht nur dieser Raum einander.',
       nick:'Nickname', create:'Raum anlegen', join:'Raum beitreten', code:'Raumcode',
       wait:'Anfrage ist raus. Der Captain muss zustimmen.', copy:'Code kopieren', copied:'Kopiert',
       enter:'Zur Karte', leave:'Raum verlassen', pending:'Offen', approve:'Annehmen', reject:'Ablehnen', alertLater:'Später',
-      here:'Ich bin hier', hereNeed:'Öffne zuerst einen Ort auf der Karte.',
+      here:'Ich bin hier', hereNeed:'Der Rechtsklick muss auf einem Ort liegen.',
       route:'Route markieren', routeOn:'Markieren beenden', routeHint:'Shift halten und Orte der Reihe nach anklicken.',
       note:'Notiz zur Route', publish:'Für den Raum veröffentlichen', clear:'Leeren', comment:'Kommentar', send:'Senden', del:'Löschen',
       mode:'Wer Routen zeichnen darf', modeCaptain:'Nur der Captain', modeMembers:'Auch Mitglieder',
@@ -155,7 +155,7 @@
       linkWait:'Im Starfix-Fenster bestätigen.',
       linkOn:'Verbunden mit',
       linkOff:'Starfix läuft nicht. Starfix doppelklicken, auf das Fenster warten und erneut klicken.',
-      locGuide:'Du kannst den Ort von Hand setzen oder das mitgelieferte Programm das Spiellog lesen lassen. Von Hand: Ort auf der Karte öffnen, dann „Ich bin hier“. Automatisch: das Projekt enthält Starfix. Der ganze Quelltext liegt in companion/. Lies ihn, bevor du ihn startest. Es liest nur die Game.log auf diesem Computer. Es betritt das Spiel nicht, liest keinen Speicher und ändert keine Spieldateien. Öffne es, wähle „Diesen Computer verbinden“ und bestätige im Fenster. Diese Seite liest keinen Spielordner. Die RSI-Bedingungen erlauben das Lesen des Logs nicht schriftlich. Du entscheidest.'
+      locGuide:'Du kannst den Ort von Hand setzen oder das mitgelieferte Programm das Spiellog lesen lassen. Von Hand: Rechtsklick auf der Karte, dann „Ich bin hier“. Automatisch: das Projekt enthält Starfix. Der ganze Quelltext liegt in companion/. Lies ihn, bevor du ihn startest. Es liest nur die Game.log auf diesem Computer. Es betritt das Spiel nicht, liest keinen Speicher und ändert keine Spieldateien. Öffne es, wähle „Diesen Computer verbinden“ und bestätige im Fenster. Diese Seite liest keinen Spielordner. Die RSI-Bedingungen erlauben das Lesen des Logs nicht schriftlich. Du entscheidest.'
     }
   };
   function lang(){ return (SC.i18n && SC.i18n.lang) || 'en'; }
@@ -163,7 +163,7 @@
   function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
   function token(){ try{ return localStorage.getItem(TOKEN)||''; }catch(e){ return ''; } }
   function savedCode(){ try{ return localStorage.getItem(CODE)||''; }catch(e){ return ''; } }
-  var state = null, draft = [], marking = false, note = '', statusMsg = '', selected = '', API = '', entered = false, roomKind = '', linkState = '', linkMiss = 0, leaving = false, crewQ = '', picking = false, histInfo = {}, histKey = '', pubRooms = null, pubSig = null, pubAt = 0, alertHold = false, alertSeen = {}, alertFlash = null, alertTimer = 0, kickAsk = '', alertDeny = null, castCompose = false, castDraft = '', castErr = '', castIncoming = null, castAudio = null;
+  var state = null, draft = [], marking = false, note = '', statusMsg = '', selected = '', API = '', entered = false, roomKind = '', linkState = '', linkMiss = 0, leaving = false, crewQ = '', picking = false, histInfo = {}, histKey = '', pubRooms = null, pubSig = null, pubAt = 0, alertHold = false, alertSeen = {}, alertFlash = null, alertTimer = 0, kickAsk = '', alertDeny = null, castCompose = false, castDraft = '', castErr = '', castIncoming = null, castAudio = null, ctxAt = null;
 
   function api(path, opt){
     opt = opt || {};
@@ -443,6 +443,7 @@
       var saved = readRaw(CREW);
       if(saved && typeof saved.ix==='number') placeIcon(ui.crewIco, saved.ix, saved.iy);
     }
+    mountDockBar();
     window.__stRouteOn = !!(state && state.status==='member' && marking && canDraw());
     window.__stRouteAdd = function(o){
       if(!window.__stRouteOn || !o) return;
@@ -453,6 +454,7 @@
     };
     drawSelected();
     paintAlert();
+    syncCtx();
   }
 
   function ti(k){
@@ -688,6 +690,38 @@
     bindPub(el);
   }
 
+  function dockBar(){
+    var cap = state && state.role==='captain' && state.status==='member';
+    var open = !!(state && state.open);
+    var left = coolLeft();
+    var disPub = (!open && left>0) ? ' disabled' : '';
+    var disPriv = (open && left>0) ? ' disabled' : '';
+    var vis = cap ? (
+      '<span class="st-seg"'+(left?' data-cool="'+state.openUntil+'"':'')+' title="'+esc(t('visTitle')+' · '+t('visLead')+(left?(' · '+t('visCool').replace('{n}', coolLabel(left))):''))+'">'+
+        '<button type="button" data-open="1"'+(open?' class="on"':'')+disPub+'>'+esc(t('visPublic'))+'</button>'+
+        '<button type="button" data-open="0"'+(!open?' class="on"':'')+disPriv+'>'+esc(t('visPrivate'))+'</button>'+
+      '</span>'+
+      '<button type="button" id="stCast">'+esc(t('cast'))+'</button>'
+    ) : '';
+    return '<div class="st-dockbar">'+
+      '<button type="button" id="stLinkPc">'+esc(t('link'))+'</button>'+
+      vis+'</div>';
+  }
+  function mountDockBar(){
+    var slot = document.getElementById('sclmw-stDockSlot');
+    if(!slot) return;
+    var onMap = !!(entered && state && state.status==='member');
+    if(!onMap){ slot.hidden = true; slot.innerHTML = ''; return; }
+    slot.hidden = false;
+    slot.innerHTML = dockBar();
+    var link = slot.querySelector('#stLinkPc');
+    if(link) link.onclick = linkPc;
+    var castBtn = slot.querySelector('#stCast');
+    if(castBtn) castBtn.onclick = function(){ castCompose = true; castErr = ''; paint(); };
+    bindOpen(slot);
+  }
+  window.__stDockMount = mountDockBar;
+
   function paintDock(el){
     var mine = canDraw();
     el.innerHTML =
@@ -701,21 +735,7 @@
       '<div class="st-room-body">'+
       (leaving && state.role==='captain' ? handoffHtml() : '')+
       '<p class="st-room-dim">'+esc(t('locGuide'))+'</p>'+
-      '<div class="row"><button type="button" id="stLinkPc">'+esc(t('link'))+'</button></div>'+
       linkNote()+
-      (state.role==='captain' ? visHtml() : '')+
-      (state.role==='captain' ? '<div class="row"><button type="button" id="stCast">'+esc(t('cast'))+'</button></div>' : '')+
-      (state.role==='captain' ? (
-        '<div class="st-room-sec"><span>'+esc(t('mode'))+'</span>'+
-          '<div class="st-dd" id="stRouteMode"><button type="button" class="st-dd-btn" id="stRouteModeBtn">'+esc(state.routeMode==='members'?t('modeMembers'):t('modeCaptain'))+'</button>'+
-          '<div class="st-dd-list" hidden>'+
-            '<button type="button" data-mode="captain"'+(state.routeMode==='captain'?' class="on"':'')+'>'+esc(t('modeCaptain'))+'</button>'+
-            '<button type="button" data-mode="members"'+(state.routeMode==='members'?' class="on"':'')+'>'+esc(t('modeMembers'))+'</button>'+
-          '</div></div></div>'
-      ) : '')+
-      '<div class="row"><button type="button" id="stHere">'+esc(t('here'))+'</button>'+
-        (mine ? '<button type="button" id="stMark"'+(marking?' class="on"':'')+'>'+esc(marking?t('routeOn'):t('route'))+'</button>' : '')+
-      '</div>'+
       (marking && mine ? (
         '<p class="st-room-dim">'+esc(t('routeHint'))+'</p>'+
         '<ol class="st-room-pts">'+draft.map(function(p,i){
@@ -768,17 +788,6 @@
     if(dissolve) dissolve.onclick = function(){ exitRoom({dissolve:true}); };
     var link = el.querySelector('#stLinkPc');
     if(link) link.onclick = linkPc;
-    var modeBtn = el.querySelector('#stRouteModeBtn');
-    if(modeBtn) modeBtn.onclick = function(e){
-      e.stopPropagation();
-      var list = el.querySelector('.st-dd-list');
-      if(list) list.hidden = !list.hidden;
-    };
-    el.querySelectorAll('[data-mode]').forEach(function(b){ b.onclick=function(e){
-      e.stopPropagation();
-      api('/api/rooms/'+encodeURIComponent(state.code)+'/settings', {method:'POST', body:{routeMode:b.getAttribute('data-mode')}}).then(take).catch(fail);
-    }; });
-    el.querySelector('#stHere').onclick = here;
     var castBtn = el.querySelector('#stCast');
     if(castBtn) castBtn.onclick = function(){ castCompose = true; castErr = ''; paint(); };
     var mark = el.querySelector('#stMark');
@@ -921,7 +930,10 @@
     document.querySelectorAll('[data-cool]').forEach(function(n){
       var left = Math.max(0, Math.ceil((+n.getAttribute('data-cool')-Date.now())/1000));
       var next = left ? t('visCool').replace('{n}', coolLabel(left)) : '';
-      if(n.textContent!==next) n.textContent = next;
+      if(n.classList.contains('st-seg')){
+        var title = t('visTitle')+' · '+t('visLead')+(next?(' · '+next):'');
+        if(n.title!==title) n.title = title;
+      } else if(n.textContent!==next) n.textContent = next;
       if(!left && n.getAttribute('data-cool-done')!=='1'){
         n.setAttribute('data-cool-done', '1');
         paint();
@@ -968,7 +980,7 @@
     var inner = '<i class="st-crew-pip'+(on?' on':'')+'"></i>'+
       '<span class="st-mate-roll"><span><b>'+esc(m.nickname)+'</b>'+tags+
       (bits?'<span class="st-mate-last">'+bits+'</span>':'')+'</span></span>'+when;
-    return '<div class="st-mate-row"><button type="button" class="st-mate'+(m.location?' has-place':'')+(on?'':' is-off')+'" data-mate="'+esc(m.id)+'">'+inner+'</button>'+kick+give+'</div>';
+    return '<div class="st-mate-row'+(kickAsk===m.id?' st-kick-ask':'')+'"><button type="button" class="st-mate'+(m.location?' has-place':'')+(on?'':' is-off')+'" data-mate="'+esc(m.id)+'">'+inner+'</button>'+kick+give+'</div>';
   }
   function handoffHtml(){
     var rest = (state.members||[]).filter(function(m){ return m.status==='member' && state.me && m.id!==state.me.id; });
@@ -1335,6 +1347,116 @@
       .then(function(d){ if(d && d.error) throw new Error(d.error); setLink('wait'); pullLink(); })
       .catch(function(){ setLink('off'); });
   }
+  function mapTarget(node){
+    if(!node || !node.closest) return false;
+    return !node.closest('.st-loc-card,.st-zoom,.stx,.st-side,.st-crumb,.st-top,.st-room,.st-crew,.st-float-ico,.st-gate,.st-call,.st-sfx,.st-ctrldlg,.st-locdlg,.st-alert,.st-ctx');
+  }
+  function closeCtx(){
+    ctxAt = null;
+    var menu = document.getElementById('stCtx');
+    if(menu) menu.hidden = true;
+  }
+  function syncCtx(){
+    var menu = document.getElementById('stCtx');
+    if(!menu) return;
+    if(!ctxAt || !entered || !state || state.status!=='member'){ menu.hidden = true; return; }
+    var mine = canDraw();
+    var cap = state.role==='captain';
+    var members = state.routeMode==='members';
+    menu.innerHTML =
+      '<button type="button" class="st-ctx-btn" data-ctx="here">'+esc(t('here'))+'</button>'+
+      (mine ? '<button type="button" class="st-ctx-btn'+(marking?' on':'')+'" data-ctx="mark">'+esc(marking?t('routeOn'):t('route'))+'</button>' : '')+
+      (cap ? '<div class="st-ctx-h">'+esc(t('mode'))+'</div>'+
+        '<button type="button" class="st-ctx-btn'+(!members?' on':'')+'" data-ctx-mode="captain">'+esc(t('modeCaptain'))+'</button>'+
+        '<button type="button" class="st-ctx-btn'+(members?' on':'')+'" data-ctx-mode="members">'+esc(t('modeMembers'))+'</button>' : '');
+    menu.hidden = false;
+    var host = root().getBoundingClientRect();
+    var x = ctxAt.x-host.left, y = ctxAt.y-host.top;
+    menu.style.left = '0px';
+    menu.style.top = '0px';
+    var w = menu.offsetWidth, h = menu.offsetHeight;
+    var maxX = Math.max(8, host.width-w-8);
+    var maxY = Math.max(8, host.height-h-36);
+    menu.style.left = Math.max(8, Math.min(x, maxX))+'px';
+    menu.style.top = Math.max(8, Math.min(y, maxY))+'px';
+  }
+  function openCtx(x, y){
+    if(!entered || !state || state.status!=='member') return;
+    ctxAt = {x:x, y:y};
+    syncCtx();
+  }
+  function onCtxClick(e){
+    var b = e.target.closest('button');
+    if(!b) return;
+    e.stopPropagation();
+    var act = b.getAttribute('data-ctx');
+    var mode = b.getAttribute('data-ctx-mode');
+    var at = ctxAt;
+    if(act==='here'){
+      closeCtx();
+      var hit = at && window.__stCtl && window.__stCtl.hitAt && window.__stCtl.hitAt(at.x, at.y);
+      if(hit) window.__stPlace = hit;
+      here();
+      return;
+    }
+    if(act==='mark'){
+      if(!canDraw()) return;
+      marking = !marking;
+      if(!marking) window.__stRouteOn = false;
+      selected = '';
+      closeCtx();
+      paint();
+      return;
+    }
+    if(mode && state && state.role==='captain'){
+      closeCtx();
+      api('/api/rooms/'+encodeURIComponent(state.code)+'/settings', {method:'POST', body:{routeMode:mode}}).then(take).catch(fail);
+    }
+  }
+  function bindCtx(){
+    if(window.__stCtxBound) return;
+    window.__stCtxBound = true;
+    var menu = document.createElement('div');
+    menu.id = 'stCtx';
+    menu.className = 'st-ctx';
+    menu.hidden = true;
+    menu.setAttribute('role', 'menu');
+    root().appendChild(menu);
+    menu.addEventListener('click', onCtxClick);
+    menu.addEventListener('contextmenu', function(e){ e.preventDefault(); });
+    var arm = {x:0, y:0, moved:false, btn:-1};
+    var hold = 0;
+    var host = root();
+    host.addEventListener('pointerdown', function(e){
+      arm.x = e.clientX; arm.y = e.clientY; arm.moved = false; arm.btn = e.button;
+      if(ctxAt && !(e.target && e.target.closest && e.target.closest('.st-ctx'))) closeCtx();
+    }, true);
+    host.addEventListener('pointermove', function(e){
+      if(Math.abs(e.clientX-arm.x)+Math.abs(e.clientY-arm.y)>=6) arm.moved = true;
+    }, true);
+    host.addEventListener('contextmenu', function(e){
+      if(!entered || !state || state.status!=='member' || !mapTarget(e.target)) return;
+      if(arm.moved && arm.btn===2) return;
+      e.preventDefault();
+      openCtx(e.clientX, e.clientY);
+    });
+    host.addEventListener('touchstart', function(e){
+      if(!entered || e.touches.length!==1 || !mapTarget(e.target)) return;
+      var t = e.touches[0];
+      var x = t.clientX, y = t.clientY;
+      clearTimeout(hold);
+      hold = setTimeout(function(){ arm.moved = true; openCtx(x, y); }, 560);
+    }, {passive:true});
+    host.addEventListener('touchmove', function(e){
+      var t = e.touches && e.touches[0];
+      if(t && Math.abs(t.clientX-arm.x)+Math.abs(t.clientY-arm.y)>=8) clearTimeout(hold);
+    }, {passive:true});
+    host.addEventListener('touchend', function(){ clearTimeout(hold); }, {passive:true});
+    host.addEventListener('touchcancel', function(){ clearTimeout(hold); }, {passive:true});
+    window.addEventListener('keydown', function(e){
+      if(e.key==='Escape' && ctxAt) closeCtx();
+    });
+  }
   function here(){
     var ctl = window.__stCtl;
     var o = window.__stPlace;
@@ -1364,7 +1486,7 @@
   function localLeave(){
     leaving = false;
     state = null; draft = []; marking = false; note = ''; selected = ''; statusMsg = ''; entered = false; roomKind = ''; linkState = ''; linkMiss = 0;
-    castCompose = false; castDraft = ''; castErr = ''; castIncoming = null;
+    castCompose = false; castDraft = ''; castErr = ''; castIncoming = null; ctxAt = null;
     try{ localStorage.removeItem(CODE); }catch(e){}
     window.__stRouteOn = false;
     var cfg = window.LIVEMAP_CONFIG || {};
@@ -1443,6 +1565,7 @@
       if(window.ResizeObserver) new ResizeObserver(window.__stRoomFit).observe(root());
       requestAnimationFrame(window.__stRoomFit);
     }
+    bindCtx();
     if(!window.__stCastArm){
       window.__stCastArm = true;
       window.addEventListener('pointerdown', function(){ armCastAudio(); }, true);
