@@ -101,8 +101,8 @@
 .sc-lmw .st-lbls{position:absolute;inset:0;pointer-events:none;overflow:hidden}
 .sc-lmw .st-lbl{position:absolute;left:0;top:0;white-space:nowrap;font-family:"Chakra Petch","Inter",sans-serif;font-size:.66rem;letter-spacing:.05em;color:#dfe8f5;text-shadow:0 0 3px #000,0 0 7px #000,0 0 12px #000;transform:translate(-9999px,0);will-change:transform}
 .sc-lmw .st-lbl.dim{opacity:.28}
-.sc-lmw .st-lbl.far{filter:blur(var(--st-far, 8px));opacity:.4}
-.sc-lmw .st-lbl.far.dim{opacity:.18}
+.sc-lmw .st-lbl.far{filter:blur(var(--st-far, 0px));opacity:var(--st-far-op, 1)}
+.sc-lmw .st-lbl.far.dim{opacity:calc(var(--st-far-op, 1) * .45)}
 .sc-lmw .st-lbl.far.hl{filter:none;opacity:1}
 .sc-lmw .st-lg-note{margin:8px 0 2px;font-size:12px;line-height:1.45;color:var(--sclmw-dim)}
 .sc-lmw .st-lbl.p3{font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.14em}
@@ -279,7 +279,7 @@
 /* ---- Handy: oben System + X, Suche voll breit, Zoom darunter; Knoepfe mind. 44 px, nichts ueberlappt ----
    ---- Phone: system + X on top, full-width search, zoom on the next row; buttons at least 44 px, no overlap ---- */
 @media(max-width:700px){
-  .sc-lmw.st-explore .st-top{top:8px;left:8px;right:60px;gap:6px}
+  .sc-lmw.st-explore .st-top{top:0;left:0;right:0;gap:4px}
   .sc-lmw.st-explore .st-top-row{flex-wrap:wrap;gap:6px}
   .sc-lmw.st-explore .st-sys{flex:1 1 auto;order:0}
   .sc-lmw.st-explore .st-sys button{flex:1;justify-content:center;min-height:44px;padding:4px 6px;font-size:12px}
@@ -293,7 +293,7 @@
   .sc-lmw.st-explore .st-cats::-webkit-scrollbar,.sc-lmw.st-explore .st-tabs::-webkit-scrollbar{display:none}
   .sc-lmw.st-explore .st-tabs{width:100%;min-width:0;flex-shrink:1}
   .sc-lmw.st-explore .st-cats button{min-height:44px;font-size:12px}
-  .sc-lmw.st-explore .st-exui .stx{top:8px;right:8px}
+  .sc-lmw.st-explore .st-top-row>.stx{position:static;order:0;margin-left:auto;width:32px;height:32px;min-width:32px;min-height:0;flex:0 0 32px;border-radius:0}
   .sc-lmw.st-explore .st-zoom{order:1;flex:1 1 100%;width:auto;max-width:none;min-width:0;min-height:46px;padding:0 10px 0 4px;gap:8px}
   .sc-lmw.st-explore .st-zoom .st-pause{width:36px;height:36px;min-width:36px;min-height:0;flex-basis:36px}
   .sc-lmw.st-explore .st-side{left:8px;right:8px;width:auto!important;bottom:calc(8px + var(--sclmw-bottom-gap,0px));top:auto;max-height:46%;border-radius:16px}
@@ -956,10 +956,30 @@ html{-webkit-text-size-adjust:100%}
   .sc-lmw .st-tabs{width:100%;min-width:0;flex-shrink:1}
   .sc-lmw .st-home{width:min(960px,100%)}
 }
-@media (min-width:1181px) and (max-width:1680px){
-  .sc-lmw .st-top-row{flex-wrap:wrap}
-  .sc-lmw .st-cats{flex:1 1 100%;order:1}
-  .sc-lmw .st-tools{order:0}
+@media (min-width:701px){
+  .sc-lmw.st-explore .st-top{top:0;left:0;right:0;gap:0}
+  .sc-lmw.st-explore .st-top-row{flex-wrap:nowrap;align-items:stretch;gap:4px;height:32px;min-height:32px;padding:0 4px;box-sizing:border-box}
+  .sc-lmw.st-explore .st-sbox{flex:0 1 260px;width:260px;min-width:120px;max-width:260px;height:32px}
+  .sc-lmw.st-explore .st-zoom{flex:0 0 176px;width:176px;max-width:176px;height:32px;min-height:0;padding:0 6px}
+  .sc-lmw.st-explore .st-cats{flex:1 1 auto;min-width:0}
+  .sc-lmw.st-explore .st-cats button{flex:1 1 auto;justify-content:center;min-width:max-content}
+  .sc-lmw.st-explore .st-tools{flex:0 0 auto}
+  .sc-lmw.st-explore .st-sys,
+  .sc-lmw.st-explore .st-crumb,
+  .sc-lmw.st-explore .st-sbox,
+  .sc-lmw.st-explore .st-zoom{height:32px;min-height:0;align-self:stretch;box-sizing:border-box}
+  .sc-lmw.st-explore .st-sys{padding:0 2px}
+  .sc-lmw.st-explore .st-sys button,
+  .sc-lmw.st-explore .st-cats button,
+  .sc-lmw.st-explore .st-tabs button,
+  .sc-lmw.st-explore .st-zoom .st-pause,
+  .sc-lmw.st-explore .st-top-row>.stx{height:32px;min-height:0;max-height:32px;box-sizing:border-box}
+  .sc-lmw.st-explore .st-tabs button.st-sq,
+  .sc-lmw.st-explore .st-zoom .st-pause,
+  .sc-lmw.st-explore .st-top-row>.stx{width:32px;min-width:32px;flex:0 0 32px;padding:0}
+  .sc-lmw.st-explore .st-top-row>.stx{position:static;border-radius:0}
+  .sc-lmw.st-explore .st-side,
+  .sc-lmw.st-explore .st-loc-card{top:40px}
 }
 @media (max-width:900px) and (max-height:500px){
   .sc-lmw .st-top{top:6px;left:8px;right:52px}

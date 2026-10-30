@@ -1,6 +1,6 @@
 # SC LMW – Star Citizen LiveMap Wiki
 
-**Version 1.1.0** · AGPL-3.0 · Starfix 1.0.8
+**Version 1.1.0** · AGPL-3.0 · Starfix 1.0.9
 
 **English** · [Deutsch](README.de.md) · [简体中文](README.zh-Hans.md) · [繁體中文](README.zh-Hant.md)
 
@@ -17,7 +17,7 @@ A free, open-source 3D map of Star Citizen: Stanton, Pyro and Nyx, with search, 
 
 `sclmw.cltbbs.com` is a reverse proxy, not a redirect and not a CNAME to the origin. Cloudflare zone `cltbbs.com`, Worker `sclmw-proxy`, custom hostname `sclmw.cltbbs.com`. The Worker fetches `https://gugugubear.pythonanywhere.com` with that host's `Host` header, and rewrites a `Location` that would reveal the origin. This repository does not contain the Worker script. Change the origin by editing the Worker's `ORIGIN` constant and uploading the script again.
 
-Both addresses serve one application. Room calls and map files use relative paths, so a page opened on either name stays there. Starfix 1.0.8 accepts a pairing from either name. See [companion/README.md](companion/README.md).
+Both addresses serve one application. Room calls and map files use relative paths, so a page opened on either name stays there. Starfix 1.0.9 accepts a pairing from either name. See [companion/README.md](companion/README.md).
 
 Cloudflare can keep a static file for several hours. A check on 30 Oct 2026 showed `js/starmap.js` on the public name with `cache-control: max-age=14400` and `cf-cache-status: HIT`, while the origin already had the newer file. After a deploy, the origin updates when the Action finishes. The public name can lag until that cache expires. Room API responses from [server/room_server.py](server/room_server.py) send `Cache-Control: no-store`. The page shell is not a private document. Login state is a bearer token in `localStorage`, not a cookie.
 
@@ -51,7 +51,7 @@ Optional. The map works without it: right-click and choose "I am here".
 
 Starfix reads `Game.log` on that computer and, after you confirm, posts the place code to the room. It does not attach to the game, read memory, or upload the log. Read [companion/README.md](companion/README.md) before you run the source.
 
-Published build: [Starfix 1.0.8](https://github.com/GuguguBear/sc-lmw/releases/tag/starfix-1.0.8). The program compares `companion/VERSION` with GitHub Releases named `starfix-X.Y.Z`. Pushing `companion/**` or [.github/workflows/starfix-release.yml](.github/workflows/starfix-release.yml) to `master` builds the exe when that tag does not exist yet. [companion/write_version_info.py](companion/write_version_info.py) writes the Windows version resource from the same number.
+Published build: [Starfix 1.0.9](https://github.com/GuguguBear/sc-lmw/releases/tag/starfix-1.0.9). The program compares `companion/VERSION` with GitHub Releases named `starfix-X.Y.Z`. Pushing `companion/**` or [.github/workflows/starfix-release.yml](.github/workflows/starfix-release.yml) to `master` builds the exe when that tag does not exist yet. [companion/write_version_info.py](companion/write_version_info.py) writes the Windows version resource from the same number.
 
 On update, a window in the theme you already chose shows crates loading into a container. When the download finishes, a helper copies the new file over the one you started. `Move-Item -Force` in Windows PowerShell does not replace an existing exe, so the helper uses `System.IO.File.Copy`. If the file you launched is named like `Starfix 1.0.6.exe`, the new file is `Starfix 1.0.8.exe` and the old name is removed. A file that is just `Starfix.exe` keeps that name.
 
@@ -61,6 +61,8 @@ Starfix allows these page origins, plus `http://127.0.0.1` and `http://localhost
 
 - `https://gugugubear.pythonanywhere.com`
 - `https://sclmw.cltbbs.com`
+
+A new window fills in `https://sclmw.cltbbs.com`. If the saved address is still the previous built-in `https://gugugubear.pythonanywhere.com`, the next start of this version replaces it. Pairing from a page stores that page's own address.
 
 Pairing from a page stores that page's origin as the API base. An older install keeps the PythonAnywhere address until you pair again. Both addresses work once the proxy is in front.
 

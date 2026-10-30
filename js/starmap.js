@@ -851,7 +851,7 @@ function stantonScene(canvas,sysKey){
   function scrRadius(e){ const a=scr(e.p); if(!a) return 0; tmp2.copy(camera.up).multiplyScalar(e.r).add(e.p); const b=scr(tmp2); return b?Math.hypot(a.x-b.x,a.y-b.y):0; }
   const eVis=e=>true;   // Nico 23.09.2026: andere Systeme werden beim Zoomen nie ausgeblendet
   function nearest(cx,cy,maxPx){ let best=null,bs=1e9;
-    for(const e of entries){ if(!eVis(e)) continue; if(bgAmt>0.08&&e.sys&&e.sys!==ST_SYS) continue; const s=scr(e.p); if(!s) continue; const dd=Math.hypot(s.x-cx,s.y-cy);
+    for(const e of entries){ if(!eVis(e)) continue; if(bgAmt>0.66&&e.sys&&e.sys!==ST_SYS) continue; const s=scr(e.p); if(!s) continue; const dd=Math.hypot(s.x-cx,s.y-cy);
       if(e.body){ const rr=Math.max(14,scrRadius(e)); if(dd<rr){ const sc=12+dd*0.2; if(sc<bs){bs=sc;best=e;} } }
       else { const hit=e.o&&e.o.k==='player'&&!e.o.on?Math.max(maxPx,26):maxPx; if(dd<hit && !behind(e.p)){ const sc=dd-e.prio*0.5; if(sc<bs){bs=sc;best=e;} } } }
     return best; }
@@ -867,7 +867,7 @@ function stantonScene(canvas,sysKey){
   function labels(){ const ex=explore(), _b=boxWH(), W=_b.w, H=_b.h, placed=[], cp=camera.position;
     const isHl=e=>hlVis&&hlVis.has(e.o.id), isF=e=>e.o.id===hl||e===hover||(e.o.k==='player'&&(!e.sys||e.sys===ST_SYS)&&!stOtherFaded(e.sys,!!e.o.on));
     const order=hlVis||hl||hover?entries.filter(isF).concat(entries.filter(e=>!isF(e)&&isHl(e)),entries.filter(e=>!isF(e)&&!isHl(e))):entries;
-    for(const e of order){ const d=e.el; if(!d) continue; d.classList.toggle('far', bgAmt>0.08&&!!e.sys&&e.sys!==ST_SYS); if(!eVis(e)){ d.style.transform='translate(-9999px,0)'; continue; } const o=e.o, force=isF(e), mark=isHl(e);
+    for(const e of order){ const d=e.el; if(!d) continue; d.classList.toggle('far', bgAmt>0.04&&!!e.sys&&e.sys!==ST_SYS); if(!eVis(e)){ d.style.transform='translate(-9999px,0)'; continue; } const o=e.o, force=isF(e), mark=isHl(e);
       const dc=cp.distanceTo(e.p); let show=force||mark||o.k==='star'||(e.prio>=3&&(!ex||level.t!=='sys'||dc<260))||(ex&&e.prio<3&&dc<LBL[level.t][e.prio]);
       let s=null; if(show){ s=scr(e.p); if(!s||s.x<-50||s.x>W+50||s.y<-20||s.y>H+20) show=false; else if(!e.body&&behind(e.p)) show=false; }
       if(show){ const label=o.k==='player'?o.n:gn(o.n); const w=label.length*(/[^\u0000-\u00ff]/.test(label)?13:(e.prio>=3?9:6.4))+8, h=16, x=s.x-w/2, y=s.y-(e.body?Math.max(10,scrRadius(e))+14:18);
@@ -936,16 +936,18 @@ function stantonScene(canvas,sysKey){
       pinchD=d; midX=mx; midY=my; lastTX=null; tMoved=true; if(e.cancelable) e.preventDefault(); } };
   const touchEnd=(e)=>{ if(!tUI&&e&&e.changedTouches&&e.changedTouches.length&&!tMoved&&(Math.abs(e.changedTouches[0].clientX-tsx)+Math.abs(e.changedTouches[0].clientY-tsy))<10){ const p=relXY(e.changedTouches[0].clientX,e.changedTouches[0].clientY); pickAt(p.x,p.y); } if(!e.touches||e.touches.length<2){ pinchD=0; midX=null; midY=null; } lastTX=null; lastTY=null; };
   canvas.addEventListener('touchstart',tStart,{passive:true}); canvas.addEventListener('touchmove',touch,{passive:false}); canvas.addEventListener('touchend',touchEnd);
-  let blurRT=null, blurRT2=null, blurCam=null, blurScene=null, blurMat=null, blitMat=null, blurQuad=null, layersSplit=false;
-  function allocBlur(){
-    const w=Math.max(2, renderer.domElement.width>>1), h=Math.max(2, renderer.domElement.height>>1);
-    if(blurRT&&blurRT.width===w&&blurRT.height===h) return;
+  let blurRT=null, blurRT2=null, blurCam=null, blurScene=null, blurMat=null, mosaicMat=null, blitMat=null, blurQuad=null, layersSplit=false, blurWantHi=false, blurIsHi=false, bgShown=-1, bgStamp=0, bgMove=0;
+  function allocBlur(hi){
+    const dw=Math.max(2, renderer.domElement.width), dh=Math.max(2, renderer.domElement.height);
+    const w=hi?dw:Math.max(2,dw>>1), h=hi?dh:Math.max(2,dh>>1);
+    if(blurRT&&blurRT.width===w&&blurRT.height===h&&blurIsHi===hi) return;
+    blurIsHi=hi;
     if(blurRT){ blurRT.dispose(); blurRT2.dispose(); }
     const opt={minFilter:T.LinearFilter, magFilter:T.LinearFilter, format:T.RGBAFormat, depthBuffer:true};
     blurRT=new T.WebGLRenderTarget(w,h,opt); blurRT2=new T.WebGLRenderTarget(w,h,opt);
   }
   function ensureBlur(){
-    if(blurRT) return;
+    if(blurMat) return;
     blurCam=new T.OrthographicCamera(-1,1,1,-1,0.01,3); blurCam.position.z=1;
     const vs='varying vec2 vUv; void main(){ vUv=uv; gl_Position=vec4(position.xy,0.0,1.0); }';
     blurMat=new T.ShaderMaterial({
@@ -963,14 +965,38 @@ function stantonScene(canvas,sysKey){
       ].join('\n'),
       depthTest:false, depthWrite:false
     });
+    mosaicMat=new T.ShaderMaterial({
+      uniforms:{tDiffuse:{value:null}, uPix:{value:new T.Vector2()}, uBlock:{value:8}, uMix:{value:0}, uTime:{value:0}},
+      vertexShader:vs,
+      fragmentShader:[
+        'varying vec2 vUv; uniform sampler2D tDiffuse; uniform vec2 uPix; uniform float uBlock; uniform float uMix; uniform float uTime;',
+        'void main(){',
+        '  vec4 sharp=texture2D(tDiffuse,vUv);',
+        '  vec2 cell=max(uPix*max(uBlock,1.0), vec2(0.00001));',
+        '  vec2 gv=floor(vUv/cell);',
+        '  float n=fract(sin(dot(gv,vec2(127.1,311.7))+uTime*0.17)*43758.5453);',
+        '  vec2 uv=(gv+0.5)*cell+(n-0.5)*uPix*uMix*1.4;',
+        '  float sh=uMix*uPix.x*1.6;',
+        '  float r=texture2D(tDiffuse,uv+vec2(sh,0.0)).r;',
+        '  float g=texture2D(tDiffuse,uv).g;',
+        '  float b=texture2D(tDiffuse,uv-vec2(sh,0.0)).b;',
+        '  float a=texture2D(tDiffuse,uv).a;',
+        '  vec2 fr=abs(fract(vUv/cell)-0.5);',
+        '  float edge=smoothstep(0.40,0.5,max(fr.x,fr.y));',
+        '  float flick=0.62+0.38*sin(uTime*5.5+gv.x*1.3+gv.y*0.8);',
+        '  vec3 block=vec3(r,g,b)+vec3(0.45,0.78,1.0)*edge*uMix*0.38*flick*a;',
+        '  gl_FragColor=vec4(mix(sharp.rgb, block, uMix), mix(sharp.a, a, uMix));',
+        '}'
+      ].join('\n'),
+      depthTest:false, depthWrite:false
+    });
     blitMat=new T.ShaderMaterial({
       uniforms:{tDiffuse:{value:null}, uGain:{value:1}},
       vertexShader:vs,
-      fragmentShader:'varying vec2 vUv; uniform sampler2D tDiffuse; uniform float uGain; void main(){ vec4 c=texture2D(tDiffuse,vUv); gl_FragColor=vec4(c.rgb, c.a*uGain); }',
+      fragmentShader:'varying vec2 vUv; uniform sampler2D tDiffuse; uniform float uGain; void main(){ vec4 c=texture2D(tDiffuse,vUv); gl_FragColor=vec4(c.rgb*uGain, c.a); }',
       transparent:true, depthTest:false, depthWrite:false
     });
     blurScene=new T.Scene(); blurQuad=new T.Mesh(new T.PlaneGeometry(2,2), blurMat); blurQuad.frustumCulled=false; blurScene.add(blurQuad);
-    allocBlur();
   }
   function splitLayers(focus){
     sysGroups.forEach(function(g){ const bit=g.userData.sys===focus?0:1; g.traverse(function(o){ o.layers.set(bit); }); });
@@ -989,35 +1015,91 @@ function stantonScene(canvas,sysKey){
     Object.keys(ST_DATA.sys).forEach(function(k){ const d=offOf(k).distanceTo(camera.position); if(d<nearD) nearD=d; if(d>farD) farD=d; n++; });
     if(n<2) return 0;
     const ratio=farD/Math.max(nearD,1);
-    if(ratio>=3.2) return 1;
-    if(ratio<=1.85) return 0;
-    const t=(ratio-1.85)/(3.2-1.85); return t*t*(3-2*t);
+    if(ratio>=4.4) return 1;
+    if(ratio<=1.55) return 0;
+    const t=(ratio-1.55)/(4.4-1.55); return t*t*(3-2*t);
+  }
+  function stepBg(target){
+    const now=performance.now();
+    if(bgShown<0){ bgShown=target; bgStamp=now; bgMove=0; return bgShown; }
+    const dt=Math.min(0.08, Math.max(0.001, (now-bgStamp)/1000));
+    bgStamp=now;
+    const prev=bgShown;
+    bgShown+=(target-bgShown)*(1-Math.exp(-dt/0.55));
+    if(Math.abs(target-bgShown)<0.0012) bgShown=target;
+    const vel=Math.abs(bgShown-prev)/dt;
+    const want=Math.min(1, vel/0.42);
+    bgMove+=(want-bgMove)*(1-Math.exp(-dt/0.16));
+    if(bgMove<0.025) bgMove=0;
+    return bgShown;
+  }
+  function mosaicOf(a){
+    if(bgMove<0.05||a<=0.03||a>=0.97) return 0;
+    const t=Math.max(0, Math.min(1, (a-0.03)/0.94));
+    const shape=Math.sin(Math.PI*Math.pow(t, 0.85));
+    return Math.min(1, Math.max(shape, 0.45)*bgMove);
+  }
+  function useHiRes(shown){
+    if(shown<0.012) blurWantHi=false;
+    else if(blurWantHi){ if(shown>0.94) blurWantHi=false; }
+    else if(shown<0.9) blurWantHi=true;
+    return blurWantHi;
   }
   function blurPass(src, dst, dx, dy){
     blurQuad.material=blurMat; blurMat.uniforms.tDiffuse.value=src.texture; blurMat.uniforms.uDir.value.set(dx,dy);
     renderer.setRenderTarget(dst); renderer.clear(true,true,true); renderer.render(blurScene, blurCam);
   }
   function renderView(){
-    bgAmt=bgAmount();
-    if(lblLayer) lblLayer.style.setProperty('--st-far', (4+bgAmt*8).toFixed(1)+'px');
-    if(bgAmt<0.02||renderer.domElement.width<2){ resetLayers(); camera.layers.set(0); renderer.setRenderTarget(null); renderer.autoClear=true; renderer.render(scene,camera); return; }
-    ensureBlur(); allocBlur(); splitLayers(ST_SYS);
+    const shown=stepBg(bgAmount());
+    bgAmt=shown;
+    if(lblLayer){
+      lblLayer.style.setProperty('--st-far', (shown*9).toFixed(2)+'px');
+      lblLayer.style.setProperty('--st-far-op', (1-shown*0.5).toFixed(3));
+    }
+    if(shown<0.015||renderer.domElement.width<2){ resetLayers(); camera.layers.set(0); renderer.setRenderTarget(null); renderer.autoClear=true; renderer.render(scene,camera); return; }
+    ensureBlur(); allocBlur(useHiRes(shown)); splitLayers(ST_SYS);
     renderer.setClearColor(0x000000, 0);
     renderer.autoClear=true;
     renderer.setRenderTarget(blurRT); renderer.clear(true,true,true);
     camera.layers.set(1); renderer.render(scene, camera);
-    const w=blurRT.width, h=blurRT.height;
-    blurPass(blurRT, blurRT2, 2.2/w, 0); blurPass(blurRT2, blurRT, 0, 2.2/h);
-    blurPass(blurRT, blurRT2, 4.4/w, 0); blurPass(blurRT2, blurRT, 0, 4.4/h);
+    const w=blurRT.width, h=blurRT.height, dw=Math.max(1, renderer.domElement.width);
+    const m=mosaicOf(shown);
+    let src=blurRT;
+    if(m>0.03){
+      blurQuad.material=mosaicMat;
+      mosaicMat.uniforms.tDiffuse.value=blurRT.texture;
+      mosaicMat.uniforms.uPix.value.set(1/w, 1/h);
+      mosaicMat.uniforms.uBlock.value=(5+m*20)*(0.94+0.06*Math.sin(performance.now()*0.004));
+      mosaicMat.uniforms.uMix.value=m;
+      mosaicMat.uniforms.uTime.value=performance.now()*0.001;
+      renderer.setRenderTarget(blurRT2); renderer.clear(true,true,true); renderer.render(blurScene, blurCam);
+      src=blurRT2;
+    }
+    const cover=m>0.45?0.4:1;
+    const rad=((0.3+Math.pow(shown,1.45)*6.2)*cover)*(w/dw);
+    const mid=src===blurRT?blurRT2:blurRT;
+    blurPass(src, mid, rad/w, 0);
+    const out1=mid===blurRT?blurRT2:blurRT;
+    blurPass(mid, out1, 0, rad/h);
+    let out=out1;
+    if(shown>0.58){
+      const rad2=(((shown-0.58)/0.42)*5.2)*(w/dw);
+      const a=out===blurRT?blurRT2:blurRT;
+      blurPass(out, a, rad2/w, 0);
+      const b=a===blurRT?blurRT2:blurRT;
+      blurPass(a, b, 0, rad2/h);
+      out=b;
+    }
     camera.layers.set(0);
     renderer.setRenderTarget(null); renderer.clear(true,true,true); renderer.autoClear=false;
-    blurQuad.material=blitMat; blitMat.uniforms.tDiffuse.value=blurRT.texture; blitMat.uniforms.uGain.value=bgAmt;
+    const dim=shown<=0.72?1:(1-0.14*((shown-0.72)/0.28));
+    blurQuad.material=blitMat; blitMat.uniforms.tDiffuse.value=out.texture; blitMat.uniforms.uGain.value=dim;
     renderer.render(blurScene, blurCam);
     renderer.clearDepth();
     renderer.render(scene, camera);
     renderer.autoClear=true;
   }
-  function cleanup(){ cancelAnimationFrame(raf); if(blurRT){ blurRT.dispose(); blurRT2.dispose(); blurRT=null; blurRT2=null; } if(routeLine){ scene.remove(routeLine); routeLine.geometry.dispose(); routeLine.material.dispose(); routeLine=null; } if(typeof clearTrail==='function') clearTrail(); window.__stCtl=null; canvas.removeEventListener('mousedown',down); window.removeEventListener('mouseup',up); window.removeEventListener('mousemove',move); if(ro) ro.disconnect(); else window.removeEventListener('resize',size); canvas.removeEventListener('wheel',wheel); canvas.removeEventListener('contextmenu',ctxm); canvas.removeEventListener('auxclick',aux); ROOT.removeEventListener('keydown',key); canvas.removeEventListener('touchstart',tStart); canvas.removeEventListener('touchmove',touch); canvas.removeEventListener('touchend',touchEnd); if(grp) dispose(grp); lblLayer.remove(); try{ renderer.dispose(); }catch(e){} }
+  function cleanup(){ cancelAnimationFrame(raf); if(blurRT){ blurRT.dispose(); blurRT2.dispose(); blurRT=null; blurRT2=null; } if(blurMat){ blurMat.dispose(); mosaicMat.dispose(); blitMat.dispose(); if(blurQuad&&blurQuad.geometry) blurQuad.geometry.dispose(); blurMat=null; } if(routeLine){ scene.remove(routeLine); routeLine.geometry.dispose(); routeLine.material.dispose(); routeLine=null; } if(typeof clearTrail==='function') clearTrail(); window.__stCtl=null; canvas.removeEventListener('mousedown',down); window.removeEventListener('mouseup',up); window.removeEventListener('mousemove',move); if(ro) ro.disconnect(); else window.removeEventListener('resize',size); canvas.removeEventListener('wheel',wheel); canvas.removeEventListener('contextmenu',ctxm); canvas.removeEventListener('auxclick',aux); ROOT.removeEventListener('keydown',key); canvas.removeEventListener('touchstart',tStart); canvas.removeEventListener('touchmove',touch); canvas.removeEventListener('touchend',touchEnd); if(grp) dispose(grp); lblLayer.remove(); try{ renderer.dispose(); }catch(e){} }
   let loopErr=false;
   function loop(){ if(!canvas.isConnected){ cleanup(); return; } raf=requestAnimationFrame(loop); try{
     if(!ST_PAUSE&&!dragging&&!panning) azT+=explore()?0.0003:0.00045;
@@ -1404,14 +1486,13 @@ function enterStExplore(){
   ROOT.classList.add('st-explore');
   const ui=document.createElement('div'); ui.className='st-exui'; ui.id=ID('stExUI');
   ui.innerHTML=
-    '<button class="stx" id="'+ID('stExX')+'" title="'+esc(_t('ui.leave_map'))+'">'+(SC.ico?SC.ico('close'):'')+'</button>'+
     '<div class="st-top" id="'+ID('stTop')+'"><div class="st-top-row"><div class="st-sys" id="'+ID('stSysSel')+'">'+[['stanton','Stanton'],['pyro','Pyro'],['nyx','Nyx']].map(s=>'<button data-sys="'+s[0]+'"><i style="background:'+ST_SYSLOOK[s[0]].dot+'"></i>'+s[1]+'</button>').join('')+'<button data-sys="all" title="'+esc(_t('system.all_title'))+'">'+(SC.ico?SC.ico('star'):'')+'</button></div><div class="st-crumb" id="'+ID('stCrumb')+'"></div>'+
       '<div class="st-sbox"><input id="'+ID('stQ')+'" placeholder="'+esc(_t('search.placeholder'))+'" autocomplete="off" enterkeyhint="search"><button id="'+ID('stQx')+'" title="'+esc(_t('ui.clear'))+'">'+(SC.ico?SC.ico('close'):'')+'</button></div>'+
       '<div class="st-zoom"><button class="st-pause" id="'+ID('stPause')+'" title="'+esc(_t('action.pause_rotation'))+'">'+(SC.ico?SC.ico('pause'):'')+'</button><button class="st-pause" id="'+ID('stHome')+'" title="'+esc(_t('action.home_title'))+'">'+(SC.ico?SC.ico('home'):'')+'</button><span>'+(SC.ico?SC.ico('sat'):'')+'</span><input type="range" id="'+ID('stZoom')+'" min="0" max="1" step="0.001"><span>'+(SC.ico?SC.ico('scope'):'')+'</span></div>'+
       '<div class="st-dockslot" id="'+ID('stDockSlot')+'" hidden></div>'+
       '<div class="st-cats" id="'+ID('stCats')+'">'+ST_CATS.map(c=>'<button data-cat="'+c[0]+'"'+(ST_CAT===c[0]?' class="on"':'')+'>'+esc(_t(c[1]))+'</button>').join('')+'</div>'+
       '<div class="st-tools"><div class="st-tabs"><button id="'+ID('stSideMin')+'">'+esc(_t('tabs.legend'))+' ▸</button><button id="'+ID('stSidePl')+'"><span id="'+ID('stSidePlLbl')+'">'+esc(_t('tabs.players'))+'</span> <span id="'+ID('stPlCnt')+'"></span></button><button type="button" class="st-sq" id="'+ID('stUiLang')+'" title="'+esc(_t('uilang.title'))+'">'+uiLangMark()+'</button><button type="button" class="st-sq" id="'+ID('stTheme')+'" title="'+esc(_t('theme.title'))+'">'+(SC.ico?SC.ico('theme'):'')+'</button><button type="button" class="st-sq" id="'+ID('stDrag')+'" title="'+esc(_t('drag.title'))+'">'+(SC.ico?SC.ico('drag'):'')+'</button><button type="button" class="st-sq" id="'+ID('stLocBtn')+'" title="'+esc(_t('loc.title'))+'">文</button></div>'+
-      '<div class="st-pick" id="'+ID('stLangPick')+'" hidden></div><div class="st-pick st-pick-themes" id="'+ID('stThemePick')+'" hidden></div><div class="st-pick st-pick-loc" id="'+ID('stLocPick')+'" hidden></div></div></div>'+
+      '<div class="st-pick" id="'+ID('stLangPick')+'" hidden></div><div class="st-pick st-pick-themes" id="'+ID('stThemePick')+'" hidden></div><div class="st-pick st-pick-loc" id="'+ID('stLocPick')+'" hidden></div></div><button class="stx" id="'+ID('stExX')+'" title="'+esc(_t('ui.leave_map'))+'">'+(SC.ico?SC.ico('close'):'')+'</button></div>'+
       '<div class="st-res" id="'+ID('stRes')+'" hidden></div></div>'+
     '<div class="st-side min" id="'+ID('stSide')+'"><div class="st-tab" id="'+ID('stTabLeg')+'"><div id="'+ID('stLegend')+'"></div></div><div class="st-tab" id="'+ID('stTabPl')+'" hidden><input id="'+ID('stPlQ')+'" placeholder="'+esc(_t('player.search_placeholder'))+'"><div id="'+ID('stPlList')+'"></div></div></div>'+
     '<div class="st-compass"><svg viewBox="0 0 100 100" width="86" height="86">'+

@@ -68,6 +68,14 @@ LIVE_ORIGINS = (
     "https://gugugubear.pythonanywhere.com",
     "https://sclmw.cltbbs.com",
 )
+DEFAULT_API = "https://sclmw.cltbbs.com"
+# Earlier builds filled this in. A saved copy of it is the old default, not a
+# choice the user typed, so the next start switches it to DEFAULT_API.
+OLD_APIS = (
+    "https://gugugubear.pythonanywhere.com",
+    "http://127.0.0.1:8770",
+    "http://localhost:8770",
+)
 
 TRANS = re.compile(
     r"Transitioning from zone (?P<from_zone>[\w.-]+) in (?P<from_system>[\w.-]+) "
@@ -134,30 +142,33 @@ def default_log():
     return str(candidates[0])
 
 
+def save_config(cfg):
+    CONFIG.write_text(json.dumps(cfg, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
 def load_config():
     cfg = {
-        "apiBase": "https://gugugubear.pythonanywhere.com",
+        "apiBase": DEFAULT_API,
         "room": "",
         "token": "",
         "logPath": default_log(),
         "theme": "compact",
         "lang": "",
     }
-    if CONFIG.is_file():
+    existed = CONFIG.is_file()
+    if existed:
         try:
             saved = json.loads(CONFIG.read_text(encoding="utf-8"))
             if isinstance(saved, dict):
                 cfg.update({k: saved[k] for k in cfg if k in saved and isinstance(saved[k], str)})
         except (OSError, json.JSONDecodeError):
-            pass
+            existed = False
     base = str(cfg.get("apiBase") or "").strip().rstrip("/")
-    if base in ("http://127.0.0.1:8770", "http://localhost:8770"):
-        cfg["apiBase"] = "https://gugugubear.pythonanywhere.com"
+    if not base or base in OLD_APIS:
+        cfg["apiBase"] = DEFAULT_API
+        if existed and base in OLD_APIS:
+            save_config(cfg)
     return cfg
-
-
-def save_config(cfg):
-    CONFIG.write_text(json.dumps(cfg, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
 STATE = {
@@ -1409,6 +1420,8 @@ if __name__ == "__main__":
         assert origin_allowed("https://gugugubear.pythonanywhere.com")
         assert origin_allowed("https://sclmw.cltbbs.com/")
         assert not origin_allowed("https://evil.example")
+        assert DEFAULT_API == "https://sclmw.cltbbs.com"
+        assert "https://gugugubear.pythonanywhere.com" in OLD_APIS
         assert next_exe_name("Starfix 1.0.6.exe", "1.0.8") == "Starfix 1.0.8.exe"
         assert next_exe_name("Starfix.exe", "1.0.8") == "Starfix.exe"
         script = update_script(r"C:\Starfix\Starfix 1.0.6.exe", r"C:\Starfix\Starfix 1.0.6.exe", 99, "failed", "1.0.8")

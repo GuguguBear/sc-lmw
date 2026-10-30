@@ -1,6 +1,6 @@
 # SC LMW – 星際公民星圖
 
-**版本 1.1.0** · AGPL-3.0 · Starfix 1.0.8
+**版本 1.1.0** · AGPL-3.0 · Starfix 1.0.9
 
 [English](README.md) · [Deutsch](README.de.md) · [简体中文](README.zh-Hans.md) · **繁體中文**
 
@@ -17,7 +17,7 @@
 
 `sclmw.cltbbs.com` 是反向代理，不是重新導向，也不是把 CNAME 指到來源站。Cloudflare 區域 `cltbbs.com`，Worker 名 `sclmw-proxy`，自訂主機名 `sclmw.cltbbs.com`。Worker 去取 `https://gugugubear.pythonanywhere.com`，請求標頭 `Host` 用來來源站的主機名；如果上游的 `Location` 會露出來源站，就改回目前主機名。Worker 指令碼不在這個儲存庫裡。要換來源站，改 Worker 裡的 `ORIGIN` 常數，再把指令碼上傳一次。
 
-兩個網址是同一套應用。房間請求和地圖檔案都用相對路徑，所以從哪個名字打開，就留在哪個名字上。Starfix 1.0.8 接受從這兩個名字發起的連線。見 [companion/README.md](companion/README.md)。
+兩個網址是同一套應用。房間請求和地圖檔案都用相對路徑，所以從哪個名字打開，就留在哪個名字上。Starfix 1.0.9 接受從這兩個名字發起的連線。見 [companion/README.md](companion/README.md)。
 
 Cloudflare 可能把靜態檔案留幾個小時。2026 年 10 月 30 日查過：對外名稱上的 `js/starmap.js` 是 `cache-control: max-age=14400`、`cf-cache-status: HIT`，來源站當時已經是更新的檔案。部署完成後，來源站在 Action 成功時就換好了。對外名稱要等這份快取過期。房間介面來自 [server/room_server.py](server/room_server.py)，回應帶 `Cache-Control: no-store`。頁面本身不是私人文件。登入狀態是 `localStorage` 裡的 Bearer 權杖，不是 Cookie。
 
@@ -51,7 +51,7 @@ Cloudflare 可能把靜態檔案留幾個小時。2026 年 10 月 30 日查過�
 
 Starfix 讀取這台電腦上的 `Game.log`。你確認之後，它把地點代碼發到房間。它不進遊戲行程，不讀記憶體，不上傳整份日誌。執行原始碼之前先讀 [companion/README.md](companion/README.md)。
 
-已發布的安裝包：[Starfix 1.0.8](https://github.com/GuguguBear/sc-lmw/releases/tag/starfix-1.0.8)。程式拿 `companion/VERSION` 和名為 `starfix-X.Y.Z` 的 GitHub Release 比較。把 `companion/**` 或 [.github/workflows/starfix-release.yml](.github/workflows/starfix-release.yml) 推到 `master`，如果這個標籤還不存在，就會打出 exe。[companion/write_version_info.py](companion/write_version_info.py) 用同一個版本號寫 Windows 的版本資訊。
+已發布的安裝包：[Starfix 1.0.9](https://github.com/GuguguBear/sc-lmw/releases/tag/starfix-1.0.9)。程式拿 `companion/VERSION` 和名為 `starfix-X.Y.Z` 的 GitHub Release 比較。把 `companion/**` 或 [.github/workflows/starfix-release.yml](.github/workflows/starfix-release.yml) 推到 `master`，如果這個標籤還不存在，就會打出 exe。[companion/write_version_info.py](companion/write_version_info.py) 用同一個版本號寫 Windows 的版本資訊。
 
 更新時，視窗用你已經選好的主題，顯示箱子裝進貨櫃的進度。下載結束後，輔助程式把新檔案蓋到你剛才打開的那個檔案上。Windows PowerShell 的 `Move-Item -Force` 換不掉已經存在的 exe，所以輔助程式用 `System.IO.File.Copy`。如果你打開的檔案名叫 `Starfix 1.0.6.exe`，新檔案會是 `Starfix 1.0.8.exe`，舊名字會去掉。檔名就是 `Starfix.exe` 的，繼續用這個名字。
 
@@ -61,6 +61,8 @@ Starfix 允許這些頁面來源，另外還有 `http://127.0.0.1` 和 `http://l
 
 - `https://gugugubear.pythonanywhere.com`
 - `https://sclmw.cltbbs.com`
+
+新打開的視窗裡，星圖位址是 `https://sclmw.cltbbs.com`。如果保存的位址還是以前內建的 `https://gugugubear.pythonanywhere.com`，這個版本下次啟動時會換成新位址。從某個頁面連過來時，存的是那個頁面自己的位址。
 
 從某個頁面點「連到這台電腦」，就會把那個頁面的來源存成介面位址。更早安裝的程式會一直用 PythonAnywhere，直到你再連一次。代理在前面時，兩個網址都可以用。
 
