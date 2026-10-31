@@ -319,7 +319,7 @@ function pilotRows(p){ const loc=stPlayerLoc(p), body=loc?stBodyOf(loc):null, ro
   pilotFacts(p).forEach(function(r){ rows.push(r); });
   return rows; }
 function placeExtra(p){ const loc=stPlayerLoc(p); if(!loc||typeof loc.x!=='number') return '';
-  return '<p class="st-call-dist">'+esc(_t('coord.from_star',{dist:stDist(Math.hypot(loc.x,loc.y,loc.z)),x:tn(Math.round(loc.x)),y:tn(Math.round(loc.y)),z:tn(Math.round(loc.z))}))+'</p>'; }
+  return '<p class="st-call-dist">'+esc(stCoordLine(loc))+'</p>'; }
 function travelBlurb(p){ const tr=p&&p.travel; if(!tr||!(tr.to||tr.from)) return '';
   const to=gn(tr.to||'');
   if(tr.mode==='aim') return _t('travel.to',{to:to});
@@ -1891,7 +1891,14 @@ function stOpenNofix(k){ const D=ST_DATA; let p=$('stLoc'); if(p) p.remove();
   p=document.createElement('div'); p.id=ID('stLoc'); p.className='st-loc';
   p.innerHTML='<div class="st-loc-card"><div class="st-loc-h"><span class="st-dot" style="background:#9c8b76"></span><h3>'+esc(stMineLabel(k))+'<small>'+esc(_t('nofix.title'))+'</small></h3>'+'<button class="st-loc-x" id="'+ID('stLocX')+'">✕</button></div><div class="st-loc-body"><div class="st-nofix-note">'+stNofixNote(k)+'</div>'+stMiningHTML([k])+'</div></div>';
   p.__re=()=>stOpenNofix(k); ROOT.appendChild(p); $('stLocX').onclick=()=>p.remove(); }
-function stDist(km){ return km>=1e6?_t('unit.mio_km',{n:tn(km/1e6,{maximumFractionDigits:2})}):_t('unit.km',{n:tn(Math.round(km))}); }
+function stDist(km){ const n=+km||0, a=Math.abs(n), lang=SC.i18n&&SC.i18n.getLang?SC.i18n.getLang():'en', zh=lang==='zh-Hans'||lang==='zh-Hant';
+  let key='unit.km', v=Math.round(n);
+  if(zh&&a>=1e8){ key='unit.yi_km'; v=n/1e8; }
+  else if(zh&&a>=1e4){ key='unit.wan_km'; v=n/1e4; }
+  else if(!zh&&a>=1e9){ key='unit.bn_km'; v=n/1e9; }
+  else if(!zh&&a>=1e6){ key='unit.mio_km'; v=n/1e6; }
+  return _t(key,{n:tn(v,key==='unit.km'?undefined:{maximumFractionDigits:2})}); }
+function stCoordLine(o){ return _t('coord.from_star',{dist:stDist(Math.hypot(o.x,o.y,o.z)),x:stDist(o.x),y:stDist(o.y),z:stDist(o.z)}); }
 async function openStPanel(o){
   const D=ST_DATA; if(!D||!o) return;
   if(o.grp){ if(window.__stPinPlayer) window.__stPinPlayer(null); stOpenGroup(o); return; }
@@ -1922,7 +1929,7 @@ async function openStPanel(o){
   if(comm.length) h+='<div class="st-slbl">'+_t('label.commodity_market')+'</div><div id="'+ID('stGoodsBox')+'"><p class="sc-lmw-muted" style="font-size:.85rem">'+_t('status.loading_prices')+'</p></div>';
   if(o.terms&&o.terms.length) h+='<div class="st-slbl">'+esc(_t('label.terminals',{n:o.terms.length}))+'</div><div class="st-chips">'+o.terms.map(t=>'<span>'+esc(gnLine(t.n))+'</span>').join('')+'</div>';
   h+='<div class="st-slbl">'+_t('label.search_items_ships')+'</div><input id="'+ID('stCat')+'" placeholder="'+esc(_t('search.item_ship_placeholder'))+'"><div id="'+ID('stCatRes')+'"><p class="sc-lmw-muted" style="font-size:.82rem"></p></div>';
-  h+='<div class="st-coord">'+esc(_t('coord.from_star',{dist:stDist(Math.hypot(o.x,o.y,o.z)),x:tn(Math.round(o.x)),y:tn(Math.round(o.y)),z:tn(Math.round(o.z))}))+'<br>'+esc(_t('data.version_prefix',{version:(D.d.version||'').replace(/-LIVE.*/,'')}))+(o.h?esc(_t('note.not_on_starmap')):'')+(o.approx?esc(_t('note.approx_position')):'')+(isDe&&o.dde?esc(_t('note.de_ini_source')):'')+'</div>';
+  h+='<div class="st-coord">'+esc(stCoordLine(o))+'<br>'+esc(_t('data.version_prefix',{version:(D.d.version||'').replace(/-LIVE.*/,'')}))+(o.h?esc(_t('note.not_on_starmap')):'')+(o.approx?esc(_t('note.approx_position')):'')+(isDe&&o.dde?esc(_t('note.de_ini_source')):'')+'</div>';
   body.innerHTML=h; if(SC.guides) SC.guides.wire(body,o);
   const de=$('stDesc'); if(de) de.onclick=()=>de.classList.toggle('open');
   const wk=$('stWkBox'); if(wk) stWikeloHTML(wk);

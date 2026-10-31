@@ -25,6 +25,8 @@ The interface is Simplified Chinese, Traditional Chinese, English, and German. T
 - **The home page is one plate.** Joining a room sits beside the Starfix notes. The fan-site notice runs along the bottom of that plate. A flat grid moves behind it.
 - **Opening the page no longer builds the star map.** The 3D engine, the place-name pack, and the map itself start when you enter the map.
 - **The pilot card drops amenities and terminals.** It shows armistice, a monitored area, the contract being tracked, and the accepted contracts. A quantum start that names a place is used when the zone line is missing. Failures, revocations, and shared contracts stay in the personal record on this computer.
+- **Distance and each coordinate carry their own unit.** A large figure stays in millions of kilometres. A small one stays in kilometres.
+- **Chinese uses the game's own gear names.** A worn class id matches the simplified and traditional item name. A paint without its own line uses the series name.
 
 ## Deutsch
 
@@ -47,6 +49,8 @@ The interface is Simplified Chinese, Traditional Chinese, English, and German. T
 - **Die Startseite ist eine Tafel.** Der Beitritt steht neben den Starfix-Hinweisen. Der Fan-Hinweis läuft am unteren Rand dieser Tafel. Dahinter läuft ein flaches Gitter.
 - **Beim Öffnen der Seite wird die Sternenkarte nicht mehr aufgebaut.** Die 3D-Engine, das Ortsnamenpaket und die Karte selbst starten erst beim Einstieg in die Karte.
 - **Die Pilotenkarte lässt Ausstattung und Terminals weg.** Sie zeigt Waffenruhe, Überwachung, den verfolgten Auftrag und die angenommenen Aufträge. Fehlt die Zonenzeile, gilt der Ortsname am Start einer Quantum-Route. Fehlschlag, Widerruf und geteilte Aufträge bleiben im persönlichen Verlauf auf diesem Computer.
+- **Abstand und jede Koordinate tragen die eigene Einheit.** Eine große Zahl bleibt in Mio km, eine kleine in km.
+- **Chinesisch zeigt die Ausrüstungsnamen aus dem Spiel.** Eine getragene Klassenkennung trifft den vereinfachten und den traditionellen Gegenstandsnamen. Eine Lackierung ohne eigene Zeile nutzt den Namen der Serie.
 
 ## 简体中文
 
@@ -69,6 +73,8 @@ The interface is Simplified Chinese, Traditional Chinese, English, and German. T
 - **首页收成一块。** 进入房间和 Starfix 的说明并排。粉丝站声明在这一块的下方。后面是一块平的、慢慢走的网格。
 - **打开页面时不再把星图建出来。** 三维引擎、地名包和星图本身，改到进入星图时再开始。
 - **个人信息卡片不再列出设施和终端。** 卡片显示禁火区、监管区域、正在追踪的合约和已接受的合约。日志里没有换区行时，用量子航线写下的地名。失败、撤销和共享的合约留在本机记录里。
+- **距离和每一项坐标各自带单位。** 大数写成万公里或亿公里，小数写成公里。
+- **中文界面使用游戏里的装备名称。** 穿戴编号对上简体和繁体原文。同一系列里没有单独名称的涂装，用该系列的名称。
 
 ## 繁體中文
 
@@ -91,3 +97,5 @@ The interface is Simplified Chinese, Traditional Chinese, English, and German. T
 - **首頁收成一塊。** 進入房間和 Starfix 的說明並排。粉絲站聲明在這一塊的下方。後面是一塊平的、慢慢走的網格。
 - **打開頁面時不再把星圖建出來。** 三維引擎、地名包和星圖本身，改到進入星圖時再開始。
 - **個人資訊卡片不再列出設施和終端。** 卡片顯示禁火區、監管區域、正在追蹤的合約和已接受的合約。日誌裡沒有換區行時，用量子航線寫下的地名。失敗、撤銷和共享的合約留在本機記錄裡。
+- **距離和每一項座標各自帶單位。** 大數寫成萬公里或億公里，小數寫成公里。
+- **中文介面使用遊戲裡的裝備名稱。** 穿戴編號對上簡體和繁體原文。同一系列裡沒有單獨名稱的塗裝，用該系列的名稱。

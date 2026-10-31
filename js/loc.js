@@ -2,6 +2,7 @@
    Place, ship, item, ore, mission and description strings are English in data/*.json.
    data/loc.json maps those English strings to zh-Hans / zh-Hant, built from
    Language/chinese_(simplified|traditional)/global.ini plus the game's labels.json keys.
+   lang/item-class.json maps a worn class id onto the game's own item name.
    A user-supplied global.ini (same keys) overrides the built-in pack. */
 (function(){
   'use strict';
@@ -11,7 +12,7 @@
   try{ mode=localStorage.getItem(MODE_KEY)||'auto'; }catch(e){}
   if(['auto','hans','hant','off','custom'].indexOf(mode)<0) mode='auto';
 
-  var pack=null, packWait=null, keys=null, keysWait=null, REV=null;
+  var pack=null, packWait=null, extraClass=null, keys=null, keysWait=null, REV=null;
   var custom=null; // {map, name, lines, cls}
   var active=null, activeClass=null;
   var userText=null, userName='';
@@ -45,6 +46,7 @@
     if(r==='custom'&&custom&&custom.map) Object.assign(baseDict, custom.map);
     active=withAlias(baseDict);
     var table=pack&&pack.class&&pack.class[lang]?Object.assign({}, pack.class[lang]):{};
+    mergeClass(table, lang);
     if(r==='custom'&&custom&&custom.cls) Object.assign(table, custom.cls);
     activeClass=table;
     indexRev();
@@ -157,13 +159,30 @@
     }); });
   }
 
+  function grabJson(url){
+    return fetch(base()+url,{cache:'no-cache'}).then(function(r){ if(!r.ok) throw new Error(r.status); return r.json(); });
+  }
   function ensurePack(){
-    if(pack) return Promise.resolve(pack);
+    if(pack && extraClass) return Promise.resolve(pack);
     if(packWait) return packWait;
-    packWait=fetch(base()+'data/loc.json',{cache:'no-cache'}).then(function(r){ if(!r.ok) throw new Error(r.status); return r.json(); }).then(function(d){
-      pack=d&&d.hans?d:{hans:{},hant:{},alias:{}}; return pack;
-    }).catch(function(){ pack={hans:{},hant:{},alias:{}}; return pack; });
+    packWait=Promise.all([
+      grabJson('data/loc.json').catch(function(){ return {hans:{},hant:{},alias:{}}; }),
+      grabJson('lang/item-class.json').catch(function(){ return {hans:{},hant:{}}; })
+    ]).then(function(pair){
+      var d=pair[0];
+      pack=d&&d.hans?d:{hans:{},hant:{},alias:{}};
+      extraClass=pair[1]&&pair[1].hans?pair[1]:{hans:{},hant:{}};
+      return pack;
+    });
     return packWait;
+  }
+  function mergeClass(table, lang){
+    if(!extraClass) return;
+    var src=extraClass[lang]||{};
+    var fill=lang==='hant'?(extraClass.hans||null):null;
+    Object.keys(src).forEach(function(k){ table[k]=src[k]; });
+    if(!fill) return;
+    Object.keys(fill).forEach(function(k){ if(!table[k]) table[k]=fill[k]; });
   }
   function ensureKeys(){
     if(keys) return Promise.resolve(keys);
@@ -215,9 +234,22 @@
     });
   }
 
+  var ITEM_SLOT={undersuit:1,helmet:1,core:1,arms:1,legs:1,torso:1,backpack:1,weapon:1,magazine:1,optics:1,barrel:1,stock:1,grip:1,suit:1,armor:1,light:1,medium:1,heavy:1,specialist:1};
   function item(cls){
     if(!cls||!activeClass) return '';
-    return activeClass[String(cls).toLowerCase()]||'';
+    var low=String(cls).toLowerCase(), hit=activeClass[low];
+    if(hit) return hit;
+    var parts=low.split('_');
+    while(parts.length>2){
+      var seg=parts[parts.length-1];
+      if(ITEM_SLOT[seg]) break;
+      var parent=parts.slice(0,-1).join('_');
+      var variant=/^\d+$/.test(seg)||/\d/.test(seg);
+      if(!variant && !activeClass[parent]) break;
+      parts.pop();
+      if(activeClass[parent]) return activeClass[parent];
+    }
+    return '';
   }
 
   SC.loc={
