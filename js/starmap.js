@@ -553,7 +553,11 @@ function stantonScene(canvas,sysKey){
   const sky=new T.Group(); scene.add(sky); const skyNeb=[]; let skyStars=null, skyGlowTex=null;
   function glowTex(cols){ const c=document.createElement('canvas');c.width=c.height=128;const x=c.getContext('2d');const g=x.createRadialGradient(64,64,0,64,64,64);cols.forEach(s=>g.addColorStop(s[0],s[1]));x.fillStyle=g;x.fillRect(0,0,128,128);return new T.CanvasTexture(c); }
   const neb=glowTex([[0,'rgba(140,100,255,.5)'],[0.5,'rgba(60,120,255,.16)'],[1,'rgba(0,0,0,0)']]);
-  [[-220,80,-320,0x8a5aff,300],[300,-60,-380,0x2ec6ff,340],[100,150,-500,0xff5aa0,280],[-320,-120,-240,0x5affc0,240],[260,210,-600,0x9a7aff,360],[-120,-160,-180,0x6a7aff,160],[160,-30,-200,0xff7ac0,140],[40,180,-260,0x4ac6ff,150],[-260,120,-420,0xb06aff,200],[210,90,-300,0x7affd0,150]].forEach(n=>{ const s=new T.Sprite(new T.SpriteMaterial({map:neb,color:n[3],transparent:true,opacity:.38,blending:T.AdditiveBlending,depthWrite:false})); s.position.set(n[0],n[1],n[2]); s.scale.set(n[4],n[4],1); sky.add(s); skyNeb.push(s); });
+  // These offsets used to stay on the world's negative Z. Turning away from
+  // that side put every cloud behind the camera. The rig follows the view,
+  // so the same clouds stay in front of the lens.
+  const skyNebRig=new T.Group(); sky.add(skyNebRig);
+  [[-220,80,-320,0x8a5aff,300],[300,-60,-380,0x2ec6ff,340],[100,150,-500,0xff5aa0,280],[-320,-120,-240,0x5affc0,240],[260,210,-600,0x9a7aff,360],[-120,-160,-180,0x6a7aff,160],[160,-30,-200,0xff7ac0,140],[40,180,-260,0x4ac6ff,150],[-260,120,-420,0xb06aff,200],[210,90,-300,0x7affd0,150]].forEach(n=>{ const s=new T.Sprite(new T.SpriteMaterial({map:neb,color:n[3],transparent:true,opacity:.38,blending:T.AdditiveBlending,depthWrite:false})); s.position.set(n[0],n[1],n[2]); s.scale.set(n[4],n[4],1); skyNebRig.add(s); skyNeb.push(s); });
   function skyGlowMap(){ if(skyGlowTex) return skyGlowTex; const c=document.createElement('canvas'); c.width=c.height=64; const x=c.getContext('2d'); const g=x.createRadialGradient(32,32,0,32,32,32); g.addColorStop(0,'rgba(255,255,255,1)'); g.addColorStop(0.22,'rgba(255,255,255,.5)'); g.addColorStop(1,'rgba(255,255,255,0)'); x.fillStyle=g; x.fillRect(0,0,64,64); skyGlowTex=new T.CanvasTexture(c); return skyGlowTex; }
   function tintSky(k){ const L=ST_SYSLOOK[k]||ST_SYSLOOK.stanton, pal=L.sky; const style=ST_SKY.on?ST_SKY.style:'off'; const show=style==='classic'||style==='dense'||style==='spectrum'||style==='glow'; const mul=style==='dense'?0.4:(style==='glow'?0.75:1); skyNeb.forEach((s,i)=>{ s.visible=show; s.material.color.setHex(pal[i%pal.length]); s.material.opacity=(L.skyOp||.38)*mul; }); }
   function applySky(){
@@ -1150,7 +1154,7 @@ function stantonScene(canvas,sysKey){
     sysGroups.forEach(g=>{ g.visible=true; }); if(plPts){ const bcol=beaconHex(), pulse=0.5+0.5*Math.sin(performance.now()/240); plPts.forEach(p=>{ p.visible=true; const faded=stOtherFaded(p.userData.sys, !!(p.userData.beacon||p.userData.live)); if(p.userData.beacon){ p.material.color.setHex(bcol); const full=(isMobile?58:68)+pulse*18; p.material.size=faded?full*0.42:full; p.material.opacity=faded?0.22:(0.82+pulse*0.18); } else if(p.userData.live){ p.material.opacity=faded?0.14:0.85; } else if(p.material){ const full=isMobile?48:56; p.material.size=faded?full*0.45:full; p.material.opacity=faded?0.22:1; } }); }
     if(animNodes.length){ animNodes.forEach(a=>{ a.o.rotation.y+=a.s; }); entries.forEach(e=>{ if(e.node) e.node.getWorldPosition(e.p); }); }
     az+=(azT-az)*0.08; el+=(elT-el)*0.08; R+=(RT-R)*0.07; tgt.lerp(tgtT,0.1);
-    camera.position.set(tgt.x+R*Math.cos(el)*Math.sin(az),tgt.y+R*Math.sin(el),tgt.z+R*Math.cos(el)*Math.cos(az)); camera.lookAt(tgt); sky.position.copy(camera.position);
+    camera.position.set(tgt.x+R*Math.cos(el)*Math.sin(az),tgt.y+R*Math.sin(el),tgt.z+R*Math.cos(el)*Math.cos(az)); camera.lookAt(tgt); sky.position.copy(camera.position); skyNebRig.quaternion.copy(camera.quaternion);
     renderView();
     if(hoverReq){ hoverReq=false; const e=nearest(hx,hy,10); hover=(e&&!e.body)?e:null; }
     labels(); }catch(err){ if(!loopErr){ loopErr=true; console.error('Live Map, Fehler im Bildaufbau:',err); } } }
