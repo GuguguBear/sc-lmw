@@ -79,29 +79,37 @@ jobs:
             The Microsoft Store package does not. It keeps its settings in LocalAppData and is updated by the Store.
           generate_release_notes: false
       - name: See whether the Store identity is ready
-        if: steps.rel.outputs.exists != 'true'
         id: store
-        shell: powershell
+        shell: pwsh
         run: |
           $id = Get-Content -Raw companion\store-identity.json | ConvertFrom-Json
           $ready = [bool]($id.productId -and $id.identityName -and $id.publisher -and $id.publisherDisplayName)
           if ($ready) { "ready=true" >> $env:GITHUB_OUTPUT } else { "ready=false" >> $env:GITHUB_OUTPUT }
           if (-not $ready) {
-            Write-Host "companion/store-identity.json is empty. GitHub release is published. The Store package waits until that file has the product id, identity name, publisher, and publisher display name."
+            Write-Host "companion/store-identity.json is empty. The GitHub release stands. The Store package waits until that file has the product id, identity name, publisher, and publisher display name."
           }
+      - name: Use the published exe for the Store package
+        if: ${{ success() && steps.store.outputs.ready == 'true' }}
+        shell: pwsh
+        run: |
+          $exe = "companion\dist\Starfix.exe"
+          if (Test-Path $exe) { exit 0 }
+          New-Item -ItemType Directory -Path companion\dist -Force | Out-Null
+          $url = "https://github.com/GuguguBear/sc-lmw/releases/download/starfix-${{ steps.ver.outputs.version }}/Starfix.exe"
+          Invoke-WebRequest -Uri $url -OutFile $exe
       - name: Pack the Store package
-        if: ${{ steps.rel.outputs.exists != 'true' && steps.store.outputs.ready == 'true' }}
+        if: ${{ success() && steps.store.outputs.ready == 'true' }}
         shell: powershell
         run: |
           $id = Get-Content -Raw companion\store-identity.json | ConvertFrom-Json
           & .\companion\pack-store.ps1 -Exe .\companion\dist\Starfix.exe -Icon .\companion\icon.png -Version "${{ steps.ver.outputs.version }}" -IdentityName $id.identityName -Publisher $id.publisher -PublisherDisplayName $id.publisherDisplayName -Out .\companion\dist\Starfix.msix
       - name: Attach the Store package to the GitHub release
-        if: ${{ steps.rel.outputs.exists != 'true' && steps.store.outputs.ready == 'true' }}
+        if: ${{ success() && steps.store.outputs.ready == 'true' }}
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh release upload "starfix-${{ steps.ver.outputs.version }}" companion/dist/Starfix.msix --clobber
       - name: Install the Microsoft Store CLI
-        if: ${{ steps.rel.outputs.exists != 'true' && steps.store.outputs.ready == 'true' }}
+        if: ${{ success() && steps.store.outputs.ready == 'true' }}
         shell: pwsh
         run: |
           $zip = Join-Path $env:RUNNER_TEMP "msstore.zip"
@@ -112,7 +120,7 @@ jobs:
           if (-not $exe) { throw "The Store CLI zip did not contain an exe." }
           "$($exe.DirectoryName)" >> $env:GITHUB_PATH
       - name: Publish the Store package
-        if: ${{ steps.rel.outputs.exists != 'true' && steps.store.outputs.ready == 'true' }}
+        if: ${{ success() && steps.store.outputs.ready == 'true' }}
         shell: powershell
         env:
           TENANT: ${{ secrets.AZURE_AD_TENANT_ID }}
