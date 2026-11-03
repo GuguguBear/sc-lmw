@@ -299,6 +299,28 @@ def hide_window_border(widget, hex_color):
         pass
 
 
+def tray_click_kind(mouse_message):
+    # The tray callback only records the click. It must not call into Tk.
+    mouse = int(mouse_message) & 0xFFFF
+    if mouse in (0x0202, 0x0203):
+        return "show"
+    if mouse in (0x0205, 0x007B):
+        return "menu"
+    return ""
+
+
+def tray_menu_place(pointer_x, pointer_y, menu_h=140, gap=28):
+    # Keep the pointer outside the menu. A right-click must not land on Quit.
+    # When there is no room above the pointer, the menu opens below it and
+    # Quit is the last row, away from that pointer.
+    pointer_x = int(pointer_x)
+    pointer_y = int(pointer_y)
+    above = pointer_y - int(menu_h) - int(gap)
+    if above >= 0:
+        return pointer_x, above, False
+    return pointer_x, pointer_y + int(gap), True
+
+
 def _dpi():
     try:
         import ctypes
@@ -427,12 +449,15 @@ class Desktop:
         self._tray_hicon = None
         self._tray_taskbar_msg = 0
         self._tray_menu_at = 0
+        self._tray_pending = ""
+        self._tray_panel = None
         self._user_background = False
         self._placing = False
         self._guard_on = False
         self._resume_frame = False
         _dpi()
         self.root = tk.Tk()
+        self.root.after(50, self._tray_pump)
         self.root.overrideredirect(True)
         self.root.title(tr(self.lang, "title"))
         ico = _asset("icon.ico")
@@ -1212,14 +1237,12 @@ class Desktop:
             try:
                 message = int(msg)
                 if self._tray_taskbar_msg and message == self._tray_taskbar_msg:
-                    self.root.after(0, self._tray_restore)
+                    self._tray_pending = "restore"
                     return 0
                 if message == 0x8000 and int(wparam) == 1:
-                    mouse = int(lparam) & 0xFFFF
-                    if mouse in (0x0202, 0x0203):
-                        self.root.after(0, self._show)
-                    elif mouse in (0x0205, 0x007B):
-                        self.root.after(0, self._tray_menu)
+                    kind = tray_click_kind(lparam)
+                    if kind:
+                        self._tray_pending = kind
                     return 0
             except Exception:
                 return 0
@@ -1337,75 +1360,117 @@ class Desktop:
         self._tray_on = False
         self._tray_add()
 
-    def _tray_menu(self):
-        if not self._tray_on or not self._tray_hwnd:
+    def _tray_pump(self):
+        # Runs from Tk's own timer. The tray callback only leaves a word here.
+        kind = self._tray_pending
+        self._tray_pending = ""
+        try:
+            if kind == "show":
+                self._tray_panel_close()
+                self._show()
+            elif kind == "menu":
+                self._tray_menu_open()
+            elif kind == "restore":
+                self._tray_restore()
+        except Exception:
+            pass
+        try:
+            self.root.after(50, self._tray_pump)
+        except tk.TclError:
+            pass
+
+    def _tray_panel_close(self):
+        panel = self._tray_panel
+        self._tray_panel = None
+        if panel is None:
+            return
+        try:
+            panel.destroy()
+        except tk.TclError:
+            pass
+
+    def _tray_menu_open(self):
+        if not self._tray_on:
+            return
+        if self._tray_panel is not None:
+            self._tray_panel_close()
             return
         now = time.time()
         if now - self._tray_menu_at < 0.4:
             return
         self._tray_menu_at = now
         try:
-            self._tray_menu_open()
-        except Exception:
+            px = self.root.winfo_pointerx()
+            py = self.root.winfo_pointery()
+        except tk.TclError:
             return
-
-    def _tray_menu_open(self):
-        import ctypes
-        from ctypes import wintypes
-        user32 = ctypes.windll.user32
-        kernel32 = ctypes.windll.kernel32
-        user32.CreatePopupMenu.restype = wintypes.HMENU
-        user32.AppendMenuW.argtypes = [wintypes.HMENU, wintypes.UINT, ctypes.c_size_t, wintypes.LPCWSTR]
-        user32.TrackPopupMenu.restype = ctypes.c_int
-        user32.TrackPopupMenu.argtypes = [wintypes.HMENU, wintypes.UINT, ctypes.c_int, ctypes.c_int, ctypes.c_int, wintypes.HWND, ctypes.c_void_p]
-        user32.PostMessageW.argtypes = [wintypes.HWND, wintypes.UINT, wintypes.WPARAM, wintypes.LPARAM]
-        user32.PostMessageW.restype = wintypes.BOOL
-        user32.DestroyMenu.argtypes = [wintypes.HMENU]
-        user32.DestroyMenu.restype = wintypes.BOOL
-        user32.GetCursorPos.argtypes = [ctypes.POINTER(wintypes.POINT)]
-        user32.GetForegroundWindow.restype = wintypes.HWND
-        user32.GetWindowThreadProcessId.argtypes = [wintypes.HWND, ctypes.POINTER(wintypes.DWORD)]
-        user32.GetWindowThreadProcessId.restype = wintypes.DWORD
-        user32.AttachThreadInput.argtypes = [wintypes.DWORD, wintypes.DWORD, wintypes.BOOL]
-        user32.AttachThreadInput.restype = wintypes.BOOL
-        user32.SetForegroundWindow.argtypes = [wintypes.HWND]
-        user32.SetForegroundWindow.restype = wintypes.BOOL
-        kernel32.GetCurrentThreadId.restype = wintypes.DWORD
-        menu = user32.CreatePopupMenu()
-        user32.AppendMenuW(menu, 0, 1, tr(self.lang, "tray_show"))
         running = False
         try:
             running = bool(self.core.public_state().get("running"))
         except Exception:
             running = False
-        user32.AppendMenuW(menu, 0, 3, tr(self.lang, "watch_stop" if running else "watch"))
-        user32.AppendMenuW(menu, 0x800, 0, "")
-        user32.AppendMenuW(menu, 0, 2, tr(self.lang, "quit"))
-        point = wintypes.POINT()
-        user32.GetCursorPos(ctypes.byref(point))
-        fg = user32.GetForegroundWindow()
-        pid = wintypes.DWORD()
-        fg_tid = user32.GetWindowThreadProcessId(fg, ctypes.byref(pid)) if fg else 0
-        tid = kernel32.GetCurrentThreadId()
-        linked = bool(fg_tid and fg_tid != tid and user32.AttachThreadInput(tid, fg_tid, True))
-        user32.SetForegroundWindow(self._tray_hwnd)
-        # The right button only opens the menu. Tracking that same button
-        # would release on the last item, which is Quit.
-        cmd = user32.TrackPopupMenu(
-            menu, 0x0100 | 0x0080 | 0x0008 | 0x0020,
-            int(point.x), int(point.y) - 8, 0, self._tray_hwnd, None,
-        )
-        user32.PostMessageW(self._tray_hwnd, 0, 0, 0)
-        if linked:
-            user32.AttachThreadInput(tid, fg_tid, False)
-        user32.DestroyMenu(menu)
-        self._tray_menu_at = time.time()
-        if cmd == 1:
-            self._show()
-        elif cmd == 3:
-            self._toggle_watch()
-        elif cmd == 2:
-            self.close()
+        c = self._colors()
+        try:
+            panel = tk.Toplevel(self.root)
+            panel.overrideredirect(True)
+            panel.configure(bg=c["line"])
+            try:
+                panel.attributes("-topmost", True)
+            except tk.TclError:
+                pass
+        except tk.TclError:
+            return
+        self._tray_panel = panel
+        armed = {"ok": False}
+
+        def arm():
+            armed["ok"] = True
+
+        def act(fn):
+            # The click that opened this panel is already over. A later click
+            # on a row is the only thing that can run, and Quit is one of those rows.
+            if not armed["ok"] or self._tray_panel is not panel:
+                return
+            self._tray_panel_close()
+            fn()
+
+        inner = tk.Frame(panel, bg=c["panel"])
+        inner.pack(fill="both", expand=True, padx=1, pady=1)
+        rows = [
+            (tr(self.lang, "tray_show"), self._show),
+            (tr(self.lang, "watch_stop" if running else "watch"), self._toggle_watch),
+            (tr(self.lang, "quit"), self.close),
+        ]
+        for label, fn in rows:
+            line = tk.Label(
+                inner, text=label, font=FONT, anchor="w", padx=14, pady=6,
+                bg=c["panel"], fg=c["ink"], cursor="hand2",
+            )
+            line.pack(fill="x")
+
+            def enter(_event, widget=line):
+                widget.configure(bg=c["accent"], fg=c["on"])
+
+            def leave(_event, widget=line):
+                widget.configure(bg=c["panel"], fg=c["ink"])
+
+            line.bind("<Enter>", enter)
+            line.bind("<Leave>", leave)
+            line.bind("<ButtonRelease-1>", lambda _event, fn=fn: act(fn))
+        try:
+            panel.update_idletasks()
+            height = max(1, panel.winfo_reqheight())
+            width = max(1, panel.winfo_reqwidth())
+            x, y, _quit_last = tray_menu_place(px, py, height, 16)
+            screen_w = panel.winfo_screenwidth()
+            screen_h = panel.winfo_screenheight()
+            x = min(max(0, x), max(0, screen_w - width))
+            y = min(max(0, y), max(0, screen_h - height))
+            panel.geometry("+%d+%d" % (x, y))
+            panel.bind("<Escape>", lambda _event: self._tray_panel_close())
+            panel.after(300, arm)
+        except tk.TclError:
+            self._tray_panel_close()
 
     def _tray_guard(self):
         try:
@@ -1441,6 +1506,7 @@ class Desktop:
             self._tray_remove()
 
     def _show(self):
+        self._tray_panel_close()
         self._user_background = False
         self._tray_remove()
         try:

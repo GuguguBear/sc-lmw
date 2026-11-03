@@ -1107,23 +1107,48 @@ def unreachable_text():
 def update_ready_text(version):
     lang = _update_lang()
     if lang == "zh-Hant":
-        return "發現新版本 %s。點確定後開始下載，視窗會顯示裝載進度，完成後會自己重新開啟。" % version
+        return "發現新版本 %s。要現在更新嗎？\n\n選「否」會繼續使用目前的版本。" % version
     if lang == "en":
-        return "Version %s is available. Choose OK to download it. A window shows the load, then Starfix opens again by itself." % version
+        return "Version %s is available. Update now?\n\nChoose No to keep this version." % version
     if lang == "de":
-        return "Version %s ist da. Mit OK beginnt der Download. Ein Fenster zeigt den Ladevorgang, danach öffnet sich Starfix von selbst." % version
-    return "发现新版本 %s。点确定后开始下载，窗口会显示装载进度，完成后会自己重新打开。" % version
+        return "Version %s ist da. Jetzt aktualisieren?\n\nNein behält diese Version." % version
+    return "发现新版本 %s。要现在更新吗？\n\n选“否”会继续使用当前版本。" % version
 
 
 def update_failed_text():
     lang = _update_lang()
     if lang == "zh-Hant":
-        return "更新檔已經下載，但沒能換上目前的程式。請關掉 Starfix，再雙擊旁邊的 Starfix.update.exe。"
+        return "新版本沒能換上目前的程式。請再打開 Starfix。目錄裡仍然只有原來的那一個。"
     if lang == "en":
-        return "The update downloaded, but this copy could not be replaced. Close Starfix, then double-click Starfix.update.exe beside it."
+        return "The new version did not replace this program. Open Starfix again. The folder still has the one program."
     if lang == "de":
-        return "Die Aktualisierung ist geladen, aber diese Datei konnte nicht ersetzt werden. Starfix schließen und dann Starfix.update.exe daneben doppelklicken."
-    return "更新文件已经下载，但没能换上当前程序。请关掉 Starfix，再双击旁边的 Starfix.update.exe。"
+        return "Die neue Version hat dieses Programm nicht ersetzt. Starfix erneut öffnen. Im Ordner liegt weiterhin nur das eine Programm."
+    return "新版本没能换上当前程序。请再打开 Starfix。目录里仍然只有原来的那一个。"
+
+
+class GitHubError(OSError):
+    def __init__(self, kind):
+        super().__init__(kind)
+        self.kind = kind
+
+
+def release_tag(url):
+    match = re.search(r"/tag/(starfix-\d+\.\d+\.\d+)/?(?:[?#].*)?$", str(url or ""), re.I)
+    if not match:
+        return None
+    return match.group(1)
+
+
+def _github_fail(exc):
+    if isinstance(exc, urllib.error.HTTPError):
+        limited = exc.code == 429
+        if not limited and exc.code == 403:
+            try:
+                limited = "rate limit" in exc.read(800).decode("utf-8", "replace").lower()
+            except (OSError, UnicodeError):
+                limited = False
+        return GitHubError("limit" if limited else "http")
+    return GitHubError("network")
 
 
 def _github_json(url):
@@ -1137,35 +1162,75 @@ def _github_json(url):
     except urllib.error.HTTPError as exc:
         if exc.code == 404:
             return None
-        raise OSError("github")
+        raise _github_fail(exc)
     except (urllib.error.URLError, TimeoutError, OSError):
-        raise OSError("github")
+        raise GitHubError("network")
     try:
         data = json.loads(raw.decode("utf-8"))
     except json.JSONDecodeError:
-        raise OSError("github")
+        raise GitHubError("http")
     return data if isinstance(data, dict) else None
+
+
+def _latest_tag_from_page():
+    # The API allows few anonymous checks. The releases page still redirects
+    # to the current tag, and that answer means GitHub itself was reached.
+    found = {}
+
+    class Stop(urllib.request.HTTPRedirectHandler):
+        def redirect_request(self, req, fp, code, msg, headers, newurl):
+            found["url"] = newurl
+            return None
+
+    opener = urllib.request.build_opener(Stop)
+    req = urllib.request.Request(RELEASE_PAGE + "/latest", headers={"User-Agent": "Starfix/" + VERSION})
+    try:
+        opener.open(req, timeout=12)
+    except urllib.error.HTTPError as exc:
+        if exc.code not in (301, 302, 303, 307, 308) or not found.get("url"):
+            raise _github_fail(exc)
+    except (urllib.error.URLError, TimeoutError, OSError):
+        raise GitHubError("network")
+    return release_tag(found.get("url"))
+
+
+def _release_choice(tag, mine, url):
+    theirs = version_tuple(tag)
+    if not theirs or theirs <= mine or not url:
+        return None
+    return {"version": "%d.%d.%d" % theirs, "url": url}
 
 
 def newer_release():
     mine = version_tuple(VERSION)
-    data = _github_json(RELEASE_API)
-    if not mine or not data:
+    if not mine:
         return None
-    theirs = version_tuple(data.get("tag_name"))
-    if not theirs or theirs <= mine:
+    api_error = None
+    try:
+        data = _github_json(RELEASE_API)
+    except GitHubError as exc:
+        api_error = exc
+        data = None
+    if isinstance(data, dict):
+        url = ""
+        for item in data.get("assets") or []:
+            if not isinstance(item, dict) or item.get("name") != "Starfix.exe":
+                continue
+            link = str(item.get("browser_download_url") or "")
+            if link.startswith(RELEASE_EXE):
+                url = link
+                break
+        if version_tuple(data.get("tag_name")):
+            return _release_choice(data.get("tag_name"), mine, url)
+    try:
+        tag = _latest_tag_from_page()
+    except GitHubError as exc:
+        if api_error is not None and api_error.kind == "network" and exc.kind == "network":
+            raise GitHubError("network")
         return None
-    url = ""
-    for item in data.get("assets") or []:
-        if not isinstance(item, dict) or item.get("name") != "Starfix.exe":
-            continue
-        link = str(item.get("browser_download_url") or "")
-        if link.startswith(RELEASE_EXE):
-            url = link
-            break
-    if not url:
+    if not tag:
         return None
-    return {"version": "%d.%d.%d" % theirs, "url": url}
+    return _release_choice(tag, mine, RELEASE_EXE + tag + "/Starfix.exe")
 
 
 def download_release(url, dest, on_progress=None):
@@ -1205,6 +1270,18 @@ def update_spawn_flags():
     return 0x01000000 | 0x00000008 | 0x00000200 | 0x08000000
 
 
+def staged_update_path(folder, version):
+    # The download stays out of the program folder. After the swap, that
+    # folder still contains one Starfix program.
+    safe = re.sub(r"[^0-9A-Za-z._-]", "", str(version)) or "next"
+    return Path(folder) / ("Starfix-%s.exe" % safe)
+
+
+def update_download_path(version):
+    folder = os.environ.get("TEMP") or os.environ.get("TMP") or str(Path.home())
+    return staged_update_path(folder, version)
+
+
 def next_exe_name(current_name, version):
     # A copy named Starfix 1.0.6.exe stays that name unless the version in the
     # filename is replaced. Starfix.exe keeps its name.
@@ -1231,11 +1308,17 @@ def update_script(src, dest, pid, fail_text, version):
         "    break\n"
         "  } catch { Start-Sleep -Milliseconds 250 }\n"
         "}\n"
+        "$legacy = Join-Path (Split-Path -Parent $final) 'Starfix.update.exe'\n"
+        "$legacy2 = Join-Path (Split-Path -Parent $final) 'Starfix_update.exe'\n"
         "if ($moved) {\n"
         "  if ($final -ne $dst) { Remove-Item -LiteralPath $dst -Force -ErrorAction SilentlyContinue }\n"
-        "  Remove-Item -LiteralPath $src -Force -ErrorAction SilentlyContinue\n"
+        "  if ($src -ne $final) { Remove-Item -LiteralPath $src -Force -ErrorAction SilentlyContinue }\n"
+        "  foreach ($extra in @($legacy, $legacy2)) {\n"
+        "    if ($extra -ne $final -and $extra -ne $dst) { Remove-Item -LiteralPath $extra -Force -ErrorAction SilentlyContinue }\n"
+        "  }\n"
         "  Start-Process -FilePath $final -WorkingDirectory (Split-Path -Parent $final)\n"
         "} else {\n"
+        "  if ($src -ne $dst -and $src -ne $final) { Remove-Item -LiteralPath $src -Force -ErrorAction SilentlyContinue }\n"
         "  Add-Type -AssemblyName System.Windows.Forms\n"
         "  [System.Windows.Forms.MessageBox]::Show(%s, 'Starfix') | Out-Null\n"
         "}\n"
@@ -1326,20 +1409,49 @@ def spawn_detached(argv):
     subprocess.Popen(list(argv), creationflags=update_spawn_flags(), close_fds=True)
 
 
+def spawn_independent(argv):
+    # Win32_Process.Create is not a child of this process. A helper started
+    # the ordinary way is closed when the packaged exe exits, so the new
+    # file never replaces Starfix.exe.
+    if sys.platform != "win32":
+        raise OSError("update")
+    cmdline = subprocess.list2cmdline(list(argv))
+    command = (
+        "$created = ([wmiclass]'Win32_Process').Create(%s); "
+        "if (-not $created -or [int]$created.ReturnValue -ne 0) { exit 1 }"
+        % _ps_quote(cmdline)
+    )
+    try:
+        done = subprocess.run(
+            ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", command],
+            capture_output=True,
+            creationflags=0x08000000,
+            timeout=30,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        raise OSError("update")
+    if done.returncode != 0:
+        raise OSError("update")
+
+
 def swap_and_exit(src, dest, version):
     if sys.platform != "win32":
         tell(update_failed_text())
         return
-    script = Path(os.environ.get("TEMP") or os.environ.get("TMP") or ".") / "starfix-update.ps1"
+    script = Path(os.environ.get("TEMP") or os.environ.get("TMP") or ".") / ("starfix-update-%d.ps1" % os.getpid())
     script.write_text(
         update_script(src, dest, os.getpid(), update_failed_text(), version),
         encoding="utf-8-sig",
     )
     helper = ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-WindowStyle", "Hidden", "-File", str(script)]
     try:
-        spawn_detached(helper)
+        spawn_independent(helper)
     except OSError:
         tell(update_failed_text())
+        try:
+            Path(src).unlink()
+        except OSError:
+            pass
         return
     os._exit(0)
 
@@ -1392,12 +1504,18 @@ def clear_update_file():
     if packaged_app() or not frozen():
         return
     me = Path(sys.executable).resolve()
-    if me.name.lower() == "starfix.update.exe":
+    if me.name.lower() in ("starfix.update.exe", "starfix_update.exe"):
         return
-    try:
-        me.with_name("Starfix.update.exe").unlink()
-    except OSError:
-        pass
+    for name in ("Starfix.update.exe", "Starfix_update.exe"):
+        leftover = me.with_name(name)
+        for _ in range(20):
+            try:
+                leftover.unlink()
+                break
+            except FileNotFoundError:
+                break
+            except OSError:
+                time.sleep(0.25)
 
 
 def maybe_update():
@@ -1407,15 +1525,18 @@ def maybe_update():
         return
     try:
         found = newer_release()
-    except OSError:
-        tell(unreachable_text())
+    except GitHubError as exc:
+        if exc.kind == "network":
+            tell(unreachable_text())
         return
     if not found:
         clear_update_file()
         return
+    if not ask_yes(update_ready_text(found["version"])):
+        clear_update_file()
+        return
     dest = Path(sys.executable).resolve()
-    src = dest.with_name("Starfix.update.exe")
-    tell(update_ready_text(found["version"]))
+    src = update_download_path(found["version"])
     prog = None
     try:
         prog = desk.open_update_progress(CFG.get("theme"), _update_lang(), found["version"])
@@ -1702,10 +1823,25 @@ if __name__ == "__main__":
         assert "https://gugugubear.pythonanywhere.com" in OLD_APIS
         assert next_exe_name("Starfix 1.0.6.exe", "1.0.8") == "Starfix 1.0.8.exe"
         assert next_exe_name("Starfix.exe", "1.0.8") == "Starfix.exe"
-        script = update_script(r"C:\Starfix\Starfix 1.0.6.exe", r"C:\Starfix\Starfix 1.0.6.exe", 99, "failed", "1.0.8")
+        staged = staged_update_path(r"C:\Users\a\AppData\Local\Temp", "1.0.8")
+        assert staged.name == "Starfix-1.0.8.exe"
+        assert staged.parent == Path(r"C:\Users\a\AppData\Local\Temp")
+        script = update_script(str(staged), r"C:\Starfix\Starfix.exe", 99, "failed", "1.0.8")
         assert "[System.IO.File]::Copy($src, $final, $true)" in script, script
-        assert "Starfix 1.0.8.exe" in script and "Move-Item -LiteralPath $src -Destination $dst -Force" not in script
+        assert "Starfix.exe" in script and "Move-Item -LiteralPath $src -Destination $dst -Force" not in script
         assert "$procId = 99" in script and "foreach ($try in 1..120)" in script
+        assert "Starfix.update.exe" in script and "Starfix_update.exe" in script
+        assert "Remove-Item -LiteralPath $src" in script
+        assert release_tag("https://github.com/GuguguBear/sc-lmw/releases/tag/starfix-1.0.12") == "starfix-1.0.12"
+        assert release_tag("https://github.com/example/releases/latest") is None
+        assert _release_choice("starfix-1.0.12", (1, 0, 13), "https://example/Starfix.exe") is None
+        assert _release_choice("starfix-1.0.14", (1, 0, 13), RELEASE_EXE + "starfix-1.0.14/Starfix.exe")["version"] == "1.0.14"
+        assert desk.tray_click_kind(0x0202) == "show"
+        assert desk.tray_click_kind(0x0205) == "menu"
+        assert desk.tray_click_kind(0x0201) == ""
+        assert desk.tray_menu_place(400, 700) == (400, 532, False)
+        assert desk.tray_menu_place(20, 40)[1] == 68
+        assert desk.tray_menu_place(20, 40)[2] is True
         assert update_spawn_flags() & 0x01000000
         assert parse_tasklist_pids('"Starfix.exe","4321","Console","1","12,345 K"\nINFO: none\n') == [4321]
         assert parse_tasklist_pids('"notepad.exe","1","Console","1","1 K"') == []
