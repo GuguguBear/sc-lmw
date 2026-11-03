@@ -84,11 +84,13 @@ $utf8 = New-Object System.Text.UTF8Encoding $false
 [System.IO.File]::WriteAllText((Join-Path $layout "AppxManifest.xml"), $manifest.Trim(), $utf8)
 
 $kitRoot = "C:\Program Files (x86)\Windows Kits\10\bin"
-$kit = Get-ChildItem $kitRoot -Directory | Sort-Object Name -Descending | Select-Object -First 1
-if (-not $kit) { throw "Windows SDK was not found." }
-$makeappx = Join-Path $kit.FullName "x64\makeappx.exe"
-$signtool = Join-Path $kit.FullName "x64\signtool.exe"
-if (-not (Test-Path $makeappx)) { throw "makeappx.exe was not found." }
+$makeappxItem = Get-ChildItem $kitRoot -Recurse -Filter makeappx.exe -ErrorAction SilentlyContinue |
+  Where-Object { $_.FullName -match '\\x64\\makeappx\.exe$' } |
+  Sort-Object FullName -Descending |
+  Select-Object -First 1
+if (-not $makeappxItem) { throw "makeappx.exe was not found." }
+$makeappx = $makeappxItem.FullName
+$signtool = Join-Path $makeappxItem.DirectoryName "signtool.exe"
 
 $unsigned = Join-Path $layout "Starfix.msix"
 & $makeappx pack /d $layout /p $unsigned /o
