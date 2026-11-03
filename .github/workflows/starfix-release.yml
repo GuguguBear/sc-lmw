@@ -102,7 +102,15 @@ jobs:
         run: gh release upload "starfix-${{ steps.ver.outputs.version }}" companion/dist/Starfix.msix --clobber
       - name: Install the Microsoft Store CLI
         if: ${{ steps.rel.outputs.exists != 'true' && steps.store.outputs.ready == 'true' }}
-        uses: microsoft/microsoft-store-apppublisher@v1.4
+        shell: pwsh
+        run: |
+          $zip = Join-Path $env:RUNNER_TEMP "msstore.zip"
+          $dest = Join-Path $env:RUNNER_TEMP "msstore"
+          Invoke-WebRequest -Uri "https://github.com/microsoft/msstore-cli/releases/download/v0.4.4/MSStoreCLI-win-x64.zip" -OutFile $zip
+          Expand-Archive -LiteralPath $zip -DestinationPath $dest -Force
+          $exe = Get-ChildItem $dest -Recurse -Filter msstore.exe | Select-Object -First 1
+          if (-not $exe) { throw "The Store CLI zip did not contain an exe." }
+          "$($exe.DirectoryName)" >> $env:GITHUB_PATH
       - name: Publish the Store package
         if: ${{ steps.rel.outputs.exists != 'true' && steps.store.outputs.ready == 'true' }}
         shell: powershell
@@ -118,5 +126,5 @@ jobs:
           $id = Get-Content -Raw companion\store-identity.json | ConvertFrom-Json
           msstore reconfigure --tenantId $env:TENANT --sellerId $env:SELLER --clientId $env:CLIENT --clientSecret $env:SECRET
           if ($LASTEXITCODE -ne 0) { throw "msstore reconfigure failed." }
-          msstore publish (Get-Location).Path -i companion\dist\Starfix.msix -id $id.productId
+          msstore publish . --inputDirectory companion\dist --appId $id.productId
           if ($LASTEXITCODE -ne 0) { throw "msstore publish failed." }
