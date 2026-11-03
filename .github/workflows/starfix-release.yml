@@ -129,7 +129,8 @@ jobs:
           SELLER: ${{ secrets.SELLER_ID }}
         run: |
           if (-not $env:TENANT -or -not $env:CLIENT -or -not $env:SECRET -or -not $env:SELLER) {
-            throw "Add the Partner Center secrets AZURE_AD_TENANT_ID, AZURE_AD_APPLICATION_CLIENT_ID, AZURE_AD_APPLICATION_SECRET, and SELLER_ID."
+            Write-Host "Partner Center login secrets are not set. The package identity is saved. Store submission waits for AZURE_AD_TENANT_ID, AZURE_AD_APPLICATION_CLIENT_ID, AZURE_AD_APPLICATION_SECRET, and SELLER_ID."
+            exit 0
           }
           $id = Get-Content -Raw companion\store-identity.json | ConvertFrom-Json
           msstore reconfigure --tenantId $env:TENANT --sellerId $env:SELLER --clientId $env:CLIENT --clientSecret $env:SECRET
