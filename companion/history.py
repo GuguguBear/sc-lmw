@@ -1,5 +1,6 @@
 # Personal timeline parsed from Game.log on this computer.
-# Events stay in history.jsonl next to the program. They are not posted to a room.
+# Events stay in history.jsonl on this computer. They are not posted to a room.
+# The Store package keeps that file under LocalAppData. The GitHub exe keeps it beside itself.
 
 import json
 import re

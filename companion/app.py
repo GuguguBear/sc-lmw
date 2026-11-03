@@ -30,8 +30,45 @@ def frozen():
     return bool(getattr(sys, "frozen", False))
 
 
+def packaged_app():
+    # A Microsoft Store package cannot write beside the exe, and it must not
+    # download a replacement from GitHub. Unpackaged builds keep both.
+    if sys.platform != "win32":
+        return False
+    try:
+        import ctypes
+        kernel = ctypes.WinDLL("kernel32", use_last_error=True)
+        kernel.GetCurrentPackageFullName.argtypes = [ctypes.POINTER(ctypes.c_uint), ctypes.c_wchar_p]
+        kernel.GetCurrentPackageFullName.restype = ctypes.c_ulong
+        size = ctypes.c_uint(0)
+        code = int(kernel.GetCurrentPackageFullName(ctypes.byref(size), None))
+    except (AttributeError, OSError, ValueError):
+        code = 15700
+    if code == 122:
+        return True
+    exe = str(Path(sys.executable).resolve()) if frozen() else ""
+    return "\\WindowsApps\\" in exe
+
+
+def choose_data_dir(packaged, program_dir, local_app_data):
+    if packaged:
+        return Path(local_app_data) / "Starfix"
+    return Path(program_dir)
+
+
+def data_root():
+    if packaged_app():
+        local = os.environ.get("LOCALAPPDATA") or str(Path.home() / "AppData" / "Local")
+        path = choose_data_dir(True, "", local)
+        path.mkdir(parents=True, exist_ok=True)
+        return path
+    if frozen():
+        return choose_data_dir(False, Path(sys.executable).resolve().parent, "")
+    return choose_data_dir(False, Path(__file__).resolve().parent, "")
+
+
 BUNDLE = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent))
-DATA = Path(sys.executable).resolve().parent if frozen() else Path(__file__).resolve().parent
+DATA = data_root()
 ROOT = BUNDLE if frozen() else BUNDLE.parent
 RELEASE_API = "https://api.github.com/repos/GuguguBear/sc-lmw/releases/latest"
 RELEASE_PAGE = "https://github.com/GuguguBear/sc-lmw/releases"
@@ -1310,7 +1347,8 @@ def swap_and_exit(src, dest, version):
 def finish_pending_install():
     # An older Starfix can download the new exe but not replace itself.
     # Opening Starfix.update.exe finishes that: copy over Starfix.exe and start it.
-    if sys.platform != "win32" or not frozen():
+    # The Store package is updated by the Store, so this path stays closed.
+    if packaged_app() or sys.platform != "win32" or not frozen():
         return False
     me = Path(sys.executable).resolve()
     if me.name.lower() != "starfix.update.exe":
@@ -1351,7 +1389,7 @@ def finish_pending_install():
 
 
 def clear_update_file():
-    if not frozen():
+    if packaged_app() or not frozen():
         return
     me = Path(sys.executable).resolve()
     if me.name.lower() == "starfix.update.exe":
@@ -1363,8 +1401,9 @@ def clear_update_file():
 
 
 def maybe_update():
-    # Only the packaged exe replaces itself. Running from source stays as it is.
-    if not frozen():
+    # Only the unpackaged exe replaces itself from GitHub.
+    # The Microsoft Store copy is updated by the Store.
+    if packaged_app() or not frozen():
         return
     try:
         found = newer_release()
@@ -1831,6 +1870,9 @@ if __name__ == "__main__":
         live = snapshot(stocked)["card"]
         assert live["board"] is False and live["kills"] == 1 and live["down"] == "down", live
         assert live["fps"] == 48 and live["crash"] == "gpu" and live["crime"] == 2, live
+        assert packaged_app() is False
+        assert choose_data_dir(True, r"C:\app", r"C:\Users\a\AppData\Local") == Path(r"C:\Users\a\AppData\Local\Starfix")
+        assert choose_data_dir(False, r"C:\app", r"C:\Users\a\AppData\Local") == Path(r"C:\app")
         print("parser ok", got, SHIP, WORN["Armor_Torso"])
     else:
         main()

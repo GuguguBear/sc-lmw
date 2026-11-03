@@ -76,4 +76,47 @@ jobs:
             Windows build of the optional log reader. The source is in companion/.
             It only reads Game.log on the computer where you run it.
             The program compares this version with GitHub Releases when it starts.
+            The Microsoft Store package does not. It keeps its settings in LocalAppData and is updated by the Store.
           generate_release_notes: false
+      - name: See whether the Store identity is ready
+        if: steps.rel.outputs.exists != 'true'
+        id: store
+        shell: powershell
+        run: |
+          $id = Get-Content -Raw companion\store-identity.json | ConvertFrom-Json
+          $ready = [bool]($id.productId -and $id.identityName -and $id.publisher -and $id.publisherDisplayName)
+          if ($ready) { "ready=true" >> $env:GITHUB_OUTPUT } else { "ready=false" >> $env:GITHUB_OUTPUT }
+          if (-not $ready) {
+            Write-Host "companion/store-identity.json is empty. GitHub release is published. The Store package waits until that file has the product id, identity name, publisher, and publisher display name."
+          }
+      - name: Pack the Store package
+        if: ${{ steps.rel.outputs.exists != 'true' && steps.store.outputs.ready == 'true' }}
+        shell: powershell
+        run: |
+          $id = Get-Content -Raw companion\store-identity.json | ConvertFrom-Json
+          & .\companion\pack-store.ps1 -Exe .\companion\dist\Starfix.exe -Icon .\companion\icon.png -Version "${{ steps.ver.outputs.version }}" -IdentityName $id.identityName -Publisher $id.publisher -PublisherDisplayName $id.publisherDisplayName -Out .\companion\dist\Starfix.msix
+      - name: Attach the Store package to the GitHub release
+        if: ${{ steps.rel.outputs.exists != 'true' && steps.store.outputs.ready == 'true' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "starfix-${{ steps.ver.outputs.version }}" companion/dist/Starfix.msix --clobber
+      - name: Install the Microsoft Store CLI
+        if: ${{ steps.rel.outputs.exists != 'true' && steps.store.outputs.ready == 'true' }}
+        uses: microsoft/microsoft-store-apppublisher@v1.4
+      - name: Publish the Store package
+        if: ${{ steps.rel.outputs.exists != 'true' && steps.store.outputs.ready == 'true' }}
+        shell: powershell
+        env:
+          TENANT: ${{ secrets.AZURE_AD_TENANT_ID }}
+          CLIENT: ${{ secrets.AZURE_AD_APPLICATION_CLIENT_ID }}
+          SECRET: ${{ secrets.AZURE_AD_APPLICATION_SECRET }}
+          SELLER: ${{ secrets.SELLER_ID }}
+        run: |
+          if (-not $env:TENANT -or -not $env:CLIENT -or -not $env:SECRET -or -not $env:SELLER) {
+            throw "Add the Partner Center secrets AZURE_AD_TENANT_ID, AZURE_AD_APPLICATION_CLIENT_ID, AZURE_AD_APPLICATION_SECRET, and SELLER_ID."
+          }
+          $id = Get-Content -Raw companion\store-identity.json | ConvertFrom-Json
+          msstore reconfigure --tenantId $env:TENANT --sellerId $env:SELLER --clientId $env:CLIENT --clientSecret $env:SECRET
+          if ($LASTEXITCODE -ne 0) { throw "msstore reconfigure failed." }
+          msstore publish (Get-Location).Path -i companion\dist\Starfix.msix -id $id.productId
+          if ($LASTEXITCODE -ne 0) { throw "msstore publish failed." }

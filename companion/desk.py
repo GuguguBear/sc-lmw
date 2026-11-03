@@ -609,15 +609,79 @@ class Desktop:
         hwnd = ctypes.windll.user32.GetParent(self.root.winfo_id())
         return hwnd or self.root.winfo_id()
 
+    def _taskbar_add(self):
+        if sys.platform != "win32":
+            return
+        try:
+            import ctypes
+            from ctypes import wintypes
+            if not getattr(self, "_taskbar_vtbl", None):
+                class GUID(ctypes.Structure):
+                    _fields_ = [
+                        ("Data1", ctypes.c_ulong),
+                        ("Data2", ctypes.c_ushort),
+                        ("Data3", ctypes.c_ushort),
+                        ("Data4", ctypes.c_ubyte * 8),
+                    ]
+
+                def guid(text):
+                    flat = text.replace("-", "")
+                    item = GUID()
+                    item.Data1 = int(flat[0:8], 16)
+                    item.Data2 = int(flat[8:12], 16)
+                    item.Data3 = int(flat[12:16], 16)
+                    raw = bytes.fromhex(flat[16:])
+                    for index, value in enumerate(raw):
+                        item.Data4[index] = value
+                    return item
+
+                ole32 = ctypes.WinDLL("ole32")
+                ole32.CoInitialize.argtypes = [ctypes.c_void_p]
+                ole32.CoInitialize.restype = ctypes.c_long
+                ole32.CoInitialize(None)
+                ole32.CoCreateInstance.argtypes = [
+                    ctypes.POINTER(GUID), ctypes.c_void_p, ctypes.c_ulong,
+                    ctypes.POINTER(GUID), ctypes.POINTER(ctypes.c_void_p),
+                ]
+                ole32.CoCreateInstance.restype = ctypes.c_long
+                clsid = guid("56FDF344-FD6D-11d0-958A-006097C9A090")
+                iid = guid("56FDF342-FD6D-11d0-958A-006097C9A090")
+                ptr = ctypes.c_void_p()
+                if ole32.CoCreateInstance(ctypes.byref(clsid), None, 1, ctypes.byref(iid), ctypes.byref(ptr)) < 0 or not ptr.value:
+                    return
+                vtbl = ctypes.cast(ptr, ctypes.POINTER(ctypes.POINTER(ctypes.c_void_p))).contents
+                init = ctypes.WINFUNCTYPE(ctypes.c_long, ctypes.c_void_p)(vtbl[3])
+                if init(ptr) < 0:
+                    return
+                self._taskbar_ptr = ptr
+                self._taskbar_vtbl = vtbl
+            add = ctypes.WINFUNCTYPE(ctypes.c_long, ctypes.c_void_p, wintypes.HWND)(self._taskbar_vtbl[4])
+            add(self._taskbar_ptr, self._hwnd())
+        except (AttributeError, OSError, tk.TclError, ValueError):
+            return
+
     def _mark_appwindow(self):
         import ctypes
-        user32 = ctypes.windll.user32
+        from ctypes import wintypes
+        user32 = ctypes.WinDLL("user32", use_last_error=True)
+        get_long = getattr(user32, "GetWindowLongPtrW", user32.GetWindowLongW)
+        set_long = getattr(user32, "SetWindowLongPtrW", user32.SetWindowLongW)
+        get_long.argtypes = [wintypes.HWND, ctypes.c_int]
+        get_long.restype = ctypes.c_ssize_t
+        set_long.argtypes = [wintypes.HWND, ctypes.c_int, ctypes.c_ssize_t]
+        set_long.restype = ctypes.c_ssize_t
+        user32.SetWindowPos.argtypes = [
+            wintypes.HWND, wintypes.HWND, ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.c_int, wintypes.UINT,
+        ]
+        user32.SetWindowPos.restype = wintypes.BOOL
         hwnd = self._hwnd()
-        style = user32.GetWindowLongW(hwnd, -20)
-        style = (style & ~0x00000080) | 0x00040000
-        user32.SetWindowLongW(hwnd, -20, style)
+        frame = get_long(hwnd, -16) | 0x00020000 | 0x00080000
+        set_long(hwnd, -16, frame)
+        extra = (get_long(hwnd, -20) & ~0x00000080) | 0x00040000
+        set_long(hwnd, -20, extra)
         user32.SetWindowPos(hwnd, None, 0, 0, 0, 0, 0x0001 | 0x0002 | 0x0004 | 0x0010 | 0x0020)
         hide_window_border(self.root, self._colors()["panel"])
+        self._taskbar_add()
 
     def _seat_taskbar(self):
         # withdraw() drops the frameless flag. Put it back before the window
@@ -653,12 +717,7 @@ class Desktop:
                 self.root.after(3000, self._tray_guard)
 
     def _on_map(self, _event):
-        if not self._resume_frame or str(self.root.state()) != "normal":
-            return
-        self._resume_frame = False
-        try:
-            self.root.overrideredirect(True)
-        except tk.TclError:
+        if self._placing or self._user_background:
             return
         self._mark_appwindow()
 
@@ -690,20 +749,40 @@ class Desktop:
         self.root.geometry("+%d+%d" % (event.x_root - self._drag[0], event.y_root - self._drag[1]))
 
     def _minimize(self):
-        # The user asked to leave the screen. Keep a taskbar button so the
-        # window can come back. If that fails, stay on screen.
-        self._resume_frame = True
-        try:
-            self.root.overrideredirect(False)
-            self._mark_appwindow()
-            self.root.iconify()
-        except tk.TclError:
-            self._resume_frame = False
+        # Leave the window borderless. Toggling the frame here makes Windows
+        # rebuild the taskbar, so the bar vanishes and the button does not
+        # come back. Minimize the same window instead.
+        if sys.platform != "win32":
             try:
-                self.root.overrideredirect(True)
-                self.root.deiconify()
+                self.root.iconify()
             except tk.TclError:
                 pass
+            return
+        try:
+            import ctypes
+            from ctypes import wintypes
+            user32 = ctypes.WinDLL("user32", use_last_error=True)
+            user32.ShowWindow.argtypes = [wintypes.HWND, ctypes.c_int]
+            user32.ShowWindow.restype = wintypes.BOOL
+            self._mark_appwindow()
+            user32.ShowWindow(self._hwnd(), 6)
+        except (AttributeError, OSError, tk.TclError):
+            try:
+                self.root.iconify()
+            except tk.TclError:
+                pass
+
+    def _work_area(self):
+        if sys.platform == "win32":
+            try:
+                import ctypes
+                from ctypes import wintypes
+                rect = wintypes.RECT()
+                if ctypes.windll.user32.SystemParametersInfoW(0x0030, 0, ctypes.byref(rect), 0):
+                    return rect.left, rect.top, max(420, rect.right - rect.left), max(520, rect.bottom - rect.top)
+            except (AttributeError, OSError):
+                pass
+        return 0, 0, self.root.winfo_screenwidth(), self.root.winfo_screenheight()
 
     def _toggle_zoom(self):
         if self._zoomed:
@@ -712,7 +791,8 @@ class Desktop:
             self.btn_max.configure(text="□")
             return
         self._normal = self.root.geometry()
-        self.root.geometry("%dx%d+0+0" % (self.root.winfo_screenwidth(), self.root.winfo_screenheight()))
+        x, y, w, h = self._work_area()
+        self.root.geometry("%dx%d+%d+%d" % (w, h, x, y))
         self._zoomed = True
         self.btn_max.configure(text="❐")
 
@@ -1169,12 +1249,12 @@ class Desktop:
         atom = user32.RegisterClassW(ctypes.byref(klass))
         if not atom and kernel32.GetLastError() not in (0, 1410):
             return False
+        user32.CreateWindowExW.restype = wintypes.HWND
         user32.CreateWindowExW.argtypes = [
             wintypes.DWORD, wintypes.LPCWSTR, wintypes.LPCWSTR, wintypes.DWORD,
             ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.c_int,
-            wintypes.HWND, wintypes.HMENU, wintypes.HINSTANCE, wintypes.LPVOID,
+            ctypes.c_void_p, wintypes.HMENU, wintypes.HINSTANCE, wintypes.LPVOID,
         ]
-        user32.CreateWindowExW.restype = wintypes.HWND
         hwnd = user32.CreateWindowExW(
             0x80, "StarfixTray", "Starfix", 0x80000000,
             -32000, -32000, 1, 1,
@@ -1182,9 +1262,6 @@ class Desktop:
         )
         if not hwnd:
             return False
-        user32.ShowWindow.argtypes = [wintypes.HWND, ctypes.c_int]
-        user32.ShowWindow.restype = wintypes.BOOL
-        user32.ShowWindow(hwnd, 8)
         self._tray_hwnd = hwnd
         self._tray_class = atom
         return True
@@ -1267,6 +1344,12 @@ class Desktop:
         if now - self._tray_menu_at < 0.4:
             return
         self._tray_menu_at = now
+        try:
+            self._tray_menu_open()
+        except Exception:
+            return
+
+    def _tray_menu_open(self):
         import ctypes
         from ctypes import wintypes
         user32 = ctypes.windll.user32
@@ -1275,6 +1358,10 @@ class Desktop:
         user32.AppendMenuW.argtypes = [wintypes.HMENU, wintypes.UINT, ctypes.c_size_t, wintypes.LPCWSTR]
         user32.TrackPopupMenu.restype = ctypes.c_int
         user32.TrackPopupMenu.argtypes = [wintypes.HMENU, wintypes.UINT, ctypes.c_int, ctypes.c_int, ctypes.c_int, wintypes.HWND, ctypes.c_void_p]
+        user32.PostMessageW.argtypes = [wintypes.HWND, wintypes.UINT, wintypes.WPARAM, wintypes.LPARAM]
+        user32.PostMessageW.restype = wintypes.BOOL
+        user32.DestroyMenu.argtypes = [wintypes.HMENU]
+        user32.DestroyMenu.restype = wintypes.BOOL
         user32.GetCursorPos.argtypes = [ctypes.POINTER(wintypes.POINT)]
         user32.GetForegroundWindow.restype = wintypes.HWND
         user32.GetWindowThreadProcessId.argtypes = [wintypes.HWND, ctypes.POINTER(wintypes.DWORD)]
@@ -1302,9 +1389,11 @@ class Desktop:
         tid = kernel32.GetCurrentThreadId()
         linked = bool(fg_tid and fg_tid != tid and user32.AttachThreadInput(tid, fg_tid, True))
         user32.SetForegroundWindow(self._tray_hwnd)
+        # The right button only opens the menu. Tracking that same button
+        # would release on the last item, which is Quit.
         cmd = user32.TrackPopupMenu(
-            menu, 0x0100 | 0x0002 | 0x0080 | 0x0008 | 0x0020,
-            int(point.x), int(point.y), 0, self._tray_hwnd, None,
+            menu, 0x0100 | 0x0080 | 0x0008 | 0x0020,
+            int(point.x), int(point.y) - 8, 0, self._tray_hwnd, None,
         )
         user32.PostMessageW(self._tray_hwnd, 0, 0, 0)
         if linked:
@@ -1355,7 +1444,6 @@ class Desktop:
         self._user_background = False
         self._tray_remove()
         try:
-            self.root.overrideredirect(True)
             self.root.deiconify()
             self.root.lift()
             self.root.focus_force()
@@ -1363,6 +1451,7 @@ class Desktop:
         except tk.TclError:
             return
         force_foreground(self.root)
+        self._taskbar_add()
 
     def _raise(self):
         self._show()
