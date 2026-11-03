@@ -195,6 +195,8 @@ END_CARD_RE = re.compile(
 
 LOCK = threading.Lock()
 STOP = threading.Event()
+QUIT = threading.Event()
+STATUS_LOCK = threading.Lock()
 THREAD = None
 
 
@@ -247,6 +249,7 @@ STATE = {
     "status": "stopped",
     "offset": 0,
 }
+LOG_SIZE = {"n": None}
 PENDING = None
 CFG = load_config()
 
@@ -705,25 +708,94 @@ def apply_settings(body):
         save_config(CFG)
 
 
-def post_place(place):
-    room = CFG["room"]
-    token = CFG["token"]
-    if not room or not token:
-        raise RuntimeError("先在星图里点「连到这台电脑」，再回到这里确认")
-    url = CFG["apiBase"] + "/api/rooms/" + quote(room) + "/presence"
-    raw = json.dumps(place).encode("utf-8")
-    req = urllib.request.Request(
-        url,
-        data=raw,
-        method="POST",
-        headers={
-            "Content-Type": "application/json",
-            "Authorization": "Bearer " + token,
-            "User-Agent": "sc-lmw-companion",
-        },
-    )
-    with urllib.request.urlopen(req, timeout=8) as resp:
-        resp.read()
+def file_grew(prev, size):
+    # The first look only remembers the length. A longer file means the game wrote again.
+    return prev is not None and size > prev
+
+
+def post_status(starfix, game, timeout=3):
+    with STATUS_LOCK:
+        if starfix and QUIT.is_set():
+            return
+        room = CFG["room"]
+        token = CFG["token"]
+        if not room or not token:
+            return
+        raw = json.dumps({"starfix": bool(starfix), "game": bool(game)}).encode("utf-8")
+        url = CFG["apiBase"] + "/api/rooms/" + quote(room) + "/presence"
+        req = urllib.request.Request(
+            url,
+            data=raw,
+            method="POST",
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": "Bearer " + token,
+                "User-Agent": "sc-lmw-companion",
+            },
+        )
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            resp.read()
+
+
+def log_grew():
+    with LOCK:
+        running = bool(STATE.get("running"))
+        path = Path(CFG.get("logPath") or "")
+    if not running or not path.is_file():
+        with LOCK:
+            LOG_SIZE["n"] = None
+        return False
+    size = path.stat().st_size
+    with LOCK:
+        prev = LOG_SIZE["n"]
+        LOG_SIZE["n"] = size
+    return file_grew(prev, size)
+
+
+def beat_loop():
+    while not QUIT.is_set():
+        try:
+            if CFG.get("room") and CFG.get("token"):
+                post_status(True, log_grew())
+        except Exception:
+            pass
+        if QUIT.wait(30):
+            break
+
+
+def leave_room():
+    QUIT.set()
+    try:
+        post_status(False, False, timeout=2)
+    except Exception:
+        pass
+
+
+def post_place(place, game=False):
+    with STATUS_LOCK:
+        if QUIT.is_set():
+            return
+        room = CFG["room"]
+        token = CFG["token"]
+        if not room or not token:
+            raise RuntimeError("先在星图里点「连到这台电脑」，再回到这里确认")
+        url = CFG["apiBase"] + "/api/rooms/" + quote(room) + "/presence"
+        body = dict(place)
+        body["starfix"] = True
+        body["game"] = bool(game)
+        raw = json.dumps(body).encode("utf-8")
+        req = urllib.request.Request(
+            url,
+            data=raw,
+            method="POST",
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": "Bearer " + token,
+                "User-Agent": "sc-lmw-companion",
+            },
+        )
+        with urllib.request.urlopen(req, timeout=8) as resp:
+            resp.read()
     with LOCK:
         STATE["place"] = place
         STATE["sentAt"] = time.strftime("%H:%M:%S")
@@ -758,7 +830,7 @@ def consider(line, send):
         return payload
     LAST_SIG = sig
     if send:
-        post_place(payload)
+        post_place(payload, True)
     else:
         with LOCK:
             STATE["place"] = payload
@@ -880,6 +952,7 @@ def set_running(on):
         with LOCK:
             STATE["running"] = True
             STATE["offset"] = path.stat().st_size if path.is_file() else 0
+            LOG_SIZE["n"] = STATE["offset"] if path.is_file() else None
             STATE["status"] = "watching"
             STATE["error"] = ""
         scan_tail()
@@ -899,6 +972,7 @@ def set_running(on):
     with LOCK:
         STATE["running"] = False
         STATE["status"] = "stopped"
+        LOG_SIZE["n"] = None
 
 
 def origin_allowed(origin):
@@ -1748,6 +1822,7 @@ def claim_single_instance():
 
 def request_stop():
     STOP.set()
+    QUIT.set()
 
     def _stop():
         time.sleep(0.2)
@@ -1772,9 +1847,11 @@ def main():
     HTTPD = httpd
     threading.Thread(target=httpd.serve_forever, daemon=True).start()
     threading.Thread(target=lambda: history.backfill(CFG["logPath"]), daemon=True).start()
+    threading.Thread(target=beat_loop, daemon=True).start()
     try:
         desk.open_window(sys.modules[__name__])
     finally:
+        leave_room()
         request_stop()
         httpd.server_close()
         if frozen():
@@ -1790,6 +1867,10 @@ if __name__ == "__main__":
             "Loading | Ready | Stanton | host [1] | "
             "Transitioning from zone Stanton3 in Stanton to zone RR_HUR_Lorville in Stanton [Team][Loading]"
         )
+        assert file_grew(None, 10) is False
+        assert file_grew(10, 10) is False
+        assert file_grew(10, 12) is True
+        assert file_grew(12, 4) is False
         got = parse_line(sample)
         assert got and got["code"] == "RR_HUR_Lorville" and got["system"] == "Stanton", got
         assert got.get("server") == "1", got

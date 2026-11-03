@@ -209,7 +209,7 @@ async function stLoadPlayers(){ try{ const cfg=window.LIVEMAP_CONFIG||{};
     const r=await fetch(cfg.PLAYERS_URL||pathOf('players.example.json'),{headers:cfg.PLAYERS_HEADERS||{},cache:'no-store'});
     if(!r.ok) throw new Error(r.status);
     const d=await r.json(); ST_PL=d.players||[]; ST_PL_ERR=''; }catch(e){ ST_PL_ERR='Spielerdaten gerade nicht erreichbar.'; if(!ST_PL) ST_PL=[]; }
-  const sig=JSON.stringify(ST_PL.map(p=>[p.id,p.online,p.code,p.location,p.ship,p.card])); const ch=sig!==ST_PL_SIG; ST_PL_SIG=sig; return ch; }
+  const sig=JSON.stringify(ST_PL.map(p=>[p.id,p.online,p.starfix,p.game,p.code,p.location,p.ship,p.card])); const ch=sig!==ST_PL_SIG; ST_PL_SIG=sig; return ch; }
 const ST_ABBR={HUR:'Stanton1',CRU:'Stanton2',ARC:'Stanton3',MIC:'Stanton4'};
 function stPlayerLoc(p){ const D=ST_DATA; if(!D||!p) return null;
   var en=placeEnglish(p), sysOnly=systemOnlyName(en);
@@ -278,12 +278,16 @@ function stFuzzyLoc(D,code,sy,body){ const rom={1:'i',2:'ii',3:'iii',4:'iv',5:'v
   return best; }
 // Ort gilt als frisch, wenn die letzte Ortsmeldung juenger als 15 Minuten ist (online heisst nur: das Tool laeuft)
 function stLocFresh(p){ const t=Date.parse(String(p.when||p.last_seen||'').replace(' ','T')); return !!t&&Date.now()-t<15*60000; }   // 'when' optional (Zeit der letzten Ortsmeldung), sonst last_seen
+function pilotStateText(p){
+  if(p && typeof p.starfix==='boolean') return _t(p.starfix?'status.starfix_on':'status.starfix_off')+' · '+_t(p.game?'status.game_on':'status.game_off');
+  return p&&p.online?_t('status.online'):_t('status.offline');
+}
 function stAgo(ts){ const d=Date.parse(String(ts||'').replace(' ','T')); if(!d) return _t('location.unknown'); const m=Math.max(0,Math.round((Date.now()-d)/60000));
   return m<2?_t('time.just_now'):m<60?_t('time.ago_min',{n:m}):m<1440?_t('time.ago_hour',{n:Math.round(m/60)}):_t('time.ago_day',{n:Math.round(m/1440)}); }
 function stPlayerObj(p){ const o=stPlayerLoc(p); if(!o) return null; return {id:'pl-'+p.id,n:p.name||p.player||_t('entity.player'),k:'player',sy:o.sy,p:o.id,x:o.x,y:o.y,z:o.z,pl:p,loc:o,on:!!p.online}; }
 function stOpenGroup(g){ const L=g.grp, nOn=L.filter(x=>x.on).length;
   const body=stCard(nOn?'#4dff9a':'#8a93a6',(g.loc&&g.loc.n)?gn(g.loc.n):_t('player.multiple'),nOn?_t('player.here_count_online',{n:L.length,on:nOn}):_t('player.here_count',{n:L.length}));
-  body.innerHTML=L.map((x,i)=>{ const p=x.pl; return '<div class="st-pr" data-gi="'+i+'" style="cursor:pointer"><div><b>'+(x.on?'<span style="color:#4dff9a">●</span> ':'<span class="sc-lmw-muted">○</span> ')+esc(x.n)+'</b><span>'+esc([playerPlaceName(p)||(x.loc&&translated(x.loc.n))||'',x.on?_t('status.online'):_t('status.offline_last',{time:stAgo(p.last_seen||p.when)}),gn(p.ship||'')].filter(Boolean).join(' · '))+'</span></div><em>'+_t('action.profile')+'</em></div>'; }).join('');
+  body.innerHTML=L.map((x,i)=>{ const p=x.pl; return '<div class="st-pr" data-gi="'+i+'" style="cursor:pointer"><div><b>'+(x.on?'<span style="color:#4dff9a">●</span> ':'<span class="sc-lmw-muted">○</span> ')+esc(x.n)+'</b><span>'+esc([playerPlaceName(p)||(x.loc&&translated(x.loc.n))||'',pilotStateText(p),gn(p.ship||'')].filter(Boolean).join(' · '))+'</span></div><em>'+_t('action.profile')+'</em></div>'; }).join('');
   body.querySelectorAll('[data-gi]').forEach(r=>r.onclick=()=>stOpenPlayer(L[+r.getAttribute('data-gi')].pl)); }
 let ST_PIN='', ST_CALL_HELD=false, ST_CALL_DRAG=null, ST_CALL_MINI=false;
 function callStore(){ try{ const s=JSON.parse(localStorage.getItem('sclmw_call_frame')||'null'); return s&&typeof s==='object'?s:{}; }catch(e){ return {}; } }
@@ -403,11 +407,15 @@ function ensurePilotUi(){ if(!ROOT||$('stCall')) return;
   ico.addEventListener('pointerup', endIco); ico.addEventListener('pointercancel', endIco);
 }
 function paintPilot(p){ ensurePilotUi(); const box=$('stCall'); if(!box||!p) return;
-  const bits=pilotBits(p), rows=pilotRows(p), extra=placeExtra(p)+pilotContracts(p), sig=JSON.stringify([ST_LANG,p.name,p.player,!!p.online,bits.place,bits.ship,bits.gear,rows,extra,p.code,p.card]);
+  const bits=pilotBits(p), rows=pilotRows(p), extra=placeExtra(p)+pilotContracts(p), sig=JSON.stringify([ST_LANG,p.name,p.player,!!p.online,!!p.starfix,!!p.game,bits.place,bits.ship,bits.gear,rows,extra,p.code,p.card]);
   if(box.dataset.sig!==sig){ box.dataset.sig=sig;
     const nm=p.name||p.player||_t('entity.player'); box.querySelector('.st-call-name').textContent=nm; box.setAttribute('aria-label', nm);
-    box.querySelector('.st-call-status').textContent=p.online?_t('status.online'):_t('status.offline');
-    box.querySelector('.st-call-pip').classList.toggle('on', !!p.online);
+    box.querySelector('.st-call-status').textContent=pilotStateText(p);
+    const pip=box.querySelector('.st-call-pip');
+    const playing=typeof p.game==='boolean'?!!p.game:!!p.online;
+    const sfx=typeof p.starfix==='boolean'?!!p.starfix:!!p.online;
+    pip.classList.toggle('on', playing);
+    pip.classList.toggle('sfx', sfx && !playing);
     box.querySelector('.st-call-rows').innerHTML=rows.map(function(r){ return '<div'+(r[2]==='hot'?' class="is-hot"':'')+'><span>'+esc(r[0])+'</span><b>'+esc(r[1])+'</b></div>'; }).join('');
     box.classList.remove('is-fresh'); void box.offsetWidth; box.classList.add('is-fresh');
     let place=box.querySelector('.st-call-place');
@@ -557,7 +565,8 @@ function stantonScene(canvas,sysKey){
   // that side put every cloud behind the camera. The rig follows the view,
   // so the same clouds stay in front of the lens.
   const skyNebRig=new T.Group(); sky.add(skyNebRig);
-  [[-220,80,-320,0x8a5aff,300],[300,-60,-380,0x2ec6ff,340],[100,150,-500,0xff5aa0,280],[-320,-120,-240,0x5affc0,240],[260,210,-600,0x9a7aff,360],[-120,-160,-180,0x6a7aff,160],[160,-30,-200,0xff7ac0,140],[40,180,-260,0x4ac6ff,150],[-260,120,-420,0xb06aff,200],[210,90,-300,0x7affd0,150]].forEach(n=>{ const s=new T.Sprite(new T.SpriteMaterial({map:neb,color:n[3],transparent:true,opacity:.38,blending:T.AdditiveBlending,depthWrite:false})); s.position.set(n[0],n[1],n[2]); s.scale.set(n[4],n[4],1); skyNebRig.add(s); skyNeb.push(s); });
+  const sysNeb=[];
+  [[-220,80,-320,0x8a5aff,300],[300,-60,-380,0x2ec6ff,340],[100,150,-500,0xff5aa0,280],[-320,-120,-240,0x5affc0,240],[260,210,-600,0x9a7aff,360],[-120,-160,-180,0x6a7aff,160],[160,-30,-200,0xff7ac0,140],[40,180,-260,0x4ac6ff,150],[-260,120,-420,0xb06aff,200],[210,90,-300,0x7affd0,150]].forEach(n=>{ const s=new T.Sprite(new T.SpriteMaterial({map:neb,color:n[3],transparent:true,opacity:.38,blending:T.AdditiveBlending,depthWrite:false})); s.position.set(n[0],n[1],n[2]); s.userData.home=s.position.clone(); s.scale.set(n[4],n[4],1); s.frustumCulled=false; skyNebRig.add(s); skyNeb.push(s); });
   function skyGlowMap(){ if(skyGlowTex) return skyGlowTex; const c=document.createElement('canvas'); c.width=c.height=64; const x=c.getContext('2d'); const g=x.createRadialGradient(32,32,0,32,32,32); g.addColorStop(0,'rgba(255,255,255,1)'); g.addColorStop(0.22,'rgba(255,255,255,.5)'); g.addColorStop(1,'rgba(255,255,255,0)'); x.fillStyle=g; x.fillRect(0,0,64,64); skyGlowTex=new T.CanvasTexture(c); return skyGlowTex; }
   function tintSky(k){ const L=ST_SYSLOOK[k]||ST_SYSLOOK.stanton, pal=L.sky; const style=ST_SKY.on?ST_SKY.style:'off'; const show=style==='classic'||style==='dense'||style==='spectrum'||style==='glow'; const mul=style==='dense'?0.4:(style==='glow'?0.75:1); skyNeb.forEach((s,i)=>{ s.visible=show; s.material.color.setHex(pal[i%pal.length]); s.material.opacity=(L.skyOp||.38)*mul; }); }
   function applySky(){
@@ -693,7 +702,7 @@ function stantonScene(canvas,sysKey){
     entries.push({o:star,p:c0.clone(),body:true,r:sr,prio:3});
     // Gasnebel des Systems (Pyro rot-orange, Nyx blau-tuerkis)
     look.neb.forEach((col,i)=>{ const a=i*2.399+S.k.length, rr=45+(i*37%70), s=new T.Sprite(new T.SpriteMaterial({map:neb,color:col,transparent:true,opacity:look.nebOp,blending:T.AdditiveBlending,depthWrite:false}));
-      s.position.set(c0.x+Math.cos(a)*rr,c0.y+((i%3)-1)*14,c0.z+Math.sin(a)*rr); const sc=110+(i*53%120); s.scale.set(sc,sc,1); grp.add(s); });
+      s.position.set(c0.x+Math.cos(a)*rr,c0.y+((i%3)-1)*14,c0.z+Math.sin(a)*rr); const sc=110+(i*53%120); s.scale.set(sc,sc,1); s.userData.neb=1; s.userData.base=sc; s.frustumCulled=false; sysNeb.push(s); grp.add(s); });
     if(star.ring&&ST_VIS.halo){ const p=ringPoints(grp,star.ring.in*1e-6,star.ring.out*1e-6,0.12,4200,look.belt); p.position.copy(c0); }
     (D.kids[star.id]||[]).filter(o=>o.k==='belt'&&o.belt).forEach(b=>{ if(!ST_VIS.halo) return; const pc=Vs(D.by[b.p]||star), w=Math.max(0.9,(b.belt.out-b.belt.in)*1e-6);
       const p=ringPoints(grp,b.belt.in*1e-6-w/2,b.belt.out*1e-6+w/2,Math.max(0.2,b.belt.depth*1e-6),S.k==='nyx'?7000:3000,look.belt); p.position.copy(pc); });
@@ -852,7 +861,7 @@ function stantonScene(canvas,sysKey){
     addMarkers(descendants(F.id,c=>c.k==='moon'),o=>{ const v=rel(o); if(v.length()<lift) v.setLength(lift); return v; });
   }
   function dispose(g){ const kept=Object.values(BODY_MAP); g.traverse(x=>{ if(x.geometry) x.geometry.dispose(); if(x.material){ if(x.material.map&&x.material.map!==dotTex&&x.material.map!==sunGlowTex&&x.material.map!==neb&&!Object.values(ICON).includes(x.material.map)&&kept.indexOf(x.material.map)<0) x.material.map.dispose(); x.material.dispose(); } }); }
-  function rebuild(){ wormClock=null; wormMouths=[]; wormStat=null; if(!ST_DATA) return;
+  function rebuild(){ wormClock=null; wormMouths=[]; wormStat=null; sysNeb.length=0; if(!ST_DATA) return;
     if(grp){ scene.remove(grp); dispose(grp); } grp=new T.Group(); scene.add(grp); entries=[]; spin=[]; animNodes=[]; sysGroups=[]; lblLayer.innerHTML='';
     camera.near=level.t==='sys'?0.05:0.004; camera.updateProjectionMatrix();
     if(level.t==='sys') buildSys(); else buildBody(level.o);
@@ -1040,7 +1049,7 @@ function stantonScene(canvas,sysKey){
     blurScene=new T.Scene(); blurQuad=new T.Mesh(new T.PlaneGeometry(2,2), blurMat); blurQuad.frustumCulled=false; blurScene.add(blurQuad);
   }
   function splitLayers(focus){
-    sysGroups.forEach(function(g){ const bit=g.userData.sys===focus?0:1; g.traverse(function(o){ o.layers.set(bit); }); });
+    sysGroups.forEach(function(g){ const bit=g.userData.sys===focus?0:1; g.traverse(function(o){ o.layers.set(o.userData.neb?0:bit); }); });
     if(plPts) plPts.forEach(function(p){ p.layers.set(p.userData.sys&&p.userData.sys!==focus?1:0); });
     layersSplit=true;
   }
@@ -1155,6 +1164,13 @@ function stantonScene(canvas,sysKey){
     if(animNodes.length){ animNodes.forEach(a=>{ a.o.rotation.y+=a.s; }); entries.forEach(e=>{ if(e.node) e.node.getWorldPosition(e.p); }); }
     az+=(azT-az)*0.08; el+=(elT-el)*0.08; R+=(RT-R)*0.07; tgt.lerp(tgtT,0.1);
     camera.position.set(tgt.x+R*Math.cos(el)*Math.sin(az),tgt.y+R*Math.sin(el),tgt.z+R*Math.cos(el)*Math.cos(az)); camera.lookAt(tgt); sky.position.copy(camera.position); skyNebRig.quaternion.copy(camera.quaternion);
+    // The backdrop stays behind the subject at every zoom, and large enough
+    // to cover the view. System clouds keep the same apparent size when the
+    // camera pulls back, instead of shrinking into the black background.
+    const back=Math.min(camera.far*0.45, Math.max(720, R*2.15));
+    const axis=tmp.set(0,0,-1);
+    skyNeb.forEach(function(s){ tmp2.copy(s.userData.home).normalize().lerp(axis,0.62).normalize(); s.position.copy(tmp2).multiplyScalar(back); s.scale.set(back*0.78,back*0.78,1); });
+    sysNeb.forEach(function(s){ const dist=Math.max(30, camera.position.distanceTo(s.position)), k=Math.max(1, dist/260), sc=s.userData.base*k; s.scale.set(sc,sc,1); });
     renderView();
     if(hoverReq){ hoverReq=false; const e=nearest(hx,hy,10); hover=(e&&!e.body)?e:null; }
     labels(); }catch(err){ if(!loopErr){ loopErr=true; console.error('Live Map, Fehler im Bildaufbau:',err); } } }
@@ -1687,7 +1703,69 @@ function placeUnder(panel, btn, prefW){ if(!panel||!btn) return; const anchor=bt
 const stCache=new Map();
 async function stGet(url){ const c=stCache.get(url); if(c&&Date.now()-c.t<300000) return c.d;
   const d=await fetch(url).then(r=>r.json()).then(j=>(j&&j.data)||[]).catch(()=>null); if(d) stCache.set(url,{t:Date.now(),d}); return d||[]; }
-function stCloseCard(){ const p=$('stLoc'); if(p) p.remove(); window.__stCtl&&window.__stCtl.highlight(null); }
+const LOC_FRAME_KEY='sclmw_loc_frame';
+function locStore(){ try{ const s=JSON.parse(localStorage.getItem(LOC_FRAME_KEY)||'null'); return s&&typeof s==='object'?s:{}; }catch(e){ return {}; } }
+function locSave(patch){ try{ const s=locStore(); Object.assign(s, patch); localStorage.setItem(LOC_FRAME_KEY, JSON.stringify(s)); }catch(e){} }
+function placeLocCard(card){ if(!card) return;
+  if(sheetMode()||card.__drag){ if(sheetMode()) clearSheet(card); return; }
+  const s=locStore();
+  if(typeof s.l==='number'){ card.style.right='auto'; card.style.bottom='auto'; card.style.left=s.l+'px'; card.style.top=s.t+'px'; card.style.width=(s.w||380)+'px'; card.style.height=(s.h||560)+'px'; }
+  else clearSheet(card);
+}
+function flashLoc(card){ if(!card) return; card.classList.remove('is-fresh'); void card.offsetWidth; card.classList.add('is-fresh'); }
+function ensureLocShell(){ let p=$('stLoc');
+  if(p&&p.querySelector('.st-loc-card')) return p;
+  if(p) p.remove();
+  p=document.createElement('div'); p.id=ID('stLoc'); p.className='st-loc';
+  const edges=['n','s','e','w','nw','ne','sw','se'].map(function(d){ return '<i class="st-room-edge '+d+'" data-resize="'+d+'"></i>'; }).join('');
+  p.innerHTML='<div class="st-loc-card" role="dialog">'+
+    '<i class="st-call-c tl"></i><i class="st-call-c tr"></i><i class="st-call-c bl"></i><i class="st-call-c br"></i>'+
+    '<div class="st-loc-h" title="'+esc(_t('pilot.drag'))+'"><i class="st-call-grip"></i><span class="st-loc-mark"></span><h3></h3><button type="button" class="st-loc-x">✕</button></div>'+
+    '<div class="st-loc-body"></div>'+edges+'</div>';
+  ROOT.appendChild(p);
+  const card=p.querySelector('.st-loc-card');
+  card.querySelector('.st-loc-x').onclick=function(ev){ ev.preventDefault(); ev.stopPropagation(); stCloseCard(); };
+  card.addEventListener('pointerdown', function(ev){ if(ev.button!=null&&ev.button!==0) return;
+    if(sheetMode()) return;
+    if(ev.target.closest&&ev.target.closest('button,a,input,textarea,select,summary,label')) return;
+    const edge=ev.target.closest&&ev.target.closest('[data-resize]');
+    const head=ev.target.closest&&ev.target.closest('.st-loc-h');
+    if(!edge&&!head) return;
+    const rect=ROOT.getBoundingClientRect();
+    if(edge) card.__drag={id:ev.pointerId, mode:edge.getAttribute('data-resize'), x:ev.clientX, y:ev.clientY, l:card.offsetLeft, t:card.offsetTop, w:card.offsetWidth, h:card.offsetHeight};
+    else card.__drag={id:ev.pointerId, mode:'move', ox:ev.clientX-rect.left-card.offsetLeft, oy:ev.clientY-rect.top-card.offsetTop};
+    try{ card.setPointerCapture(ev.pointerId); }catch(e){}
+    card.classList.add('is-drag'); ev.preventDefault(); });
+  card.addEventListener('pointermove', function(ev){ const d=card.__drag; if(!d||ev.pointerId!==d.id) return;
+    if(d.mode==='move'){ const rect=ROOT.getBoundingClientRect(); clampCall(card, ev.clientX-rect.left-d.ox, ev.clientY-rect.top-d.oy); card.style.right='auto'; card.style.bottom='auto'; return; }
+    const dx=ev.clientX-d.x, dy=ev.clientY-d.y, m=d.mode;
+    let l=d.l, t=d.t, w=d.w, h=d.h;
+    const east=m==='e'||m==='ne'||m==='se', west=m==='w'||m==='nw'||m==='sw', south=m==='s'||m==='se'||m==='sw', north=m==='n'||m==='ne'||m==='nw';
+    if(east) w=d.w+dx; if(south) h=d.h+dy; if(west){ w=d.w-dx; l=d.l+dx; } if(north){ h=d.h-dy; t=d.t+dy; }
+    if(w<280){ if(west) l-=280-w; w=280; } if(h<220){ if(north) t-=220-h; h=220; }
+    const W=ROOT.clientWidth||1, H=ROOT.clientHeight||1;
+    w=Math.min(w, W-16); h=Math.min(h, H-16);
+    l=Math.max(8, Math.min(l, W-w-8)); t=Math.max(8, Math.min(t, H-h-8));
+    card.style.left=l+'px'; card.style.top=t+'px'; card.style.right='auto'; card.style.bottom='auto'; card.style.width=w+'px'; card.style.height=h+'px'; });
+  const endDrag=function(ev){ const d=card.__drag; if(!d||ev.pointerId!==d.id) return; card.__drag=null; card.classList.remove('is-drag');
+    locSave({l:card.offsetLeft, t:card.offsetTop, w:card.offsetWidth, h:card.offsetHeight}); };
+  card.addEventListener('pointerup', endDrag); card.addEventListener('pointercancel', endDrag);
+  if(!ROOT.__stLocSheet){ ROOT.__stLocSheet=function(){ const live=$('stLoc'); placeLocCard(live&&live.querySelector('.st-loc-card')); }; window.addEventListener('resize', ROOT.__stLocSheet); }
+  placeLocCard(card);
+  return p;
+}
+function locOpen(markHtml, titleHtml){ const p=ensureLocShell(); p.hidden=false;
+  const card=p.querySelector('.st-loc-card');
+  card.querySelector('.st-loc-mark').innerHTML=markHtml||'';
+  card.querySelector('.st-loc-h h3').innerHTML=titleHtml||'';
+  card.setAttribute('aria-label', card.querySelector('.st-loc-h h3').textContent||'');
+  const old=card.querySelector('.st-loc-body');
+  const body=document.createElement('div'); body.className='st-loc-body'; body.id=ID('stLocBody');
+  if(old) old.replaceWith(body); else card.appendChild(body);
+  flashLoc(card);
+  return {p:p, body:body};
+}
+function stCloseCard(){ const p=$('stLoc'); if(p){ p.hidden=true; p.__re=null; } window.__stCtl&&window.__stCtl.highlight(null); }
 function stCatsMark(){ const c=$('stCats'); if(c) c.querySelectorAll('[data-cat]').forEach(b=>b.classList.toggle('on',b.getAttribute('data-cat')===ST_CAT)); }
 function stTermIdx(){ if(ST_TERM) return ST_TERM; ST_TERM={}; ST_DATA.d.objects.forEach(o=>(o.terms||[]).forEach(t=>{ ST_TERM[t.id]=o; })); return ST_TERM; }
 const stBase=n=>n.toLowerCase().replace(/\s*\((raw|ore|r)\)\s*$/,'').replace(/^raw\s*/,'').trim();
@@ -1714,7 +1792,7 @@ let ST_SGEN=0;
 async function stSearch(){ const box=$('stRes'), qi=$('stQ'); if(!box||!ST_DATA) return; const gen=++ST_SGEN;
   const q=(qi.value||'').trim().toLowerCase(), cat=ST_CAT, all=cat==='all';
   if(!q&&all){ box.hidden=true; return; } box.hidden=false; placeUnder(box, popAnchor(), 440);
-  if(rootW()<700){ const lp=$('stLoc'); if(lp) lp.remove(); }
+  if(rootW()<700 && $('stLoc')) stCloseCard();
   const has=s=>{ if(!q) return true; const a=String(s||'').toLowerCase(); if(a.indexOf(q)>=0) return true; const g=gn(s); return g!==s&&String(g).toLowerCase().indexOf(q)>=0; }, lim=n=>all?5:n;
   const C=await uexCatalog(), M=await stMis(), ORES=await stOres(), BPD=(all||cat==='bp')?await stBps():{bps:{}};
   if(!C._ix){ C.items.forEach((x,i)=>{ x._i=i; }); C.ships.forEach((x,i)=>{ x._i=i; }); C._ix=1; }
@@ -1722,7 +1800,7 @@ async function stSearch(){ const box=$('stRes'), qi=$('stQ'); if(!box||!ST_DATA)
   const head=(tt,n,c)=>all?'<div class="st-rh">'+tt+(n>5?' <a data-more="'+c+'">'+esc(_t('action.show_all',{n}))+'</a>':'')+'</div>':'';
   if((all||cat==='pl')&&ST_PL){ const L=ST_PL.filter(p=>has(p.name)||has(p.player)||has(p.location)||has(p.ship)||has(p.system)||has(p.server));
     if(ST_PL_ERR&&cat==='pl') h+='<p class="st-warn">'+esc(ST_PL_ERR)+'</p>';
-    if(L.length) h+=head(_t('cat.pl'),L.length,'pl')+L.slice(0,lim(300)).map(p=>stRow('pl',p.id,p.online?'🟢':'⚪',p.name||p.player,[p.online?_t('status.online'):_t('status.offline_last',{time:stAgo(p.last_seen||p.when)}),p.location&&(playerPlaceName(p)||gn(p.location))+(p.online&&p.when&&!stLocFresh(p)?' ('+stAgo(p.when)+')':''),p.ship&&gn(p.ship),p.server&&(_t('pilot.server')+' '+p.server),travelBlurb(p)].filter(v=>v&&v!=='—').join(' · '))).join('')+stCut(L.length,lim(300)); else if(cat==='pl'&&!ST_PL_ERR) h+='<p class="sc-lmw-muted" style="padding:10px;font-size:.84rem">'+_t('search.none_players')+'</p>'; }
+    if(L.length) h+=head(_t('cat.pl'),L.length,'pl')+L.slice(0,lim(300)).map(p=>stRow('pl',p.id,p.online?'🟢':'⚪',p.name||p.player,[pilotStateText(p),p.location&&(playerPlaceName(p)||gn(p.location))+(p.online&&p.when&&!stLocFresh(p)?' ('+stAgo(p.when)+')':''),p.ship&&gn(p.ship),p.server&&(_t('pilot.server')+' '+p.server),travelBlurb(p)].filter(v=>v&&v!=='—').join(' · '))).join('')+stCut(L.length,lim(300)); else if(cat==='pl'&&!ST_PL_ERR) h+='<p class="sc-lmw-muted" style="padding:10px;font-size:.84rem">'+_t('search.none_players')+'</p>'; }
   if(all||cat==='loc'){ const L=ST_DATA.d.objects.filter(o=>o.k!=='asteroid'&&(!o.h||ST_HID)&&(q?has(o.n):(ST_PRIO[o.k]||0)>=2)).sort((a,b)=>(ST_PRIO[b.k]||0)-(ST_PRIO[a.k]||0)||a.n.localeCompare(b.n));
     if(L.length) h+=head(_t('cat.loc'),L.length,'loc')+L.slice(0,lim(600)).map(o=>stRow('loc',o.id,kindMark(o.k),gn(o.n),kindLabel(o.k)+(stBodyOf(o)!==o&&stBodyOf(o).k!=='star'?' · '+gn(stBodyOf(o).n):'')+' · '+stSysName(o))).join('')+stCut(L.length,lim(600)); }
   if(all||cat==='ore'){ const L=ORES.filter(o=>has(o.n)||o.mine.some(has)||has(o.code));
@@ -1763,10 +1841,8 @@ async function stPick(kind,key){ const ctl=window.__stCtl, C=await uexCatalog(),
   else if(kind==='ware') stOpenBuy('ware',C.items[+key]);
   else if(kind==='bp') stOpenBp(key);
   else if(kind==='mis'){ const g=(await stMis()).d.groups[+key]; ctl.highlight(g.locs); stOpenMisGroup(g); } }
-function stCard(dot,title,sub){ let p=$('stLoc'); if(p) p.remove();
-  p=document.createElement('div'); p.id=ID('stLoc'); p.className='st-loc';
-  p.innerHTML='<div class="st-loc-card"><div class="st-loc-h"><span class="st-dot" style="background:'+dot+'"></span><h3>'+esc(title)+'<small>'+esc(sub)+'</small></h3>'+'<button class="st-loc-x" id="'+ID('stLocX')+'">✕</button></div><div class="st-loc-body" id="'+ID('stCardBody')+'"><p class="sc-lmw-muted">'+_t('common.loading')+'</p></div></div>';
-  ROOT.appendChild(p); $('stLocX').onclick=()=>{ p.remove(); window.__stCtl&&window.__stCtl.highlight(null); }; return $('stCardBody'); }
+function stCard(dot,title,sub){ const shell=locOpen('<span class="st-dot" style="background:'+dot+'"></span>', esc(title)+'<small>'+esc(sub)+'</small>');
+  shell.body.innerHTML='<p class="sc-lmw-muted">'+_t('common.loading')+'</p>'; return shell.body; }
 function stPriceRows(rows,field,label,asc){ const T=stTermIdx();
   const L=rows.filter(r=>r[field]>0).sort((a,b)=>asc?a[field]-b[field]:b[field]-a[field]);
   if(!L.length) return {html:'',ids:[]}; const ids=[];
@@ -1839,7 +1915,7 @@ function stPlList(){ const box=$('stPlList'), cnt=$('stPlCnt'); const P=ST_PL||[
   box.innerHTML=(ST_PL_ERR?'<p class="st-warn">'+esc(ST_PL_ERR)+'</p>':'')+(L.map(p=>{ const o=stPlayerLoc(p);
     const place=playerPlaceName(p)||(o&&translated(o.n))||'';
     const age=stAgo(p.last_seen||p.when);
-    const where=p.online?(travelBlurb(p)||place||_t('location.unknown'))+(p.when&&!stLocFresh(p)?' ('+age+')':''):(place||_t('location.unknown'))+' · '+_t('status.offline_last',{time:age});
+    const where=(typeof p.starfix==='boolean')?[place||_t('location.unknown'), pilotStateText(p)].filter(Boolean).join(' · '):(p.online?(travelBlurb(p)||place||_t('location.unknown'))+(p.when&&!stLocFresh(p)?' ('+age+')':''):(place||_t('location.unknown'))+' · '+_t('status.offline_last',{time:age}));
     return '<div class="st-orow st-plrow'+(p.online?'':' is-off')+'" data-pid="'+esc(p.id)+'"><b><i class="st-pl-dot'+(p.online?' on':'')+'"></i>'+esc(p.name||p.player||_t('entity.player'))+'</b><div class="om"><span>'+esc(where)+'</span>'+(o?'<span>'+esc(stSysName(o))+'</span>':'')+(p.server?'<span>'+esc(_t('pilot.server'))+' '+esc(String(p.server))+'</span>':'')+(p.ship&&p.ship!=='—'?'<span>🚀 '+esc(gn(p.ship))+'</span>':'')+'</div></div>'; }).join('')||'<p class="sc-lmw-muted" style="font-size:.8rem">'+(ST_PL?_t('search.none_players'):_t('common.loading'))+'</p>');
   box.querySelectorAll('[data-pid]').forEach(el=>el.onclick=()=>{ const p=P.find(x=>String(x.id)===el.getAttribute('data-pid')); if(!p) return; const o=stPlayerLoc(p); if(o) window.__stCtl.flyTo(o); stOpenPlayer(p); }); }
 function stLegend(){ const box=$('stLegend'); if(!box||!ST_DATA) return; const cnt={}, hid={};
@@ -1862,16 +1938,15 @@ function stOreIndex(){ const D=ST_DATA; if(D.oreIdx) return D.oreIdx; const ores
     Object.entries(acc).forEach(([ore,a])=>(ores[ore]=ores[ore]||[]).push({k,g:g.g,ch:a.ch,max:a.max,q:a.q})); }));
   D.d.objects.forEach(o=>(o.mine||[]).forEach(k=>(locs[k]=locs[k]||[]).push(o)));
   D.oreIdx={ores,locs}; return D.oreIdx; }
-function stOpenMisGroup(g){ let p=$('stLoc'); if(p) p.remove(); p=document.createElement('div'); p.id=ID('stLoc'); p.className='st-loc'; p.__re=()=>stOpenMisGroup(g);
-  const locs=g.locs.map(id=>ST_DATA.by[id]).filter(Boolean);
-  p.innerHTML='<div class="st-loc-card"><div class="st-loc-h"><span class="st-dot" style="background:#ffd76a"></span><h3>'+esc(stTy(g.ty))+'<small>'+esc(gn(g.g))+(g.il?' · '+esc(_t('tag.illegal')):'')+' · '+esc(_t('count.orders',{n:g.n}))+'</small></h3>'+'<button class="st-loc-x" id="'+ID('stLocX')+'">✕</button></div><div class="st-loc-body">'+
-    (g.t.length?'<div class="st-slbl">'+_t('label.examples')+'</div>'+g.t.map(t=>'<div class="st-mis-t">'+esc(gn(t))+'</div>').join(''):'')+
+function stOpenMisGroup(g){ const locs=g.locs.map(id=>ST_DATA.by[id]).filter(Boolean);
+  const shell=locOpen('<span class="st-dot" style="background:#ffd76a"></span>', esc(stTy(g.ty))+'<small>'+esc(gn(g.g))+(g.il?' · '+esc(_t('tag.illegal')):'')+' · '+esc(_t('count.orders',{n:g.n}))+'</small>');
+  shell.p.__re=()=>stOpenMisGroup(g);
+  shell.body.innerHTML=(g.t.length?'<div class="st-slbl">'+_t('label.examples')+'</div>'+g.t.map(t=>'<div class="st-mis-t">'+esc(gn(t))+'</div>').join(''):'')+
     (g.bp?'<div class="st-slbl">🧩 '+esc(_t('cat.bp'))+' <span class="st-cnt">'+esc(_t('bp.in_x_of_y_orders',{nbp:g.nbp,n:g.n}))+'</span></div>'+(g.tb?'<div class="st-mis-sub">'+g.tb.map(function(t){ return esc(gn(t)); }).join(' · ')+'</div>':'')+
       '<div class="st-bp">'+g.bp.map(b=>'<span'+(b[2]?' title="'+esc(gn(b[2]))+'"':'')+'>'+esc(gn(b[0]))+(b[1]<100?' <em>'+b[1]+' %</em>':'')+'</span>').join('')+'</div>':'')+
     (g.rw?'<div class="st-slbl">'+_t('label.reward')+'</div><div class="st-bp">'+g.rw.map(r=>'<span>'+esc(gn(r[0]))+' ×'+r[1]+'</span>').join('')+'</div>':'')+
-    '<div class="st-slbl">'+_t('label.offered_in')+'</div>'+locs.map(o=>'<div class="st-orow" data-gid="'+o.id+'"><b>'+esc(gn(o.n))+'</b><div class="om"><span>'+esc(kindLabel(o.k))+'</span></div></div>').join('')+'</div></div>';
-  ROOT.appendChild(p); $('stLocX').onclick=()=>p.remove();
-  p.querySelectorAll('[data-gid]').forEach(el=>el.onclick=()=>{ const o=ST_DATA.by[el.getAttribute('data-gid')]; window.__stCtl.flyTo(o); openStPanel(o); }); }
+    '<div class="st-slbl">'+_t('label.offered_in')+'</div>'+locs.map(o=>'<div class="st-orow" data-gid="'+o.id+'"><b>'+esc(gn(o.n))+'</b><div class="om"><span>'+esc(kindLabel(o.k))+'</span></div></div>').join('');
+  shell.body.querySelectorAll('[data-gid]').forEach(el=>el.onclick=()=>{ const o=ST_DATA.by[el.getAttribute('data-gid')]; window.__stCtl.flyTo(o); openStPanel(o); }); }
 // (stOpenMap(), das frueher aus einem Dashboard heraus in einen separaten Taktik-Tisch-Canvas
 // wechselte, ist in diesem eigenstaendigen Projekt tot: initLiveMap()/SCLMW.mount() rufen
 // enterStExplore() direkt auf. Entfernt, statt als nie erreichbarer Code stehen zu bleiben.)
@@ -1903,10 +1978,8 @@ function stMiningHTML(keys){ const D=ST_DATA; let h='<div class="st-slbl">'+_t('
           (ores.length?'<table><tr><th>'+esc(_t('table.ore'))+'</th><th title="'+esc(_t('tooltip.ore_in_rock'))+'">'+esc(_t('table.chance'))+'</th><th title="'+esc(_t('tooltip.ore_share_quality'))+'">'+esc(_t('table.share_quality'))+'</th></tr>'+ores.map(x=>'<tr><td>'+esc(gn(x.ore))+'</td><td>'+Math.round(x.p*100)+' %</td><td>'+x.b.map(b=>b.min+'–'+b.max+' %<small>Q '+b.q[0]+'–'+b.q[1]+'</small>').join('<br>')+'</td></tr>').join('')+'</table>':'<p class="sc-lmw-muted" style="font-size:.78rem;margin:0 10px 8px">'+_t('common.no_ore_data')+'</p>')+'</details>'; }); }); });
   return h; }
 function stNofixNote(k){ return /^AsteroidCluster_/.test(k)?_t('nofix.note_random'):_t('nofix.note_no_coords'); }
-function stOpenNofix(k){ const D=ST_DATA; let p=$('stLoc'); if(p) p.remove();
-  p=document.createElement('div'); p.id=ID('stLoc'); p.className='st-loc';
-  p.innerHTML='<div class="st-loc-card"><div class="st-loc-h"><span class="st-dot" style="background:#9c8b76"></span><h3>'+esc(stMineLabel(k))+'<small>'+esc(_t('nofix.title'))+'</small></h3>'+'<button class="st-loc-x" id="'+ID('stLocX')+'">✕</button></div><div class="st-loc-body"><div class="st-nofix-note">'+stNofixNote(k)+'</div>'+stMiningHTML([k])+'</div></div>';
-  p.__re=()=>stOpenNofix(k); ROOT.appendChild(p); $('stLocX').onclick=()=>p.remove(); }
+function stOpenNofix(k){ const shell=locOpen('<span class="st-dot" style="background:#9c8b76"></span>', esc(stMineLabel(k))+'<small>'+esc(_t('nofix.title'))+'</small>');
+  shell.p.__re=()=>stOpenNofix(k); shell.body.innerHTML='<div class="st-nofix-note">'+stNofixNote(k)+'</div>'+stMiningHTML([k]); }
 function stDist(km){ const n=+km||0, a=Math.abs(n), lang=SC.i18n&&SC.i18n.getLang?SC.i18n.getLang():'en', zh=lang==='zh-Hans'||lang==='zh-Hant';
   let key='unit.km', v=Math.round(n);
   if(zh&&a>=1e8){ key='unit.yi_km'; v=n/1e8; }
@@ -1921,13 +1994,10 @@ async function openStPanel(o){
   if(o.k==='player'){ stOpenPlayer(o.pl); return; }
   if(window.__stPinPlayer) window.__stPinPlayer(null);
   window.__stPlace=o;
-  let p=$('stLoc'); if(p) p.remove();
-  p=document.createElement('div'); p.id=ID('stLoc'); p.className='st-loc';
-  const K=ST_KIND[o.k]||{c:'#ccc'}, kl=kindLabel(o.k), par=o.p&&D.by[o.p], b=stBodyOf(o);
+  const kl=kindLabel(o.k), par=o.p&&D.by[o.p], b=stBodyOf(o);
   const sub=[kl, b&&b!==o&&b.k!=='star'?gn(b.n):(par&&par!==o&&par.k!=='star'?gn(par.n):null), stSysName(o), gn(o.ju)].filter(Boolean).join(' · ');
-  p.innerHTML='<div class="st-loc-card"><div class="st-loc-h">'+kindMark(o.k)+'<h3>'+esc(gn(o.n))+'<small>'+esc(sub)+'</small></h3>'+'<button class="st-loc-x" id="'+ID('stLocX')+'">✕</button></div><div class="st-loc-body" id="'+ID('stLocBody')+'"></div></div>';
-  ROOT.appendChild(p); $('stLocX').onclick=()=>p.remove();
-  const body=$('stLocBody'); let h='';
+  const shell=locOpen(kindMark(o.k), esc(gn(o.n))+'<small>'+esc(sub)+'</small>');
+  const p=shell.p, body=shell.body; let h='';
   p.__re=()=>openStPanel(o); const isDe=ST_LANG==='de', SY=D.sys[o.sy]||{};
   let desc=isDe&&o.dde?o.dde:o.d;
   if(o.k==='star'){ if(SY.img) h+='<img class="st-shipimg" src="'+esc(SY.img)+'" alt="" onerror="this.remove()">'; desc=isDe?(o.dde||SY.dde||SY.d||o.d):(SY.d||o.d); }

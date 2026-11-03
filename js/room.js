@@ -23,6 +23,7 @@
       note:'路线备注', publish:'发布给房间', clear:'清空', comment:'评论', send:'发送', del:'删除',
       mode:'谁可以画路线', modeCaptain:'仅队长', modeMembers:'队员也可以',
       members:'房间成员', online:'在线', offline:'离线', server:'服务器', fold:'收起', unfold:'展开', you:'你', captainTag:'队长',
+      sfxOn:'Starfix 在线', sfxOff:'Starfix 离线', gameOn:'游戏在线', gameOff:'游戏离线',
       find:'搜索昵称或地点', none:'没有匹配的人',
       give:'设为队长', giveShort:'队长', giveLeave:'交给他并离开', dissolve:'解散房间', dissolveLeave:'解散并离开', cancel:'取消',
       kick:'踢出', kickYes:'确定', kicked:'你已被移出这个房间。', denied:'队长拒绝了这次申请。',
@@ -61,6 +62,7 @@
       note:'路線備註', publish:'發布給房間', clear:'清空', comment:'評論', send:'送出', del:'刪除',
       mode:'誰可以畫路線', modeCaptain:'僅隊長', modeMembers:'隊員也可以',
       members:'房間成員', online:'在線', offline:'離線', server:'伺服器', fold:'收起', unfold:'展開', you:'你', captainTag:'隊長',
+      sfxOn:'Starfix 在線', sfxOff:'Starfix 離線', gameOn:'遊戲在線', gameOff:'遊戲離線',
       find:'搜尋暱稱或地點', none:'沒有符合的人',
       give:'設為隊長', giveShort:'隊長', giveLeave:'交給他並離開', dissolve:'解散房間', dissolveLeave:'解散並離開', cancel:'取消',
       kick:'踢出', kickYes:'確定', kicked:'你已被移出這個房間。', denied:'隊長拒絕了這次申請。',
@@ -99,6 +101,7 @@
       note:'Route note', publish:'Publish to room', clear:'Clear', comment:'Comment', send:'Send', del:'Delete',
       mode:'Who can draw routes', modeCaptain:'Captain only', modeMembers:'Members too',
       members:'Room members', online:'Online', offline:'Offline', server:'Server', fold:'Minimize', unfold:'Expand', you:'you', captainTag:'Captain',
+      sfxOn:'Starfix online', sfxOff:'Starfix offline', gameOn:'Game online', gameOff:'Game offline',
       find:'Search name or place', none:'No match',
       give:'Make captain', giveShort:'Lead', giveLeave:'Give and leave', dissolve:'Close room', dissolveLeave:'Close and leave', cancel:'Cancel',
       kick:'Remove', kickYes:'Confirm', kicked:'You were removed from this room.', denied:'The captain declined this request.',
@@ -137,6 +140,7 @@
       note:'Notiz zur Route', publish:'Für den Raum veröffentlichen', clear:'Leeren', comment:'Kommentar', send:'Senden', del:'Löschen',
       mode:'Wer Routen zeichnen darf', modeCaptain:'Nur der Captain', modeMembers:'Auch Mitglieder',
       members:'Im Raum', online:'Online', offline:'Offline', server:'Server', fold:'Einklappen', unfold:'Ausklappen', you:'du', captainTag:'Captain',
+      sfxOn:'Starfix online', sfxOff:'Starfix offline', gameOn:'Spiel online', gameOff:'Spiel offline',
       find:'Name oder Ort', none:'Niemand passt',
       give:'Zum Captain machen', giveShort:'Capt.', giveLeave:'Geben und gehen', dissolve:'Raum schließen', dissolveLeave:'Schließen und gehen', cancel:'Abbrechen',
       kick:'Entfernen', kickYes:'Wirklich', kicked:'Du wurdest aus diesem Raum entfernt.', denied:'Der Captain hat diese Anfrage abgelehnt.',
@@ -492,7 +496,7 @@
       '<ul><li>'+esc(ti('home.know_1'))+'</li><li>'+esc(ti('home.know_2'))+'</li><li>'+esc(ti('home.know_3'))+'</li></ul>'+
       '<p class="st-home-links">'+
         '<a href="https://github.com/GuguguBear/sc-lmw/blob/master/companion/README.md" target="_blank" rel="noopener">'+esc(ti('starfix.src_read'))+'</a>'+
-        '<a href="https://github.com/GuguguBear/sc-lmw/releases/tag/starfix-1.0.13" target="_blank" rel="noopener">'+esc(ti('starfix.src_rel'))+'</a>'+
+        '<a href="https://github.com/GuguguBear/sc-lmw/releases/tag/starfix-1.0.14" target="_blank" rel="noopener">'+esc(ti('starfix.src_rel'))+'</a>'+
         '<a href="https://github.com/GuguguBear/sc-lmw/blob/master/companion/app.py" target="_blank" rel="noopener">'+esc(ti('starfix.src_app'))+'</a>'+
       '</p>';
   }
@@ -926,11 +930,11 @@
     if(n) n.textContent = q ? (shown.length+'/'+live.length) : String(live.length);
     var list = el.querySelector('#stCrewList');
     if(!list) return;
-    var on = shown.filter(isOnline), off = shown.filter(function(m){ return !isOnline(m); });
+    var on = shown.filter(starfixOn), off = shown.filter(function(m){ return !starfixOn(m); });
     var split = serverSplit(on);
     var html = '';
-    if(on.length) html += '<div class="st-crew-sec">'+esc(t('online'))+' '+on.length+(split.mixed?' · '+esc(t('server'))+' '+split.kinds:'')+'</div>'+on.map(function(m){ return memberRow(m, split); }).join('');
-    if(off.length) html += '<div class="st-crew-sec">'+esc(t('offline'))+' '+off.length+'</div>'+off.map(function(m){ return memberRow(m, split); }).join('');
+    if(on.length) html += '<div class="st-crew-sec">'+esc(t('sfxOn'))+' '+on.length+(split.mixed?' · '+esc(t('server'))+' '+split.kinds:'')+'</div>'+on.map(function(m){ return memberRow(m, split); }).join('');
+    if(off.length) html += '<div class="st-crew-sec">'+esc(t('sfxOff'))+' '+off.length+'</div>'+off.map(function(m){ return memberRow(m, split); }).join('');
     list.innerHTML = html || '<div class="st-room-dim">'+(q ? esc(t('none')) : '—')+'</div>';
     rollCrew(list);
     list.querySelectorAll('[data-mate]').forEach(function(b){ b.onclick=function(){ jumpMember(b.getAttribute('data-mate')); }; });
@@ -996,11 +1000,16 @@
       }
     });
   }
-  function isOnline(m){
+  function starfixOn(m){
     if(!m) return false;
+    if(typeof m.starfix==='boolean') return m.starfix;
     if(typeof m.online==='boolean') return m.online;
     return typeof m.seen==='number' && (Date.now()/1000-m.seen)<600;
   }
+  function gameOn(m){
+    return !!(m && m.game===true && starfixOn(m));
+  }
+  function isOnline(m){ return starfixOn(m); }
   function placeLabel(m){
     var raw = m.location || '';
     if(SC.loc && SC.loc.text) return SC.loc.text(raw) || raw;
@@ -1013,7 +1022,7 @@
   }
   function memberAsPlayer(m){
     var when = typeof m.seen==='number' ? new Date(m.seen*1000).toISOString() : '';
-    return {id:m.id, name:m.nickname||'', online:isOnline(m), last_seen:when, when:when,
+    return {id:m.id, name:m.nickname||'', online:gameOn(m), starfix:starfixOn(m), game:gameOn(m), last_seen:when, when:when,
       code:m.code||'', location:m.location||'', system:m.system||'', ship:m.ship||'',
       gear:Array.isArray(m.gear)?m.gear:[], server:m.server||'', travel:m.travel||null,
       card:m.card&&typeof m.card==='object'?m.card:null};
@@ -1057,21 +1066,23 @@
     var kick = own ? (kickAsk===m.id
       ? '<button type="button" class="on" data-kick-yes="'+esc(m.id)+'" title="'+esc(t('kick'))+'">'+esc(t('kickYes'))+'</button>'
       : '<button type="button" data-kick="'+esc(m.id)+'" title="'+esc(t('kick'))+'">'+esc(t('kick'))+'</button>') : '';
-    var on = isOnline(m);
-    var when = typeof m.seen==='number' ? '<time data-seen="'+m.seen+'">'+esc(ageText(m.seen))+'</time>' : '';
+    var sfx = starfixOn(m), playing = gameOn(m);
+    var when = (typeof m.seen==='number' && m.seen>0) ? '<time data-seen="'+m.seen+'">'+esc(ageText(m.seen))+'</time>' : '';
     var place = m.location ? esc(placeLabel(m)) : '';
     var ship = m.ship ? esc(shipLabel(m.ship)) : '';
-    var bits = [place, ship].filter(Boolean).join(' · ');
+    var lights = esc(t(sfx?'sfxOn':'sfxOff'))+' · '+esc(t(playing?'gameOn':'gameOff'));
+    var bits = [place, ship, lights].filter(Boolean).join(' · ');
     var host = '<span class="st-mate-host" title="'+esc(t('server'))+'">—</span>';
     if(m.server){
       var same = split && split.top && String(m.server)===split.top;
       var tone = split && split.mixed ? (same?' is-same':' is-other') : (split && split.top ? ' is-same' : '');
       host = '<span class="st-mate-host'+tone+'" title="'+esc(t('server'))+' '+esc(String(m.server))+'">'+esc(hostShort(m.server))+'</span>';
     }
-    var inner = '<i class="st-crew-pip'+(on?' on':'')+'"></i>'+
+    var pip = playing ? ' on' : (sfx ? ' sfx' : '');
+    var inner = '<i class="st-crew-pip'+pip+'"></i>'+
       '<span class="st-mate-roll"><span><b>'+esc(m.nickname)+'</b>'+tags+
       (bits?'<span class="st-mate-last">'+bits+'</span>':'')+'</span></span>'+host+when;
-    return '<div class="st-mate-row'+(kickAsk===m.id?' st-kick-ask':'')+'"><button type="button" class="st-mate'+(m.location?' has-place':'')+(on?'':' is-off')+'" data-mate="'+esc(m.id)+'">'+inner+'</button>'+kick+give+'</div>';
+    return '<div class="st-mate-row'+(kickAsk===m.id?' st-kick-ask':'')+'"><button type="button" class="st-mate'+(m.location?' has-place':'')+(sfx?'':' is-off')+'" data-mate="'+esc(m.id)+'">'+inner+'</button>'+kick+give+'</div>';
   }
   function handoffHtml(){
     var rest = (state.members||[]).filter(function(m){ return m.status==='member' && state.me && m.id!==state.me.id; });

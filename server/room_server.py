@@ -30,9 +30,12 @@ ALPH = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
 BLOCK_DIR = {"language", ".cache", ".git", ".test", "__pycache__", "server", "companion"}
 BLOCK_EXT = {".sqlite", ".ini", ".pyc", ".spec"}
 BLOCK_NAME = {"config.json"}
-ONLINE_S = 600
+# Starfix stays lit for 90s after its last heartbeat. The game stays lit for
+# 3 minutes after the chosen Game.log last grew. A quit clears both at once.
+STARFIX_S = 90
+GAME_S = 180
 OPEN_S = 300
-# Captain absence follows room polls, not the ten-minute location dot.
+# Captain absence follows room polls, not the Starfix heartbeat.
 CAPTAIN_GONE_S = 7 * 24 * 3600
 POLL_LIVE_S = 120
 LOCK = threading.Lock()
@@ -140,6 +143,10 @@ def init_db():
             con.execute("ALTER TABLE presence ADD COLUMN travel TEXT")
         if "card" not in cols:
             con.execute("ALTER TABLE presence ADD COLUMN card TEXT")
+        if "starfix_seen" not in cols:
+            con.execute("ALTER TABLE presence ADD COLUMN starfix_seen REAL")
+        if "game_seen" not in cols:
+            con.execute("ALTER TABLE presence ADD COLUMN game_seen REAL")
         room_cols = {row[1] for row in con.execute("PRAGMA table_info(room)")}
         if "open" not in room_cols:
             con.execute("ALTER TABLE room ADD COLUMN open INTEGER NOT NULL DEFAULT 0")
@@ -404,20 +411,38 @@ def travel_obj(raw):
     return json.loads(text)
 
 
+def presence_lights(starfix_seen, game_seen, at=None):
+    # The game light needs Starfix itself to be on. Nobody is watching the log otherwise.
+    at = now() if at is None else at
+    starfix = bool(starfix_seen and at - starfix_seen < STARFIX_S)
+    game = bool(starfix and game_seen and at - game_seen < GAME_S)
+    return starfix, game
+
+
 def save_presence(con, room, member, body):
-    loc = str(body.get("location") or "")[:80]
-    sys = str(body.get("system") or "")[:40]
-    code_loc = str(body.get("code") or "")[:80]
+    if not isinstance(body, dict):
+        return False
     old = con.execute(
-        "SELECT location, system, code, ship, gear, host, travel, card FROM presence WHERE room=? AND member=?",
+        "SELECT location, system, code, seen, ship, gear, host, travel, card, starfix_seen, game_seen FROM presence WHERE room=? AND member=?",
         (room, member),
     ).fetchone()
+    if "starfix" in body and not body.get("starfix"):
+        if old:
+            con.execute(
+                "UPDATE presence SET starfix_seen=NULL, game_seen=NULL WHERE room=? AND member=?",
+                (room, member),
+            )
+        return True
+    sent_loc = str(body.get("location") or "")[:80]
+    sent_code = str(body.get("code") or "")[:80]
+    sent_place = bool(sent_loc or sent_code or "card" in body)
+    loc = sent_loc
+    sys = str(body.get("system") or "")[:40]
+    code_loc = sent_code
     if not loc and not code_loc and old:
         loc = old["location"] or ""
         sys = old["system"] or sys
         code_loc = old["code"] or ""
-    if not loc and not code_loc and "card" not in body:
-        return False
     if "ship" in body:
         ship_name = str(body.get("ship") or "")[:80]
     else:
@@ -438,20 +463,26 @@ def save_presence(con, room, member, body):
         card = clean_card(body.get("card"))
     else:
         card = (old["card"] if old and old["card"] else "") or ""
-    if not loc and not code_loc and not card:
+    starfix_on = body.get("starfix") is True
+    if not sent_place and not starfix_on:
         return False
+    ts = now()
+    place_seen = ts if sent_place else ((old["seen"] if old and old["seen"] else 0) or 0)
+    starfix_seen = ts if starfix_on else (old["starfix_seen"] if old else None)
+    game_seen = ts if body.get("game") is True else (old["game_seen"] if old else None)
     con.execute(
         """
-        INSERT INTO presence (room, member, location, system, code, seen, ship, gear, host, travel, card)
-        VALUES (?,?,?,?,?,?,?,?,?,?,?)
+        INSERT INTO presence (room, member, location, system, code, seen, ship, gear, host, travel, card, starfix_seen, game_seen)
+        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)
         ON CONFLICT(room, member) DO UPDATE SET
           location=excluded.location, system=excluded.system,
           code=excluded.code, seen=excluded.seen,
           ship=excluded.ship, gear=excluded.gear,
           host=excluded.host, travel=excluded.travel,
-          card=excluded.card
+          card=excluded.card,
+          starfix_seen=excluded.starfix_seen, game_seen=excluded.game_seen
         """,
-        (room, member, loc, sys, code_loc, now(), ship_name, worn, host_id, travel, card),
+        (room, member, loc, sys, code_loc, place_seen, ship_name, worn, host_id, travel, card, starfix_seen, game_seen),
     )
     return True
 
@@ -470,7 +501,7 @@ def room_state(con, code, me):
     role = "captain" if room["captain"] == me["id"] else "member"
     rows = con.execute(
         """
-        SELECT m.id, m.nickname, s.status, p.location, p.system, p.code, p.seen, p.ship, p.gear, p.host, p.travel, p.card
+        SELECT m.id, m.nickname, s.status, p.location, p.system, p.code, p.seen, p.ship, p.gear, p.host, p.travel, p.card, p.starfix_seen, p.game_seen
         FROM membership s
         JOIN member m ON m.id = s.member
         LEFT JOIN presence p ON p.room = s.room AND p.member = s.member
@@ -485,6 +516,7 @@ def room_state(con, code, me):
             continue
         if r["status"] == "rejected":
             continue
+        starfix_on, game_on = presence_lights(r["starfix_seen"], r["game_seen"])
         members.append(
             {
                 "id": r["id"],
@@ -499,7 +531,9 @@ def room_state(con, code, me):
                 "server": r["host"] or "",
                 "travel": travel_obj(r["travel"]),
                 "card": card_obj(r["card"]),
-                "online": bool(r["seen"] and now() - r["seen"] < ONLINE_S),
+                "starfix": starfix_on,
+                "game": game_on,
+                "online": game_on,
             }
         )
     routes = []
@@ -641,9 +675,9 @@ def room_brief(con, code):
         """
         SELECT COUNT(*) AS n FROM membership s
         JOIN presence p ON p.room=s.room AND p.member=s.member
-        WHERE s.room=? AND s.status='member' AND p.seen>?
+        WHERE s.room=? AND s.status='member' AND p.starfix_seen>?
         """,
-        (code, now() - ONLINE_S),
+        (code, now() - STARFIX_S),
     ).fetchone()["n"]
     return {"code": code, "exists": True, "online": int(online), "members": int(members)}
 
@@ -714,13 +748,16 @@ def players_json(con, code, me):
         ).fetchone()
         if not seen:
             continue
+        stamp = seen["seen"] or None
         out.append(
             {
                 "id": m["id"],
                 "name": m["nickname"],
-                "online": m["online"],
-                "last_seen": iso(seen["seen"]),
-                "when": iso(seen["seen"]),
+                "online": m["game"],
+                "starfix": m["starfix"],
+                "game": m["game"],
+                "last_seen": iso(stamp) if stamp else "",
+                "when": iso(stamp) if stamp else "",
                 "code": m["code"],
                 "location": m["location"],
                 "system": m["system"],

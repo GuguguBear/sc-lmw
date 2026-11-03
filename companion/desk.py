@@ -1524,6 +1524,10 @@ class Desktop:
 
     def close(self):
         self._tray_remove()
+        try:
+            self.core.leave_room()
+        except Exception:
+            pass
         self.core.request_stop()
         self.root.destroy()
 
