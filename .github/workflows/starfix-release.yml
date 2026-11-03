@@ -105,9 +105,14 @@ jobs:
           & .\companion\pack-store.ps1 -Exe .\companion\dist\Starfix.exe -Icon .\companion\icon.png -Version "${{ steps.ver.outputs.version }}" -IdentityName $id.identityName -Publisher $id.publisher -PublisherDisplayName $id.publisherDisplayName -Out .\companion\dist\Starfix.msix
       - name: Attach the Store package to the GitHub release
         if: ${{ success() && steps.store.outputs.ready == 'true' }}
+        shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release upload "starfix-${{ steps.ver.outputs.version }}" companion/dist/Starfix.msix --clobber
+        run: |
+          gh release upload "starfix-${{ steps.ver.outputs.version }}" companion/dist/Starfix.msix --clobber
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host "The Store package was built. Attaching it to the GitHub release did not succeed."
+          }
       - name: Install the Microsoft Store CLI
         if: ${{ success() && steps.store.outputs.ready == 'true' }}
         shell: pwsh
