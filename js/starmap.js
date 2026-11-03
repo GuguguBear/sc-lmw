@@ -298,10 +298,21 @@ function pilotAge(p){ const d=Date.parse(String(p.when||p.last_seen||'').replace
   return stAgo(p.when||p.last_seen); }
 function pilotCard(p){ const c=p&&p.card&&typeof p.card==='object'?p.card:{}; return c; }
 function pilotFacts(p){ const c=pilotCard(p), rows=[];
-  if(c.arm===true) rows.push([_t('pilot.arm'), _t('pilot.arm.in')]);
+  const hot=function(label, value){ rows.push([label, value, 'hot']); };
+  if(c.board===true) hot(_t('pilot.board'), _t('pilot.board.in'));
+  else if(c.board===false) rows.push([_t('pilot.board'), _t('pilot.board.out')]);
+  if(c.arm===true) hot(_t('pilot.arm'), _t('pilot.arm.in'));
   else if(c.arm===false) rows.push([_t('pilot.arm'), _t('pilot.arm.out')]);
   if(c.watch===true) rows.push([_t('pilot.watch'), _t('pilot.watch.in')]);
   else if(c.watch===false) rows.push([_t('pilot.watch'), _t('pilot.watch.out')]);
+  if(typeof c.crime==='number'){ if(c.crime>0) hot(_t('pilot.crime'), String(c.crime)); else rows.push([_t('pilot.crime'), '0']); }
+  if(typeof c.fps==='number') rows.push([_t('pilot.fps'), String(c.fps)]);
+  if(c.crash){ const ck='pilot.crash.'+c.crash, cv=_t(ck); hot(_t('pilot.crash'), cv===ck?String(c.crash):cv); }
+  if(typeof c.kills==='number' && c.kills>0) rows.push([_t('pilot.kills'), String(c.kills)]);
+  if(typeof c.wrecks==='number' && c.wrecks>0) rows.push([_t('pilot.wrecks'), String(c.wrecks)]);
+  if(c.down==='player') hot(_t('pilot.down'), _t('pilot.down.player'));
+  else if(c.down==='npc') hot(_t('pilot.down'), _t('pilot.down.npc'));
+  else if(c.down) hot(_t('pilot.down'), _t('pilot.down.yes'));
   if(c.track) rows.push([_t('pilot.track'), String(c.track)]);
   return rows; }
 function pilotContracts(p){ const names=(pilotCard(p).contracts||[]).filter(Boolean);
@@ -397,7 +408,8 @@ function paintPilot(p){ ensurePilotUi(); const box=$('stCall'); if(!box||!p) ret
     const nm=p.name||p.player||_t('entity.player'); box.querySelector('.st-call-name').textContent=nm; box.setAttribute('aria-label', nm);
     box.querySelector('.st-call-status').textContent=p.online?_t('status.online'):_t('status.offline');
     box.querySelector('.st-call-pip').classList.toggle('on', !!p.online);
-    box.querySelector('.st-call-rows').innerHTML=rows.map(function(r){ return '<div><span>'+esc(r[0])+'</span><b>'+esc(r[1])+'</b></div>'; }).join('');
+    box.querySelector('.st-call-rows').innerHTML=rows.map(function(r){ return '<div'+(r[2]==='hot'?' class="is-hot"':'')+'><span>'+esc(r[0])+'</span><b>'+esc(r[1])+'</b></div>'; }).join('');
+    box.classList.remove('is-fresh'); void box.offsetWidth; box.classList.add('is-fresh');
     let place=box.querySelector('.st-call-place');
     if(!place){ place=document.createElement('div'); place.className='st-call-place'; const when=box.querySelector('.st-call-when'); if(when) when.parentNode.insertBefore(place, when); }
     if(place) place.innerHTML=extra;

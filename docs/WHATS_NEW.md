@@ -27,6 +27,7 @@ The interface is Simplified Chinese, Traditional Chinese, English, and German. T
 - **The pilot card drops amenities and terminals.** It shows armistice, a monitored area, the contract being tracked, and the accepted contracts. A quantum start that names a place is used when the zone line is missing. Failures, revocations, and shared contracts stay in the personal record on this computer.
 - **Distance and each coordinate carry their own unit.** A large figure stays in millions of kilometres. A small one stays in kilometres.
 - **Chinese uses the game's own gear names.** A worn class id matches the simplified and traditional item name. A paint without its own line uses the series name.
+- **The pilot card is a terminal.** Aboard, crime stat, frame rate, a crash, kills, destroyed ships, and being downed appear when the log records them. The current ship comes from the channel you joined. A new shard updates the server, and an inventory location updates the place. Names of other people are not shown. Important values blink, and a change flashes the frame.
 
 ## Deutsch
 
@@ -51,6 +52,7 @@ The interface is Simplified Chinese, Traditional Chinese, English, and German. T
 - **Die Pilotenkarte lässt Ausstattung und Terminals weg.** Sie zeigt Waffenruhe, Überwachung, den verfolgten Auftrag und die angenommenen Aufträge. Fehlt die Zonenzeile, gilt der Ortsname am Start einer Quantum-Route. Fehlschlag, Widerruf und geteilte Aufträge bleiben im persönlichen Verlauf auf diesem Computer.
 - **Abstand und jede Koordinate tragen die eigene Einheit.** Eine große Zahl bleibt in Mio km, eine kleine in km.
 - **Chinesisch zeigt die Ausrüstungsnamen aus dem Spiel.** Eine getragene Klassenkennung trifft den vereinfachten und den traditionellen Gegenstandsnamen. Eine Lackierung ohne eigene Zeile nutzt den Namen der Serie.
+- **Die Pilotenkarte ist ein Terminal.** An Bord, Verbrechen, Bilder/s, Absturz, Abschüsse, zerstörte Schiffe und Am-Boden erscheinen, sobald das Protokoll sie enthält. Das aktuelle Schiff kommt aus dem Kanal, dem du beigetreten bist. Eine neue Shard aktualisiert den Server, ein Inventarort den Ort. Namen anderer Personen erscheinen nicht. Wichtige Werte blinken, und eine Änderung lässt den Rahmen aufleuchten.
 
 ## 简体中文
 
@@ -75,6 +77,7 @@ The interface is Simplified Chinese, Traditional Chinese, English, and German. T
 - **个人信息卡片不再列出设施和终端。** 卡片显示禁火区、监管区域、正在追踪的合约和已接受的合约。日志里没有换区行时，用量子航线写下的地名。失败、撤销和共享的合约留在本机记录里。
 - **距离和每一项坐标各自带单位。** 大数写成万公里或亿公里，小数写成公里。
 - **中文界面使用游戏里的装备名称。** 穿戴编号对上简体和繁体原文。同一系列里没有单独名称的涂装，用该系列的名称。
+- **个人信息卡片改成终端样式。** 日志里出现过的内容会写上：在船内、犯罪等级、帧数、崩溃、击杀、炸船、倒地。当前舰船改用加入的语音频道。换分片会更新服务器，打开库存会更新地点。不会写出其他玩家的名字。重点数值会闪，内容一变，边框会亮一下。
 
 ## 繁體中文
 
@@ -99,3 +102,4 @@ The interface is Simplified Chinese, Traditional Chinese, English, and German. T
 - **個人資訊卡片不再列出設施和終端。** 卡片顯示禁火區、監管區域、正在追蹤的合約和已接受的合約。日誌裡沒有換區行時，用量子航線寫下的地名。失敗、撤銷和共享的合約留在本機記錄裡。
 - **距離和每一項座標各自帶單位。** 大數寫成萬公里或億公里，小數寫成公里。
 - **中文介面使用遊戲裡的裝備名稱。** 穿戴編號對上簡體和繁體原文。同一系列裡沒有單獨名稱的塗裝，用該系列的名稱。
+- **個人資訊卡片改成終端樣式。** 日誌裡出現過的內容會寫上：在船內、犯罪等級、幀數、崩潰、擊殺、炸船、倒地。目前艦船改用加入的語音頻道。換分片會更新伺服器，打開庫存會更新地點。不會寫出其他玩家的名字。重點數值會閃，內容一變，邊框會亮一下。

@@ -128,7 +128,25 @@ ARM = None
 WATCH = None
 CONTRACTS = {}
 TRACK = ""
+BOARD = None
+CRIME = None
+FPS = None
+CRASH = ""
+KILLS = 0
+WRECKS = 0
+DOWN = ""
+NICK = ""
 ZERO_MID = "00000000-0000-0000-0000-000000000000"
+CHANNEL_RE = re.compile(r"你已加入\s*频道\s*'(?P<label>[^']+)'")
+CHANNEL_LEAVE_RE = re.compile(r"你退出了?\s*频道\s*'(?P<label>[^']+)'")
+RELEASE_RE = re.compile(r"releasing control token for '(?P<ship>[A-Za-z0-9_]+)_\d+'")
+INV_RE = re.compile(r"RequestLocationInventory>.*?Location\[(?P<code>[A-Za-z0-9_]+)\]")
+SHARD_UPDATE_RE = re.compile(r"New Shard Id:\s*(?P<shard>\S+)")
+NICK_RE = re.compile(r'nickname="([^"]+)"')
+FPS_RE = re.compile(r"CPU \(WholeFrame\)\s+:\s+([\d.]+) FPS")
+KILL_RE = re.compile(r"CActor::Kill: '([^']+)' \[\d+\] in zone '[^']*' killed by '([^']+)'")
+WRECK_RE = re.compile(r"advanced from destroy level \d to (?P<to>\d) caused by '([^']+)'")
+ID_SUFFIX = re.compile(r"_\d{9,}$")
 NOTE_ADD_RE = re.compile(
     r'Added notification "(?P<text>[^"]*)".*?MissionId: \[(?P<mid>[0-9a-f-]{36})\]',
     re.I,
@@ -264,8 +282,86 @@ def drop_contract(mid):
         TRACK = ""
 
 
+def ship_label(raw):
+    return (raw or "").split(" : ")[0].strip()[:80]
+
+
+def note_ship(text):
+    global SHIP, BOARD
+    joined = CHANNEL_RE.search(text or "")
+    if joined:
+        raw = joined.group("label")
+        if " : " not in raw:
+            return
+        label = ship_label(raw)
+        if label:
+            SHIP = label
+            BOARD = True
+        return
+    left = CHANNEL_LEAVE_RE.search(text or "")
+    if left:
+        raw = left.group("label")
+        if " : " not in raw:
+            return
+        label = ship_label(raw)
+        if not SHIP or label == SHIP:
+            BOARD = False
+        return
+    released = RELEASE_RE.search(text or "")
+    if released and BOARD is not True:
+        SHIP = pretty_ship(released.group("ship"))
+
+
+def note_feed(text):
+    global CRIME, FPS, CRASH, KILLS, WRECKS, DOWN, NICK
+    raw = text or ""
+    named = NICK_RE.search(raw)
+    if named:
+        NICK = named.group(1)
+    if "Added notification" in raw:
+        found = NOTE_ADD_RE.search(raw)
+        title = (found.group("text") if found else "")[:80]
+        if title and ("犯罪等级" in title or "CrimeStat" in title):
+            digit = re.search(r"(\d)", title)
+            CRIME = int(digit.group(1)) if digit else min(5, (CRIME or 0) + 1)
+        if title and ("犯罪等级已清除" in title or "CrimeStat Cleared" in title):
+            CRIME = 0
+        if "医疗床" in title or "Medical Bed" in title:
+            DOWN = ""
+    fps = FPS_RE.search(raw)
+    if fps:
+        value = int(float(fps.group(1)))
+        if 1 <= value <= 1000:
+            FPS = value
+    if "Is GPU crash: Yes" in raw:
+        CRASH = "gpu"
+    elif "Is Timeout: Yes" in raw:
+        CRASH = "freeze"
+    elif "Is out of system memory: Yes" in raw:
+        CRASH = "ram"
+    elif "Is out of video memory: Yes" in raw:
+        CRASH = "vram"
+    elif "Exception ACCESS_VIOLATION" in raw:
+        CRASH = "fault"
+    if "CSCActorCorpseUtils" in raw:
+        DOWN = "down"
+    killed = KILL_RE.search(raw)
+    if killed and NICK:
+        victim, killer = killed.group(1), killed.group(2)
+        if killer == NICK and victim != NICK:
+            KILLS += 1
+        elif victim == NICK and killer != NICK:
+            npc = bool(ID_SUFFIX.search(killer) or killer.startswith("PU_") or "NPC" in killer or "_AI_" in killer)
+            DOWN = "npc" if npc else "player"
+    wrecked = WRECK_RE.search(raw) if "<Vehicle Destruction>" in raw else None
+    if wrecked and NICK and wrecked.group("to") == "2" and wrecked.group(2) == NICK:
+        WRECKS += 1
+
+
 def note_card(text):
     global ARM, WATCH, TRACK
+    note_ship(text)
+    note_feed(text)
     if "Added notification" in text:
         if "正在远离禁火区" in text:
             ARM = False
@@ -310,6 +406,20 @@ def card_payload():
     tracked = CONTRACTS.get(TRACK) or ""
     if tracked:
         card["track"] = tracked
+    if BOARD is True or BOARD is False:
+        card["board"] = BOARD
+    if isinstance(CRIME, int):
+        card["crime"] = CRIME
+    if isinstance(FPS, int):
+        card["fps"] = FPS
+    if CRASH:
+        card["crash"] = CRASH
+    if KILLS:
+        card["kills"] = KILLS
+    if WRECKS:
+        card["wrecks"] = WRECKS
+    if DOWN:
+        card["down"] = DOWN
     return card or None
 
 
@@ -358,6 +468,11 @@ def host_of(line):
 
 def note_server(line):
     global SERVER, SERVER_KIND
+    moved = SHARD_UPDATE_RE.search(line or "")
+    if moved:
+        SERVER = moved.group("shard").rstrip(".")
+        SERVER_KIND = "shard"
+        return
     found = SHARD_RE.search(line or "")
     if found:
         SERVER = found.group("shard")
@@ -437,7 +552,16 @@ def ingest(line):
     for cls, port in GEAR_RE.findall(text):
         WORN[port] = pretty_item(cls)
         WORN_CLS[port] = cls
-    if "CSCItemNavigation::" in text and ("OnPlayer" in text or "OnQuantumDriveArrived" in text):
+    stock = INV_RE.search(text)
+    if stock and re.match(r"^(RR_|Stanton|Pyro|Nyx)", stock.group("code"), re.I):
+        coded = tidy_place({
+            "code": stock.group("code"),
+            "location": stock.group("code"),
+            "system": system_of(stock.group("code")),
+        })
+        if not place or not place.get("code"):
+            place = coded
+    if BOARD is not True and "CSCItemNavigation::" in text and ("OnPlayer" in text or "OnQuantumDriveArrived" in text):
         found = SHIP_RE.search(text)
         if found:
             SHIP = pretty_ship(found.group(1))
@@ -1680,6 +1804,33 @@ if __name__ == "__main__":
         gone = snapshot(moon).get("card") or {}
         assert "contracts" not in gone and "track" not in gone, gone
         assert gone["arm"] is True
+        boarded = ingest('Added notification "你已加入 频道 \'Origin M80 : Pilot\'。"')
+        assert boarded is None and BOARD is True and SHIP == "Origin M80", (BOARD, SHIP)
+        ingest("releasing control token for 'AEGS_Idris_M_123456789'")
+        assert SHIP == "Origin M80", SHIP
+        ingest('Added notification "你退出了 频道 \'Origin M80 : Pilot\'。"')
+        assert BOARD is False, BOARD
+        stocked = ingest(
+            "RequestLocationInventory> Player[Pilot] requested inventory for Location[RR_HUR_L2]"
+        )
+        assert stocked and stocked["code"] == "RR_HUR_L2", stocked
+        ingest("New Shard Id: pub_ape1a_1_200.")
+        assert SERVER == "pub_ape1a_1_200", SERVER
+        ingest('nickname="Pilot"')
+        ingest(
+            "CActor::Kill: 'Bandit_123456789' [1] in zone 'RR_HUR_L2' killed by 'Pilot' [2] "
+            "using 'gun' [Class gun] with damage type 'Bullet'"
+        )
+        ingest("CSCActorCorpseUtils created")
+        ingest("CPU (WholeFrame) : 48.0 FPS ( 20.83 ms)| 10%| 20%")
+        ingest("Is GPU crash: Yes")
+        ingest(
+            'Added notification "犯罪等级 2" [9] to queue. '
+            "MissionId: [00000000-0000-0000-0000-000000000000]"
+        )
+        live = snapshot(stocked)["card"]
+        assert live["board"] is False and live["kills"] == 1 and live["down"] == "down", live
+        assert live["fps"] == 48 and live["crash"] == "gpu" and live["crime"] == 2, live
         print("parser ok", got, SHIP, WORN["Armor_Torso"])
     else:
         main()

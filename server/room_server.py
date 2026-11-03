@@ -360,6 +360,24 @@ def clean_card(raw):
     tracked = clip(raw.get("track"))
     if tracked:
         out["track"] = tracked
+    if isinstance(raw.get("board"), bool):
+        out["board"] = raw["board"]
+    crime = raw.get("crime")
+    if isinstance(crime, int) and not isinstance(crime, bool) and 0 <= crime <= 5:
+        out["crime"] = crime
+    fps = raw.get("fps")
+    if isinstance(fps, int) and not isinstance(fps, bool) and 1 <= fps <= 1000:
+        out["fps"] = fps
+    crash = clip(raw.get("crash"))
+    if crash in ("gpu", "freeze", "ram", "vram", "fault"):
+        out["crash"] = crash
+    for key in ("kills", "wrecks"):
+        num = raw.get(key)
+        if isinstance(num, int) and not isinstance(num, bool) and 0 < num <= 9999:
+            out[key] = num
+    down = clip(raw.get("down"))
+    if down in ("down", "player", "npc"):
+        out["down"] = down
     if not out:
         return ""
     return json.dumps(out, ensure_ascii=False, separators=(",", ":"))
