@@ -28,6 +28,7 @@
       give:'设为队长', giveShort:'队长', giveLeave:'交给他并离开', dissolve:'解散房间', dissolveLeave:'解散并离开', cancel:'取消',
       kick:'踢出', kickYes:'确定', kicked:'你已被移出这个房间。', denied:'队长拒绝了这次申请。',
       cast:'广播', castLead:'发给这个房间里的所有人。', castPh:'写一句给小队的话', castSend:'发送', castFrom:'来自', castClose:'知道了', castSound:'广播音效', castOn:'开', castOff:'关', castEmpty:'先写一点内容。',
+      horn:'集合号角', hornLead:'指定一个地点和时间。队员会反复看到这声号角，直到选择参加或不参加。', hornPlace:'地点', hornNeed:'先在星图上点一个地点。', hornTime:'集合时间', hornSend:'吹响', hornClear:'取消号角', hornJoin:'参加', hornSkip:'不参加', hornLook:'查看地点', hornLater:'稍后', hornGoing:'参加', hornGone:'不参加', hornPin:'集合',
       handTitle:'离开前先交接', handLead:'把队长交给一位队员，或解散房间。', handSolo:'房间里只有你。离开会解散这个房间。',
       errNick:'请填写 1 到 32 个字的昵称。', errRoom:'没有这个房间。',
       agoNow:'刚刚', agoSec:'{n} 秒前', agoMin:'{n} 分钟前', agoHour:'{n} 小时前', agoDay:'{n} 天前',
@@ -67,6 +68,7 @@
       give:'設為隊長', giveShort:'隊長', giveLeave:'交給他並離開', dissolve:'解散房間', dissolveLeave:'解散並離開', cancel:'取消',
       kick:'踢出', kickYes:'確定', kicked:'你已被移出這個房間。', denied:'隊長拒絕了這次申請。',
       cast:'廣播', castLead:'發給這個房間裡的所有人。', castPh:'寫一句給小隊的話', castSend:'發送', castFrom:'來自', castClose:'知道了', castSound:'廣播音效', castOn:'開', castOff:'關', castEmpty:'先寫一點內容。',
+      horn:'集合號角', hornLead:'指定一個地點和時間。隊員會反覆看到這聲號角，直到選擇參加或不參加。', hornPlace:'地點', hornNeed:'先在星圖上點一個地點。', hornTime:'集合時間', hornSend:'吹響', hornClear:'取消號角', hornJoin:'參加', hornSkip:'不參加', hornLook:'查看地點', hornLater:'稍後', hornGoing:'參加', hornGone:'不參加', hornPin:'集合',
       handTitle:'離開前先交接', handLead:'把隊長交給一位隊員，或解散房間。', handSolo:'房間裡只有你。離開會解散這個房間。',
       errNick:'請填寫 1 到 32 個字的暱稱。', errRoom:'沒有這個房間。',
       agoNow:'剛剛', agoSec:'{n} 秒前', agoMin:'{n} 分鐘前', agoHour:'{n} 小時前', agoDay:'{n} 天前',
@@ -106,6 +108,7 @@
       give:'Make captain', giveShort:'Lead', giveLeave:'Give and leave', dissolve:'Close room', dissolveLeave:'Close and leave', cancel:'Cancel',
       kick:'Remove', kickYes:'Confirm', kicked:'You were removed from this room.', denied:'The captain declined this request.',
       cast:'Broadcast', castLead:'Send this to everyone in the room.', castPh:'A note for the squad', castSend:'Send', castFrom:'From', castClose:'Got it', castSound:'Broadcast sound', castOn:'On', castOff:'Off', castEmpty:'Write something first.',
+      horn:'Rally', hornLead:'Pick a place and a time. The site keeps reminding the team until each member joins or declines.', hornPlace:'Place', hornNeed:'Click a place on the map first.', hornTime:'Time', hornSend:'Sound it', hornClear:'Cancel rally', hornJoin:'Join', hornSkip:'Decline', hornLook:'Show place', hornLater:'Later', hornGoing:'Going', hornGone:'Not going', hornPin:'Rally',
       handTitle:'Hand off before leaving', handLead:'Give the captain role to a member, or close the room.', handSolo:'You are the only person here. Leaving closes the room.',
       errNick:'Use a nickname of 1 to 32 characters.', errRoom:'No room with that code.',
       agoNow:'Just now', agoSec:'{n}s ago', agoMin:'{n} min ago', agoHour:'{n} h ago', agoDay:'{n} d ago',
@@ -145,6 +148,7 @@
       give:'Zum Captain machen', giveShort:'Capt.', giveLeave:'Geben und gehen', dissolve:'Raum schließen', dissolveLeave:'Schließen und gehen', cancel:'Abbrechen',
       kick:'Entfernen', kickYes:'Wirklich', kicked:'Du wurdest aus diesem Raum entfernt.', denied:'Der Captain hat diese Anfrage abgelehnt.',
       cast:'Durchsage', castLead:'Das geht an alle in diesem Raum.', castPh:'Ein Satz für die Gruppe', castSend:'Senden', castFrom:'Von', castClose:'Verstanden', castSound:'Durchsage-Ton', castOn:'An', castOff:'Aus', castEmpty:'Erst etwas schreiben.',
+      horn:'Sammelruf', hornLead:'Ort und Zeit festlegen. Die Seite erinnert, bis jede Person zusagt oder absagt.', hornPlace:'Ort', hornNeed:'Zuerst einen Ort auf der Karte antippen.', hornTime:'Zeit', hornSend:'Blasen', hornClear:'Ruf aufheben', hornJoin:'Dabei', hornSkip:'Nicht dabei', hornLook:'Ort zeigen', hornLater:'Später', hornGoing:'Dabei', hornGone:'Nicht dabei', hornPin:'Ruf',
       handTitle:'Vor dem Gehen übergeben', handLead:'Captain an ein Mitglied geben, oder den Raum schließen.', handSolo:'Du bist allein. Gehen schließt den Raum.',
       errNick:'Nickname mit 1 bis 32 Zeichen.', errRoom:'Diesen Raum gibt es nicht.',
       agoNow:'Gerade', agoSec:'vor {n} s', agoMin:'vor {n} min', agoHour:'vor {n} h', agoDay:'vor {n} d',
@@ -172,6 +176,7 @@
   function token(){ try{ return localStorage.getItem(TOKEN)||''; }catch(e){ return ''; } }
   function savedCode(){ try{ return localStorage.getItem(CODE)||''; }catch(e){ return ''; } }
   var state = null, draft = [], marking = false, note = '', statusMsg = '', selected = '', API = '', entered = false, roomKind = '', linkState = '', linkMiss = 0, leaving = false, crewQ = '', picking = false, histInfo = {}, histKey = '', pubRooms = null, pubSig = null, pubAt = 0, alertHold = false, alertSeen = {}, alertFlash = null, alertTimer = 0, kickAsk = '', alertDeny = null, castCompose = false, castDraft = '', castErr = '', castIncoming = null, castAudio = null, ctxAt = null, ctxSig = '', recoverDraft = '', recoverFocus = '';
+  var hornCompose = false, hornErr = '', hornWhen = '', hornOpen = false, hornSheet = false, hornId = '', hornNag = 0, hornTimer = 0;
 
   function api(path, opt){
     opt = opt || {};
@@ -476,7 +481,9 @@
       paint();
     };
     drawSelected();
+    syncRallyPin();
     paintAlert();
+    armRally();
     syncCtx();
     if(recoverFocus){
       var again = document.getElementById(recoverFocus);
@@ -766,7 +773,8 @@
         '<button type="button" data-open="1"'+(open?' class="on"':'')+disPub+'>'+esc(t('visPublic'))+'</button>'+
         '<button type="button" data-open="0"'+(!open?' class="on"':'')+disPriv+'>'+esc(t('visPrivate'))+'</button>'+
       '</span>'+
-      '<button type="button" id="stCast">'+esc(t('cast'))+'</button>'
+      '<button type="button" id="stCast">'+esc(t('cast'))+'</button>'+
+      '<button type="button" id="stHorn">'+esc(t('horn'))+'</button>'
     ) : '';
     return '<button type="button" id="stLinkPc">'+esc(t('link'))+'</button>'+vis;
   }
@@ -849,6 +857,8 @@
     if(link) link.onclick = linkPc;
     var castBtn = el.querySelector('#stCast');
     if(castBtn) castBtn.onclick = function(){ castCompose = true; castErr = ''; paint(); };
+    var hornBtn = el.querySelector('#stHorn');
+    if(hornBtn) hornBtn.onclick = function(){ hornCompose = true; hornErr = ''; if(!hornWhen) hornWhen = hornDefaultWhen(); paint(); };
     var mark = el.querySelector('#stMark');
     if(mark) mark.onclick = function(){ marking=!marking; if(!marking) window.__stRouteOn=false; selected=''; paint(); };
     el.querySelectorAll('[data-rm]').forEach(function(b){ b.onclick=function(){ draft.splice(+b.getAttribute('data-rm'),1); paint(); }; });
@@ -1255,6 +1265,7 @@
     if(st.status!=='member') entered = false;
     if(st.status==='member' && entered) bindPlayers();
     noteCast(st);
+    noteRally(st);
     paint();
   }
   function fail(e){
@@ -1381,6 +1392,150 @@
       take(st);
     }).catch(fail);
   }
+  function hornDefaultWhen(){
+    var d = new Date(Date.now()+15*60*1000);
+    d.setSeconds(0,0);
+    function z(n){ return (n<10?'0':'')+n; }
+    return d.getFullYear()+'-'+z(d.getMonth()+1)+'-'+z(d.getDate())+'T'+z(d.getHours())+':'+z(d.getMinutes());
+  }
+  function rallyPlace(){
+    var o = window.__stPlace;
+    if(!o || !o.id || o.k==='player' || o.grp) return null;
+    return {id:String(o.id), name:String(o.n||o.id), system:o.sy||''};
+  }
+  var placeWarm = false;
+  function placeFace(name){
+    var loc = window.SCLMW && SCLMW.loc;
+    if(loc && typeof loc.text==='function'){
+      var hit = loc.text(name);
+      if(hit && hit!==name) return hit;
+      if(!placeWarm && hit===name && typeof loc.index==='function'){
+        placeWarm = true;
+        loc.index().then(function(){ paint(); }).catch(function(){});
+      }
+      if(hit) return hit;
+    }
+    return name||'';
+  }
+  function rallyWhenLabel(sec){
+    var d = new Date((+sec||0)*1000);
+    if(isNaN(d.getTime())) return '';
+    try{ return d.toLocaleString(); }catch(e){ return ''; }
+  }
+  function rallyReplyLine(r){
+    var yes = [], no = [];
+    (r.replies||[]).forEach(function(p){ (p.going?yes:no).push(p.nickname||''); });
+    return t('hornGoing')+' '+yes.length+(yes.length?' · '+yes.join(', '):'')+' · '+t('hornGone')+' '+no.length+(no.length?' · '+no.join(', '):'');
+  }
+  function playHorn(){
+    if(!castSoundOn()) return;
+    var ctx = armCastAudio();
+    if(!ctx) return;
+    var t0 = ctx.currentTime;
+    function tone(freq, start, dur, peak){
+      var o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = 'square';
+      o.frequency.setValueAtTime(freq, t0+start);
+      g.gain.setValueAtTime(0.0001, t0+start);
+      g.gain.exponentialRampToValueAtTime(peak, t0+start+0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0+start+dur);
+      o.connect(g); g.connect(ctx.destination);
+      o.start(t0+start); o.stop(t0+start+dur+0.02);
+    }
+    tone(196, 0, 0.28, 0.04);
+    tone(247, 0.16, 0.34, 0.035);
+    tone(294, 0.32, 0.42, 0.03);
+  }
+  function noteRally(st){
+    var r = st && st.rally;
+    var id = r && r.id || '';
+    if(!id){ hornId = ''; hornOpen = false; hornSheet = false; return; }
+    if(id===hornId) return;
+    hornId = id;
+    hornNag = Date.now();
+    hornCompose = false;
+    if(st.role!=='captain' && st.status==='member' && r.mine!==true && r.mine!==false){
+      hornOpen = true;
+      playHorn();
+    } else hornOpen = false;
+  }
+  function rallyUnanswered(){
+    var r = state && state.rally;
+    return !!(r && state.status==='member' && state.role!=='captain' && r.mine!==true && r.mine!==false);
+  }
+  function armRally(){
+    clearTimeout(hornTimer);
+    if(!rallyUnanswered() || hornOpen || hornSheet || hornCompose) return;
+    var wait = Math.max(800, 40000-(Date.now()-hornNag));
+    hornTimer = setTimeout(function(){
+      if(!rallyUnanswered()) return;
+      hornOpen = true;
+      hornNag = Date.now();
+      playHorn();
+      paint();
+    }, wait);
+  }
+  function syncRallyPin(){
+    var r = entered && state && state.status==='member' ? state.rally : null;
+    window.__stRally = r && r.place ? {place:r.place, label:t('hornPin')} : null;
+    window.__stHornOffer = function(){ return !!(entered && state && state.role==='captain' && state.status==='member'); };
+    window.__stHornLabel = function(){ return t('horn'); };
+    window.__stHornAt = function(o){
+      if(o && o.id && o.k!=='player') window.__stPlace = o;
+      hornCompose = true;
+      hornErr = '';
+      if(!hornWhen) hornWhen = hornDefaultWhen();
+      paint();
+    };
+    window.__stRallyOpen = function(){
+      if(!state || !state.rally) return;
+      hornSheet = true;
+      hornOpen = false;
+      paint();
+    };
+  }
+  function sendHorn(){
+    var place = rallyPlace();
+    var input = document.getElementById('stHornTime');
+    if(input) hornWhen = input.value;
+    if(!place){ hornErr = t('hornNeed'); paint(); return; }
+    var at = Date.parse(hornWhen);
+    if(!hornWhen || isNaN(at)){ hornErr = t('hornTime'); paint(); return; }
+    hornErr = '';
+    api('/api/rooms/'+encodeURIComponent(state.code)+'/rally', {method:'POST', body:{place:place.id, name:place.name, system:place.system, at:Math.round(at/1000)}}).then(function(st){
+      hornCompose = false;
+      take(st);
+    }).catch(function(e){
+      if(e && e.body && e.body.error==='rally') hornErr = t('hornTime');
+      fail(e);
+    });
+  }
+  function clearHorn(){
+    api('/api/rooms/'+encodeURIComponent(state.code)+'/rally', {method:'POST', body:{clear:true}}).then(function(st){
+      hornCompose = false;
+      hornSheet = false;
+      hornOpen = false;
+      take(st);
+    }).catch(fail);
+  }
+  function sendRsvp(going){
+    api('/api/rooms/'+encodeURIComponent(state.code)+'/rally/rsvp', {method:'POST', body:{going:!!going}}).then(function(st){
+      hornOpen = false;
+      hornSheet = false;
+      take(st);
+    }).catch(fail);
+  }
+  function showRallyPlace(){
+    var r = state && state.rally;
+    hornOpen = false;
+    hornNag = Date.now();
+    if(r && window.__stCtl && window.__stCtl.focusId) window.__stCtl.focusId(r.place);
+    paint();
+  }
+  function hornBody(r){
+    return '<p class="st-alert-msg">'+esc(placeFace(r.name))+'</p>'+
+      '<p class="st-alert-from"><b>'+esc(t('hornTime')+' '+rallyWhenLabel(r.at))+'</b><em>'+esc(rallyReplyLine(r))+'</em></p>';
+  }
   function paintAlert(){
     var host = root();
     var box = document.getElementById('stAlert');
@@ -1436,6 +1591,53 @@
       box.querySelector('#stCastClose').onclick = function(){ castMarkSeen(castIncoming.id); castIncoming = null; paint(); };
       bindCastSound(box);
       return;
+    }
+    if(hornCompose && state && state.role==='captain' && state.status==='member'){
+      var time0 = document.getElementById('stHornTime');
+      if(time0 && document.activeElement===time0 && box.classList.contains('tone-horn') && !hornErr){
+        box.hidden = false;
+        return;
+      }
+      if(!hornWhen) hornWhen = hornDefaultWhen();
+      var picked = rallyPlace();
+      box.hidden = false;
+      box.className = 'st-alert tone-horn';
+      var placeLine = '<p class="st-alert-msg">'+esc(picked ? placeFace(picked.name) : t('hornNeed'))+'</p>'+
+        '<input id="stHornTime" type="datetime-local" value="'+esc(hornWhen)+'">'+
+        (hornErr ? '<p class="st-alert-sub"><span>'+esc(hornErr)+'</span></p>' : '');
+      var hornActs = '<div class="st-alert-acts"><button type="button" id="stHornSend">'+bi('hornSend')+'</button>'+
+        (state.rally ? '<button type="button" id="stHornClear">'+bi('hornClear')+'</button>' : '')+
+        '<button type="button" id="stHornCancel">'+bi('cancel')+'</button>'+castSoundHtml()+'</div>';
+      box.innerHTML = alertPlate('horn', 'horn', 'hornLead', placeLine, hornActs);
+      var time = box.querySelector('#stHornTime');
+      if(time) time.oninput = function(){ hornWhen = time.value; hornErr = ''; };
+      box.querySelector('#stHornSend').onclick = sendHorn;
+      var clearBtn = box.querySelector('#stHornClear');
+      if(clearBtn) clearBtn.onclick = clearHorn;
+      box.querySelector('#stHornCancel').onclick = function(){ hornCompose = false; hornErr = ''; paint(); };
+      bindCastSound(box);
+      return;
+    }
+    if((hornOpen || hornSheet) && state && state.rally && state.status==='member'){
+      if(hornOpen && !rallyUnanswered()) hornOpen = false;
+      if(hornOpen || hornSheet){
+        var rally = state.rally;
+        box.hidden = false;
+        box.className = 'st-alert tone-horn';
+        var choice = '<div class="st-alert-acts"><button type="button" id="stHornJoin">'+bi('hornJoin')+'</button><button type="button" id="stHornSkip">'+bi('hornSkip')+'</button><button type="button" id="stHornLook">'+bi('hornLook')+'</button>'+
+          (state.role==='captain' ? '<button type="button" id="stHornClear2">'+bi('hornClear')+'</button>' : '')+
+          (rallyUnanswered() ? '<button type="button" id="stHornLater">'+bi('hornLater')+'</button>' : '<button type="button" id="stHornLater">'+bi('castClose')+'</button>')+
+          castSoundHtml()+'</div>';
+        box.innerHTML = alertPlate('horn', 'horn', '', hornBody(rally), choice);
+        box.querySelector('#stHornJoin').onclick = function(){ sendRsvp(true); };
+        box.querySelector('#stHornSkip').onclick = function(){ sendRsvp(false); };
+        box.querySelector('#stHornLook').onclick = showRallyPlace;
+        var clear2 = box.querySelector('#stHornClear2');
+        if(clear2) clear2.onclick = clearHorn;
+        box.querySelector('#stHornLater').onclick = function(){ hornOpen = false; hornSheet = false; hornNag = Date.now(); paint(); };
+        bindCastSound(box);
+        return;
+      }
     }
     if(!flash && !waiting && !review){ box.hidden = true; box.innerHTML = ''; return; }
     if(!flash && review && alertHold){
@@ -1520,7 +1722,7 @@
   }
   function mapTarget(node){
     if(!node || !node.closest) return false;
-    return !node.closest('.st-loc-card,.st-zoom,.stx,.st-side,.st-crumb,.st-top,.st-room,.st-crew,.st-float-ico,.st-gate,.st-call,.st-sfx,.st-ctrldlg,.st-locdlg,.st-alert,.st-ctx');
+    return !node.closest('.st-loc-card,.st-zoom,.stx,.st-side,.st-crumb,.st-top,.st-room,.st-crew,.st-float-ico,.st-gate,.st-call,.st-sfx,.st-ctrldlg,.st-locdlg,.st-alert,.st-ctx,.st-rally');
   }
   function closeCtx(){
     ctxAt = null;
@@ -1535,12 +1737,13 @@
     var mine = canDraw();
     var cap = state.role==='captain';
     var members = state.routeMode==='members';
-    var sig = [mine?1:0, cap?1:0, members?1:0, marking?1:0, t('here'), t('route'), t('routeOn'), t('mode'), t('modeCaptain'), t('modeMembers')].join('|');
+    var sig = [mine?1:0, cap?1:0, members?1:0, marking?1:0, t('here'), t('route'), t('routeOn'), t('mode'), t('modeCaptain'), t('modeMembers'), t('horn')].join('|');
     if(sig === ctxSig && !menu.hidden && menu.childElementCount) return;
     var keepOpen = !!menu.querySelector('.st-ctx-sub.st-open');
     ctxSig = sig;
     menu.innerHTML =
       '<button type="button" class="st-ctx-btn" data-ctx="here">'+esc(t('here'))+'</button>'+
+      (cap ? '<button type="button" class="st-ctx-btn" data-ctx="horn">'+esc(t('horn'))+'</button>' : '')+
       (mine ? '<button type="button" class="st-ctx-btn'+(marking?' on':'')+'" data-ctx="mark">'+esc(marking?t('routeOn'):t('route'))+'</button>' : '')+
       (cap ? '<div class="st-ctx-sub">'+
         '<button type="button" class="st-ctx-btn" data-ctx="mode" aria-haspopup="menu" title="'+esc(members?t('modeMembers'):t('modeCaptain'))+'">'+esc(t('mode'))+'<i class="st-ctx-caret"></i></button>'+
@@ -1602,6 +1805,16 @@
       var hit = at && window.__stCtl && window.__stCtl.hitAt && window.__stCtl.hitAt(at.x, at.y);
       if(hit) window.__stPlace = hit;
       here();
+      return;
+    }
+    if(act==='horn' && state && state.role==='captain'){
+      var where = at && window.__stCtl && window.__stCtl.hitAt && window.__stCtl.hitAt(at.x, at.y);
+      closeCtx();
+      if(where) window.__stPlace = where;
+      hornCompose = true;
+      hornErr = '';
+      if(!hornWhen) hornWhen = hornDefaultWhen();
+      paint();
       return;
     }
     if(act==='mark'){

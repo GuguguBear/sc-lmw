@@ -130,6 +130,22 @@ def init_db():
               body TEXT NOT NULL,
               created REAL NOT NULL
             );
+            CREATE TABLE IF NOT EXISTS rally (
+              room TEXT PRIMARY KEY,
+              id TEXT NOT NULL,
+              place TEXT NOT NULL,
+              name TEXT NOT NULL,
+              system TEXT,
+              at REAL NOT NULL,
+              created REAL NOT NULL
+            );
+            CREATE TABLE IF NOT EXISTS rally_rsvp (
+              room TEXT NOT NULL,
+              rally TEXT NOT NULL,
+              member TEXT NOT NULL,
+              going INTEGER NOT NULL,
+              PRIMARY KEY (room, member)
+            );
             """
         )
         cols = {row[1] for row in con.execute("PRAGMA table_info(presence)")}
@@ -173,6 +189,59 @@ def clean_cast(raw):
     if not s:
         return None
     return s[:120]
+
+
+def clean_label(raw, limit):
+    s = " ".join(str(raw or "").replace("\r", " ").replace("\n", " ").split())
+    s = "".join(ch for ch in s if ch >= " " and ch != "\x7f").strip()
+    if not s:
+        return None
+    return s[:limit]
+
+
+def clean_when(raw):
+    try:
+        at = float(raw)
+    except (TypeError, ValueError):
+        return None
+    if at > 10_000_000_000:
+        at = at / 1000.0
+    stamp = now()
+    if at < stamp - 3600 or at > stamp + 8 * 24 * 3600:
+        return None
+    return at
+
+
+def rally_view(con, code, me_id):
+    row = con.execute("SELECT * FROM rally WHERE room=?", (code,)).fetchone()
+    if not row:
+        return None
+    replies = []
+    mine = None
+    for person in con.execute(
+        """
+        SELECT v.member, v.going, m.nickname
+        FROM rally_rsvp v JOIN member m ON m.id=v.member
+        WHERE v.room=? AND v.rally=?
+        ORDER BY m.nickname
+        """,
+        (code, row["id"]),
+    ):
+        going = bool(person["going"])
+        replies.append(
+            {"id": person["member"], "nickname": person["nickname"] or "", "going": going}
+        )
+        if person["member"] == me_id:
+            mine = going
+    return {
+        "id": row["id"],
+        "place": row["place"],
+        "name": row["name"],
+        "system": row["system"] or "",
+        "at": int(row["at"]),
+        "mine": mine,
+        "replies": replies,
+    }
 
 
 def latest_cast(con, code):
@@ -580,6 +649,7 @@ def room_state(con, code, me):
         "members": members,
         "routes": routes,
         "cast": latest_cast(con, code),
+        "rally": rally_view(con, code, me["id"]) if ship["status"] == "member" else None,
     }
     if role == "captain" and ship["status"] == "member":
         state["recover"] = ensure_recover(con, room)
@@ -719,12 +789,15 @@ def wipe_room(con, code):
     con.execute("DELETE FROM route WHERE room=?", (code,))
     con.execute("DELETE FROM presence WHERE room=?", (code,))
     con.execute("DELETE FROM broadcast WHERE room=?", (code,))
+    con.execute("DELETE FROM rally_rsvp WHERE room=?", (code,))
+    con.execute("DELETE FROM rally WHERE room=?", (code,))
     con.execute("DELETE FROM membership WHERE room=?", (code,))
     con.execute("DELETE FROM room WHERE code=?", (code,))
 
 
 def drop_member(con, code, mid):
     con.execute("DELETE FROM presence WHERE room=? AND member=?", (code, mid))
+    con.execute("DELETE FROM rally_rsvp WHERE room=? AND member=?", (code, mid))
     con.execute("DELETE FROM membership WHERE room=? AND member=?", (code, mid))
     left = con.execute(
         "SELECT 1 FROM membership WHERE room=? AND status='member'", (code,)
@@ -1116,6 +1189,63 @@ class Handler(BaseHTTPRequestHandler):
                 con.execute(
                     "DELETE FROM broadcast WHERE room=? AND id!=?",
                     (code, bid),
+                )
+                self.send_json(200, room_state(con, code, me))
+                return
+            if len(parts) == 4 and parts[3] == "rally":
+                code = parts[2].upper()
+                room = con.execute("SELECT * FROM room WHERE code=?", (code,)).fetchone()
+                ship = con.execute(
+                    "SELECT status FROM membership WHERE room=? AND member=?",
+                    (code, me["id"]),
+                ).fetchone()
+                if not room or not ship or ship["status"] != "member" or room["captain"] != me["id"]:
+                    self.send_json(403, {"error": "captain"})
+                    return
+                if isinstance(body, dict) and body.get("clear"):
+                    con.execute("DELETE FROM rally_rsvp WHERE room=?", (code,))
+                    con.execute("DELETE FROM rally WHERE room=?", (code,))
+                    self.send_json(200, room_state(con, code, me))
+                    return
+                place = clean_label(body.get("place") if isinstance(body, dict) else None, 80)
+                name = clean_label(body.get("name") if isinstance(body, dict) else None, 80)
+                system = clean_label(body.get("system") if isinstance(body, dict) else None, 24) or ""
+                at = clean_when(body.get("at") if isinstance(body, dict) else None)
+                if not place or not name or at is None:
+                    self.send_json(400, {"error": "rally"})
+                    return
+                if system.lower() not in ("", "stanton", "pyro", "nyx"):
+                    system = ""
+                rid = secrets.token_hex(8)
+                con.execute("DELETE FROM rally_rsvp WHERE room=?", (code,))
+                con.execute("DELETE FROM rally WHERE room=?", (code,))
+                con.execute(
+                    "INSERT INTO rally (room, id, place, name, system, at, created) VALUES (?,?,?,?,?,?,?)",
+                    (code, rid, place, name, system.lower(), at, now()),
+                )
+                self.send_json(200, room_state(con, code, me))
+                return
+            if len(parts) == 5 and parts[3] == "rally" and parts[4] == "rsvp":
+                code = parts[2].upper()
+                room = con.execute("SELECT * FROM room WHERE code=?", (code,)).fetchone()
+                ship = con.execute(
+                    "SELECT status FROM membership WHERE room=? AND member=?",
+                    (code, me["id"]),
+                ).fetchone()
+                row = con.execute("SELECT id FROM rally WHERE room=?", (code,)).fetchone()
+                if not room or not ship or ship["status"] != "member" or not row:
+                    self.send_json(403, {"error": "forbidden"})
+                    return
+                going = body.get("going") if isinstance(body, dict) else None
+                if going not in (True, False, 0, 1):
+                    self.send_json(400, {"error": "going"})
+                    return
+                con.execute(
+                    """
+                    INSERT INTO rally_rsvp (room, rally, member, going) VALUES (?,?,?,?)
+                    ON CONFLICT(room, member) DO UPDATE SET rally=excluded.rally, going=excluded.going
+                    """,
+                    (code, row["id"], me["id"], 1 if going else 0),
                 )
                 self.send_json(200, room_state(con, code, me))
                 return

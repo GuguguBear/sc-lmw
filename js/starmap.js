@@ -935,10 +935,44 @@ function stantonScene(canvas,sysKey){
       if(show){ const label=o.k==='player'?o.n:gn(o.n); const w=label.length*(/[^\u0000-\u00ff]/.test(label)?13:(e.prio>=3?9:6.4))+8, h=16, x=s.x-w/2, y=s.y-(e.body?Math.max(10,scrRadius(e))+14:18);
         if(!force&&placed.some(r=>x<r.x+r.w&&x+w>r.x&&y<r.y+r.h&&y+h>r.y)) show=false; else { placed.push({x,y,w,h}); d.style.transform='translate('+x.toFixed(1)+'px,'+y.toFixed(1)+'px)'; } }
       if(!show) d.style.transform='translate(-9999px,0)'; d.classList.toggle('hl',force||mark); d.classList.toggle('dim', !!(e.o&&e.o.k==='player'&&stOtherFaded(e.sys,!!e.o.on))); }
-    if(window.__stLeaderFrame) window.__stLeaderFrame(entries, scr, hover); }
+    if(window.__stLeaderFrame) window.__stLeaderFrame(entries, scr, hover);
+    placeRally(); }
+  function rallyPin(){
+    let pin=$('stRally');
+    if(pin||!ROOT) return pin;
+    pin=document.createElement('button');
+    pin.type='button'; pin.id=ID('stRally'); pin.className='st-rally'; pin.hidden=true;
+    pin.innerHTML='<i></i><b></b>';
+    pin.onclick=function(ev){ ev.preventDefault(); ev.stopPropagation(); if(window.__stRallyOpen) window.__stRallyOpen(); };
+    ROOT.appendChild(pin);
+    return pin;
+  }
+  function placeRally(){
+    const pin=rallyPin(); if(!pin) return;
+    const spec=window.__stRally;
+    const o=spec&&spec.place&&ST_DATA&&ST_DATA.by?ST_DATA.by[spec.place]:null;
+    let p=null, here=false;
+    if(explore()&&o){
+      const hit=entries.find(x=>x.o&&x.o.id===o.id);
+      if(hit&&hit.body&&level.t!=='sys') here=true;
+      else if(hit) p=hit.p;
+      else if(level.t==='sys') p=Vs(o);
+      else if(level.o&&level.o.id===o.id) here=true;
+    }
+    if(here){
+      const b0=pin.querySelector('b'); if(b0) b0.textContent=spec.label||'';
+      const box=boxWH();
+      pin.hidden=false; pin.style.left=(box.w/2)+'px'; pin.style.top=(box.h*0.42)+'px';
+      return;
+    }
+    const s=p&&scr(p);
+    if(!s||behind(p)){ pin.hidden=true; return; }
+    const b=pin.querySelector('b'); if(b) b.textContent=spec.label||'';
+    pin.hidden=false; pin.style.left=s.x+'px'; pin.style.top=s.y+'px';
+  }
   size();
   let raf=0, dragging=false, panning=false, lastX=0, lastY=0, downX=0, downY=0, uiDown=false;
-  const onUI=(e)=> !!(e&&e.target&&e.target.closest&&e.target.closest('.st-loc-card,.st-zoom,.stx,.st-side,.st-crumb,.st-top,.st-room,.st-crew,.st-float-ico,.st-gate,.st-call,.st-sfx,.st-ctrldlg,.st-locdlg,.st-alert,.st-ctx'));
+  const onUI=(e)=> !!(e&&e.target&&e.target.closest&&e.target.closest('.st-loc-card,.st-zoom,.stx,.st-side,.st-crumb,.st-top,.st-room,.st-crew,.st-float-ico,.st-gate,.st-call,.st-sfx,.st-ctrldlg,.st-locdlg,.st-alert,.st-ctx,.st-rally'));
   const clampR=v=>explore()?Math.max(LV[level.t].min,Math.min(LV[level.t].max,v)):Math.max(LV.sys.bgMin*BGK,Math.min(LV.sys.bgMax*BGK,v));
   const canNav=()=>explore()&&level.t==='sys';
   const canPan=()=>explore()&&(level.t==='sys'||level.t==='body');
@@ -1296,6 +1330,7 @@ function stantonScene(canvas,sysKey){
   }
   window.__stCtl={ _cleanup:cleanup, getAz:()=>az, holdSpin:on=>{ spinHold=!!on; }, level:()=>level, focus, flyTo, rebuild, home, zoomBy, pan, highlight, showRoute, clearTrail, playTrail, frameTrail, goSystem, galaxy, onSys:null,
     hitAt:function(cx,cy){ const p=relXY(cx,cy); const hit=nearest(p.x,p.y,isMobile?22:16); return hit&&hit.o&&hit.o.k!=='player'?hit.o:null; },
+    focusId:function(id){ const o=ST_DATA&&ST_DATA.by&&ST_DATA.by[id]; if(o) flyTo(o); },
     setSystem:k=>{ if(!k) return; ST_SYS=k; tintSky(k); if(!explore()&&ST_DATA){ bgScale(); rebuild(); tgtT.copy(offOf(k)); tgt.copy(tgtT); RT=LV.sys.def*BGK; } },
     zoom01:()=>{ const L=LV[level.t]; return (Math.log(RT)-Math.log(L.min))/(Math.log(L.max)-Math.log(L.min)); },
     setZoom01:t=>{ const L=LV[level.t]; RT=Math.exp(Math.log(L.min)+t*(Math.log(L.max)-Math.log(L.min))); },
@@ -1776,6 +1811,16 @@ function locOpen(markHtml, titleHtml){ const p=ensureLocShell(); p.hidden=false;
   const body=document.createElement('div'); body.className='st-loc-body'; body.id=ID('stLocBody');
   if(old) old.replaceWith(body); else card.appendChild(body);
   flashLoc(card);
+  let horn=card.querySelector('.st-horn-here');
+  if(window.__stHornOffer&&window.__stHornOffer()){
+    if(!horn){
+      horn=document.createElement('button'); horn.type='button'; horn.className='st-horn-here';
+      card.querySelector('.st-loc-h').insertBefore(horn, card.querySelector('.st-loc-x'));
+    }
+    horn.hidden=false;
+    horn.textContent=window.__stHornLabel?window.__stHornLabel():'Rally';
+    horn.onclick=function(ev){ ev.preventDefault(); ev.stopPropagation(); if(window.__stHornAt) window.__stHornAt(window.__stPlace); };
+  } else if(horn) horn.hidden=true;
   return {p:p, body:body};
 }
 function stCloseCard(){ const p=$('stLoc'); if(p){ p.hidden=true; p.__re=null; } window.__stCtl&&window.__stCtl.highlight(null); }
