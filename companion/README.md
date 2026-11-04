@@ -41,7 +41,7 @@ The files in this folder are an optional add-on for the star map. The website do
 
 日志怎么认地点，写在 `app.py` 的 `parse_line`。它找的是游戏日志里这种句子：`Transitioning from zone … to zone …`。句子里如果出现 zone、location、quantum 或 jump，也可能取最后一个看起来像地点代码的词。对不上时，它就不发送。
 
-配置写在本机的 `config.json`，包含星图地址、房间码、房间令牌和日志路径。这个文件在 `.gitignore` 里，不会进仓库。令牌相当于房间钥匙，不要发给别人，也不要贴到公开页面。从 GitHub 安装时，它和 `history.jsonl` 在 exe 旁边。从微软商店安装时，它们在 `%LOCALAPPDATA%\Starfix`，商店版不从 GitHub 自己更新。`companion/store-identity.json` 填上合作伙伴中心的产品 ID、包标识名、发布者（CN=…）和发布者显示名之后，推送会同时把这一版发到 GitHub 和微软商店。
+配置写在本机的 `config.json`，包含星图地址、房间码、房间令牌和日志路径。这个文件在 `.gitignore` 里，不会进仓库。令牌相当于房间钥匙，不要发给别人，也不要贴到公开页面。从 GitHub 安装时，它和 `history.jsonl` 在 exe 旁边。发布只走 GitHub Releases。
 
 ### 怎么从源码运行
 
@@ -96,7 +96,7 @@ The behavior is in two files. They use the Python standard library only.
 
 `parse_line` in `app.py` is the whole parser. It looks for `Transitioning from zone … to zone …`. If a line mentions zone, location, quantum, or jump, it may take the last token that looks like a place code. If nothing matches, it sends nothing.
 
-Settings go in `config.json` on this computer: map address, room code, room token, and log path. That file is listed in `.gitignore` and is not part of the repository. The token is a key to the room. Do not publish it. The GitHub build keeps it and `history.jsonl` beside the exe. The Microsoft Store build keeps them in `%LOCALAPPDATA%\Starfix` and does not update itself from GitHub. After `companion/store-identity.json` has the Partner Center product id, identity name, publisher (CN=…), and publisher display name, a push sends that version to GitHub and to the Microsoft Store.
+Settings go in `config.json` on this computer: map address, room code, room token, and log path. That file is listed in `.gitignore` and is not part of the repository. The token is a key to the room. Do not publish it. The GitHub build keeps it and `history.jsonl` beside the exe. Releases go out through GitHub Releases.
 
 ### Run it from source
 
@@ -151,7 +151,7 @@ Das Verhalten steckt in zwei Dateien. Sie nutzen nur die Python-Standardbiblioth
 
 `parse_line` in `app.py` ist der ganze Parser. Er sucht `Transitioning from zone … to zone …`. Kommen in einer Zeile zone, location, quantum oder jump vor, kann er das letzte Wort nehmen, das wie ein Ortscode aussieht. Passt nichts, wird nichts gesendet.
 
-Die Einstellungen liegen in `config.json` auf diesem Computer: Kartenadresse, Raumcode, Raumtoken und Logpfad. Die Datei steht in `.gitignore` und gehört nicht ins Repository. Der Token ist ein Schlüssel zum Raum. Nicht veröffentlichen. Der GitHub-Bau legt sie und `history.jsonl` neben die exe. Der Microsoft-Store-Bau legt sie nach `%LOCALAPPDATA%\Starfix` und aktualisiert sich nicht selbst von GitHub. Stehen Produkt-ID, Identität, Publisher (CN=…) und Publisher-Anzeigename in `companion/store-identity.json`, geht ein Push an GitHub und an den Microsoft Store.
+Die Einstellungen liegen in `config.json` auf diesem Computer: Kartenadresse, Raumcode, Raumtoken und Logpfad. Die Datei steht in `.gitignore` und gehört nicht ins Repository. Der Token ist ein Schlüssel zum Raum. Nicht veröffentlichen. Der GitHub-Bau legt sie und `history.jsonl` neben die exe. Veröffentlichungen gehen über GitHub Releases.
 
 ### Aus dem Quelltext starten
 
@@ -206,7 +206,7 @@ Er sagt: Diese Software hat keine Beziehung zu CIG, RSI oder deren verbundenen U
 
 日誌怎麼認地點，寫在 `app.py` 的 `parse_line`。它找的是遊戲日誌裡這種句子：`Transitioning from zone … to zone …`。句子裡如果出現 zone、location、quantum 或 jump，也可能取最後一個看起來像地點代碼的詞。對不上時，它就不發送。
 
-設定寫在本機的 `config.json`，包含星圖地址、房間碼、房間令牌和日誌路徑。這個檔案在 `.gitignore` 裡，不會進倉庫。令牌相當於房間鑰匙，不要發給別人，也不要貼到公開頁面。從 GitHub 安裝時，它和 `history.jsonl` 在 exe 旁邊。從微軟商店安裝時，它們在 `%LOCALAPPDATA%\Starfix`，商店版不從 GitHub 自己更新。`companion/store-identity.json` 填上合作夥伴中心的產品 ID、套件識別名稱、發行者（CN=…）和發行者顯示名稱之後，推送會同時把這一版發到 GitHub 和微軟商店。
+設定寫在本機的 `config.json`，包含星圖地址、房間碼、房間令牌和日誌路徑。這個檔案在 `.gitignore` 裡，不會進倉庫。令牌相當於房間鑰匙，不要發給別人，也不要貼到公開頁面。從 GitHub 安裝時，它和 `history.jsonl` 在 exe 旁邊。發布只走 GitHub Releases。
 
 ### 怎麼從源碼執行
 
