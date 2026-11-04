@@ -116,6 +116,12 @@
     }
     return s;
   }
+  function phrase(raw){
+    var s = String(raw || '').trim();
+    if(!s) return s;
+    if(window.SCLMW && typeof SCLMW.gamePhrase === 'function') return SCLMW.gamePhrase(s);
+    return shopFace(s) || s;
+  }
   function rowHtml(ev){
     if(ev.kind === 'buy' || ev.kind === 'sell'){
       var face = itemFace(ev.item || '');
@@ -131,7 +137,7 @@
     if(ev.kind === 'online') return t('online');
     if(ev.kind === 'place') return fill('place', {code: ev.code || ''});
     if(ev.kind === 'contract') return ev.result === 'abandon' ? t('abandon') : (ev.result === 'fail' ? t('fail') : t('done'));
-    if(ev.kind === 'mission') return ev.say || '';
+    if(ev.kind === 'mission') return phrase(ev.say || '');
     if(ev.kind === 'buy' || ev.kind === 'sell') return fill(ev.kind, {item: ev.item || '', qty: ev.qty || 0, price: ev.price || 0});
     if(ev.kind === 'ship') return fill('ship', {ship: ship});
     if(ev.kind === 'aim') return fill(ship ? 'aimShip' : 'aim', {where: where(ev), ship: ship});

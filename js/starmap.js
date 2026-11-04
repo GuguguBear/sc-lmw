@@ -99,7 +99,20 @@ function gnLine(s){
   var bit=gnBit(raw);
   return bit!==raw ? bit : s;
 }
+// Contract titles arrive in the game client's language. The pack already maps the
+// English title onto that string, so the card can follow the site language.
+function gamePhrase(s){
+  s=String(s||'').trim();
+  if(!s) return s;
+  var shown=gnLine(s);
+  if(shown && shown!==s) return shown;
+  var en=SC.loc&&SC.loc.english?SC.loc.english(s):'';
+  if(!en||en===s) return s;
+  var back=gn(en);
+  return back||en;
+}
 SC.gnLine=gnLine;
+SC.gamePhrase=gamePhrase;
 function translated(s){ if(s==null||s==='') return ''; var hit=gn(s); return (hit && hit!==String(s)) ? hit : ''; }
 function placeEnglish(p){
   var raw=p&&p.location;
@@ -317,11 +330,11 @@ function pilotFacts(p){ const c=pilotCard(p), rows=[];
   if(c.down==='player') hot(_t('pilot.down'), _t('pilot.down.player'));
   else if(c.down==='npc') hot(_t('pilot.down'), _t('pilot.down.npc'));
   else if(c.down) hot(_t('pilot.down'), _t('pilot.down.yes'));
-  if(c.track) rows.push([_t('pilot.track'), String(c.track)]);
+  if(c.track) rows.push([_t('pilot.track'), gamePhrase(c.track)]);
   return rows; }
 function pilotContracts(p){ const names=(pilotCard(p).contracts||[]).filter(Boolean);
   if(!names.length) return '';
-  return '<div class="st-call-sec">'+esc(_t('pilot.contracts'))+'</div><div class="st-call-cons">'+names.map(function(n){ return '<b>'+esc(String(n))+'</b>'; }).join('')+'</div>'; }
+  return '<div class="st-call-sec">'+esc(_t('pilot.contracts'))+'</div><div class="st-call-cons">'+names.map(function(n){ return '<b>'+esc(gamePhrase(n))+'</b>'; }).join('')+'</div>'; }
 function pilotRows(p){ const loc=stPlayerLoc(p), body=loc?stBodyOf(loc):null, rows=[[_t('pilot.place'), playerPlaceName(p)||_t('location.unknown')]];
   if(loc&&loc.k) rows.push([_t('pilot.kind'), kindLabel(loc.k)]);
   const sys=loc?stSysName(loc):(p.system?gn(p.system):''); if(sys) rows.push([_t('pilot.system'), sys]);
