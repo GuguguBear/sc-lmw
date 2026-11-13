@@ -528,7 +528,7 @@ async function stWikeloHTML(box){ const M=await stMis(), W=(M.d.wikelo||[]), C=a
       '<div class="st-wk-h">'+_t('wikelo.you_get')+'</div>'+w.rw.map(r=>'<div>· '+esc(gn(r[0]))+(r[1]>1?' ×'+r[1]:'')+'</div>').join('')+
       '<div class="st-wk-h">'+_t('wikelo.you_give')+'</div>'+(w.cost.length?w.cost.map(c=>'<div>· '+esc(gn(c[0]))+(c[1]?(c[2]==='scu'?' · '+c[1]+' SCU':' ×'+c[1]):'')+'</div>').join(''):'<div class="sc-lmw-muted">'+_t('wikelo.nothing_specified')+'</div>')+
       (w.pre.length?'<div class="st-wk-h">'+_t('label.requirement')+'</div>'+w.pre.map(p=>'<div>· '+esc(gn(p))+'</div>').join(''):'')+'</div></details>'; };
-  const draw=tab=>{ const L=W.filter(w=>stWkCat(w)===tab); box.querySelector('.st-wk-list').innerHTML=(tab==='favor'?'<p class="st-mnote" style="margin:0 0 8px">'+_t('wikelo.favor_note')+'</p>':'')+(L.map(row).join('')||'<p class="sc-lmw-muted" style="font-size:.8rem">'+_t('common.nothing_in_category')+'</p>');
+  const draw=tab=>{ const L=W.filter(w=>stWkCat(w)===tab); box.querySelector('.st-wk-list').innerHTML=(tab==='favor'?'<p class="st-mnote" style="margin:0 0 8px">'+_t('wikelo.favor_note')+'</p>':'')+(L.map(row).join('')||'<p class="sc-lmw-muted" style="font-size:clamp(12px, calc(.8rem * var(--sclmw-fs, 12) / 12), 28px)">'+_t('common.nothing_in_category')+'</p>');
     box.querySelectorAll('[data-wkt]').forEach(b=>b.classList.toggle('on',b.getAttribute('data-wkt')===tab)); };
   box.innerHTML='<div class="st-slbl">'+_t('wikelo.title')+' <span class="st-cnt">'+_t('wikelo.offers',{n:W.length})+'</span></div><div class="st-wk-tabs">'+ST_WK_TABS.map(tb=>'<button data-wkt="'+tb[0]+'">'+_t(tb[1])+' <span>'+W.filter(w=>stWkCat(w)===tb[0]).length+'</span></button>').join('')+'</div><div class="st-wk-list"></div>';
   box.querySelectorAll('[data-wkt]').forEach(b=>b.onclick=()=>draw(b.getAttribute('data-wkt'))); draw('ship'); }
@@ -540,11 +540,11 @@ async function stShopHTML(o,box){ const C=await uexCatalog(); const byI={}; C.it
   // gleiche Items/Schiffe an mehreren Terminals: einmal, guenstigster Preis, Terminals zusammen
   const mm={}; [].concat(...lists).filter(x=>x.price>0&&(x.item||x.ship)).forEach(x=>{ const k=(x.ship?'s':'i')+((x.ship||x.item).i||(x.ship||x.item).n); const y=mm[k];
     if(!y) mm[k]=Object.assign({},x,{terms:[x.term]}); else { if(x.price<y.price) y.price=x.price; if(y.terms.indexOf(x.term)<0) y.terms.push(x.term); y.term=y.terms.length>1?_t('count.terminals',{n:y.terms.length}):y.terms[0]; } });
-  const all=Object.values(mm); if(!all.length){ box.innerHTML='<p class="sc-lmw-muted" style="font-size:.82rem">'+_t('shop.none')+'</p>'; return; }
+  const all=Object.values(mm); if(!all.length){ box.innerHTML='<p class="sc-lmw-muted" style="font-size:clamp(12px, calc(.82rem * var(--sclmw-fs, 12) / 12), 28px)">'+_t('shop.none')+'</p>'; return; }
   const rk=x=>x.ship?0:(x.item.s?1:2); all.sort((a,b)=>rk(a)-rk(b)||String(a.ship?'':a.item.s).localeCompare(String(b.ship?'':b.item.s))||(a.ship||a.item).n.localeCompare((b.ship||b.item).n));
   const draw=q=>{ const L=all.filter(x=>{ if(!q) return true; const n=(x.ship||x.item).n||'', s=(x.item||{}).s||''; return n.toLowerCase().indexOf(q)>=0||String(gn(n)).toLowerCase().indexOf(q)>=0||s.toLowerCase().indexOf(q)>=0||String(gn(s)).toLowerCase().indexOf(q)>=0; }); let last='';
     box.querySelector('.st-shop-l').innerHTML=L.slice(0,200).map((x,i)=>{ const sec=x.ship?_t('cat.ship'):(gn(x.item.s)||_t('common.misc2')), hd=sec!==last?'<div class="st-rh">'+esc(sec)+'</div>':''; last=sec;
-      return hd+'<div class="st-pr" data-si="'+all.indexOf(x)+'"><div><b>'+esc(gn((x.ship||x.item).n))+'</b><span>'+esc(gnLine(x.term))+'</span></div><em>'+uexMoney(x.price)+'</em></div>'; }).join('')+(L.length>200?'<p class="sc-lmw-muted" style="font-size:.78rem">'+_t('shop.more_filter',{n:L.length-200})+'</p>':'');
+      return hd+'<div class="st-pr" data-si="'+all.indexOf(x)+'"><div><b>'+esc(gn((x.ship||x.item).n))+'</b><span>'+esc(gnLine(x.term))+'</span></div><em>'+uexMoney(x.price)+'</em></div>'; }).join('')+(L.length>200?'<p class="sc-lmw-muted" style="font-size:clamp(12px, calc(.78rem * var(--sclmw-fs, 12) / 12), 28px)">'+_t('shop.more_filter',{n:L.length-200})+'</p>':'');
     box.querySelectorAll('[data-si]').forEach(el=>el.onclick=()=>{ const x=all[+el.getAttribute('data-si')]; if(x.ship) stOpenBuy('ship',x.ship); else if(x.item.i) stOpenBuy('item',x.item); }); };
   box.innerHTML='<input class="st-shop-f" placeholder="'+esc(_t('shop.filter_placeholder',{n:all.length}))+'"><div class="st-shop-l"></div>'; box.querySelector('.st-shop-f').oninput=e=>draw(e.target.value.trim().toLowerCase()); draw(''); }
 function stDestLoc(tr){ if(!tr) return null; return stPlayerLoc({code:tr.to_raw||'',location:tr.to||'',system:''}); }
@@ -1551,6 +1551,38 @@ function bindChips(kind, act){
   if(!list.length&&!(waiting&&ST_CAP.index<0)) html='<span class="st-ctrl-name">'+esc(_t('ctrl.unset'))+'</span>'+html;
   return html;
 }
+function fontPx(){
+  let n=12;
+  try{ n=parseInt(localStorage.getItem('sclmw_font_px'),10); }catch(e){}
+  if(!(n>=12&&n<=28)) n=12;
+  return n;
+}
+function applyFontPx(n){
+  n=Math.round(+n);
+  if(!(n>=12&&n<=28)) n=12;
+  document.documentElement.style.setProperty('--sclmw-fs', String(n));
+  try{ localStorage.setItem('sclmw_font_px', String(n)); }catch(e){}
+  document.querySelectorAll('.st-font').forEach(function(box){
+    const out=box.querySelector('[data-font-out]');
+    if(out) out.textContent=n+'px';
+    const down=box.querySelector('[data-font-step="-1"]');
+    const up=box.querySelector('[data-font-step="1"]');
+    if(down) down.disabled=n<=12;
+    if(up) up.disabled=n>=28;
+  });
+}
+function fontControlHtml(){
+  const n=fontPx();
+  return '<span class="st-font"><span>'+esc(_t('font.title'))+'</span><button type="button" data-font-step="-1"'+(n<=12?' disabled':'')+' aria-label="'+esc(_t('font.smaller'))+'">A−</button><b data-font-out>'+n+'px</b><button type="button" data-font-step="1"'+(n>=28?' disabled':'')+' aria-label="'+esc(_t('font.larger'))+'">A+</button></span>';
+}
+if(!window.__stFontStep){
+  window.__stFontStep=function(e){
+    const b=e.target&&e.target.closest&&e.target.closest('[data-font-step]');
+    if(!b||b.disabled) return;
+    applyFontPx(fontPx()+(+b.getAttribute('data-font-step')||0));
+  };
+  document.addEventListener('click', window.__stFontStep);
+}
 function paintCtrl(){
   const body=$('stCtrlBody'); if(!body) return;
   const row=function(kind, act){ return '<div class="st-ctrl-row"><span class="st-ctrl-name">'+esc(_t('ctrl.'+act))+'</span><span class="st-ctrl-binds">'+bindChips(kind, act)+'</span></div>'; };
@@ -1563,6 +1595,7 @@ function paintCtrl(){
     '<div class="st-ctrl-sec">'+esc(_t('ctrl.feel'))+'</div><div class="st-ctrl-flags">'+flag('invertX')+flag('invertY')+flag('invertWheel')+'</div>'+
     slide('sensRot')+slide('sensPan')+slide('sensZoom')+
     '<div class="st-ctrl-sec">'+esc(_t('sky.title'))+'</div><div class="st-ctrl-flags"><button type="button" class="st-ctrl-flag'+(ST_SKY.on?' on':'')+'" data-sky="toggle">'+esc(_t('sky.title'))+' · '+esc(_t(ST_SKY.on?'ctrl.on':'ctrl.off'))+'</button></div><div class="st-ctrl-flags">'+ST_SKY_STYLES.map(function(id){ return '<button type="button" class="st-ctrl-flag'+(ST_SKY.on&&ST_SKY.style===id?' on':'')+'" data-sky="'+id+'">'+esc(_t('sky.'+id))+'</button>'; }).join('')+'</div>'+
+    '<div class="st-ctrl-sec">'+esc(_t('font.title'))+'</div>'+fontControlHtml()+
     '<div class="st-ctrl-sec">'+esc(_t('ctrl.more'))+'</div><div class="st-ctrl-flags">'+tog('spin')+tog('hint')+tog('castSound')+tog('blurBg')+'</div>'+
     '<div class="st-ctrl-row"><button type="button" class="st-ctrl-reset" data-ctrl="reset">'+esc(_t('ctrl.reset'))+'</button></div>';
 }
@@ -1694,6 +1727,8 @@ function stApplyLang(){
     syncGameLang();
     const ul=$('stUiLang'); if(ul){ ul.title=_t('uilang.title'); ul.textContent=uiLangMark(); }
     const tb=$('stTheme'); if(tb) tb.title=_t('theme.title')+' · '+_t('theme.'+ST_UI_THEME);
+    const fb=$('stFont'); if(fb) fb.title=_t('font.title');
+    const fp=$('stFontPick'); if(fp&&!fp.hidden) fp.innerHTML=fontControlHtml();
     const dg=$('stDrag'); if(dg) dg.title=_t('ctrl.title');
     paintDrag();
     paintLoc();
@@ -1728,8 +1763,8 @@ function enterStExplore(){
       '<div class="st-zoom"><button class="st-pause" id="'+ID('stPause')+'" title="'+esc(_t('action.pause_rotation'))+'">'+(SC.ico?SC.ico('pause'):'')+'</button><button class="st-pause" id="'+ID('stHome')+'" title="'+esc(_t('action.home_title'))+'">'+(SC.ico?SC.ico('home'):'')+'</button></div>'+
       '<div class="st-dockslot" id="'+ID('stDockSlot')+'" hidden></div>'+
       '<div class="st-cats" id="'+ID('stCats')+'">'+ST_CATS.map(c=>'<button data-cat="'+c[0]+'"'+(ST_CAT===c[0]?' class="on"':'')+'>'+esc(_t(c[1]))+'</button>').join('')+'</div>'+
-      '<div class="st-tools"><div class="st-tabs"><button type="button" id="'+ID('stPlaza')+'"></button><button id="'+ID('stSideMin')+'">'+esc(_t('tabs.legend'))+' ▸</button><button id="'+ID('stSidePl')+'"><span id="'+ID('stSidePlLbl')+'">'+esc(_t('tabs.players'))+'</span> <span id="'+ID('stPlCnt')+'"></span></button><button type="button" class="st-sq" id="'+ID('stUiLang')+'" title="'+esc(_t('uilang.title'))+'">'+uiLangMark()+'</button><button type="button" class="st-sq" id="'+ID('stTheme')+'" title="'+esc(_t('theme.title'))+'">'+(SC.ico?SC.ico('theme'):'')+'</button><button type="button" class="st-sq" id="'+ID('stDrag')+'" title="'+esc(_t('drag.title'))+'">'+(SC.ico?SC.ico('drag'):'')+'</button><button type="button" class="st-sq" id="'+ID('stLocBtn')+'" title="'+esc(_t('loc.title'))+'">文</button></div>'+
-      '<div class="st-pick" id="'+ID('stLangPick')+'" hidden></div><div class="st-pick st-pick-themes" id="'+ID('stThemePick')+'" hidden></div><div class="st-pick st-pick-loc" id="'+ID('stLocPick')+'" hidden></div></div><button class="stx" id="'+ID('stExX')+'" title="'+esc(_t('ui.leave_map'))+'">'+(SC.ico?SC.ico('close'):'')+'</button></div>'+
+      '<div class="st-tools"><div class="st-tabs"><button type="button" id="'+ID('stPlaza')+'"></button><button id="'+ID('stSideMin')+'">'+esc(_t('tabs.legend'))+' ▸</button><button id="'+ID('stSidePl')+'"><span id="'+ID('stSidePlLbl')+'">'+esc(_t('tabs.players'))+'</span> <span id="'+ID('stPlCnt')+'"></span></button><button type="button" class="st-sq" id="'+ID('stUiLang')+'" title="'+esc(_t('uilang.title'))+'">'+uiLangMark()+'</button><button type="button" class="st-sq" id="'+ID('stFont')+'" title="'+esc(_t('font.title'))+'">A</button><button type="button" class="st-sq" id="'+ID('stTheme')+'" title="'+esc(_t('theme.title'))+'">'+(SC.ico?SC.ico('theme'):'')+'</button><button type="button" class="st-sq" id="'+ID('stDrag')+'" title="'+esc(_t('drag.title'))+'">'+(SC.ico?SC.ico('drag'):'')+'</button><button type="button" class="st-sq" id="'+ID('stLocBtn')+'" title="'+esc(_t('loc.title'))+'">文</button></div>'+
+      '<div class="st-pick" id="'+ID('stLangPick')+'" hidden></div><div class="st-pick st-pick-font" id="'+ID('stFontPick')+'" hidden></div><div class="st-pick st-pick-themes" id="'+ID('stThemePick')+'" hidden></div><div class="st-pick st-pick-loc" id="'+ID('stLocPick')+'" hidden></div></div><button class="stx" id="'+ID('stExX')+'" title="'+esc(_t('ui.leave_map'))+'">'+(SC.ico?SC.ico('close'):'')+'</button></div>'+
       '<div class="st-res" id="'+ID('stRes')+'" hidden></div></div>'+
     '<div class="st-side min" id="'+ID('stSide')+'"><div class="st-tab" id="'+ID('stTabLeg')+'"><div id="'+ID('stLegend')+'"></div></div><div class="st-tab" id="'+ID('stTabPl')+'" hidden><input id="'+ID('stPlQ')+'" placeholder="'+esc(_t('player.search_placeholder'))+'"><div id="'+ID('stPlList')+'"></div></div></div>'+
     '<div class="st-compass"><svg viewBox="0 0 100 100" width="86" height="86">'+
@@ -1750,14 +1785,15 @@ function enterStExplore(){
   const dial=$('stComDial'), pause=$('stPause');
   if(pause){ syncPauseBtn(); pause.onclick=()=>{ ST_PAUSE=!ST_PAUSE; ST_CTRL.spin=!ST_PAUSE; saveCtrl(); }; }
   $('stExX').onclick=exitStExplore;
-  $('stUiLang').onclick=e=>{ e.stopPropagation(); const p=$('stLangPick'); $('stThemePick').hidden=true; $('stLocPick').hidden=true; closeCtrl(); p.hidden=!p.hidden; };
-  $('stTheme').onclick=e=>{ e.stopPropagation(); const p=$('stThemePick'); $('stLangPick').hidden=true; $('stLocPick').hidden=true; closeCtrl(); p.hidden=!p.hidden; };
-  $('stDrag').onclick=e=>{ e.stopPropagation(); $('stLangPick').hidden=true; $('stThemePick').hidden=true; $('stLocPick').hidden=true; openCtrl(); };
-  $('stLocBtn').onclick=e=>{ e.stopPropagation(); const p=$('stLocPick'); $('stLangPick').hidden=true; $('stThemePick').hidden=true; closeCtrl(); p.hidden=!p.hidden; };
+  $('stUiLang').onclick=e=>{ e.stopPropagation(); const p=$('stLangPick'); $('stThemePick').hidden=true; $('stFontPick').hidden=true; $('stLocPick').hidden=true; closeCtrl(); p.hidden=!p.hidden; };
+  $('stFont').onclick=e=>{ e.stopPropagation(); const p=$('stFontPick'); $('stLangPick').hidden=true; $('stThemePick').hidden=true; $('stLocPick').hidden=true; closeCtrl(); if(p.hidden) p.innerHTML=fontControlHtml(); p.hidden=!p.hidden; };
+  $('stTheme').onclick=e=>{ e.stopPropagation(); const p=$('stThemePick'); $('stLangPick').hidden=true; $('stFontPick').hidden=true; $('stLocPick').hidden=true; closeCtrl(); p.hidden=!p.hidden; };
+  $('stDrag').onclick=e=>{ e.stopPropagation(); $('stLangPick').hidden=true; $('stThemePick').hidden=true; $('stFontPick').hidden=true; $('stLocPick').hidden=true; openCtrl(); };
+  $('stLocBtn').onclick=e=>{ e.stopPropagation(); const p=$('stLocPick'); $('stLangPick').hidden=true; $('stThemePick').hidden=true; $('stFontPick').hidden=true; closeCtrl(); p.hidden=!p.hidden; };
   $('stLangPick').onclick=e=>{ const b=e.target.closest('[data-ui-lang]'); if(!b||!SC.i18n) return; e.stopPropagation(); SC.i18n.setLang(b.getAttribute('data-ui-lang')); $('stLangPick').hidden=true; syncGameLang(); if(SC.loc) SC.loc.sync(); stApplyLang(); };
   $('stThemePick').onclick=e=>{ const b=e.target.closest('[data-ui-theme]'); if(!b) return; e.stopPropagation(); applyUiTheme(b.getAttribute('data-ui-theme'), true); $('stThemePick').hidden=true; };
   $('stLocPick').onclick=e=>{ const b=e.target.closest('[data-loc]'); if(!b) return; e.stopPropagation(); onLocPick(b.getAttribute('data-loc')); };
-  if(!ROOT.__stPickClose){ ROOT.__stPickClose=function(e){ if(e.target.closest('.st-pick,.st-ctrldlg,#'+ID('stUiLang')+',#'+ID('stTheme')+',#'+ID('stDrag')+',#'+ID('stLocBtn')+',.st-locdlg')) return; const a=$('stLangPick'),b=$('stThemePick'),d=$('stLocPick'); if(a) a.hidden=true; if(b) b.hidden=true; if(d) d.hidden=true; closeCtrl(); }; ROOT.addEventListener('click', ROOT.__stPickClose); }
+  if(!ROOT.__stPickClose){ ROOT.__stPickClose=function(e){ if(e.target.closest('.st-pick,.st-ctrldlg,.st-font,#'+ID('stUiLang')+',#'+ID('stFont')+',#'+ID('stTheme')+',#'+ID('stDrag')+',#'+ID('stLocBtn')+',.st-locdlg')) return; const a=$('stLangPick'),b=$('stThemePick'),d=$('stLocPick'),f=$('stFontPick'); if(a) a.hidden=true; if(b) b.hidden=true; if(d) d.hidden=true; if(f) f.hidden=true; closeCtrl(); }; ROOT.addEventListener('click', ROOT.__stPickClose); }
   if(SC.loc) SC.loc.onChange=function(){ paintLoc(); refreshGameText(); };
   if(!window.__stLangSync){ window.__stLangSync=function(){ if(SC.loc) SC.loc.sync(); }; document.addEventListener('sclmw-lang', window.__stLangSync); }
   paintDrag();
@@ -1923,7 +1959,7 @@ async function stSearch(){ const box=$('stRes'), qi=$('stQ'); if(!box||!ST_DATA)
   const head=(tt,n,c)=>all?'<div class="st-rh">'+tt+(n>5?' <a data-more="'+c+'">'+esc(_t('action.show_all',{n}))+'</a>':'')+'</div>':'';
   if((all||cat==='pl')&&ST_PL){ const L=ST_PL.filter(p=>has(p.name)||has(p.player)||has(p.location)||has(p.ship)||has(p.system)||has(p.server));
     if(ST_PL_ERR&&cat==='pl') h+='<p class="st-warn">'+esc(ST_PL_ERR)+'</p>';
-    if(L.length) h+=head(_t('cat.pl'),L.length,'pl')+L.slice(0,lim(300)).map(p=>stRow('pl',p.id,p.online?'🟢':'⚪',p.name||p.player,[pilotStateText(p),p.location&&(playerPlaceName(p)||gn(p.location))+(p.online&&p.when&&!stLocFresh(p)?' ('+stAgo(p.when)+')':''),p.ship&&gn(p.ship),p.server&&(_t('pilot.server')+' '+p.server),travelBlurb(p)].filter(v=>v&&v!=='—').join(' · '))).join('')+stCut(L.length,lim(300)); else if(cat==='pl'&&!ST_PL_ERR) h+='<p class="sc-lmw-muted" style="padding:10px;font-size:.84rem">'+_t('search.none_players')+'</p>'; }
+    if(L.length) h+=head(_t('cat.pl'),L.length,'pl')+L.slice(0,lim(300)).map(p=>stRow('pl',p.id,p.online?'🟢':'⚪',p.name||p.player,[pilotStateText(p),p.location&&(playerPlaceName(p)||gn(p.location))+(p.online&&p.when&&!stLocFresh(p)?' ('+stAgo(p.when)+')':''),p.ship&&gn(p.ship),p.server&&(_t('pilot.server')+' '+p.server),travelBlurb(p)].filter(v=>v&&v!=='—').join(' · '))).join('')+stCut(L.length,lim(300)); else if(cat==='pl'&&!ST_PL_ERR) h+='<p class="sc-lmw-muted" style="padding:10px;font-size:clamp(12px, calc(.84rem * var(--sclmw-fs, 12) / 12), 28px)">'+_t('search.none_players')+'</p>'; }
   if(all||cat==='loc'){ const L=ST_DATA.d.objects.filter(o=>o.k!=='asteroid'&&(!o.h||ST_HID)&&(q?has(o.n):(ST_PRIO[o.k]||0)>=2)).sort((a,b)=>(ST_PRIO[b.k]||0)-(ST_PRIO[a.k]||0)||a.n.localeCompare(b.n));
     if(L.length) h+=head(_t('cat.loc'),L.length,'loc')+L.slice(0,lim(600)).map(o=>stRow('loc',o.id,kindMark(o.k),gn(o.n),kindLabel(o.k)+(stBodyOf(o)!==o&&stBodyOf(o).k!=='star'?' · '+gn(stBodyOf(o).n):'')+' · '+stSysName(o))).join('')+stCut(L.length,lim(600)); }
   if(all||cat==='ore'){ const L=ORES.filter(o=>has(o.n)||o.mine.some(has)||has(o.code));
@@ -1945,9 +1981,9 @@ async function stSearch(){ const box=$('stRes'), qi=$('stQ'); if(!box||!ST_DATA)
   const miss=(M.failed?[_t('cat.mis')+'/'+_t('cat.bp')]:[]).concat(!C.items.length?[_t('cat.item')+'/'+_t('cat.ware')]:[],!C.ships.length?[_t('cat.ship')]:[]);
   if(miss.length) h='<p class="st-warn">'+esc(_t('search.load_failed',{list:miss.join(', ')}))+'</p>'+h;
   // Sichtbar machen, wenn eine Liste gekuerzt wurde (nie still abschneiden)
-  h=h.replace(/<!--CUT:(\d+)-->/g,(m,n)=>'<p class="sc-lmw-muted" style="padding:6px 10px;font-size:.78rem">'+esc(_t('search.more_specific',{n}))+'</p>');
+  h=h.replace(/<!--CUT:(\d+)-->/g,(m,n)=>'<p class="sc-lmw-muted" style="padding:6px 10px;font-size:clamp(12px, calc(.78rem * var(--sclmw-fs, 12) / 12), 28px)">'+esc(_t('search.more_specific',{n}))+'</p>');
   if(gen!==ST_SGEN) return;   // eine neuere Suche laeuft schon, dieses Ergebnis ist veraltet
-  box.innerHTML=h||'<p class="sc-lmw-muted" style="padding:10px;font-size:.84rem">'+_t('search.nothing_found')+'</p>';
+  box.innerHTML=h||'<p class="sc-lmw-muted" style="padding:10px;font-size:clamp(12px, calc(.84rem * var(--sclmw-fs, 12) / 12), 28px)">'+_t('search.nothing_found')+'</p>';
   const f1=box.querySelector('.st-r'); if(f1) f1.classList.add('sel');
   box.querySelectorAll('[data-more]').forEach(a=>a.onclick=(e)=>{ e.stopPropagation(); ST_CAT=a.getAttribute('data-more'); stCatsMark(); const b=$('stCats')&&$('stCats').querySelector('[data-cat="'+ST_CAT+'"]'); if(b) ST_ANCHOR=b; stSearch(); });
   placeUnder(box, popAnchor(), 440);
@@ -1989,7 +2025,7 @@ async function stOpenBuy(kind,rec){ if(!rec) return;
   h+=buy.html+sell.html;
   if(kind==='item') h+='<div id="'+ID('stLoot')+'"></div>';   // Beute-Fundorte / loot (js/guides.js, data/loot.json)
   if(kind==='item'&&rec.i) h+='<div id="'+ID('stAttr')+'"></div>';
-  if(!buy.html&&!sell.html) h+='<p class="sc-lmw-muted" style="font-size:.84rem">'+(kind==='ship'?_t('notice.ship_not_buyable'):kind==='item'?_t('notice.item_not_buyable'):_t('notice.ware_no_price'))+'</p>';
+  if(!buy.html&&!sell.html) h+='<p class="sc-lmw-muted" style="font-size:clamp(12px, calc(.84rem * var(--sclmw-fs, 12) / 12), 28px)">'+(kind==='ship'?_t('notice.ship_not_buyable'):kind==='item'?_t('notice.item_not_buyable'):_t('notice.ware_no_price'))+'</p>';
   h+='<div class="st-coord">'+_t('price.coord_note')+'</div>';
   body.innerHTML=h; stWirePrices(body); if(kind==='item'&&SC.guides) SC.guides.loot($('stLoot'),rec.n);
   if(kind==='item'&&rec.i) stGet(UEX_BASE+'/items_attributes?id_item='+rec.i).then(A=>{ const bx=$('stAttr'); if(!bx) return; const L=A.filter(a=>a.attribute_name&&a.value!==''&&a.value!=null); if(L.length) bx.innerHTML='<div class="st-slbl">'+_t('label.stats')+'</div><table class="st-attr">'+L.map(a=>'<tr><td>'+esc(gn(a.attribute_name))+'</td><td>'+esc(a.value)+(a.unit?' '+esc(gn(a.unit)):'')+'</td></tr>').join('')+'</table>'; });
@@ -2001,13 +2037,13 @@ async function stOpenOre(x){ const I=stOreIndex();
   let h=rows.length?'<div class="st-slbl">'+_t('label.mining')+' <span class="st-cnt">'+_t('hint.best_quality_first')+'</span></div>'+rows.map((r,i)=>{ const L=I.locs[r.k]||[]; L.forEach(o=>ids.add(o.id));
     const where=!L.length?stMineLabel(r.k)+_t('nofix.mineable_no_place'):r.k==='HPP_AaronHalo'?gn('Aaron Halo')+' ('+L.length+')':(/^HPP_(Stanton|Pyro)\d/.test(r.k)?L.map(o=>gn(o.n)).join(', '):stMineLabel(r.k)+' · '+L.slice(0,4).map(o=>gn(o.n)).join(', ')+(L.length>4?' …':''))+(L.length?' · '+stSysName(L[0]):'');
     return '<div class="st-orow'+(L.length?'':' st-nofix')+'" data-ri="'+i+'"><b>'+esc(where)+'</b><div class="om"><span>'+esc(mineGroupLabel(r.g))+'</span><span title="'+esc(_t('tooltip.ore_chance'))+'">'+esc(_t('ore.percent_chance',{n:(r.ch>=1?Math.round(r.ch):r.ch.toFixed(1))}))+'</span><span title="'+esc(_t('tooltip.ore_max_share'))+'">'+esc(_t('ore.up_to_percent',{n:Math.round(r.max)}))+'</span><span title="'+esc(_t('tooltip.best_quality'))+'">'+esc(_t('ore.quality',{n:r.q}))+'</span></div></div>'; }).join(''):'';
-  body.innerHTML=h+'<div id="'+ID('stOreSell')+'"><p class="sc-lmw-muted" style="font-size:.82rem">'+_t('status.loading_sell_prices')+'</p></div>';
+  body.innerHTML=h+'<div id="'+ID('stOreSell')+'"><p class="sc-lmw-muted" style="font-size:clamp(12px, calc(.82rem * var(--sclmw-fs, 12) / 12), 28px)">'+_t('status.loading_sell_prices')+'</p></div>';
   body.querySelectorAll('[data-ri]').forEach(el=>el.onclick=()=>{ const r=rows[+el.getAttribute('data-ri')]; const o=(I.locs[r.k]||[])[0]; if(!o){ stOpenNofix(r.k); return; } window.__stCtl.flyTo(o); openStPanel(o); });
   if(ids.size) window.__stCtl.highlight([...ids]);
   const [raw,ref]=await Promise.all([x.ido?stGet(UEX_BASE+'/commodities_prices?id_commodity='+x.ido):[],x.idr?stGet(UEX_BASE+'/commodities_prices?id_commodity='+x.idr):[]]);
   if(!ROOT.contains(body)) return; const box=body.querySelector('#stOreSell'); if(!box) return;
   const a=stPriceRows(raw,'price_sell',_t('label.sell_raw'),false), b=stPriceRows(ref,'price_sell',_t('label.sell_refined'),false);
-  box.innerHTML=(a.html+b.html)||'<p class="sc-lmw-muted" style="font-size:.82rem">'+_t('price.none_sell_uex')+'</p>'; stWirePrices(box); }
+  box.innerHTML=(a.html+b.html)||'<p class="sc-lmw-muted" style="font-size:clamp(12px, calc(.82rem * var(--sclmw-fs, 12) / 12), 28px)">'+_t('price.none_sell_uex')+'</p>'; stWirePrices(box); }
 // Rezept: was man zum Craften braucht (Baugruppen, Ressourcen in SCU, Items mit Stueckzahl, Mindestqualitaet)
 function stBpRecipe(R){ if(!R||!R.req||!R.req.length) return '';
   const tm=R.tm?(R.tm>=3600?_t('time.hours_short',{n:Math.round(R.tm/360)/10}):R.tm>=60?_t('time.min_short',{n:Math.round(R.tm/60)}):_t('time.sec_short',{n:R.tm})):'';
@@ -2039,7 +2075,7 @@ function stPlList(){ const box=$('stPlList'), cnt=$('stPlCnt'); const P=ST_PL||[
     const place=playerPlaceName(p)||(o&&translated(o.n))||'';
     const age=stAgo(p.last_seen||p.when);
     const where=(typeof p.starfix==='boolean')?[place||_t('location.unknown'), pilotStateText(p)].filter(Boolean).join(' · '):(p.online?(travelBlurb(p)||place||_t('location.unknown'))+(p.when&&!stLocFresh(p)?' ('+age+')':''):(place||_t('location.unknown'))+' · '+_t('status.offline_last',{time:age}));
-    return '<div class="st-orow st-plrow'+(p.online?'':' is-off')+'" data-pid="'+esc(p.id)+'"><b><i class="st-pl-dot'+(p.online?' on':'')+'"></i>'+esc(p.name||p.player||_t('entity.player'))+'</b><div class="om"><span>'+esc(where)+'</span>'+(o?'<span>'+esc(stSysName(o))+'</span>':'')+(p.server?'<span>'+esc(_t('pilot.server'))+' '+esc(String(p.server))+'</span>':'')+(p.ship&&p.ship!=='—'?'<span>🚀 '+esc(gn(p.ship))+'</span>':'')+'</div></div>'; }).join('')||'<p class="sc-lmw-muted" style="font-size:.8rem">'+(ST_PL?_t('search.none_players'):_t('common.loading'))+'</p>');
+    return '<div class="st-orow st-plrow'+(p.online?'':' is-off')+'" data-pid="'+esc(p.id)+'"><b><i class="st-pl-dot'+(p.online?' on':'')+'"></i>'+esc(p.name||p.player||_t('entity.player'))+'</b><div class="om"><span>'+esc(where)+'</span>'+(o?'<span>'+esc(stSysName(o))+'</span>':'')+(p.server?'<span>'+esc(_t('pilot.server'))+' '+esc(String(p.server))+'</span>':'')+(p.ship&&p.ship!=='—'?'<span>🚀 '+esc(gn(p.ship))+'</span>':'')+'</div></div>'; }).join('')||'<p class="sc-lmw-muted" style="font-size:clamp(12px, calc(.8rem * var(--sclmw-fs, 12) / 12), 28px)">'+(ST_PL?_t('search.none_players'):_t('common.loading'))+'</p>');
   box.querySelectorAll('[data-pid]').forEach(el=>el.onclick=()=>{ const p=P.find(x=>String(x.id)===el.getAttribute('data-pid')); if(!p) return; const o=stPlayerLoc(p); if(o) window.__stCtl.flyTo(o); stOpenPlayer(p); }); }
 function stLegend(){ const box=$('stLegend'); if(!box||!ST_DATA) return; const cnt={}, hid={};
   ST_DATA.d.objects.forEach(o=>{ if(o.h) hid[o.k]=(hid[o.k]||0)+1; else cnt[o.k]=(cnt[o.k]||0)+1; });
@@ -2098,7 +2134,7 @@ function stMiningHTML(keys){ const D=ST_DATA; let h='<div class="st-slbl">'+_t('
     gs.forEach(g=>{ h+='<div class="st-mgrp">'+esc(mineGroupLabel(g.g))+'</div>';
       g.deps.forEach(d=>{ const ores=stOreMerge(d.parts).filter(x=>!/^Inert/i.test(x.ore));
         h+='<details class="st-dep"><summary><b>'+esc(gn(d.rock))+'</b>'+(d.tier?'<em class="t-'+esc(d.tier)+'">'+esc(d.tier)+'</em>':'')+'<span title="'+esc(_t('tooltip.rock_frequency'))+'">'+d.rel+' %</span></summary>'+
-          (ores.length?'<table><tr><th>'+esc(_t('table.ore'))+'</th><th title="'+esc(_t('tooltip.ore_in_rock'))+'">'+esc(_t('table.chance'))+'</th><th title="'+esc(_t('tooltip.ore_share_quality'))+'">'+esc(_t('table.share_quality'))+'</th></tr>'+ores.map(x=>'<tr><td>'+esc(gn(x.ore))+'</td><td>'+Math.round(x.p*100)+' %</td><td>'+x.b.map(b=>b.min+'–'+b.max+' %<small>Q '+b.q[0]+'–'+b.q[1]+'</small>').join('<br>')+'</td></tr>').join('')+'</table>':'<p class="sc-lmw-muted" style="font-size:.78rem;margin:0 10px 8px">'+_t('common.no_ore_data')+'</p>')+'</details>'; }); }); });
+          (ores.length?'<table><tr><th>'+esc(_t('table.ore'))+'</th><th title="'+esc(_t('tooltip.ore_in_rock'))+'">'+esc(_t('table.chance'))+'</th><th title="'+esc(_t('tooltip.ore_share_quality'))+'">'+esc(_t('table.share_quality'))+'</th></tr>'+ores.map(x=>'<tr><td>'+esc(gn(x.ore))+'</td><td>'+Math.round(x.p*100)+' %</td><td>'+x.b.map(b=>b.min+'–'+b.max+' %<small>Q '+b.q[0]+'–'+b.q[1]+'</small>').join('<br>')+'</td></tr>').join('')+'</table>':'<p class="sc-lmw-muted" style="font-size:clamp(12px, calc(.78rem * var(--sclmw-fs, 12) / 12), 28px);margin:0 10px 8px">'+_t('common.no_ore_data')+'</p>')+'</details>'; }); }); });
   return h; }
 function stNofixNote(k){ return /^AsteroidCluster_/.test(k)?_t('nofix.note_random'):_t('nofix.note_no_coords'); }
 function stOpenNofix(k){ const shell=locOpen('<span class="st-dot" style="background:#9c8b76"></span>', esc(stMineLabel(k))+'<small>'+esc(_t('nofix.title'))+'</small>');
@@ -2135,28 +2171,28 @@ async function openStPanel(o){
   if((o.terms||[]).some(t=>!/^(commodity|refinery|fuel)/.test(t.t||''))) h+='<div class="st-slbl">'+_t('label.available_here')+'</div><div id="'+ID('stShopBox')+'"><button class="sc-lmw-btn sm" id="'+ID('stShopGo')+'">'+_t('action.load_items_ships')+'</button></div>';
   h+='<div id="'+ID('stMisBox')+'"></div>';
   const comm=(o.terms||[]).filter(t=>t.t==='commodity').slice(0,6);
-  if(comm.length) h+='<div class="st-slbl">'+_t('label.commodity_market')+'</div><div id="'+ID('stGoodsBox')+'"><p class="sc-lmw-muted" style="font-size:.85rem">'+_t('status.loading_prices')+'</p></div>';
+  if(comm.length) h+='<div class="st-slbl">'+_t('label.commodity_market')+'</div><div id="'+ID('stGoodsBox')+'"><p class="sc-lmw-muted" style="font-size:clamp(12px, calc(.85rem * var(--sclmw-fs, 12) / 12), 28px)">'+_t('status.loading_prices')+'</p></div>';
   if(o.terms&&o.terms.length) h+='<div class="st-slbl">'+esc(_t('label.terminals',{n:o.terms.length}))+'</div><div class="st-chips">'+o.terms.map(t=>'<span>'+esc(gnLine(t.n))+'</span>').join('')+'</div>';
-  h+='<div class="st-slbl">'+_t('label.search_items_ships')+'</div><input id="'+ID('stCat')+'" placeholder="'+esc(_t('search.item_ship_placeholder'))+'"><div id="'+ID('stCatRes')+'"><p class="sc-lmw-muted" style="font-size:.82rem"></p></div>';
+  h+='<div class="st-slbl">'+_t('label.search_items_ships')+'</div><input id="'+ID('stCat')+'" placeholder="'+esc(_t('search.item_ship_placeholder'))+'"><div id="'+ID('stCatRes')+'"><p class="sc-lmw-muted" style="font-size:clamp(12px, calc(.82rem * var(--sclmw-fs, 12) / 12), 28px)"></p></div>';
   h+='<div class="st-coord">'+esc(stCoordLine(o))+'<br>'+esc(_t('data.version_prefix',{version:(D.d.version||'').replace(/-LIVE.*/,'')}))+(o.h?esc(_t('note.not_on_starmap')):'')+(o.approx?esc(_t('note.approx_position')):'')+(isDe&&o.dde?esc(_t('note.de_ini_source')):'')+'</div>';
   body.innerHTML=h; if(SC.guides) SC.guides.wire(body,o);
   const de=$('stDesc'); if(de) de.onclick=()=>de.classList.toggle('open');
   const wk=$('stWkBox'); if(wk) stWikeloHTML(wk);
-  const sg=$('stShopGo'); if(sg) sg.onclick=()=>{ const bx=$('stShopBox'); bx.innerHTML='<p class="sc-lmw-muted" style="font-size:.82rem">'+_t('status.loading_uex')+'</p>'; stShopHTML(o,bx); };
+  const sg=$('stShopGo'); if(sg) sg.onclick=()=>{ const bx=$('stShopBox'); bx.innerHTML='<p class="sc-lmw-muted" style="font-size:clamp(12px, calc(.82rem * var(--sclmw-fs, 12) / 12), 28px)">'+_t('status.loading_uex')+'</p>'; stShopHTML(o,bx); };
   const jg=$('stJumpGo'); if(jg) jg.onclick=()=>{ const t=D.by[jg.getAttribute('data-to')]; if(!t) return; window.__stCtl.flyTo(t); openStPanel(t); };
   const misBox=$('stMisBox'), goodsBox=$('stGoodsBox');
   stMis().then(M=>{ const box=misBox; if(!box||!ROOT.contains(box)) return; const ids=[]; let x=o; while(x){ ids.push(x.id); if(x.k==='planet'||(D.by[x.p]||{}).k==='star') break; x=D.by[x.p]; }
     const seen=new Set(), rows=[]; ids.forEach(id=>(M.byLoc[id]||[]).forEach(i=>{ if(!seen.has(i)){ seen.add(i); rows.push(i); } }));
     if(!rows.length) return; rows.sort((a,b)=>M.d.groups[b].n-M.d.groups[a].n);
     const area=gn(ids.length>1?D.by[ids[ids.length-1]].n:o.n);
-    box.innerHTML='<div class="st-slbl">'+esc(_t('mission.area_heading',{area}))+'</div>'+rows.slice(0,12).map(i=>stMisRow(M.d.groups[i],i)).join('')+(rows.length>12?'<p class="sc-lmw-muted" style="font-size:.76rem">'+esc(_t('mission.more_groups',{n:rows.length-12}))+'</p>':''); });
+    box.innerHTML='<div class="st-slbl">'+esc(_t('mission.area_heading',{area}))+'</div>'+rows.slice(0,12).map(i=>stMisRow(M.d.groups[i],i)).join('')+(rows.length>12?'<p class="sc-lmw-muted" style="font-size:clamp(12px, calc(.76rem * var(--sclmw-fs, 12) / 12), 28px)">'+esc(_t('mission.more_groups',{n:rows.length-12}))+'</p>':''); });
   const cf=$('stCat'), cr=$('stCatRes');
-  if(cf) cf.oninput=async()=>{ const cat=await uexCatalog(); const q=cf.value.toLowerCase().trim(); if(q.length<2){ cr.innerHTML='<p class="sc-lmw-muted" style="font-size:.82rem">'+_t('search.min_2_chars')+'</p>'; return; }
+  if(cf) cf.oninput=async()=>{ const cat=await uexCatalog(); const q=cf.value.toLowerCase().trim(); if(q.length<2){ cr.innerHTML='<p class="sc-lmw-muted" style="font-size:clamp(12px, calc(.82rem * var(--sclmw-fs, 12) / 12), 28px)">'+_t('search.min_2_chars')+'</p>'; return; }
     const hitn=x=>x.n.toLowerCase().indexOf(q)>=0||String(gn(x.n)).toLowerCase().indexOf(q)>=0;
     const its=cat.items.filter(hitn).slice(0,8).map(x=>({t:'item',o:x}));
     const shs=cat.ships.filter(hitn).slice(0,8).map(x=>({t:'ship',o:x}));
     const all=shs.concat(its);
-    cr.innerHTML=all.length?all.map((r,i)=>'<div class="st-res" data-ci="'+i+'"><b>'+(r.t==='ship'?'🚀 ':'📦 ')+esc(gn(r.o.n))+'</b><div class="rp" id="'+ID('stRp'+i)+'">'+(r.t==='ship'?_t('label.ship'):esc(gn(r.o.s)||_t('label.item')))+esc(_t('hint.tap_for_price'))+'</div></div>').join(''):'<p class="sc-lmw-muted" style="font-size:.82rem">'+_t('common.nothing_in_catalog')+'</p>';
+    cr.innerHTML=all.length?all.map((r,i)=>'<div class="st-res" data-ci="'+i+'"><b>'+(r.t==='ship'?'🚀 ':'📦 ')+esc(gn(r.o.n))+'</b><div class="rp" id="'+ID('stRp'+i)+'">'+(r.t==='ship'?_t('label.ship'):esc(gn(r.o.s)||_t('label.item')))+esc(_t('hint.tap_for_price'))+'</div></div>').join(''):'<p class="sc-lmw-muted" style="font-size:clamp(12px, calc(.82rem * var(--sclmw-fs, 12) / 12), 28px)">'+_t('common.nothing_in_catalog')+'</p>';
     cr.querySelectorAll('.st-res').forEach(el=>el.onclick=()=>uexPriceInto(all[+el.getAttribute('data-ci')],$('stRp'+el.getAttribute('data-ci')),o.n)); };
   if(comm.length){ let goods=[];
     try{ const lists=await Promise.all(comm.map(t=>fetch(UEX_BASE+'/commodities_prices?id_terminal='+t.id).then(r=>r.json()).then(d=>(d&&d.data)||[]).catch(()=>[])));
@@ -2164,8 +2200,8 @@ async function openStPanel(o){
       goods=Object.values(merged).sort((a,b)=>a.n.localeCompare(b.n)); }catch(e){}
     const box=goodsBox; if(!box||!ROOT.contains(box)) return;
     const grow=g=>'<div class="st-grow"><span>'+esc(gn(g.n))+'</span><span class="gp">'+'<b class="st-buy" title="'+esc(_t('label.buy_here'))+'">'+(g.buy?uexMoney(g.buy):'–')+'</b><b class="st-sell" title="'+esc(_t('label.sell_here'))+'">'+(g.sell?uexMoney(g.sell):'–')+'</b>'+'</span></div>';
-    box.innerHTML=goods.length?'<input id="'+ID('stGoodF')+'" placeholder="'+esc(_t('ware.filter_placeholder'))+'"><div class="st-grow st-gh"><span>'+esc(_t('table.commodity'))+'</span><span class="gp"><span>'+esc(_t('table.buy'))+'</span><span>'+esc(_t('table.sell'))+'</span></span></div><div id="'+ID('stGoods')+'">'+goods.map(grow).join('')+'</div>':'<p class="sc-lmw-muted" style="font-size:.85rem">'+_t('price.none_uex')+'</p>';
-    const gf=$('stGoodF'); if(gf) gf.oninput=()=>{ const q=gf.value.toLowerCase().trim(); $('stGoods').innerHTML=goods.filter(g=>!q||g.n.toLowerCase().indexOf(q)>=0||String(gn(g.n)).toLowerCase().indexOf(q)>=0).map(grow).join('')||'<p class="sc-lmw-muted" style="font-size:.82rem">'+_t('ware.none_found')+'</p>'; }; }
+    box.innerHTML=goods.length?'<input id="'+ID('stGoodF')+'" placeholder="'+esc(_t('ware.filter_placeholder'))+'"><div class="st-grow st-gh"><span>'+esc(_t('table.commodity'))+'</span><span class="gp"><span>'+esc(_t('table.buy'))+'</span><span>'+esc(_t('table.sell'))+'</span></span></div><div id="'+ID('stGoods')+'">'+goods.map(grow).join('')+'</div>':'<p class="sc-lmw-muted" style="font-size:clamp(12px, calc(.85rem * var(--sclmw-fs, 12) / 12), 28px)">'+_t('price.none_uex')+'</p>';
+    const gf=$('stGoodF'); if(gf) gf.oninput=()=>{ const q=gf.value.toLowerCase().trim(); $('stGoods').innerHTML=goods.filter(g=>!q||g.n.toLowerCase().indexOf(q)>=0||String(gn(g.n)).toLowerCase().indexOf(q)>=0).map(grow).join('')||'<p class="sc-lmw-muted" style="font-size:clamp(12px, calc(.82rem * var(--sclmw-fs, 12) / 12), 28px)">'+_t('ware.none_found')+'</p>'; }; }
 }
 window.openStPanel=openStPanel;
 // ---- UEX-Marktdaten fuer Orte im Erkunden-Modus ----
@@ -2287,6 +2323,7 @@ function mount(el, opts){
   ROOT=el; ROOT.classList.add('sc-lmw');
   bootFit(ROOT);
   applyUiTheme(readUiTheme(opts.theme), false);
+  applyFontPx(fontPx());
   syncLangAttr();
   BASE=String(opts.base||BASE||'./'); if(BASE.slice(-1)!=='/') BASE+='/';
   if(SC.setHoloBase) SC.setHoloBase(BASE);
@@ -2334,7 +2371,7 @@ function unmount(){
   ROOT.innerHTML='';
   ROOT=null;
 }
-SC.mount=mount; SC.unmount=unmount;
+SC.mount=mount; SC.unmount=unmount; SC.fontControlHtml=fontControlHtml; SC.applyFontPx=applyFontPx;
 // Rueckwaertskompatibel: index.html rief bisher initLiveMap()/exitLiveMap() direkt (kein
 // SCLMW.mount() noetig fuer die eigenstaendige Seite, Container ist dort einfach <body>).
 // Backward compatible: index.html used to call initLiveMap()/exitLiveMap() directly (no

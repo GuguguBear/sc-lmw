@@ -358,7 +358,7 @@
       if(opt.sheet && sheetLayout()) return;
       var edge = e.target.closest && e.target.closest('[data-resize]');
       var bar = e.target.closest && e.target.closest(opt.bar || '.st-room-h');
-      if(!edge && !(bar && !(e.target.closest && e.target.closest('button')))) return;
+      if(!edge && !(bar && !(e.target.closest && e.target.closest('button,input,.st-font')))) return;
       var host = root().getBoundingClientRect();
       var box = dock.getBoundingClientRect();
       drag = {
@@ -720,7 +720,7 @@
   function paintGate(el){
     if(leaving && state && state.role==='captain' && state.status==='member'){
       var hand = mountHome(el, true);
-      hand.innerHTML = '<header class="st-home-hero"><div class="st-home-kicker">SC LMW</div><h1>'+esc(t('title'))+'</h1></header><section class="st-home-card">'+handoffHtml()+'</section>';
+      hand.innerHTML = '<header class="st-home-hero"><div class="st-home-kicker">SC LMW</div><h1>'+esc(t('title'))+'</h1>'+(SC.fontControlHtml?SC.fontControlHtml():'')+'</header><section class="st-home-card">'+handoffHtml()+'</section>';
       bindHandoff(el);
       return;
     }
@@ -761,7 +761,7 @@
     var home = mountHome(el, false);
     home.innerHTML =
         '<header class="st-home-hero"><div class="st-home-kicker">SC LMW · '+esc(ti('home.kicker'))+'</div>'+
-          '<h1>'+esc(t('title'))+'</h1><p>'+esc(ti('home.lead'))+'</p></header>'+
+          '<h1>'+esc(t('title'))+'</h1><p>'+esc(ti('home.lead'))+'</p>'+(SC.fontControlHtml?SC.fontControlHtml():'')+'</header>'+
         rsiHtml()+
         '<section class="st-home-card" id="stHomeStarfix">'+starfixFactsHtml()+'</section>'+
         '<section class="st-home-card st-home-join"><h2>'+esc(ti('home.join_h'))+'</h2>'+
@@ -2508,7 +2508,7 @@
         '<button type="button" data-plaza="ship" data-k="shipTab"></button>'+
         '<button type="button" data-plaza="job" data-k="jobTab"></button>'+
         '<button type="button" data-plaza="roam" data-k="roamTab"></button>'+
-      '</div><button type="button" class="st-plaza-page" data-act="page" data-k="plazaPage"></button><button type="button" class="st-plaza-x" aria-label="close">×</button></header>'+
+      '</div>'+(SC.fontControlHtml?SC.fontControlHtml():'')+'<button type="button" class="st-plaza-page" data-act="page" data-k="plazaPage"></button><button type="button" class="st-plaza-x" aria-label="close">×</button></header>'+
       '<p class="st-plaza-lead" data-k="plazaLead"></p>'+
       '<p class="st-plaza-err"></p>'+
       '<div class="st-plaza-body">'+
@@ -2531,6 +2531,8 @@
   function labelPlaza(el){
     var pageBtn = el.querySelector('.st-plaza-page');
     if(pageBtn) pageBtn.setAttribute('data-k', plazaPage ? 'plazaBack' : 'plazaPage');
+    var fontLabel = el.querySelector('.st-font span');
+    if(fontLabel && SC.i18n) fontLabel.textContent = SC.i18n.t('font.title');
     el.querySelectorAll('[data-k]').forEach(function(node){ node.textContent = t(node.getAttribute('data-k')); });
     el.querySelectorAll('[data-ph]').forEach(function(node){ node.placeholder = t(node.getAttribute('data-ph')); });
     var on = el.querySelector('#stLobbyOn');
