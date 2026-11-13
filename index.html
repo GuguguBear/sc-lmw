@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-sclmw-theme="haze">
+<html lang="en" data-sclmw-theme="compact">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
@@ -120,11 +120,11 @@
       if(meta) meta.setAttribute('content', themeColor[name]||themeColor.haze);
     }
     document.addEventListener('sclmw-theme', function(ev){
-      var name=(ev&&ev.detail)||'haze';
+      var name=(ev&&ev.detail)||'compact';
       document.documentElement.setAttribute('data-sclmw-theme', name);
       paintThemeColor(name);
     });
-    paintThemeColor(document.documentElement.getAttribute('data-sclmw-theme')||'haze');
+    paintThemeColor(document.documentElement.getAttribute('data-sclmw-theme')||'compact');
     try{
       var cfg=window.LIVEMAP_CONFIG||{};
       // Eigenstaendige Seite: mount() auf <body> selbst, mit standalone:true (siehe

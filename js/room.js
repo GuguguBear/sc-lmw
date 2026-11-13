@@ -8,6 +8,7 @@
   var HIST = 'sclmw_room_hist';
   var FRAME = 'sclmw_room_frame';
   var CREW = 'sclmw_crew_frame';
+  var PLAZA = 'sclmw_plaza_frame';
   var DICT = {
     'zh-Hans': {
       title:'团队房间', lead:'这个网页不读取游戏目录。在星图上右键，选「我在这里」，队友就能看到。',
@@ -29,6 +30,11 @@
       kick:'踢出', kickYes:'确定', kicked:'你已被移出这个房间。', denied:'队长拒绝了这次申请。',
       cast:'广播', castLead:'发给这个房间里的所有人。', castPh:'写一句给小队的话', castSend:'发送', castFrom:'来自', castClose:'知道了', castSound:'广播音效', castOn:'开', castOff:'关', castEmpty:'先写一点内容。',
       horn:'集合号角', hornLead:'指定一个地点和时间。队员会反复看到这声号角，直到选择参加或不参加。', hornPlace:'地点', hornNeed:'先在星图上点一个地点。', hornTime:'集合时间', hornSend:'吹响', hornClear:'取消号角', hornJoin:'参加', hornSkip:'不参加', hornLook:'查看地点', hornLater:'稍后', hornGoing:'参加', hornGone:'不参加', hornPin:'集合',
+      plaza:'广场', plazaPage:'独立页面', plazaBack:'返回星图', plazaLead:'大厅里的人彼此看得到位置，聊天室可以说话。招募和你的小队房间是分开的。', plazaOn:'出现在大厅', plazaOff:'离开大厅', plazaHere:'用当前地点', plazaNeed:'先在星图上点一个地点，或打开 Starfix。', plazaEmpty:'还没有人出现在大厅。',
+      chatPh:'说一句', chatSend:'发送', chatEmpty:'先写一点内容。', chatFast:'说得太快了。',
+      hallTab:'大厅', shipTab:'载具招募', jobTab:'任务招募', roamTab:'闲游招募',
+      shipLead:'给自己的载具找队员。可以是散人队伍，也可以是固定队伍。', jobLead:'发布一项任务或一场活动，把需求写清楚。', roamLead:'找人一起闲逛。可以是散人队伍，也可以是固定队伍。',
+      postTitle:'标题', postDetail:'需求', postShip:'载具', postMission:'任务', postSeats:'人数', postSeatsPh:'1-9999', postSeatsBad:'人数写成 1，或 1-9999 这样的范围。', postCrew:'队伍', postStanding:'固定队伍', postTemp:'散人队伍', postServer:'服务器', srvAsia:'亚服', srvUs:'美服', srvAus:'澳服', srvEu:'欧服', postHours:'持续招募', keep15:'15分钟', keep30:'30分钟', keep1:'1小时', keep3:'3小时', keep6:'6小时', keep9:'9小时', keep12:'12小时', keep24:'24小时', keep48:'48小时', keep96:'96小时', postSend:'发布', postClear:'撤下', postNone:'还没有人发布。', postLimit:'每人最多同时挂两条。', postNeed:'先写标题。', postPlace:'地点', postAt:'时间', postBy:'来自', postLeft:'剩余 {t}', postLeftSoon:'剩余不到1分钟', postDay:'{d}天', postDayHour:'{d}天{h}小时', postHour:'{h}小时', postHourMin:'{h}小时{m}分', postMin:'{m}分钟', postBringPh:'我带的船或岗位', postLink:'链接', postSpeech:'语言', speechZh:'中文', speechEn:'英文', speechOther:'其他', speechAny:'不限', postContact:'联系方式', contactNeed:'先选择联系方式，并填写有效账号。', contactSpectrum:'光谱（推荐）', contactQq:'QQ', contactWechat:'微信', contactDiscord:'Discord', contactTelegram:'Telegram', contactKook:'KOOK', contactHeibox:'黑盒语音', contactWhatsapp:'WhatsApp', contactMail:'邮箱', contactPhSpectrum:'光谱用户名', contactPhQq:'QQ号', contactPhWechat:'微信号', contactPhDiscord:'Discord 用户名', contactPhTelegram:'Telegram 用户名', contactPhKook:'KOOK 用户名或编号', contactPhHeibox:'小黑盒编号或昵称', contactPhWhatsapp:'带国际区号的号码', contactPhMail:'邮箱地址', postCopy:'复制', roleFreight:'货运', roleAssault:'突击', roleMulti:'多用途', roleData:'数据运输', roleMerchant:'商船', roleMine:'布雷', roleBattle:'战列巡洋舰', roleTank:'坦克', roleMedical:'医疗', roleCrew:'{n}人',
       handTitle:'离开前先交接', handLead:'把队长交给一位队员，或解散房间。', handSolo:'房间里只有你。离开会解散这个房间。',
       errNick:'请填写 1 到 32 个字的昵称。', errRoom:'没有这个房间。',
       agoNow:'刚刚', agoSec:'{n} 秒前', agoMin:'{n} 分钟前', agoHour:'{n} 小时前', agoDay:'{n} 天前',
@@ -69,6 +75,11 @@
       kick:'踢出', kickYes:'確定', kicked:'你已被移出這個房間。', denied:'隊長拒絕了這次申請。',
       cast:'廣播', castLead:'發給這個房間裡的所有人。', castPh:'寫一句給小隊的話', castSend:'發送', castFrom:'來自', castClose:'知道了', castSound:'廣播音效', castOn:'開', castOff:'關', castEmpty:'先寫一點內容。',
       horn:'集合號角', hornLead:'指定一個地點和時間。隊員會反覆看到這聲號角，直到選擇參加或不參加。', hornPlace:'地點', hornNeed:'先在星圖上點一個地點。', hornTime:'集合時間', hornSend:'吹響', hornClear:'取消號角', hornJoin:'參加', hornSkip:'不參加', hornLook:'查看地點', hornLater:'稍後', hornGoing:'參加', hornGone:'不參加', hornPin:'集合',
+      plaza:'廣場', plazaPage:'獨立頁面', plazaBack:'返回星圖', plazaLead:'大廳裡的人彼此看得到位置，聊天室可以說話。招募和你的小隊房間是分開的。', plazaOn:'出現在大廳', plazaOff:'離開大廳', plazaHere:'用目前地點', plazaNeed:'先在星圖上點一個地點，或打開 Starfix。', plazaEmpty:'還沒有人出現在大廳。',
+      chatPh:'說一句', chatSend:'發送', chatEmpty:'先寫一點內容。', chatFast:'說得太快了。',
+      hallTab:'大廳', shipTab:'載具招募', jobTab:'任務招募', roamTab:'閒遊招募',
+      shipLead:'給自己的載具找隊員。可以是散人隊伍，也可以是固定隊伍。', jobLead:'發布一項任務或一場活動，把需求寫清楚。', roamLead:'找人一起閒逛。可以是散人隊伍，也可以是固定隊伍。',
+      postTitle:'標題', postDetail:'需求', postShip:'載具', postMission:'任務', postSeats:'人數', postSeatsPh:'1-9999', postSeatsBad:'人數寫成 1，或 1-9999 這樣的範圍。', postCrew:'隊伍', postStanding:'固定隊伍', postTemp:'散人隊伍', postServer:'伺服器', srvAsia:'亞服', srvUs:'美服', srvAus:'澳服', srvEu:'歐服', postHours:'持續招募', keep15:'15分鐘', keep30:'30分鐘', keep1:'1小時', keep3:'3小時', keep6:'6小時', keep9:'9小時', keep12:'12小時', keep24:'24小時', keep48:'48小時', keep96:'96小時', postSend:'發布', postClear:'撤下', postNone:'還沒有人發布。', postLimit:'每人最多同時掛兩條。', postNeed:'先寫標題。', postPlace:'地點', postAt:'時間', postBy:'來自', postLeft:'剩餘 {t}', postLeftSoon:'剩餘不到1分鐘', postDay:'{d}天', postDayHour:'{d}天{h}小時', postHour:'{h}小時', postHourMin:'{h}小時{m}分', postMin:'{m}分鐘', postBringPh:'我帶的船或崗位', postLink:'連結', postSpeech:'語言', speechZh:'中文', speechEn:'英文', speechOther:'其他', speechAny:'不限', postContact:'聯繫方式', contactNeed:'先選擇聯繫方式，並填寫有效帳號。', contactSpectrum:'光譜（推薦）', contactQq:'QQ', contactWechat:'微信', contactDiscord:'Discord', contactTelegram:'Telegram', contactKook:'KOOK', contactHeibox:'黑盒語音', contactWhatsapp:'WhatsApp', contactMail:'郵箱', contactPhSpectrum:'光譜用戶名', contactPhQq:'QQ號', contactPhWechat:'微信號', contactPhDiscord:'Discord 用戶名', contactPhTelegram:'Telegram 用戶名', contactPhKook:'KOOK 用戶名或編號', contactPhHeibox:'小黑盒編號或暱稱', contactPhWhatsapp:'帶國際區號的號碼', contactPhMail:'郵箱地址', postCopy:'複製', roleFreight:'貨運', roleAssault:'突擊', roleMulti:'多用途', roleData:'數據運輸', roleMerchant:'商船', roleMine:'佈雷', roleBattle:'戰列巡洋艦', roleTank:'坦克', roleMedical:'醫療', roleCrew:'{n}人',
       handTitle:'離開前先交接', handLead:'把隊長交給一位隊員，或解散房間。', handSolo:'房間裡只有你。離開會解散這個房間。',
       errNick:'請填寫 1 到 32 個字的暱稱。', errRoom:'沒有這個房間。',
       agoNow:'剛剛', agoSec:'{n} 秒前', agoMin:'{n} 分鐘前', agoHour:'{n} 小時前', agoDay:'{n} 天前',
@@ -109,6 +120,11 @@
       kick:'Remove', kickYes:'Confirm', kicked:'You were removed from this room.', denied:'The captain declined this request.',
       cast:'Broadcast', castLead:'Send this to everyone in the room.', castPh:'A note for the squad', castSend:'Send', castFrom:'From', castClose:'Got it', castSound:'Broadcast sound', castOn:'On', castOff:'Off', castEmpty:'Write something first.',
       horn:'Rally', hornLead:'Pick a place and a time. The site keeps reminding the team until each member joins or declines.', hornPlace:'Place', hornNeed:'Click a place on the map first.', hornTime:'Time', hornSend:'Sound it', hornClear:'Cancel rally', hornJoin:'Join', hornSkip:'Decline', hornLook:'Show place', hornLater:'Later', hornGoing:'Going', hornGone:'Not going', hornPin:'Rally',
+      plaza:'Lobby', plazaPage:'Own page', plazaBack:'Back to map', plazaLead:'People who appear here can see each other, and the chat stays open beside the list. Recruitment is separate from your crew room.', plazaOn:'Appear in the lobby', plazaOff:'Leave the lobby', plazaHere:'Use the selected place', plazaNeed:'Click a place on the map first, or run Starfix.', plazaEmpty:'Nobody is in the lobby yet.',
+      chatPh:'Say something', chatSend:'Send', chatEmpty:'Write something first.', chatFast:'Too fast.',
+      hallTab:'Lobby', shipTab:'Vehicle crew', jobTab:'Missions', roamTab:'Roaming',
+      shipLead:'Find crew for your vehicle. It can be a one-off or a standing crew.', jobLead:'Post a mission or an event and write what you need.', roamLead:'Find people to roam with. One-off or a standing group.',
+      postTitle:'Title', postDetail:'Details', postShip:'Vehicle', postMission:'Mission', postSeats:'Seats', postSeatsPh:'1-9999', postSeatsBad:'Use a number or a range, such as 1 or 1-9999.', postCrew:'Crew', postStanding:'Standing crew', postTemp:'Pickup crew', postServer:'Server', srvAsia:'Asia', srvUs:'US', srvAus:'Australia', srvEu:'Europe', postHours:'Duration', keep15:'15 minutes', keep30:'30 minutes', keep1:'1 hour', keep3:'3 hours', keep6:'6 hours', keep9:'9 hours', keep12:'12 hours', keep24:'24 hours', keep48:'48 hours', keep96:'96 hours', postSend:'Post', postClear:'Remove', postNone:'Nothing posted yet.', postLimit:'Two posts at a time.', postNeed:'Write a title first.', postPlace:'Place', postAt:'Time', postBy:'From', postLeft:'{t} left', postLeftSoon:'under 1 min left', postDay:'{d}d', postDayHour:'{d}d {h}h', postHour:'{h}h', postHourMin:'{h}h {m}m', postMin:'{m}m', postBringPh:'Ship or seat', postLink:'Link', postSpeech:'Language', speechZh:'Chinese', speechEn:'English', speechOther:'Other', speechAny:'Any', postContact:'Contact', contactNeed:'Choose a contact method and enter a valid account.', contactSpectrum:'Spectrum (recommended)', contactQq:'QQ', contactWechat:'WeChat', contactDiscord:'Discord', contactTelegram:'Telegram', contactKook:'KOOK', contactHeibox:'HeyBox', contactWhatsapp:'WhatsApp', contactMail:'Email', contactPhSpectrum:'Spectrum name', contactPhQq:'QQ number', contactPhWechat:'WeChat ID', contactPhDiscord:'Discord username', contactPhTelegram:'Telegram username', contactPhKook:'KOOK name or ID', contactPhHeibox:'HeyBox ID or name', contactPhWhatsapp:'Number with country code', contactPhMail:'Email address', postCopy:'Copy', roleFreight:'Freight', roleAssault:'Assault', roleMulti:'Multi', roleData:'Data running', roleMerchant:'Merchant', roleMine:'Minelayer', roleBattle:'Battlecruiser', roleTank:'Tank', roleMedical:'Medical', roleCrew:'{n} crew',
       handTitle:'Hand off before leaving', handLead:'Give the captain role to a member, or close the room.', handSolo:'You are the only person here. Leaving closes the room.',
       errNick:'Use a nickname of 1 to 32 characters.', errRoom:'No room with that code.',
       agoNow:'Just now', agoSec:'{n}s ago', agoMin:'{n} min ago', agoHour:'{n} h ago', agoDay:'{n} d ago',
@@ -149,6 +165,11 @@
       kick:'Entfernen', kickYes:'Wirklich', kicked:'Du wurdest aus diesem Raum entfernt.', denied:'Der Captain hat diese Anfrage abgelehnt.',
       cast:'Durchsage', castLead:'Das geht an alle in diesem Raum.', castPh:'Ein Satz für die Gruppe', castSend:'Senden', castFrom:'Von', castClose:'Verstanden', castSound:'Durchsage-Ton', castOn:'An', castOff:'Aus', castEmpty:'Erst etwas schreiben.',
       horn:'Sammelruf', hornLead:'Ort und Zeit festlegen. Die Seite erinnert, bis jede Person zusagt oder absagt.', hornPlace:'Ort', hornNeed:'Zuerst einen Ort auf der Karte antippen.', hornTime:'Zeit', hornSend:'Blasen', hornClear:'Ruf aufheben', hornJoin:'Dabei', hornSkip:'Nicht dabei', hornLook:'Ort zeigen', hornLater:'Später', hornGoing:'Dabei', hornGone:'Nicht dabei', hornPin:'Ruf',
+      plaza:'Halle', plazaPage:'Eigene Seite', plazaBack:'Zur Karte', plazaLead:'Wer hier erscheint, sieht die anderen. Der Chat bleibt daneben offen. Anwerbung bleibt getrennt vom Gruppenraum.', plazaOn:'In der Halle erscheinen', plazaOff:'Halle verlassen', plazaHere:'Gewählten Ort nehmen', plazaNeed:'Zuerst einen Ort auf der Karte antippen, oder Starfix laufen lassen.', plazaEmpty:'Noch niemand in der Halle.',
+      chatPh:'Etwas sagen', chatSend:'Senden', chatEmpty:'Erst etwas schreiben.', chatFast:'Zu schnell.',
+      hallTab:'Halle', shipTab:'Fahrzeugcrew', jobTab:'Aufträge', roamTab:'Streifzug',
+      shipLead:'Besatzung für ein Fahrzeug suchen. Einmalig oder fest.', jobLead:'Einen Auftrag oder ein Treffen ausschreiben und den Bedarf dazu.', roamLead:'Leute zum Herumziehen suchen. Einmalig oder fest.',
+      postTitle:'Titel', postDetail:'Bedarf', postShip:'Fahrzeug', postMission:'Auftrag', postSeats:'Plätze', postSeatsPh:'1-9999', postSeatsBad:'Eine Zahl oder einen Bereich angeben, zum Beispiel 1 oder 1-9999.', postCrew:'Gruppe', postStanding:'Feste Gruppe', postTemp:'Offene Gruppe', postServer:'Server', srvAsia:'Asien', srvUs:'USA', srvAus:'Australien', srvEu:'Europa', postHours:'Dauer', keep15:'15 Minuten', keep30:'30 Minuten', keep1:'1 Stunde', keep3:'3 Stunden', keep6:'6 Stunden', keep9:'9 Stunden', keep12:'12 Stunden', keep24:'24 Stunden', keep48:'48 Stunden', keep96:'96 Stunden', postSend:'Veröffentlichen', postClear:'Zurückziehen', postNone:'Noch nichts ausgeschrieben.', postLimit:'Höchstens zwei gleichzeitig.', postNeed:'Zuerst einen Titel schreiben.', postPlace:'Ort', postAt:'Zeit', postBy:'Von', postLeft:'noch {t}', postLeftSoon:'unter 1 Min', postDay:'{d} T', postDayHour:'{d} T {h} Std', postHour:'{h} Std', postHourMin:'{h} Std {m} Min', postMin:'{m} Min', postBringPh:'Schiff oder Platz', postLink:'Link', postSpeech:'Sprache', speechZh:'Chinesisch', speechEn:'Englisch', speechOther:'Andere', speechAny:'Beliebig', postContact:'Kontakt', contactNeed:'Wähle einen Kontaktweg und gib ein gültiges Konto ein.', contactSpectrum:'Spectrum (empfohlen)', contactQq:'QQ', contactWechat:'WeChat', contactDiscord:'Discord', contactTelegram:'Telegram', contactKook:'KOOK', contactHeibox:'HeyBox', contactWhatsapp:'WhatsApp', contactMail:'E-Mail', contactPhSpectrum:'Spectrum-Name', contactPhQq:'QQ-Nummer', contactPhWechat:'WeChat-ID', contactPhDiscord:'Discord-Name', contactPhTelegram:'Telegram-Name', contactPhKook:'KOOK-Name oder ID', contactPhHeibox:'HeyBox-ID oder Name', contactPhWhatsapp:'Nummer mit Ländervorwahl', contactPhMail:'E-Mail-Adresse', postCopy:'Kopieren', roleFreight:'Fracht', roleAssault:'Sturm', roleMulti:'Mehrzweck', roleData:'Datenlauf', roleMerchant:'Händler', roleMine:'Minenleger', roleBattle:'Schlachtkreuzer', roleTank:'Panzer', roleMedical:'Medizin', roleCrew:'{n} Pers.',
       handTitle:'Vor dem Gehen übergeben', handLead:'Captain an ein Mitglied geben, oder den Raum schließen.', handSolo:'Du bist allein. Gehen schließt den Raum.',
       errNick:'Nickname mit 1 bis 32 Zeichen.', errRoom:'Diesen Raum gibt es nicht.',
       agoNow:'Gerade', agoSec:'vor {n} s', agoMin:'vor {n} min', agoHour:'vor {n} h', agoDay:'vor {n} d',
@@ -177,6 +198,13 @@
   function savedCode(){ try{ return localStorage.getItem(CODE)||''; }catch(e){ return ''; } }
   var state = null, draft = [], marking = false, note = '', statusMsg = '', selected = '', API = '', entered = false, roomKind = '', linkState = '', linkMiss = 0, leaving = false, crewQ = '', picking = false, histInfo = {}, histKey = '', pubRooms = null, pubSig = null, pubAt = 0, alertHold = false, alertSeen = {}, alertFlash = null, alertTimer = 0, kickAsk = '', alertDeny = null, castCompose = false, castDraft = '', castErr = '', castIncoming = null, castAudio = null, ctxAt = null, ctxSig = '', recoverDraft = '', recoverFocus = '';
   var hornCompose = false, hornErr = '', hornWhen = '', hornOpen = false, hornSheet = false, hornId = '', hornNag = 0, hornTimer = 0;
+  var plazaOn = false, plazaTab = 'hall', plazaMineOn = false, plazaPeople = [], plazaPosts = [], plazaErr = '', chatLast = 0, chatLines = [], plazaPulling = false;
+  var pendingPost = '', linkedPost = '', linkedOnce = false, plazaPage = false;
+  try{
+    var plazaQuery = new URLSearchParams(location.search);
+    pendingPost = String(plazaQuery.get('post')||'').slice(0, 40);
+    plazaPage = plazaQuery.get('view')==='plaza';
+  }catch(e){}
 
   function api(path, opt){
     opt = opt || {};
@@ -326,8 +354,10 @@
     }
     dock.addEventListener('pointerdown', function(e){
       if(e.button!==0) return;
+      if(plazaPage && dock.id==='stPlaza') return;
+      if(opt.sheet && sheetLayout()) return;
       var edge = e.target.closest && e.target.closest('[data-resize]');
-      var bar = e.target.closest && e.target.closest('.st-room-h');
+      var bar = e.target.closest && e.target.closest(opt.bar || '.st-room-h');
       if(!edge && !(bar && !(e.target.closest && e.target.closest('button')))) return;
       var host = root().getBoundingClientRect();
       var box = dock.getBoundingClientRect();
@@ -452,7 +482,7 @@
     var onMap = !!(entered && state && state.status==='member');
     var dockMini = !!(readRaw(FRAME) && readRaw(FRAME).mini);
     var crewMini = !!(readRaw(CREW) && readRaw(CREW).mini);
-    ui.gate.hidden = onMap;
+    ui.gate.hidden = onMap || (plazaPage && state && state.status==='member');
     ui.dock.hidden = !onMap || dockMini;
     ui.dockIco.hidden = !onMap || !dockMini;
     ui.dockIco.textContent = state && state.code ? state.code : '';
@@ -485,6 +515,7 @@
     paintAlert();
     armRally();
     syncCtx();
+    syncPlazaBtn();
     if(recoverFocus){
       var again = document.getElementById(recoverFocus);
       if(again) again.focus();
@@ -733,7 +764,8 @@
           '<h1>'+esc(t('title'))+'</h1><p>'+esc(ti('home.lead'))+'</p></header>'+
         rsiHtml()+
         '<section class="st-home-card" id="stHomeStarfix">'+starfixFactsHtml()+'</section>'+
-        '<section class="st-home-card st-home-join"><h2>'+esc(ti('home.join_h'))+'</h2>'+roomBody+'</section>'+
+        '<section class="st-home-card st-home-join"><h2>'+esc(ti('home.join_h'))+'</h2>'+
+        '<p><button type="button" id="stPlazaHome" class="st-plaza-entry">'+esc(t('plaza'))+'</button></p>'+roomBody+'</section>'+
         pubHtml();
     var c = el.querySelector('#stRoomCreate'), j = el.querySelector('#stRoomJoin');
     if(c) c.onclick = function(){ act('create'); };
@@ -760,6 +792,8 @@
     bindHist(el);
     bindOpen(el);
     bindPub(el);
+    var plazaHome = el.querySelector('#stPlazaHome');
+    if(plazaHome) plazaHome.onclick = openPlaza;
   }
 
   function roomOps(){
@@ -993,6 +1027,12 @@
     return t('agoDay').replace('{n}', String(Math.floor(h/24)));
   }
   function tickAges(){
+    document.querySelectorAll('.st-post-due[data-exp]').forEach(function(n){
+      var exp = +n.getAttribute('data-exp');
+      var next = dueText(exp);
+      if(n.textContent!==next) n.textContent = next;
+      n.classList.toggle('is-short', dueShort(exp));
+    });
     document.querySelectorAll('.st-mate time[data-seen]').forEach(function(n){
       var next = ageText(+n.getAttribute('data-seen'));
       if(n.textContent!==next) n.textContent = next;
@@ -1267,6 +1307,7 @@
     noteCast(st);
     noteRally(st);
     paint();
+    enterPlazaPage();
   }
   function fail(e){
     if(e && e.body && e.body.error==='room') statusMsg = t('errRoom');
@@ -1722,7 +1763,7 @@
   }
   function mapTarget(node){
     if(!node || !node.closest) return false;
-    return !node.closest('.st-loc-card,.st-zoom,.stx,.st-side,.st-crumb,.st-top,.st-room,.st-crew,.st-float-ico,.st-gate,.st-call,.st-sfx,.st-ctrldlg,.st-locdlg,.st-alert,.st-ctx,.st-rally');
+    return !node.closest('.st-loc-card,.st-zoom,.stx,.st-side,.st-crumb,.st-top,.st-room,.st-crew,.st-float-ico,.st-gate,.st-call,.st-sfx,.st-ctrldlg,.st-locdlg,.st-alert,.st-ctx,.st-rally,.st-plaza,.st-lobby-pin');
   }
   function closeCtx(){
     ctxAt = null;
@@ -1963,9 +2004,954 @@
       return probe('http://127.0.0.1:8770').then(function(ok2){ if(ok2){ API='http://127.0.0.1:8770'; return true; } return false; });
     });
   }
+  function lobbyPlaceBody(){
+    var o = window.__stPlace;
+    if(!o || !o.id || o.k==='player' || o.grp) return {};
+    return {location:String(o.n||''), system:o.sy||'', code:String(o.id)};
+  }
+  function lobbyMeta(p){
+    var bits = [];
+    var place = placeFace(p.location||'');
+    if(place) bits.push(place);
+    if(p.ship) bits.push(p.ship);
+    if(p.server) bits.push(p.server);
+    bits.push(p.starfix ? t('sfxOn') : t('sfxOff'));
+    bits.push(p.game ? t('gameOn') : t('gameOff'));
+    return bits.join(' · ');
+  }
+  function mergeChat(lines){
+    (lines||[]).forEach(function(line){
+      if(!line || line.id==null) return;
+      if(chatLines.some(function(x){ return x.id===line.id; })) return;
+      chatLines.push(line);
+      if(line.id>chatLast) chatLast = line.id;
+    });
+    chatLines.sort(function(a,b){ return a.id-b.id; });
+    if(chatLines.length>400) chatLines = chatLines.slice(chatLines.length-400);
+  }
+  function takePlaza(d){
+    if(!d) return;
+    if(Object.prototype.hasOwnProperty.call(d, 'on')) plazaMineOn = !!d.on;
+    if(d.people) plazaPeople = d.people;
+    if(d.posts){
+      plazaPosts = d.posts;
+      if(pendingPost){
+        var linked = null;
+        plazaPosts.forEach(function(p){ if(p.id===pendingPost) linked = p; });
+        pendingPost = '';
+        if(linked){
+          linkedPost = linked.id;
+          linkedOnce = false;
+          plazaTab = linked.kind==='job' || linked.kind==='roam' || linked.kind==='ship' ? linked.kind : plazaTab;
+          plazaOn = true;
+        }
+      }
+    }
+    if(d.chat) mergeChat(d.chat);
+    if(d.line) mergeChat([d.line]);
+    window.__stLobbyPeople = plazaPeople.filter(function(p){ return p.code; }).map(function(p){
+      return {id:p.id, place:p.code, label:p.nickname||''};
+    });
+    if(plazaOn) paintPlaza();
+  }
+  function pullPlaza(){
+    if(!token() || plazaPulling) return;
+    plazaPulling = true;
+    api('/api/plaza?after='+chatLast).then(function(d){
+      plazaPulling = false;
+      takePlaza(d);
+    }).catch(function(){ plazaPulling = false; });
+  }
+  function enterPlazaPage(){
+    if(!plazaPage || !state || state.status!=='member') return;
+    var host = root();
+    if(host) host.classList.add('is-plaza-page');
+    openPlaza();
+  }
+  function openPlaza(){
+    function show(){ plazaOn = true; ensurePlaza(); paintPlaza(); pullPlaza(); }
+    if(token()){ show(); return; }
+    var nick = nickValue() || savedNick();
+    if(!nick){ statusMsg = t('errNick'); paint(); return; }
+    api('/api/session', {method:'POST', body:{nickname:nick}}).then(function(s){
+      try{ localStorage.setItem(TOKEN, s.token); }catch(e){}
+      rememberNick(nick);
+      show();
+    }).catch(fail);
+  }
+  var shipCat = null, shipWait = null;
+  function shipFold(s){
+    return String(s||'').toLowerCase().replace(/&apos;/g,"'").replace(/[\s\u3000._\-'’"“”()（）]/g,'');
+  }
+  function shipShown(en){
+    var loc = window.SCLMW && SCLMW.loc;
+    if(loc && loc.text){
+      var hit = loc.text(en);
+      if(hit && hit!==en) return hit;
+    }
+    var row = (shipCat||[]).filter(function(s){ return s.en===en; })[0];
+    if(!row) return en||'';
+    if(lang()==='zh-Hant') return row.hant||row.hans||row.en;
+    if(lang()==='zh-Hans') return row.hans||row.hant||row.en;
+    return row.en;
+  }
+  function shipFace(name){
+    if(!name) return '';
+    var loc = window.SCLMW && SCLMW.loc;
+    if(loc && loc.text){
+      var shown = loc.text(name);
+      if(shown && shown!==name) return shown;
+      var en = loc.english ? loc.english(name) : '';
+      if(en){
+        var back = loc.text(en);
+        if(back) return back;
+      }
+    }
+    return shipShown(name);
+  }
+  function shipCatalog(){
+    if(shipCat) return Promise.resolve(shipCat);
+    if(shipWait) return shipWait;
+    var base = (window.SCLMW && SCLMW.basePath) ? SCLMW.basePath() : './';
+    var locp = (window.SCLMW && SCLMW.loc && SCLMW.loc.index) ? SCLMW.loc.index() : Promise.resolve(null);
+    shipWait = Promise.all([
+      fetch(base+'data/vehicles.json', {cache:'no-store'}).then(function(r){ return r.json(); }).catch(function(){ return {ships:[]}; }),
+      locp.catch(function(){ return null; })
+    ]).then(function(pair){
+      var pack = pair[1]||{};
+      var hans = pack.hans||{}, hant = pack.hant||{};
+      var seen = {};
+      shipCat = [];
+      (pair[0].ships||[]).forEach(function(s){
+        if(!s||!s.n) return;
+        var en = String(s.n).replace(/&apos;/g,"'");
+        if(seen[en]) return;
+        seen[en] = 1;
+        shipCat.push({en:en, hans:hans[en]||'', hant:hant[en]||'', co:String(s.co||'').replace(/&apos;/g,"'")});
+      });
+      return shipCat;
+    });
+    return shipWait;
+  }
+  function shipScore(q, ship){
+    var raw = String(q||'').trim();
+    if(!raw) return 0;
+    var tokens = raw.toLowerCase().split(/[\s\u3000]+/).filter(Boolean);
+    var nq = shipFold(raw);
+    var fields = [ship.en, ship.hans, ship.hant, ship.co];
+    var best = 0;
+    fields.forEach(function(f){
+      var n = shipFold(f);
+      if(!n) return;
+      if(n===nq) best = Math.max(best, 100);
+      else if(n.indexOf(nq)===0) best = Math.max(best, 80);
+      else if(n.indexOf(nq)>=0) best = Math.max(best, 60);
+    });
+    if(best || tokens.length<2) return best;
+    var loose = fields.some(function(f){
+      var n = shipFold(f);
+      return n && tokens.every(function(tok){ return n.indexOf(shipFold(tok))>=0; });
+    });
+    return loose ? 50 : 0;
+  }
+  var MAKER_KEY = {
+    'Musashi Industrial and Starflight Concern':'Musashi Industrial & Starflight Concern',
+    "Grey&apos;s Market":"Grey's Market",
+    "Grey's Market":"Grey's Market",
+    'Esperia Incorporation':'Esperia',
+    'Banu Souli':'Banu',
+    'Vanduul Clans':'Vanduul'
+  };
+  function makerFace(co){
+    var raw = String(co||'').replace(/&apos;/g, "'").trim();
+    if(!raw) return '';
+    var loc = window.SCLMW && SCLMW.loc;
+    function hit(s){
+      if(!s || !loc || !loc.text) return '';
+      var z = locPlain(loc.text(s));
+      return z && z!==s ? z : '';
+    }
+    return hit(raw) || hit(MAKER_KEY[String(co||'')] || MAKER_KEY[raw] || '') || raw;
+  }
+  function findRow(btn, title, sub){
+    var roll = document.createElement('span');
+    roll.className = 'st-find-roll';
+    var inner = document.createElement('span');
+    var name = document.createElement('b');
+    name.textContent = title;
+    inner.appendChild(name);
+    if(sub){
+      var em = document.createElement('em');
+      em.textContent = sub;
+      inner.appendChild(em);
+    }
+    roll.appendChild(inner);
+    btn.appendChild(roll);
+  }
+  function rollFind(list){
+    if(!list) return;
+    if(!list.__roll && window.ResizeObserver){
+      list.__roll = true;
+      new ResizeObserver(function(){ rollFind(list); }).observe(list);
+    }
+    list.querySelectorAll('.st-find-roll').forEach(function(box){
+      var inner = box.firstElementChild;
+      if(!inner) return;
+      inner.style.animation = 'none';
+      var extra = inner.scrollWidth - box.clientWidth;
+      if(extra<=4){
+        inner.style.animation = '';
+        inner.style.removeProperty('--st-roll');
+        return;
+      }
+      inner.style.setProperty('--st-roll', (-extra)+'px');
+      inner.style.animation = 'st-roll '+Math.max(4, extra/24).toFixed(2)+'s ease-in-out infinite alternate';
+    });
+  }
+  function paintShipList(input){
+    if(!input) return;
+    var list = input.parentElement.querySelector('.st-dd-list');
+    var q = input.value.trim();
+    if(!list) return;
+    if(!q){ list.hidden = true; list.innerHTML = ''; return; }
+    if(!shipCat){
+      list.hidden = true;
+      shipCatalog().then(function(){ if(input.value.trim()===q) paintShipList(input); });
+      return;
+    }
+    var hits = [];
+    shipCat.forEach(function(s){ var n = shipScore(q, s); if(n) hits.push({s:s, n:n}); });
+    hits.sort(function(a,b){ return b.n-a.n || shipShown(a.s.en).localeCompare(shipShown(b.s.en), 'zh'); });
+    hits = hits.slice(0, 8);
+    list.innerHTML = '';
+    if(!hits.length){ list.hidden = true; return; }
+    var form = input.closest ? input.closest('form') : null;
+    if(form) form.querySelectorAll('.st-dd-list').forEach(function(n){ if(n!==list) n.hidden = true; });
+    hits.forEach(function(x){
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.setAttribute('data-ship', x.s.en);
+      findRow(b, shipShown(x.s.en), makerFace(x.s.co));
+      list.appendChild(b);
+    });
+    list.hidden = false;
+    requestAnimationFrame(function(){ rollFind(list); });
+  }
+  function chooseShip(input, en){
+    if(!input || !en) return;
+    input.value = shipShown(en);
+    input.setAttribute('data-canon', en);
+    var list = input.parentElement.querySelector('.st-dd-list');
+    if(list) list.hidden = true;
+    paintShipFit(input);
+  }
+  var shipFacts = {}, shipFactsWait = {};
+  var ROLE_KEY = {Medical:'roleMedical', Freight:'roleFreight', Assault:'roleAssault', Multi:'roleMulti', 'Data Running':'roleData', Merchant:'roleMerchant', Minelayer:'roleMine', Battlecruiser:'roleBattle', Tank:'roleTank'};
+  function roleFace(en){
+    if(!en) return '';
+    if(ROLE_KEY[en]) return t(ROLE_KEY[en]);
+    var alias = en==='Refuelling' ? 'Refueling' : en;
+    var loc = window.SCLMW && SCLMW.loc;
+    if(loc && loc.text){
+      var hit = loc.text(alias);
+      if(hit && hit!==alias) return hit;
+    }
+    return en;
+  }
+  function fyHref(slug){
+    var s = String(slug||'').toLowerCase();
+    if(!/^[a-z0-9-]{1,80}$/.test(s)) return 'https://fleetyards.net/ships';
+    return 'https://fleetyards.net/ships/'+s;
+  }
+  function fitBits(f){
+    if(!f || f.miss) return [];
+    var bits = [];
+    if(f.role) bits.push(roleFace(f.role));
+    if(f.crew) bits.push(t('roleCrew').replace('{n}', f.crew));
+    if(f.cargo) bits.push(f.cargo);
+    if(f.loan && f.loan.length) bits.push(f.loan.map(shipShown).join(' '));
+    return bits.filter(Boolean);
+  }
+  function loadFacts(en){
+    if(!en) return Promise.resolve(null);
+    if(shipFacts[en]) return Promise.resolve(shipFacts[en]);
+    if(shipFactsWait[en]) return shipFactsWait[en];
+    shipFactsWait[en] = fetch('https://api.fleetyards.net/v1/models?perPage=5&q[nameEq]='+encodeURIComponent(en)).then(function(r){
+      return r.ok ? r.json() : null;
+    }).then(function(d){
+      var items = d && d.items || [];
+      var it = null;
+      items.forEach(function(x){ if(!it && x && x.name===en) it = x; });
+      var fact = {miss:1};
+      if(it){
+        var metrics = it.metrics||{};
+        fact = {
+          role:(it.fociLabels && it.fociLabels[0]) || it.classificationLabel || '',
+          crew:it.crew && it.crew.label || '',
+          cargo:metrics.cargoLabel || '',
+          loan:(it.loaners||[]).map(function(x){ return x && x.name; }).filter(Boolean).slice(0, 3),
+          slug:it.slug||''
+        };
+      }
+      shipFacts[en] = fact;
+      delete shipFactsWait[en];
+      return fact;
+    }).catch(function(){
+      shipFacts[en] = {miss:1};
+      delete shipFactsWait[en];
+      return shipFacts[en];
+    });
+    return shipFactsWait[en];
+  }
+  function shipFactHtml(en){
+    var f = shipFacts[en];
+    var bits = fitBits(f);
+    if(!bits.length) return '';
+    return '<div class="st-post-fit"><span class="st-find-roll"><span><b>'+esc(bits.join(' · '))+'</b><em><a href="'+fyHref(f.slug)+'" target="_blank" rel="noreferrer">FleetYards</a></em></span></span></div>';
+  }
+  function paintShipFit(input){
+    var box = input && input.parentElement;
+    if(!box) return;
+    var line = box.parentElement && box.parentElement.querySelector('.st-ship-fit');
+    if(!line) return;
+    var en = input.getAttribute('data-canon')||'';
+    if(!en || shipShown(en)!==input.value){ line.hidden = true; line.innerHTML = ''; return; }
+    var f = shipFacts[en];
+    if(!f){
+      line.hidden = true;
+      loadFacts(en).then(function(){ if(input.getAttribute('data-canon')===en) paintShipFit(input); if(plazaOn) fillPosts(); });
+      return;
+    }
+    var bits = fitBits(f);
+    if(!bits.length){ line.hidden = true; line.innerHTML = ''; return; }
+    line.hidden = false;
+    line.innerHTML = '<span class="st-find-roll"><span><b>'+esc(bits.join(' · '))+'</b><em><a href="'+fyHref(f.slug)+'" target="_blank" rel="noreferrer">FleetYards</a></em></span></span>';
+    requestAnimationFrame(function(){ rollFind(line); });
+  }
+  function bringCanon(raw){
+    var text = String(raw||'').trim().slice(0, 80);
+    if(!text || !shipCat) return text;
+    var exact = '';
+    shipCat.forEach(function(s){
+      if(exact) return;
+      if(s.en.toLowerCase()===text.toLowerCase() || shipShown(s.en)===text) exact = s.en;
+    });
+    return exact || text;
+  }
+  function shipSend(form){
+    var input = form.querySelector('[name="ship"]');
+    if(!input) return '';
+    var typed = String(input.value||'').trim();
+    var canon = input.getAttribute('data-canon')||'';
+    if(canon && shipShown(canon)===typed) return canon;
+    var loc = window.SCLMW && SCLMW.loc;
+    if(loc && loc.english){
+      var en = loc.english(typed);
+      if(en) return en;
+    }
+    return typed;
+  }
+  var missionCat = null, missionWait = null, missionPlaces = {};
+  function locPlain(s){ return String(s||'').replace(/<\/?EM\d+>/gi,'').replace(/\s+/g,' ').trim(); }
+  function missionShown(en){
+    var loc = window.SCLMW && SCLMW.loc;
+    if(loc && loc.text){
+      var hit = locPlain(loc.text(en));
+      if(hit && hit!==en) return hit;
+    }
+    var row = (missionCat||[]).filter(function(s){ return s.en===en; })[0];
+    if(!row) return en||'';
+    if(lang()==='zh-Hant') return row.hant||row.hans||row.en;
+    if(lang()==='zh-Hans') return row.hans||row.hant||row.en;
+    return row.en;
+  }
+  function missionFace(name){
+    if(!name) return '';
+    var loc = window.SCLMW && SCLMW.loc;
+    if(loc && loc.text){
+      var shown = locPlain(loc.text(name));
+      if(shown && shown!==name) return shown;
+      var en = loc.english ? loc.english(name) : '';
+      if(en){
+        var back = locPlain(loc.text(en));
+        if(back) return back;
+      }
+    }
+    return missionShown(name);
+  }
+  function missionCatalog(){
+    if(missionCat) return Promise.resolve(missionCat);
+    if(missionWait) return missionWait;
+    var base = (window.SCLMW && SCLMW.basePath) ? SCLMW.basePath() : './';
+    var locp = (window.SCLMW && SCLMW.loc && SCLMW.loc.index) ? SCLMW.loc.index() : Promise.resolve(null);
+    missionWait = Promise.all([
+      fetch(base+'data/missions.json', {cache:'no-store'}).then(function(r){ return r.json(); }).catch(function(){ return {groups:[]}; }),
+      locp.catch(function(){ return null; })
+    ]).then(function(pair){
+      var pack = pair[1]||{};
+      var hans = pack.hans||{}, hant = pack.hant||{};
+      var seen = {};
+      missionCat = [];
+      missionPlaces = {};
+      (pair[0].groups||[]).forEach(function(g){
+        (g.t||[]).forEach(function(title){
+          var en = String(title||'').trim();
+          if(!en) return;
+          var bag = missionPlaces[en] || (missionPlaces[en] = []);
+          var have = {};
+          bag.forEach(function(id){ have[id] = 1; });
+          (g.locs||[]).forEach(function(id){ if(id && !have[id]){ have[id] = 1; bag.push(id); } });
+          if(seen[en]) return;
+          seen[en] = 1;
+          missionCat.push({en:en, hans:locPlain(hans[en]||''), hant:locPlain(hant[en]||''), co:String(g.ty||'')});
+        });
+      });
+      return missionCat;
+    });
+    return missionWait;
+  }
+  function paintMissionList(input){
+    if(!input) return;
+    var list = input.parentElement.querySelector('.st-dd-list');
+    var q = input.value.trim();
+    if(!list) return;
+    if(!q){ list.hidden = true; list.innerHTML = ''; return; }
+    if(!missionCat){
+      list.hidden = true;
+      missionCatalog().then(function(){ if(input.value.trim()===q) paintMissionList(input); });
+      return;
+    }
+    var hits = [];
+    missionCat.forEach(function(s){ var n = shipScore(q, s); if(n) hits.push({s:s, n:n}); });
+    hits.sort(function(a,b){ return b.n-a.n || missionShown(a.s.en).localeCompare(missionShown(b.s.en), 'zh'); });
+    hits = hits.slice(0, 8);
+    list.innerHTML = '';
+    if(!hits.length){ list.hidden = true; return; }
+    var form = input.closest ? input.closest('form') : null;
+    if(form) form.querySelectorAll('.st-dd-list').forEach(function(n){ if(n!==list) n.hidden = true; });
+    hits.forEach(function(x){
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.setAttribute('data-mission', x.s.en);
+      var kind = x.s.co ? missionShown(x.s.co) : '';
+      findRow(b, missionShown(x.s.en), kind && kind!==x.s.co ? kind : (x.s.co||''));
+      list.appendChild(b);
+    });
+    list.hidden = false;
+    requestAnimationFrame(function(){ rollFind(list); });
+  }
+  function chooseMission(input, en){
+    if(!input || !en) return;
+    input.value = missionShown(en);
+    input.setAttribute('data-canon', en);
+    var list = input.parentElement.querySelector('.st-dd-list');
+    if(list) list.hidden = true;
+    flyMission(en);
+  }
+  function flyMission(en){
+    var ids = missionPlaces[en] || [];
+    if(!ids.length || ids.length>8) return;
+    var ctl = window.__stCtl;
+    if(!ctl || !ctl.place || !ctl.focusId) return;
+    var known = [];
+    ids.forEach(function(id){ var o = ctl.place(id); if(o) known.push(o); });
+    if(!known.length) return;
+    var pool = known.filter(function(o){ return o.k && o.k!=='star'; });
+    if(!pool.length) pool = known;
+    var here = '';
+    try{ here = lobbyPlaceBody().system || ''; }catch(e){}
+    var near = here ? pool.filter(function(o){ return o.sy===here; })[0] : null;
+    var pick = near || pool[0];
+    if(ctl.highlight) ctl.highlight(known.map(function(o){ return o.id; }));
+    ctl.focusId(pick.id);
+  }
+  function missionSend(form){
+    var input = form.querySelector('[name="mission"]');
+    if(!input) return '';
+    var typed = String(input.value||'').trim();
+    var canon = input.getAttribute('data-canon')||'';
+    if(canon && missionShown(canon)===typed) return canon;
+    var loc = window.SCLMW && SCLMW.loc;
+    if(loc && loc.english){
+      var en = loc.english(typed);
+      if(en) return en;
+    }
+    return typed;
+  }
+  function plazaField(name, key, kind){
+    var cap = '<span data-k="'+key+'"></span>';
+    if(kind==='area') return '<label>'+cap+'<textarea name="'+name+'" maxlength="400"></textarea></label>';
+    if(kind==='seats') return '<label>'+cap+'<input name="'+name+'" type="text" maxlength="9" data-ph="postSeatsPh" autocomplete="off" spellcheck="false"></label>';
+    if(kind==='mission') return '<label>'+cap+'<div class="st-dd st-plaza-dd st-ship-find" data-find="mission"><input name="'+name+'" maxlength="80" autocomplete="off" spellcheck="false"><div class="st-dd-list st-ship-list" hidden></div></div></label>';
+    if(kind==='ship') return '<label>'+cap+'<div class="st-dd st-plaza-dd st-ship-find" data-find="ship"><input name="'+name+'" maxlength="80" autocomplete="off" spellcheck="false"><div class="st-dd-list st-ship-list" hidden></div></div><p class="st-ship-fit" hidden></p></label>';
+    if(kind==='contact') return '<label class="st-plaza-contact">'+cap+'<div class="st-dd st-plaza-dd"><button type="button" class="st-dd-btn"><span data-dd-face></span></button><div class="st-dd-list" hidden><button type="button" data-pick="spectrum" data-k="contactSpectrum"></button><button type="button" data-pick="qq" data-k="contactQq"></button><button type="button" data-pick="wechat" data-k="contactWechat"></button><button type="button" data-pick="discord" data-k="contactDiscord"></button><button type="button" data-pick="telegram" data-k="contactTelegram"></button><button type="button" data-pick="kook" data-k="contactKook"></button><button type="button" data-pick="heibox" data-k="contactHeibox"></button><button type="button" data-pick="whatsapp" data-k="contactWhatsapp"></button><button type="button" data-pick="mail" data-k="contactMail"></button></div><input type="hidden" name="contactKind" value="spectrum" data-default="spectrum"></div><input name="contact" maxlength="64" data-ph="contactPhSpectrum" autocomplete="off" spellcheck="false"></label>';
+    if(kind==='region' || kind==='crew' || kind==='keep' || kind==='speech'){
+      var preset = '';
+      var opts = kind==='crew'
+        ? '<button type="button" data-pick="" data-k="postTemp"></button><button type="button" data-pick="1" data-k="postStanding"></button>'
+        : kind==='speech'
+        ? '<button type="button" data-pick="zh" data-k="speechZh"></button><button type="button" data-pick="en" data-k="speechEn"></button><button type="button" data-pick="other" data-k="speechOther"></button><button type="button" data-pick="" data-k="speechAny"></button>'
+        : kind==='keep'
+        ? '<button type="button" data-pick="900" data-k="keep15"></button><button type="button" data-pick="1800" data-k="keep30"></button><button type="button" data-pick="3600" data-k="keep1"></button><button type="button" data-pick="10800" data-k="keep3"></button><button type="button" data-pick="21600" data-k="keep6"></button><button type="button" data-pick="32400" data-k="keep9"></button><button type="button" data-pick="43200" data-k="keep12"></button><button type="button" data-pick="86400" data-k="keep24"></button><button type="button" data-pick="172800" data-k="keep48"></button><button type="button" data-pick="345600" data-k="keep96"></button>'
+        : '<button type="button" data-pick="asia" data-k="srvAsia"></button><button type="button" data-pick="us" data-k="srvUs"></button><button type="button" data-pick="aus" data-k="srvAus"></button><button type="button" data-pick="eu" data-k="srvEu"></button>';
+      if(kind==='keep') preset = '21600';
+      return '<label class="st-plaza-srv">'+cap+'<div class="st-dd st-plaza-dd"><button type="button" class="st-dd-btn"><span data-dd-face></span></button><div class="st-dd-list" hidden>'+opts+'</div><input type="hidden" name="'+name+'" value="'+preset+'" data-default="'+preset+'"></div></label>';
+    }
+    var type = kind==='num' ? 'number' : (kind==='time' ? 'datetime-local' : 'text');
+    var max = kind==='num' ? ' max="168" min="1"' : ' maxlength="60"';
+    return '<label>'+cap+'<input name="'+name+'" type="'+type+'"'+max+'></label>';
+  }
+  function plazaHtml(){
+    return edgeHtml()+'<header class="st-plaza-head"><h2 data-k="plaza"></h2>'+
+      '<div class="st-plaza-tabs">'+
+        '<button type="button" data-plaza="hall" data-k="hallTab"></button>'+
+        '<button type="button" data-plaza="ship" data-k="shipTab"></button>'+
+        '<button type="button" data-plaza="job" data-k="jobTab"></button>'+
+        '<button type="button" data-plaza="roam" data-k="roamTab"></button>'+
+      '</div><button type="button" class="st-plaza-page" data-act="page" data-k="plazaPage"></button><button type="button" class="st-plaza-x" aria-label="close">×</button></header>'+
+      '<p class="st-plaza-lead" data-k="plazaLead"></p>'+
+      '<p class="st-plaza-err"></p>'+
+      '<div class="st-plaza-body">'+
+        '<section data-pane="hall" class="st-plaza-hall">'+
+          '<aside class="st-plaza-people"><div class="st-plaza-acts">'+
+            '<button type="button" id="stLobbyOn"></button>'+
+            '<button type="button" id="stLobbyHere" data-k="plazaHere"></button></div>'+
+            '<div id="stLobbyList"></div></aside>'+
+          '<section class="st-plaza-chat"><div class="st-chat-log" id="stChatLog"></div>'+
+            '<form class="st-chat-form" id="stChatForm"><input id="stChatInput" maxlength="240" data-ph="chatPh" autocomplete="off"><button type="submit" data-k="chatSend"></button></form></section>'+
+        '</section>'+
+        '<section data-pane="ship" class="st-plaza-board" hidden>'+
+          '<form class="st-post-form" data-kind="ship">'+plazaField('title','postTitle')+plazaField('ship','postShip','ship')+plazaField('seats','postSeats','seats')+plazaField('server','postServer','region')+plazaField('keep','postHours','keep')+plazaField('standing','postCrew','crew')+plazaField('speech','postSpeech','speech')+plazaField('contact','postContact','contact')+plazaField('detail','postDetail','area')+'<button type="submit" data-k="postSend"></button></form><div class="st-post-list" data-list="ship"></div></section>'+
+        '<section data-pane="job" class="st-plaza-board" hidden>'+
+          '<form class="st-post-form" data-kind="job">'+plazaField('title','postTitle')+plazaField('mission','postMission','mission')+plazaField('seats','postSeats','seats')+plazaField('server','postServer','region')+plazaField('at','postAt','time')+plazaField('keep','postHours','keep')+plazaField('standing','postCrew','crew')+plazaField('speech','postSpeech','speech')+plazaField('contact','postContact','contact')+plazaField('detail','postDetail','area')+'<button type="submit" data-k="postSend"></button></form><div class="st-post-list" data-list="job"></div></section>'+
+        '<section data-pane="roam" class="st-plaza-board" hidden>'+
+          '<form class="st-post-form" data-kind="roam">'+plazaField('title','postTitle')+plazaField('seats','postSeats','seats')+plazaField('server','postServer','region')+plazaField('at','postAt','time')+plazaField('keep','postHours','keep')+plazaField('standing','postCrew','crew')+plazaField('speech','postSpeech','speech')+plazaField('contact','postContact','contact')+plazaField('detail','postDetail','area')+'<button type="submit" data-k="postSend"></button></form><div class="st-post-list" data-list="roam"></div></section>'+
+      '</div>';
+  }
+  function labelPlaza(el){
+    var pageBtn = el.querySelector('.st-plaza-page');
+    if(pageBtn) pageBtn.setAttribute('data-k', plazaPage ? 'plazaBack' : 'plazaPage');
+    el.querySelectorAll('[data-k]').forEach(function(node){ node.textContent = t(node.getAttribute('data-k')); });
+    el.querySelectorAll('[data-ph]').forEach(function(node){ node.placeholder = t(node.getAttribute('data-ph')); });
+    var on = el.querySelector('#stLobbyOn');
+    if(on) on.textContent = plazaMineOn ? t('plazaOff') : t('plazaOn');
+    el.querySelectorAll('.st-plaza-dd').forEach(function(dd){
+      var input = dd.querySelector('input');
+      var val = input ? input.value : '';
+      var face = dd.querySelector('[data-dd-face]');
+      var hit = null;
+      dd.querySelectorAll('[data-pick]').forEach(function(b){
+        var on = b.getAttribute('data-pick')===val;
+        b.classList.toggle('on', on);
+        if(on) hit = b;
+      });
+      if(face) face.textContent = hit ? hit.textContent : '';
+    });
+  }
+  function fillPeople(){
+    var box = document.getElementById('stLobbyList');
+    if(!box) return;
+    if(!plazaPeople.length){ box.innerHTML = '<p>'+esc(t('plazaEmpty'))+'</p>'; return; }
+    box.innerHTML = plazaPeople.map(function(p){
+      return '<button type="button" class="st-lobby-row'+(p.mine?' mine':'')+'" data-fly="'+esc(p.code||'')+'"><b>'+esc(p.nickname||'')+(p.mine?' · '+esc(t('you')):'')+'</b><span>'+esc(lobbyMeta(p))+'</span></button>';
+    }).join('');
+  }
+  function fillChat(){
+    var log = document.getElementById('stChatLog');
+    if(!log) return;
+    var have = {};
+    log.querySelectorAll('[data-id]').forEach(function(n){ have[n.getAttribute('data-id')] = 1; });
+    var stick = log.scrollHeight-log.scrollTop-log.clientHeight < 60;
+    chatLines.forEach(function(line){
+      var id = String(line.id);
+      if(have[id]) return;
+      var row = document.createElement('div');
+      row.className = 'st-chat-line'+(line.mine?' mine':'');
+      row.setAttribute('data-id', id);
+      var when = '';
+      try{ when = new Date((line.at||0)*1000).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}); }catch(e){}
+      row.innerHTML = '<b>'+esc(line.nickname||'')+'</b><time>'+esc(when)+'</time><p>'+esc(line.body||'')+'</p>';
+      log.appendChild(row);
+    });
+    if(stick) log.scrollTop = log.scrollHeight;
+  }
+  function dueText(exp){
+    var left = Math.max(0, Math.floor((+exp||0) - Date.now()/1000));
+    if(left<60) return t('postLeftSoon');
+    var d = Math.floor(left/86400);
+    var h = Math.floor((left%86400)/3600);
+    var m = Math.floor((left%3600)/60);
+    var bit = d && h ? t('postDayHour').replace('{d}', d).replace('{h}', h)
+      : d ? t('postDay').replace('{d}', d)
+      : h && m ? t('postHourMin').replace('{h}', h).replace('{m}', m)
+      : h ? t('postHour').replace('{h}', h)
+      : t('postMin').replace('{m}', m);
+    return t('postLeft').replace('{t}', bit);
+  }
+  function dueShort(exp){ return Math.max(0, (+exp||0) - Date.now()/1000) < 15*60; }
+  function postMeta(label, value){
+    if(value==null || value==='') return '';
+    return '<div><span>'+esc(label)+'</span><b>'+esc(String(value))+'</b></div>';
+  }
+  function postCard(p){
+    var exp = p.expires||0;
+    return '<article class="st-post'+(p.id && p.id===linkedPost?' is-link':'')+'">'+
+      '<time class="st-post-due'+(dueShort(exp)?' is-short':'')+'" data-exp="'+esc(String(exp))+'">'+esc(dueText(exp))+'</time>'+
+      '<h3>'+esc(p.title||'')+'</h3>'+
+      '<em>'+esc(p.standing ? t('postStanding') : t('postTemp'))+'</em>'+
+      '<em>'+esc(speechFace(p.speech||''))+'</em>'+
+      contactHtml(p)+
+      '<div class="st-post-spec">'+
+        postMeta(t('postBy'), p.nickname||'')+
+        postMeta(t('postMission'), missionFace(p.mission||''))+
+        postMeta(t('postShip'), shipFace(p.ship||''))+
+        shipFactHtml(p.ship||'')+
+        postMeta(t('postPlace'), p.name ? placeFace(p.name) : '')+
+        postMeta(t('postAt'), p.at ? rallyWhenLabel(p.at) : '')+
+        postMeta(t('postSeats'), p.seats ? String(p.seats) : '')+
+        postMeta(t('postServer'), serverFace(p.server||''))+
+      '</div>'+
+      '<div class="st-plaza-acts">'+
+        (p.place ? '<button type="button" data-act="fly" data-place="'+esc(p.place)+'" data-k="hornLook"></button>' : '')+
+        '<button type="button" data-act="link" data-id="'+esc(p.id)+'" data-k="postLink"></button>'+
+        (p.mine ? '<button type="button" data-act="clear" data-id="'+esc(p.id)+'" data-k="postClear"></button>' : '')+
+      '</div>'+(p.detail ? '<p>'+esc(p.detail)+'</p>' : '')+'</article>';
+  }
+  function postById(id){
+    if(!/^[0-9a-f]+$/i.test(id||'')) return null;
+    return document.querySelector('.st-post [data-id="'+id+'"]');
+  }
+  function fillPosts(){
+    ['ship','job','roam'].forEach(function(kind){
+      var box = document.querySelector('.st-post-list[data-list="'+kind+'"]');
+      if(!box) return;
+      var rows = plazaPosts.filter(function(p){ return p.kind===kind; });
+      box.innerHTML = rows.length ? rows.map(postCard).join('') : '<p>'+esc(t('postNone'))+'</p>';
+      box.querySelectorAll('[data-k]').forEach(function(node){ node.textContent = t(node.getAttribute('data-k')); });
+      box.querySelectorAll('[data-ph]').forEach(function(node){ node.placeholder = t(node.getAttribute('data-ph')); });
+    });
+    if(linkedPost && !linkedOnce){
+      var hit = postById(linkedPost);
+      var article = hit && hit.closest('.st-post');
+      if(article && article.scrollIntoView){ article.scrollIntoView({block:'nearest'}); linkedOnce = true; }
+    }
+    var asked = {};
+    plazaPosts.forEach(function(p){
+      if(!p.ship || shipFacts[p.ship] || asked[p.ship]) return;
+      asked[p.ship] = 1;
+      loadFacts(p.ship).then(function(){ if(plazaOn) fillPosts(); });
+    });
+  }
+  function paintPlaza(){
+    var el = ensurePlaza();
+    el.hidden = !plazaOn;
+    var host = root();
+    if(host) host.classList.toggle('is-plaza-page', !!plazaPage && plazaOn);
+    el.classList.toggle('is-sheet', !plazaPage && sheetLayout());
+    if(plazaPage) clearFrame(el);
+    else if(!el.__frameDrag) applyFrame(el, PLAZA, 480, 280);
+    if(!plazaOn) return;
+    labelPlaza(el);
+    var lead = el.querySelector('.st-plaza-lead');
+    if(lead) lead.textContent = t({ship:'shipLead', job:'jobLead', roam:'roamLead'}[plazaTab] || 'plazaLead');
+    el.querySelectorAll('[data-plaza]').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-plaza')===plazaTab); });
+    el.querySelectorAll('[data-pane]').forEach(function(pane){ pane.hidden = pane.getAttribute('data-pane')!==plazaTab; });
+    var err = el.querySelector('.st-plaza-err');
+    if(err) err.textContent = plazaErr||'';
+    fillPeople();
+    fillChat();
+    fillPosts();
+  }
+  function ensurePlaza(){
+    var el = document.getElementById('stPlaza');
+    if(el) return el;
+    el = document.createElement('section');
+    el.id = 'stPlaza';
+    el.className = 'st-plaza';
+    el.hidden = true;
+    el.innerHTML = plazaHtml();
+    root().appendChild(el);
+    bindFrame(el, {key:PLAZA, minW:480, minH:280, bar:'.st-plaza-head', sheet:true});
+    el.addEventListener('click', function(ev){
+      var node = ev.target && ev.target.nodeType===1 ? ev.target : (ev.target && ev.target.parentElement);
+      if(!node || !node.closest) return;
+      var missionPick = node.closest('[data-mission]');
+      if(missionPick && el.contains(missionPick)){
+        var missionBox = missionPick.closest('.st-ship-find');
+        if(missionBox) chooseMission(missionBox.querySelector('input'), missionPick.getAttribute('data-mission'));
+        return;
+      }
+      var chosen = node.closest('[data-ship]');
+      if(chosen && el.contains(chosen)){
+        var shipBox = chosen.closest('.st-ship-find');
+        if(shipBox) chooseShip(shipBox.querySelector('input'), chosen.getAttribute('data-ship'));
+        return;
+      }
+      var pick = node.closest('[data-pick]');
+      if(pick && el.contains(pick)){
+        var dd = pick.closest('.st-plaza-dd');
+        var input = dd.querySelector('input');
+        if(input) input.value = pick.getAttribute('data-pick')||'';
+        if(input && input.name==='contactKind'){
+          var typed = input.closest('label') && input.closest('label').querySelector('[name="contact"]');
+          if(typed) typed.setAttribute('data-ph', contactPh(input.value));
+        }
+        var list = dd.querySelector('.st-dd-list');
+        if(list) list.hidden = true;
+        labelPlaza(el);
+        return;
+      }
+      var opener = node.closest('.st-dd-btn');
+      if(opener && el.contains(opener)){
+        var menu = opener.parentElement.querySelector('.st-dd-list');
+        var was = menu && menu.hidden;
+        el.querySelectorAll('.st-dd-list').forEach(function(n){ n.hidden = true; });
+        if(menu && was) menu.hidden = false;
+        return;
+      }
+      var tab = node.closest('[data-plaza]');
+      if(tab && el.contains(tab)){ plazaTab = tab.getAttribute('data-plaza'); plazaErr=''; paintPlaza(); return; }
+      if(node.closest('.st-plaza-x')){
+        if(plazaPage){ location.href = location.origin+location.pathname; return; }
+        plazaOn = false; el.hidden = true; return;
+      }
+      var fly = node.closest('[data-fly]');
+      if(fly && fly.getAttribute('data-fly') && window.__stCtl && window.__stCtl.focusId) window.__stCtl.focusId(fly.getAttribute('data-fly'));
+      var act = node.closest('[data-act]');
+      if(!act || !el.contains(act)) return;
+      var name = act.getAttribute('data-act');
+      if(name==='fly' && window.__stCtl && window.__stCtl.focusId) window.__stCtl.focusId(act.getAttribute('data-place'));
+      if(name==='page'){
+        var pageUrl = location.origin+location.pathname+(plazaPage ? '' : '?view=plaza'+(linkedPost ? '&post='+linkedPost : (pendingPost ? '&post='+pendingPost : '')));
+        if(plazaPage){ location.href = pageUrl; return; }
+        var opened = window.open(pageUrl, '_blank', 'noopener');
+        if(!opened) location.href = pageUrl;
+        return;
+      }
+      if(name==='copy') copyContact(act.getAttribute('data-copy')||'', act);
+      if(name==='link') copyPostLink(act.getAttribute('data-id'), act);
+      if(name==='clear') clearBoard(act.getAttribute('data-id'));
+    });
+    el.querySelectorAll('[data-plaza]').forEach(function(b){
+      b.onclick = function(ev){ ev.preventDefault(); plazaTab = b.getAttribute('data-plaza'); plazaErr=''; paintPlaza(); };
+    });
+    el.querySelector('#stLobbyOn').onclick = function(){ setLobby(!plazaMineOn); };
+    el.querySelector('#stLobbyHere').onclick = function(){
+      var place = lobbyPlaceBody();
+      if(!place.code){ plazaErr = t('plazaNeed'); paintPlaza(); return; }
+      setLobby(true, place);
+    };
+    el.querySelector('#stChatForm').onsubmit = function(ev){ ev.preventDefault(); sendChat(); };
+    el.querySelectorAll('.st-post-form').forEach(function(form){
+      form.onsubmit = function(ev){ ev.preventDefault(); sendBoard(form); };
+    });
+    el.querySelectorAll('.st-ship-list').forEach(function(list){
+      list.addEventListener('mousedown', function(ev){ ev.preventDefault(); });
+    });
+    el.querySelectorAll('.st-ship-find input').forEach(function(input){
+      var mission = input.parentElement.getAttribute('data-find')==='mission';
+      var shown = mission ? missionShown : shipShown;
+      var paint = mission ? paintMissionList : paintShipList;
+      var choose = mission ? chooseMission : chooseShip;
+      var attr = mission ? 'data-mission' : 'data-ship';
+      input.addEventListener('input', function(){
+        var canon = input.getAttribute('data-canon')||'';
+        if(canon && shown(canon)!==input.value) input.removeAttribute('data-canon');
+        paint(input);
+        if(!mission) paintShipFit(input);
+      });
+      input.addEventListener('focus', function(){ paint(input); });
+      input.addEventListener('keydown', function(ev){
+        var list = input.parentElement.querySelector('.st-dd-list');
+        var items = list ? Array.prototype.slice.call(list.querySelectorAll('button')) : [];
+        if(ev.key==='Escape'){ if(list) list.hidden = true; return; }
+        if(!list || list.hidden || !items.length) return;
+        var cur = -1;
+        items.forEach(function(b,i){ if(b.classList.contains('on')) cur = i; });
+        if(ev.key==='ArrowDown' || ev.key==='ArrowUp'){
+          ev.preventDefault();
+          var next = ev.key==='ArrowDown' ? (cur+1)%items.length : (cur<=0 ? items.length-1 : cur-1);
+          items.forEach(function(b,i){ b.classList.toggle('on', i===next); });
+          if(items[next].scrollIntoView) items[next].scrollIntoView({block:'nearest'});
+        }
+        if(ev.key==='Enter'){
+          ev.preventDefault();
+          choose(input, items[cur>=0?cur:0].getAttribute(attr));
+        }
+      });
+    });
+    return el;
+  }
+  function setLobby(on, place){
+    var body = place || (on ? lobbyPlaceBody() : {});
+    body.on = !!on;
+    plazaErr = '';
+    api('/api/lobby', {method:'POST', body:body}).then(takePlaza).catch(fail);
+  }
+  function sendChat(){
+    var input = document.getElementById('stChatInput');
+    var text = input ? input.value.trim() : '';
+    if(!text){ plazaErr = t('chatEmpty'); paintPlaza(); return; }
+    plazaErr = '';
+    api('/api/lobby/chat', {method:'POST', body:{body:text}}).then(function(d){
+      if(input) input.value = '';
+      takePlaza(d);
+    }).catch(function(e){
+      plazaErr = e && e.body && e.body.error==='fast' ? t('chatFast') : (e && e.body && e.body.error==='empty' ? t('chatEmpty') : t('errNet'));
+      paintPlaza();
+    });
+  }
+  function formValue(form, name){
+    var node = form.elements[name];
+    if(!node) return '';
+    if(node.type==='checkbox') return !!node.checked;
+    return node.value;
+  }
+  function speechFace(id){
+    var key = {zh:'speechZh', en:'speechEn', other:'speechOther'}[id];
+    return t(key || 'speechAny');
+  }
+  function contactFace(kind){
+    var key = {spectrum:'contactSpectrum', qq:'contactQq', wechat:'contactWechat', discord:'contactDiscord', telegram:'contactTelegram', kook:'contactKook', heibox:'contactHeibox', whatsapp:'contactWhatsapp', mail:'contactMail'}[kind];
+    return key ? t(key) : '';
+  }
+  function contactPh(kind){
+    return {spectrum:'contactPhSpectrum', qq:'contactPhQq', wechat:'contactPhWechat', discord:'contactPhDiscord', telegram:'contactPhTelegram', kook:'contactPhKook', heibox:'contactPhHeibox', whatsapp:'contactPhWhatsapp', mail:'contactPhMail'}[kind] || 'contactPhSpectrum';
+  }
+  function contactNorm(kind, raw){
+    var text = String(raw||'').trim().replace(/\s+/g, ' ');
+    if(kind==='telegram' || kind==='discord') text = text.replace(/^@+/, '');
+    if(kind==='qq') text = text.replace(/\s+/g, '');
+    if(kind==='whatsapp'){
+      var lead = text.trim().charAt(0)==='+' ? '+' : '';
+      text = lead + text.replace(/\D/g, '');
+    }
+    if(kind==='mail') text = text.toLowerCase();
+    if(kind==='spectrum') return /^[\w.\- \u4e00-\u9fff]{2,40}$/.test(text) && /[\w\u4e00-\u9fff]/.test(text) ? text : '';
+    if(kind==='qq') return /^[1-9]\d{4,10}$/.test(text) ? text : '';
+    if(kind==='wechat') return /^[A-Za-z][-_A-Za-z0-9]{5,19}$/.test(text) ? text : '';
+    if(kind==='discord') return /^[A-Za-z0-9._]{2,32}(?:#\d{4})?$/.test(text) ? text : '';
+    if(kind==='telegram') return /^[A-Za-z][A-Za-z0-9_]{4,31}$/.test(text) ? text : '';
+    if(kind==='kook') return /^(?:[A-Za-z0-9_]{2,32}(?:#\d{4})?|\d{5,12})$/.test(text) ? text : '';
+    if(kind==='heibox'){
+      var boxed = text.replace(/\s+/g, '');
+      if(/^\d+$/.test(boxed)) text = boxed;
+      return /^(?:\d{4,10}|(?=.*[A-Za-z\u4e00-\u9fff])[\w\u4e00-\u9fff·]{2,32})$/.test(text) ? text : '';
+    }
+    if(kind==='whatsapp') return /^\+?[1-9]\d{7,14}$/.test(text) ? text : '';
+    if(kind==='mail') return /^[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}$/.test(text) ? text : '';
+    return '';
+  }
+  function contactHref(kind, value){
+    if(kind==='telegram') return 'https://t.me/'+value;
+    if(kind==='mail') return 'mailto:'+value;
+    if(kind==='whatsapp') return 'https://wa.me/'+String(value).replace(/^\+/, '');
+    return '';
+  }
+  function contactHtml(p){
+    if(!p || !p.contact || !contactFace(p.contactKind)) return '';
+    var href = contactHref(p.contactKind, p.contact);
+    var value = href ? '<a href="'+esc(href)+'" target="_blank" rel="noreferrer">'+esc(p.contact)+'</a>' : '<b>'+esc(p.contact)+'</b>';
+    return '<div class="st-post-contact"><span>'+esc(contactFace(p.contactKind))+'</span>'+value+'<button type="button" data-act="copy" data-copy="'+esc(p.contact)+'" data-k="postCopy"></button></div>';
+  }
+  function serverFace(id){
+    var key = {asia:'srvAsia', us:'srvUs', aus:'srvAus', eu:'srvEu'}[id];
+    return key ? t(key) : (id||'');
+  }
+  function seatText(raw){
+    var text = String(raw||'').trim().replace(/[－—–~～]/g,'-').replace(/\s+/g,'');
+    if(!text) return '';
+    var m = text.match(/^(\d{1,4})(?:-(\d{1,4}))?$/);
+    if(!m) return null;
+    var a = parseInt(m[1],10), b = m[2] ? parseInt(m[2],10) : a;
+    if(a<1 || b>9999 || a>b) return null;
+    return a===b ? String(a) : (a+'-'+b);
+  }
+  function sendBoard(form){
+    var kind = form.getAttribute('data-kind');
+    var mission = missionSend(form);
+    var title = String(formValue(form, 'title')||'').trim();
+    if(!title && mission) title = missionShown(mission) || mission;
+    if(!title){ plazaErr = t('postNeed'); paintPlaza(); return; }
+    var place = lobbyPlaceBody();
+    var atRaw = formValue(form, 'at');
+    var at = atRaw ? Date.parse(atRaw) : 0;
+    if(atRaw && isNaN(at)){ plazaErr = t('hornTime'); paintPlaza(); return; }
+    var seats = seatText(formValue(form, 'seats'));
+    if(seats===null){ plazaErr = t('postSeatsBad'); paintPlaza(); return; }
+    var contactKind = formValue(form, 'contactKind') || 'spectrum';
+    var contact = contactNorm(contactKind, formValue(form, 'contact'));
+    if(!contact){ plazaErr = t('contactNeed'); paintPlaza(); return; }
+    plazaErr = '';
+    api('/api/board', {method:'POST', body:{
+      kind:kind, title:title, detail:formValue(form, 'detail')||'',
+      seats:seats, server:formValue(form, 'server')||'', ship:shipSend(form), mission:mission,
+      keep:parseInt(formValue(form, 'keep'),10)||0, standing:!!formValue(form, 'standing'),
+      speech:formValue(form, 'speech')||'', contactKind:contactKind, contact:contact,
+      place:place.code||'', name:place.location||'', system:place.system||'',
+      at: at ? Math.round(at/1000) : 0
+    }}).then(function(d){
+      form.reset();
+      form.querySelectorAll('[data-canon]').forEach(function(input){ input.removeAttribute('data-canon'); });
+      form.querySelectorAll('.st-plaza-dd input').forEach(function(input){
+        var back = input.getAttribute('data-default') || '';
+        input.defaultValue = back;
+        input.value = back;
+      });
+      form.querySelectorAll('[name="contact"]').forEach(function(input){
+        input.setAttribute('data-ph', 'contactPhSpectrum');
+      });
+      var shipInput = form.querySelector('[name="ship"]');
+      if(shipInput) paintShipFit(shipInput);
+      takePlaza(d);
+    }).catch(function(e){
+      var err = e && e.body && e.body.error;
+      plazaErr = err==='limit' ? t('postLimit') : err==='title' ? t('postNeed') : err==='seats' ? t('postSeatsBad') : err==='contact' ? t('contactNeed') : t('errNet');
+      paintPlaza();
+    });
+  }
+  function bringRaw(act){
+    var card = act && act.closest ? act.closest('.st-post') : null;
+    var input = card && card.querySelector('.st-bring');
+    return input ? input.value : '';
+  }
+  function copyContact(text, btn){
+    if(!text) return;
+    var done = function(){ if(btn) btn.textContent = t('postCopy'); };
+    if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done).catch(done);
+  }
+  function copyPostLink(id, btn){
+    if(!/^[0-9a-f]+$/i.test(id||'')) return;
+    var url = location.origin+location.pathname+'?post='+id;
+    var done = function(){ if(btn){ btn.textContent = t('postLink'); } };
+    if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(url).then(done).catch(done);
+  }
+  function sendBoardRsvp(id, going, raw){
+    var send = function(){
+      api('/api/board/rsvp', {method:'POST', body:{id:id, going:!!going, note:going ? bringCanon(raw) : ''}}).then(takePlaza).catch(fail);
+    };
+    if(going && raw && !shipCat) shipCatalog().then(send).catch(send);
+    else send();
+  }
+  function clearBoard(id){
+    api('/api/board', {method:'POST', body:{clear:true, id:id}}).then(takePlaza).catch(fail);
+  }
+  function syncPlazaBtn(){
+    var b = document.getElementById('sclmw-stPlaza');
+    if(b){
+      b.textContent = t('plaza');
+      if(!b.__plaza){ b.__plaza = 1; b.onclick = function(ev){ ev.preventDefault(); ev.stopPropagation(); openPlaza(); }; }
+    }
+    if(plazaOn) paintPlaza();
+  }
+  window.__stLobbyOpen = function(p){
+    if(p && p.place && window.__stCtl && window.__stCtl.focusId) window.__stCtl.focusId(p.place);
+    openPlaza();
+  };
   function start(){
     ensure();
     paint();
+    if(pendingPost && !plazaPage) openPlaza();
     if(!window.__stRoomFit){
       window.__stRoomFit=function(){
         var host = root();
@@ -1983,6 +2969,12 @@
         var ui = ensure();
         if(ui.dock && !ui.dock.hidden) applyFrame(ui.dock, FRAME, 280, 220);
         if(ui.crew && !ui.crew.hidden) applyFrame(ui.crew, CREW, 220, 160);
+        var plaza = document.getElementById('stPlaza');
+        if(plaza && !plaza.hidden){
+          plaza.classList.toggle('is-sheet', !plazaPage && sheetLayout());
+          if(plazaPage) clearFrame(plaza);
+          else if(!plaza.__frameDrag) applyFrame(plaza, PLAZA, 480, 280);
+        }
       };
       window.addEventListener('resize', window.__stRoomFit);
       if(window.ResizeObserver) new ResizeObserver(window.__stRoomFit).observe(root());
@@ -2011,6 +3003,7 @@
         if(gate && !gate.hidden) pullPublic(true);
       }, 8000);
       if(!window.__stAgeTick) window.__stAgeTick=setInterval(tickAges, 1000);
+      if(!window.__stPlazaPoll) window.__stPlazaPoll=setInterval(function(){ if(plazaOn) pullPlaza(); }, 2000);
       if(!window.__stLinkWatch) window.__stLinkWatch=setInterval(pullLink, 2000);
     if(!window.__stDdClose){
       window.__stDdClose=function(e){ if(e.target.closest&&e.target.closest('.st-dd')) return; document.querySelectorAll('.st-dd-list').forEach(function(n){ n.hidden=true; }); };

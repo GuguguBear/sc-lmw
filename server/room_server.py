@@ -11,6 +11,7 @@
 import argparse
 import json
 import os
+import re
 import secrets
 import socket
 import sqlite3
@@ -19,7 +20,7 @@ import time
 from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from urllib.parse import unquote, urlparse
+from urllib.parse import parse_qs, unquote, urlparse
 
 ROOT = Path(__file__).resolve().parent.parent
 DB = Path(__file__).resolve().parent / "rooms.sqlite"
@@ -39,6 +40,7 @@ OPEN_S = 300
 CAPTAIN_GONE_S = 7 * 24 * 3600
 POLL_LIVE_S = 120
 LOCK = threading.Lock()
+CHAT_LAST = {}
 
 MIME = {
     ".html": "text/html; charset=utf-8",
@@ -146,6 +148,52 @@ def init_db():
               going INTEGER NOT NULL,
               PRIMARY KEY (room, member)
             );
+            CREATE TABLE IF NOT EXISTS lobby (
+              member TEXT PRIMARY KEY,
+              visible INTEGER NOT NULL DEFAULT 0,
+              location TEXT,
+              system TEXT,
+              code TEXT,
+              ship TEXT,
+              host TEXT,
+              seen REAL,
+              starfix_seen REAL,
+              game_seen REAL
+            );
+            CREATE TABLE IF NOT EXISTS lobby_chat (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              member TEXT NOT NULL,
+              body TEXT NOT NULL,
+              created REAL NOT NULL
+            );
+            CREATE TABLE IF NOT EXISTS board (
+              id TEXT PRIMARY KEY,
+              member TEXT NOT NULL,
+              kind TEXT NOT NULL,
+              title TEXT NOT NULL,
+              detail TEXT,
+              ship TEXT,
+              place TEXT,
+              name TEXT,
+              system TEXT,
+              at REAL,
+              seats INTEGER,
+              standing INTEGER NOT NULL DEFAULT 0,
+              host TEXT,
+              mission TEXT,
+              speech TEXT,
+              contact_kind TEXT,
+              contact TEXT,
+              created REAL NOT NULL,
+              expires REAL NOT NULL
+            );
+            CREATE TABLE IF NOT EXISTS board_rsvp (
+              board TEXT NOT NULL,
+              member TEXT NOT NULL,
+              going INTEGER NOT NULL,
+              note TEXT,
+              PRIMARY KEY (board, member)
+            );
             """
         )
         cols = {row[1] for row in con.execute("PRAGMA table_info(presence)")}
@@ -170,6 +218,15 @@ def init_db():
             con.execute("ALTER TABLE room ADD COLUMN open_at REAL NOT NULL DEFAULT 0")
         if "recover" not in room_cols:
             con.execute("ALTER TABLE room ADD COLUMN recover TEXT")
+        board_cols = {row[1] for row in con.execute("PRAGMA table_info(board)")}
+        if "mission" not in board_cols:
+            con.execute("ALTER TABLE board ADD COLUMN mission TEXT")
+        if "speech" not in board_cols:
+            con.execute("ALTER TABLE board ADD COLUMN speech TEXT")
+        if "contact_kind" not in board_cols:
+            con.execute("ALTER TABLE board ADD COLUMN contact_kind TEXT")
+        if "contact" not in board_cols:
+            con.execute("ALTER TABLE board ADD COLUMN contact TEXT")
         mem_cols = {row[1] for row in con.execute("PRAGMA table_info(membership)")}
         if "touched" not in mem_cols:
             con.execute("ALTER TABLE membership ADD COLUMN touched REAL")
@@ -191,12 +248,64 @@ def clean_cast(raw):
     return s[:120]
 
 
+def clean_seats(raw):
+    text = str(raw or "").strip()
+    text = text.replace("－", "-").replace("—", "-").replace("–", "-").replace("~", "-").replace("～", "-")
+    text = re.sub(r"\s+", "", text)
+    if text in ("", "0"):
+        return ""
+    match = re.fullmatch(r"(\d{1,4})(?:-(\d{1,4}))?", text)
+    if not match:
+        return None
+    low = int(match.group(1))
+    high = int(match.group(2) or low)
+    if low < 1 or high > 9999 or low > high:
+        return None
+    if low == high:
+        return str(low)
+    return f"{low}-{high}"
+
+
 def clean_label(raw, limit):
     s = " ".join(str(raw or "").replace("\r", " ").replace("\n", " ").split())
     s = "".join(ch for ch in s if ch >= " " and ch != "\x7f").strip()
     if not s:
         return None
     return s[:limit]
+
+
+def clean_contact(kind, raw):
+    kind = (clean_label(kind, 16) or "").lower()
+    text = clean_label(raw, 80) or ""
+    if kind not in ("spectrum", "qq", "wechat", "discord", "telegram", "kook", "heibox", "whatsapp", "mail") or not text:
+        return None
+    if kind in ("telegram", "discord") and text.startswith("@"):
+        text = text[1:]
+    if kind == "qq":
+        text = "".join(text.split())
+    if kind == "whatsapp":
+        lead = "+" if text.strip().startswith("+") else ""
+        text = lead + "".join(ch for ch in text if ch.isdigit())
+    if kind == "heibox":
+        compact = "".join(text.split())
+        if compact.isdigit():
+            text = compact
+    if kind == "mail":
+        text = text.lower()
+    ok = {
+        "spectrum": bool(re.fullmatch(r"[\w.\- ]{2,40}", text)) and re.search(r"\w", text),
+        "qq": bool(re.fullmatch(r"[1-9]\d{4,10}", text)),
+        "wechat": bool(re.fullmatch(r"[A-Za-z][-_A-Za-z0-9]{5,19}", text)),
+        "discord": bool(re.fullmatch(r"[A-Za-z0-9._]{2,32}(?:#\d{4})?", text)),
+        "telegram": bool(re.fullmatch(r"[A-Za-z][A-Za-z0-9_]{4,31}", text)),
+        "kook": bool(re.fullmatch(r"(?:[A-Za-z0-9_]{2,32}(?:#\d{4})?|\d{5,12})", text)),
+        "heibox": bool(re.fullmatch(r"(?:\d{4,10}|(?=.*[A-Za-z\u4e00-\u9fff])[\w\u4e00-\u9fff·]{2,32})", text)),
+        "whatsapp": bool(re.fullmatch(r"\+?[1-9]\d{7,14}", text)),
+        "mail": bool(re.fullmatch(r"[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}", text)),
+    }[kind]
+    if not ok:
+        return None
+    return kind, text
 
 
 def clean_when(raw):
@@ -488,6 +597,368 @@ def presence_lights(starfix_seen, game_seen, at=None):
     return starfix, game
 
 
+def clean_note(raw, limit):
+    s = str(raw or "").replace("\r\n", "\n").replace("\r", "\n")
+    s = "".join(ch for ch in s if ch == "\n" or (" " <= ch and ch != "\x7f"))
+    s = s.strip()
+    return s[:limit] if s else ""
+
+
+def lobby_row(con, member):
+    return con.execute("SELECT * FROM lobby WHERE member=?", (member,)).fetchone()
+
+
+def latest_presence(con, member):
+    return con.execute(
+        """
+        SELECT location, system, code, ship, host, starfix_seen, game_seen
+        FROM presence WHERE member=?
+        ORDER BY COALESCE(seen, 0) DESC LIMIT 1
+        """,
+        (member,),
+    ).fetchone()
+
+
+def mirror_lobby(con, member, loc, sys, code, ship, host, starfix_seen, game_seen, seen):
+    row = lobby_row(con, member)
+    if not row or not row["visible"]:
+        return
+    con.execute(
+        """
+        UPDATE lobby
+        SET location=?, system=?, code=?, ship=?, host=?, starfix_seen=?, game_seen=?, seen=?
+        WHERE member=?
+        """,
+        (loc or "", sys or "", code or "", ship or "", host or "", starfix_seen, game_seen, seen or now(), member),
+    )
+
+
+def set_lobby(con, me, body):
+    visible = 1 if isinstance(body, dict) and body.get("on") in (True, 1, "1") else 0
+    prev = lobby_row(con, me["id"])
+    presence = latest_presence(con, me["id"])
+    loc = (prev["location"] if prev else "") or ""
+    sys = (prev["system"] if prev else "") or ""
+    code = (prev["code"] if prev else "") or ""
+    ship = (prev["ship"] if prev else "") or ""
+    host = (prev["host"] if prev else "") or ""
+    starfix_seen = prev["starfix_seen"] if prev else None
+    game_seen = prev["game_seen"] if prev else None
+    if presence:
+        loc = presence["location"] or loc
+        sys = presence["system"] or sys
+        code = presence["code"] or code
+        ship = presence["ship"] or ship
+        host = presence["host"] or host
+        starfix_seen = presence["starfix_seen"]
+        game_seen = presence["game_seen"]
+    if isinstance(body, dict) and clean_label(body.get("code"), 80):
+        loc = clean_label(body.get("location"), 80) or loc
+        sys = (clean_label(body.get("system"), 24) or "").lower()
+        if sys not in ("", "stanton", "pyro", "nyx"):
+            sys = ""
+        code = clean_label(body.get("code"), 80) or code
+        named = clean_label(body.get("ship"), 40)
+        if named:
+            ship = named
+    con.execute(
+        """
+        INSERT INTO lobby (member, visible, location, system, code, ship, host, seen, starfix_seen, game_seen)
+        VALUES (?,?,?,?,?,?,?,?,?,?)
+        ON CONFLICT(member) DO UPDATE SET
+          visible=excluded.visible, location=excluded.location, system=excluded.system,
+          code=excluded.code, ship=excluded.ship, host=excluded.host, seen=excluded.seen,
+          starfix_seen=excluded.starfix_seen, game_seen=excluded.game_seen
+        """,
+        (me["id"], visible, loc, sys, code, ship, host, now() if visible else (prev["seen"] if prev else None), starfix_seen, game_seen),
+    )
+
+
+def chat_lines(con, me, after, limit):
+    if after > 0:
+        rows = con.execute(
+            """
+            SELECT c.id, c.body, c.created, c.member, m.nickname
+            FROM lobby_chat c JOIN member m ON m.id=c.member
+            WHERE c.id>? ORDER BY c.id ASC LIMIT ?
+            """,
+            (after, limit),
+        ).fetchall()
+    else:
+        rows = con.execute(
+            """
+            SELECT c.id, c.body, c.created, c.member, m.nickname
+            FROM lobby_chat c JOIN member m ON m.id=c.member
+            ORDER BY c.id DESC LIMIT ?
+            """,
+            (limit,),
+        ).fetchall()
+        rows = list(reversed(rows))
+    return [
+        {
+            "id": int(row["id"]),
+            "nickname": row["nickname"] or "",
+            "body": row["body"],
+            "at": int(row["created"]),
+            "mine": row["member"] == me["id"],
+        }
+        for row in rows
+    ]
+
+
+def add_chat(con, me, body):
+    text = clean_label(body.get("body") if isinstance(body, dict) else None, 240)
+    if not text:
+        return None, "empty"
+    stamp = now()
+    prev = CHAT_LAST.get(me["id"], 0)
+    if stamp - prev < 1.2:
+        return None, "fast"
+    CHAT_LAST[me["id"]] = stamp
+    cur = con.execute(
+        "INSERT INTO lobby_chat (member, body, created) VALUES (?,?,?)",
+        (me["id"], text, stamp),
+    )
+    top = con.execute("SELECT MAX(id) AS n FROM lobby_chat").fetchone()
+    if top and top["n"] and int(top["n"]) > 400:
+        con.execute("DELETE FROM lobby_chat WHERE id<?", (int(top["n"]) - 400,))
+    return {
+        "id": int(cur.lastrowid),
+        "nickname": me["nickname"] or "",
+        "body": text,
+        "at": int(stamp),
+        "mine": True,
+    }, None
+
+
+KEEP_SECONDS = (900, 1800, 3600, 10800, 21600, 32400, 43200, 86400, 172800, 345600)
+
+
+def clean_keep(body):
+    raw = body.get("keep")
+    if raw in (None, ""):
+        try:
+            raw = int(body.get("hours") or 0) * 3600
+        except (TypeError, ValueError):
+            raw = 0
+    try:
+        keep = int(raw)
+    except (TypeError, ValueError):
+        keep = 0
+    if keep not in KEEP_SECONDS:
+        return 21600
+    return keep
+
+
+def sweep_board(con):
+    stamp = now()
+    gone = [row["id"] for row in con.execute("SELECT id FROM board WHERE expires<=?", (stamp,))]
+    if not gone:
+        return
+    con.executemany("DELETE FROM board_rsvp WHERE board=?", [(bid,) for bid in gone])
+    con.execute("DELETE FROM board WHERE expires<=?", (stamp,))
+
+
+def board_posts(con, me):
+    sweep_board(con)
+    stamp = now()
+    posts = []
+    rows = con.execute(
+        """
+        SELECT b.*, m.nickname
+        FROM board b JOIN member m ON m.id=b.member
+        WHERE b.expires>?
+        ORDER BY b.created DESC LIMIT 40
+        """,
+        (stamp,),
+    ).fetchall()
+    for row in rows:
+        replies = []
+        mine_going = None
+        for person in con.execute(
+            """
+            SELECT v.member, v.going, v.note, m.nickname
+            FROM board_rsvp v JOIN member m ON m.id=v.member
+            WHERE v.board=? ORDER BY m.nickname
+            """,
+            (row["id"],),
+        ):
+            going = bool(person["going"])
+            replies.append(
+                {
+                    "nickname": person["nickname"] or "",
+                    "going": going,
+                    "note": person["note"] or "",
+                    "mine": person["member"] == me["id"],
+                }
+            )
+            if person["member"] == me["id"]:
+                mine_going = going
+        posts.append(
+            {
+                "id": row["id"],
+                "kind": row["kind"],
+                "title": row["title"],
+                "detail": row["detail"] or "",
+                "ship": row["ship"] or "",
+                "place": row["place"] or "",
+                "name": row["name"] or "",
+                "system": row["system"] or "",
+                "at": int(row["at"] or 0),
+                "seats": clean_seats(row["seats"]) or "",
+                "standing": bool(row["standing"]),
+                "server": row["host"] or "",
+                "mission": row["mission"] or "" if "mission" in row.keys() else "",
+                "speech": (row["speech"] or "") if "speech" in row.keys() else "",
+                "contactKind": (row["contact_kind"] or "") if "contact_kind" in row.keys() else "",
+                "contact": (row["contact"] or "") if "contact" in row.keys() else "",
+                "nickname": row["nickname"] or "",
+                "mine": row["member"] == me["id"],
+                "expires": int(row["expires"]),
+                "going": mine_going,
+                "replies": replies,
+            }
+        )
+    return posts
+
+
+def add_board(con, me, body):
+    if not isinstance(body, dict):
+        return "board"
+    if body.get("clear"):
+        bid = clean_label(body.get("id"), 40)
+        if not bid:
+            return "board"
+        con.execute("DELETE FROM board_rsvp WHERE board=?", (bid,))
+        con.execute("DELETE FROM board WHERE id=? AND member=?", (bid, me["id"]))
+        return None
+    kind = body.get("kind")
+    if kind not in ("ship", "job", "roam"):
+        return "board"
+    title = clean_label(body.get("title"), 60)
+    if not title:
+        return "title"
+    n = con.execute(
+        "SELECT COUNT(*) AS n FROM board WHERE member=? AND expires>?",
+        (me["id"], now()),
+    ).fetchone()["n"]
+    if int(n) >= 2:
+        return "limit"
+    standing = 1 if body.get("standing") in (True, 1, "1") else 0
+    sweep_board(con)
+    keep = clean_keep(body)
+    seats = clean_seats(body.get("seats"))
+    if seats is None:
+        return "seats"
+    at = 0
+    if body.get("at") not in (None, "", 0):
+        parsed = clean_when(body.get("at"))
+        if parsed is None:
+            return "time"
+        at = parsed
+    system = (clean_label(body.get("system"), 24) or "").lower()
+    if system not in ("", "stanton", "pyro", "nyx"):
+        system = ""
+    host = clean_label(body.get("server"), 16) or ""
+    if host not in ("", "asia", "us", "aus", "eu"):
+        host = ""
+    speech = clean_label(body.get("speech"), 16) or ""
+    if speech not in ("", "zh", "en", "other"):
+        speech = ""
+    found = clean_contact(body.get("contactKind"), body.get("contact"))
+    if not found:
+        return "contact"
+    contact_kind, contact = found
+    stamp = now()
+    con.execute(
+        """
+        INSERT INTO board (id, member, kind, title, detail, ship, place, name, system, at, seats, standing, host, mission, speech, contact_kind, contact, created, expires)
+        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+        """,
+        (
+            secrets.token_hex(8),
+            me["id"],
+            kind,
+            title,
+            clean_note(body.get("detail"), 400),
+            clean_label(body.get("ship"), 80) or "",
+            clean_label(body.get("place"), 80) or "",
+            clean_label(body.get("name"), 80) or "",
+            system,
+            at,
+            seats,
+            standing,
+            host,
+            clean_label(body.get("mission"), 80) or "",
+            speech,
+            contact_kind,
+            contact,
+            stamp,
+            stamp + keep,
+        ),
+    )
+    return None
+
+
+def set_board_rsvp(con, me, body):
+    if not isinstance(body, dict):
+        return "board"
+    bid = clean_label(body.get("id"), 40)
+    going = body.get("going")
+    if not bid or going not in (True, False, 0, 1):
+        return "board"
+    row = con.execute("SELECT id FROM board WHERE id=? AND expires>?", (bid, now())).fetchone()
+    if not row:
+        return "board"
+    con.execute(
+        """
+        INSERT INTO board_rsvp (board, member, going, note) VALUES (?,?,?,?)
+        ON CONFLICT(board, member) DO UPDATE SET going=excluded.going, note=excluded.note
+        """,
+        (bid, me["id"], 1 if going else 0, clean_label(body.get("note"), 80) or ""),
+    )
+    return None
+
+
+def plaza_view(con, me, after):
+    row = lobby_row(con, me["id"])
+    visible = bool(row and row["visible"])
+    if visible:
+        con.execute("UPDATE lobby SET seen=? WHERE member=?", (now(), me["id"]))
+    fresh = now() - 15 * 60
+    people = []
+    for person in con.execute(
+        """
+        SELECT l.*, m.nickname
+        FROM lobby l JOIN member m ON m.id=l.member
+        WHERE l.visible=1 AND l.seen>?
+        ORDER BY m.nickname
+        """,
+        (fresh,),
+    ):
+        starfix, game = presence_lights(person["starfix_seen"], person["game_seen"])
+        people.append(
+            {
+                "id": person["member"],
+                "nickname": person["nickname"] or "",
+                "location": person["location"] or "",
+                "system": person["system"] or "",
+                "code": person["code"] or "",
+                "ship": person["ship"] or "",
+                "server": person["host"] or "",
+                "starfix": starfix,
+                "game": game,
+                "mine": person["member"] == me["id"],
+            }
+        )
+    return {
+        "on": visible,
+        "people": people,
+        "chat": chat_lines(con, me, after, 80),
+        "posts": board_posts(con, me),
+    }
+
+
 def save_presence(con, room, member, body):
     if not isinstance(body, dict):
         return False
@@ -501,6 +972,10 @@ def save_presence(con, room, member, body):
                 "UPDATE presence SET starfix_seen=NULL, game_seen=NULL WHERE room=? AND member=?",
                 (room, member),
             )
+        con.execute(
+            "UPDATE lobby SET starfix_seen=NULL, game_seen=NULL WHERE member=?",
+            (member,),
+        )
         return True
     sent_loc = str(body.get("location") or "")[:80]
     sent_code = str(body.get("code") or "")[:80]
@@ -553,6 +1028,7 @@ def save_presence(con, room, member, body):
         """,
         (room, member, loc, sys, code_loc, place_seen, ship_name, worn, host_id, travel, card, starfix_seen, game_seen),
     )
+    mirror_lobby(con, member, loc, sys, code_loc, ship_name, host_id, starfix_seen, game_seen, place_seen or ts)
     return True
 
 
@@ -929,6 +1405,32 @@ class Handler(BaseHTTPRequestHandler):
                 return
             if not me:
                 self.send_json(401, {"error": "auth"})
+                return
+            if parts == ["api", "lobby"]:
+                set_lobby(con, me, body if isinstance(body, dict) else {})
+                self.send_json(200, plaza_view(con, me, 0))
+                return
+            if parts == ["api", "lobby", "chat"]:
+                line, err = add_chat(con, me, body if isinstance(body, dict) else {})
+                if err:
+                    self.send_json(400 if err == "empty" else 429, {"error": err})
+                    return
+                self.send_json(200, {"line": line})
+                return
+            if parts == ["api", "board"]:
+                err = add_board(con, me, body if isinstance(body, dict) else {})
+                if err:
+                    code = 409 if err == "limit" else 400
+                    self.send_json(code, {"error": err})
+                    return
+                self.send_json(200, plaza_view(con, me, 0))
+                return
+            if parts == ["api", "board", "rsvp"]:
+                err = set_board_rsvp(con, me, body if isinstance(body, dict) else {})
+                if err:
+                    self.send_json(400, {"error": err})
+                    return
+                self.send_json(200, plaza_view(con, me, 0))
                 return
             if parts == ["api", "rooms", "lookup"]:
                 raw = body.get("codes") if isinstance(body, dict) else None
@@ -1348,6 +1850,15 @@ class Handler(BaseHTTPRequestHandler):
             me = self.me(con)
             if not me:
                 self.send_json(401, {"error": "auth"})
+                return
+            if parts == ["api", "plaza"]:
+                try:
+                    after = int(parse_qs(urlparse(self.path).query).get("after", ["0"])[0] or 0)
+                except (TypeError, ValueError):
+                    after = 0
+                if after < 0:
+                    after = 0
+                self.send_json(200, plaza_view(con, me, after))
                 return
             if len(parts) == 3 and parts[:2] == ["api", "rooms"]:
                 code = parts[2].upper()

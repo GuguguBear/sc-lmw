@@ -44,10 +44,10 @@ window.LIVEMAP_CONFIG = {
   LANG: 'auto',
 
   // Interface theme: 'classic' | 'compact' | 'practical' | 'chassis' | 'scifi' | 'haze'.
-  // haze is the default. classic is the original look, compact is dense and flat,
+  // compact is the default. classic is the original look, compact is dense and flat,
   // practical is easier to read, chassis is a metal instrument case,
   // scifi is a holographic console.
   // data-theme on the script tag, or mount(el,{theme:'chassis'}).
   // The visitor's own choice is remembered in localStorage and wins over this.
-  THEME: 'haze'
+  THEME: 'compact'
 };

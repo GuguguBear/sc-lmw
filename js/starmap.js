@@ -572,8 +572,8 @@ function stantonScene(canvas,sysKey){
   let isMobile=boxWH().w<700;
   // Himmel (folgt der Kamera, damit er auf jeder Ebene gleich aussieht)
   const sky=new T.Group(); scene.add(sky); const skyNeb=[]; let skyStars=null, skyGlowTex=null;
-  function glowTex(cols){ const c=document.createElement('canvas');c.width=c.height=128;const x=c.getContext('2d');const g=x.createRadialGradient(64,64,0,64,64,64);cols.forEach(s=>g.addColorStop(s[0],s[1]));x.fillStyle=g;x.fillRect(0,0,128,128);return new T.CanvasTexture(c); }
-  const neb=glowTex([[0,'rgba(140,100,255,.5)'],[0.5,'rgba(60,120,255,.16)'],[1,'rgba(0,0,0,0)']]);
+  function glowTex(cols, rad){ const c=document.createElement('canvas');c.width=c.height=128;const x=c.getContext('2d');const g=x.createRadialGradient(64,64,0,64,64,rad||64);cols.forEach(s=>g.addColorStop(s[0],s[1]));x.fillStyle=g;x.fillRect(0,0,128,128);return new T.CanvasTexture(c); }
+  const neb=glowTex([[0,'rgba(140,100,255,.40)'],[0.34,'rgba(60,120,255,.11)'],[0.68,'rgba(40,90,180,.035)'],[1,'rgba(30,70,150,0)']]);
   // These offsets used to stay on the world's negative Z. Turning away from
   // that side put every cloud behind the camera. The rig follows the view,
   // so the same clouds stay in front of the lens.
@@ -936,7 +936,8 @@ function stantonScene(canvas,sysKey){
         if(!force&&placed.some(r=>x<r.x+r.w&&x+w>r.x&&y<r.y+r.h&&y+h>r.y)) show=false; else { placed.push({x,y,w,h}); d.style.transform='translate('+x.toFixed(1)+'px,'+y.toFixed(1)+'px)'; } }
       if(!show) d.style.transform='translate(-9999px,0)'; d.classList.toggle('hl',force||mark); d.classList.toggle('dim', !!(e.o&&e.o.k==='player'&&stOtherFaded(e.sys,!!e.o.on))); }
     if(window.__stLeaderFrame) window.__stLeaderFrame(entries, scr, hover);
-    placeRally(); }
+    placeRally();
+    placeLobby(); }
   function rallyPin(){
     let pin=$('stRally');
     if(pin||!ROOT) return pin;
@@ -970,9 +971,59 @@ function stantonScene(canvas,sysKey){
     const b=pin.querySelector('b'); if(b) b.textContent=spec.label||'';
     pin.hidden=false; pin.style.left=s.x+'px'; pin.style.top=s.y+'px';
   }
+  function lobbyHost(){
+    let host=$('stLobbyPins');
+    if(host||!ROOT) return host;
+    host=document.createElement('div');
+    host.id=ID('stLobbyPins'); host.className='st-lobby-pins';
+    ROOT.appendChild(host);
+    return host;
+  }
+  function placeLobby(){
+    const host=lobbyHost(); if(!host) return;
+    const list=(window.__stLobbyPeople||[]).filter(p=>p&&p.place);
+    const sig=list.map(p=>p.id+'|'+p.place+'|'+p.label).join(';');
+    if(host.__sig!==sig){
+      host.__sig=sig; host.innerHTML='';
+      list.forEach(function(p){
+        const b=document.createElement('button');
+        b.type='button'; b.className='st-lobby-pin'; b.dataset.id=p.id;
+        b.innerHTML='<i></i><b></b>';
+        b.querySelector('b').textContent=p.label||'';
+        b.onclick=function(ev){ ev.preventDefault(); ev.stopPropagation(); if(window.__stLobbyOpen) window.__stLobbyOpen(p); };
+        host.appendChild(b);
+      });
+    }
+    if(!explore()||!list.length){ host.hidden=true; return; }
+    host.hidden=false;
+    const seen={};
+    [...host.children].forEach(function(b){
+      const person=list.find(p=>p.id===b.dataset.id);
+      const o=person&&ST_DATA&&ST_DATA.by?ST_DATA.by[person.place]:null;
+      let p=null, here=false;
+      if(o){
+        const hit=entries.find(x=>x.o&&x.o.id===o.id);
+        if(hit&&hit.body&&level.t!=='sys') here=true;
+        else if(hit) p=hit.p;
+        else if(level.t==='sys') p=Vs(o);
+        else if(level.o&&level.o.id===o.id) here=true;
+      }
+      if(here){
+        const box=boxWH();
+        const n=seen.here||0; seen.here=n+1;
+        b.hidden=false; b.style.left=(box.w/2+n*28)+'px'; b.style.top=(box.h*0.42)+'px';
+        return;
+      }
+      const s=p&&scr(p);
+      if(!s||behind(p)){ b.hidden=true; return; }
+      const key=Math.round(s.x)+':'+Math.round(s.y);
+      const n=seen[key]||0; seen[key]=n+1;
+      b.hidden=false; b.style.left=(s.x+n*22)+'px'; b.style.top=s.y+'px';
+    });
+  }
   size();
   let raf=0, dragging=false, panning=false, lastX=0, lastY=0, downX=0, downY=0, uiDown=false;
-  const onUI=(e)=> !!(e&&e.target&&e.target.closest&&e.target.closest('.st-loc-card,.st-zoom,.stx,.st-side,.st-crumb,.st-top,.st-room,.st-crew,.st-float-ico,.st-gate,.st-call,.st-sfx,.st-ctrldlg,.st-locdlg,.st-alert,.st-ctx,.st-rally'));
+  const onUI=(e)=> !!(e&&e.target&&e.target.closest&&e.target.closest('.st-loc-card,.st-zoom,.stx,.st-side,.st-crumb,.st-top,.st-room,.st-crew,.st-float-ico,.st-gate,.st-call,.st-sfx,.st-ctrldlg,.st-locdlg,.st-alert,.st-ctx,.st-rally,.st-plaza,.st-lobby-pin'));
   const clampR=v=>explore()?Math.max(LV[level.t].min,Math.min(LV[level.t].max,v)):Math.max(LV.sys.bgMin*BGK,Math.min(LV.sys.bgMax*BGK,v));
   const canNav=()=>explore()&&level.t==='sys';
   const canPan=()=>explore()&&(level.t==='sys'||level.t==='body');
@@ -1211,12 +1262,26 @@ function stantonScene(canvas,sysKey){
     if(animNodes.length){ animNodes.forEach(a=>{ a.o.rotation.y+=a.s; }); entries.forEach(e=>{ if(e.node) e.node.getWorldPosition(e.p); }); }
     az+=(azT-az)*0.08; el+=(elT-el)*0.08; R+=(RT-R)*0.07; tgt.lerp(tgtT,0.1);
     camera.position.set(tgt.x+R*Math.cos(el)*Math.sin(az),tgt.y+R*Math.sin(el),tgt.z+R*Math.cos(el)*Math.cos(az)); camera.lookAt(tgt); sky.position.copy(camera.position); skyNebRig.quaternion.copy(camera.quaternion);
-    // The backdrop stays behind the subject at every zoom, and large enough
-    // to cover the view. System clouds keep the same apparent size when the
-    // camera pulls back, instead of shrinking into the black background.
+    // One dim veil covers the frame. The other clouds stay small, so they
+    // tint the view without stacking into a white sheet. System clouds keep
+    // the same apparent size when the camera pulls back.
     const back=Math.min(camera.far*0.45, Math.max(720, R*2.15));
+    const halfV=Math.tan(camera.fov*Math.PI/360);
+    const reach=Math.hypot(halfV*Math.max(camera.aspect,1), halfV);
     const axis=tmp.set(0,0,-1);
-    skyNeb.forEach(function(s){ tmp2.copy(s.userData.home).normalize().lerp(axis,0.62).normalize(); s.position.copy(tmp2).multiplyScalar(back); s.scale.set(back*0.78,back*0.78,1); });
+    skyNeb.forEach(function(s,i){
+      if(i===0){
+        s.position.set(0,0,-back);
+        const veil=back*reach*3.1;
+        s.scale.set(veil,veil,1);
+        s.material.opacity=Math.min(s.material.opacity, 0.055);
+        return;
+      }
+      tmp2.copy(s.userData.home).normalize().lerp(axis,0.55).normalize();
+      s.position.copy(tmp2).multiplyScalar(back);
+      const sc=back*Math.max(0.72, reach*0.78);
+      s.scale.set(sc,sc,1);
+    });
     sysNeb.forEach(function(s){ const dist=Math.max(30, camera.position.distanceTo(s.position)), k=Math.max(1, dist/260), sc=s.userData.base*k; s.scale.set(sc,sc,1); });
     renderView();
     if(hoverReq){ hoverReq=false; const e=nearest(hx,hy,10); hover=(e&&!e.body)?e:null; }
@@ -1331,6 +1396,7 @@ function stantonScene(canvas,sysKey){
   window.__stCtl={ _cleanup:cleanup, getAz:()=>az, holdSpin:on=>{ spinHold=!!on; }, level:()=>level, focus, flyTo, rebuild, home, zoomBy, pan, highlight, showRoute, clearTrail, playTrail, frameTrail, goSystem, galaxy, onSys:null,
     hitAt:function(cx,cy){ const p=relXY(cx,cy); const hit=nearest(p.x,p.y,isMobile?22:16); return hit&&hit.o&&hit.o.k!=='player'?hit.o:null; },
     focusId:function(id){ const o=ST_DATA&&ST_DATA.by&&ST_DATA.by[id]; if(o) flyTo(o); },
+    place:function(id){ const o=ST_DATA&&ST_DATA.by&&ST_DATA.by[id]; return o?{id:o.id,sy:o.sy||'',n:o.n||'',k:o.k||''}:null; },
     setSystem:k=>{ if(!k) return; ST_SYS=k; tintSky(k); if(!explore()&&ST_DATA){ bgScale(); rebuild(); tgtT.copy(offOf(k)); tgt.copy(tgtT); RT=LV.sys.def*BGK; } },
     zoom01:()=>{ const L=LV[level.t]; return (Math.log(RT)-Math.log(L.min))/(Math.log(L.max)-Math.log(L.min)); },
     setZoom01:t=>{ const L=LV[level.t]; RT=Math.exp(Math.log(L.min)+t*(Math.log(L.max)-Math.log(L.min))); },
@@ -1587,11 +1653,11 @@ function onLocPick(action){
 }
 const ST_UI_THEMES=['classic','compact','practical','chassis','scifi','haze'];
 const ST_UI_THEME_KEY='sclmw_ui_theme';
-let ST_UI_THEME='haze';
+let ST_UI_THEME='compact';
 function normUiTheme(t){ return ST_UI_THEMES.indexOf(t)>=0?t:null; }
 function readUiTheme(given){
   let saved=null; try{ saved=localStorage.getItem(ST_UI_THEME_KEY); }catch(e){}
-  return normUiTheme(saved)||normUiTheme(given)||normUiTheme(window.LIVEMAP_CONFIG&&window.LIVEMAP_CONFIG.THEME)||'haze';
+  return normUiTheme(saved)||normUiTheme(given)||normUiTheme(window.LIVEMAP_CONFIG&&window.LIVEMAP_CONFIG.THEME)||'compact';
 }
 function syncLangAttr(){
   if(!ROOT||!SC.i18n) return;
@@ -1607,7 +1673,7 @@ function paintPicks(){
   if(tp) tp.innerHTML=ST_UI_THEMES.map(id=>'<button type="button" data-ui-theme="'+id+'"'+(ST_UI_THEME===id?' class="on"':'')+'>'+esc(_t('theme.'+id))+'</button>').join('');
 }
 function applyUiTheme(t, persist){
-  t=normUiTheme(t)||'haze'; ST_UI_THEME=t;
+  t=normUiTheme(t)||'compact'; ST_UI_THEME=t;
   if(ROOT) ROOT.setAttribute('data-theme', t);
   if(persist){ try{ localStorage.setItem(ST_UI_THEME_KEY, t); }catch(e){} }
   try{ document.dispatchEvent(new CustomEvent('sclmw-theme',{detail:t})); }catch(e){}
@@ -1659,10 +1725,10 @@ function enterStExplore(){
   ui.innerHTML=
     '<div class="st-top" id="'+ID('stTop')+'"><div class="st-top-row"><div class="st-sys" id="'+ID('stSysSel')+'">'+[['stanton','Stanton'],['pyro','Pyro'],['nyx','Nyx']].map(s=>'<button data-sys="'+s[0]+'"><i style="background:'+ST_SYSLOOK[s[0]].dot+'"></i>'+s[1]+'</button>').join('')+'<button data-sys="all" title="'+esc(_t('system.all_title'))+'">'+(SC.ico?SC.ico('star'):'')+'</button></div><div class="st-crumb" id="'+ID('stCrumb')+'"></div>'+
       '<div class="st-sbox"><input id="'+ID('stQ')+'" placeholder="'+esc(_t('search.placeholder'))+'" autocomplete="off" enterkeyhint="search"><button id="'+ID('stQx')+'" title="'+esc(_t('ui.clear'))+'">'+(SC.ico?SC.ico('close'):'')+'</button></div>'+
-      '<div class="st-zoom"><button class="st-pause" id="'+ID('stPause')+'" title="'+esc(_t('action.pause_rotation'))+'">'+(SC.ico?SC.ico('pause'):'')+'</button><button class="st-pause" id="'+ID('stHome')+'" title="'+esc(_t('action.home_title'))+'">'+(SC.ico?SC.ico('home'):'')+'</button><span>'+(SC.ico?SC.ico('sat'):'')+'</span><input type="range" id="'+ID('stZoom')+'" min="0" max="1" step="0.001"><span>'+(SC.ico?SC.ico('scope'):'')+'</span></div>'+
+      '<div class="st-zoom"><button class="st-pause" id="'+ID('stPause')+'" title="'+esc(_t('action.pause_rotation'))+'">'+(SC.ico?SC.ico('pause'):'')+'</button><button class="st-pause" id="'+ID('stHome')+'" title="'+esc(_t('action.home_title'))+'">'+(SC.ico?SC.ico('home'):'')+'</button></div>'+
       '<div class="st-dockslot" id="'+ID('stDockSlot')+'" hidden></div>'+
       '<div class="st-cats" id="'+ID('stCats')+'">'+ST_CATS.map(c=>'<button data-cat="'+c[0]+'"'+(ST_CAT===c[0]?' class="on"':'')+'>'+esc(_t(c[1]))+'</button>').join('')+'</div>'+
-      '<div class="st-tools"><div class="st-tabs"><button id="'+ID('stSideMin')+'">'+esc(_t('tabs.legend'))+' ▸</button><button id="'+ID('stSidePl')+'"><span id="'+ID('stSidePlLbl')+'">'+esc(_t('tabs.players'))+'</span> <span id="'+ID('stPlCnt')+'"></span></button><button type="button" class="st-sq" id="'+ID('stUiLang')+'" title="'+esc(_t('uilang.title'))+'">'+uiLangMark()+'</button><button type="button" class="st-sq" id="'+ID('stTheme')+'" title="'+esc(_t('theme.title'))+'">'+(SC.ico?SC.ico('theme'):'')+'</button><button type="button" class="st-sq" id="'+ID('stDrag')+'" title="'+esc(_t('drag.title'))+'">'+(SC.ico?SC.ico('drag'):'')+'</button><button type="button" class="st-sq" id="'+ID('stLocBtn')+'" title="'+esc(_t('loc.title'))+'">文</button></div>'+
+      '<div class="st-tools"><div class="st-tabs"><button type="button" id="'+ID('stPlaza')+'"></button><button id="'+ID('stSideMin')+'">'+esc(_t('tabs.legend'))+' ▸</button><button id="'+ID('stSidePl')+'"><span id="'+ID('stSidePlLbl')+'">'+esc(_t('tabs.players'))+'</span> <span id="'+ID('stPlCnt')+'"></span></button><button type="button" class="st-sq" id="'+ID('stUiLang')+'" title="'+esc(_t('uilang.title'))+'">'+uiLangMark()+'</button><button type="button" class="st-sq" id="'+ID('stTheme')+'" title="'+esc(_t('theme.title'))+'">'+(SC.ico?SC.ico('theme'):'')+'</button><button type="button" class="st-sq" id="'+ID('stDrag')+'" title="'+esc(_t('drag.title'))+'">'+(SC.ico?SC.ico('drag'):'')+'</button><button type="button" class="st-sq" id="'+ID('stLocBtn')+'" title="'+esc(_t('loc.title'))+'">文</button></div>'+
       '<div class="st-pick" id="'+ID('stLangPick')+'" hidden></div><div class="st-pick st-pick-themes" id="'+ID('stThemePick')+'" hidden></div><div class="st-pick st-pick-loc" id="'+ID('stLocPick')+'" hidden></div></div><button class="stx" id="'+ID('stExX')+'" title="'+esc(_t('ui.leave_map'))+'">'+(SC.ico?SC.ico('close'):'')+'</button></div>'+
       '<div class="st-res" id="'+ID('stRes')+'" hidden></div></div>'+
     '<div class="st-side min" id="'+ID('stSide')+'"><div class="st-tab" id="'+ID('stTabLeg')+'"><div id="'+ID('stLegend')+'"></div></div><div class="st-tab" id="'+ID('stTabPl')+'" hidden><input id="'+ID('stPlQ')+'" placeholder="'+esc(_t('player.search_placeholder'))+'"><div id="'+ID('stPlList')+'"></div></div></div>'+
@@ -1681,8 +1747,7 @@ function enterStExplore(){
     '</svg></div>'+
     '<div class="st-hint" id="'+ID('stHint')+'">'+esc(_t('hint.controls'))+'</div>';
   ROOT.appendChild(ui);
-  const zoom=$('stZoom'), dial=$('stComDial'), pause=$('stPause');
-  if(zoom){ zoom.value=ctl.zoom01(); zoom.oninput=()=>ctl.setZoom01(parseFloat(zoom.value)); }
+  const dial=$('stComDial'), pause=$('stPause');
   if(pause){ syncPauseBtn(); pause.onclick=()=>{ ST_PAUSE=!ST_PAUSE; ST_CTRL.spin=!ST_PAUSE; saveCtrl(); }; }
   $('stExX').onclick=exitStExplore;
   $('stUiLang').onclick=e=>{ e.stopPropagation(); const p=$('stLangPick'); $('stThemePick').hidden=true; $('stLocPick').hidden=true; closeCtrl(); p.hidden=!p.hidden; };
@@ -1730,7 +1795,7 @@ function enterStExplore(){
   $('stCats').querySelectorAll('[data-cat]').forEach(b=>b.onclick=()=>{ const c=b.getAttribute('data-cat'); ST_SEC=null;
     if(ST_CAT===c&&!$('stRes').hidden){ $('stRes').hidden=true; return; } ST_CAT=c; ST_ANCHOR=b; stCatsMark(); stCloseCard(); stSearch(); });
   if(!window.__stPopResize){ window.__stPopResize=function(){ const box=$('stRes'), side=$('stSide'); if(box&&!box.hidden) placeUnder(box, popAnchor(), 440); if(side&&!side.classList.contains('min')&&side.__btn) placeUnder(side, side.__btn, 320); }; window.addEventListener('resize', window.__stPopResize); }
-  function spinUI(){ window.__stExRaf=requestAnimationFrame(spinUI); const c=window.__stCtl; if(!c) return; if(dial) dial.setAttribute('transform','rotate('+(-c.getAz()*180/Math.PI)+' 50 50)'); if(zoom&&document.activeElement!==zoom) zoom.value=c.zoom01(); }
+  function spinUI(){ window.__stExRaf=requestAnimationFrame(spinUI); const c=window.__stCtl; if(!c) return; if(dial) dial.setAttribute('transform','rotate('+(-c.getAz()*180/Math.PI)+' 50 50)'); }
   spinUI();
   window.__stExStop=function(){ cancelAnimationFrame(window.__stExRaf); };
   if(window.__stDockMount) window.__stDockMount();
