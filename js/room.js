@@ -53,6 +53,7 @@
       linkWait:'请在 Starfix 窗口点确认。',
       linkOn:'已连上房间',
       linkOff:'本机的 Starfix 没开。先双击 Starfix，等窗口出现后再点一次。',
+      linkToast:'本机链路', linkRetry:'再试一次',
       locGuide:'你可以手动标位置，也可以用附带程序试着自动读日志。手动：在星图上右键，选「我在这里」。自动：项目自带 Starfix，源码都在 companion/，可以先读完再运行。它只读本机 Game.log，不进游戏、不读内存、不改游戏文件。打开后点「连到这台电脑」，回窗口确认。网页本身不读游戏目录。RSI 条款没有书面允许读日志，开不开由你决定。'
     },
     'zh-Hant': {
@@ -98,6 +99,7 @@
       linkWait:'請在 Starfix 視窗點確認。',
       linkOn:'已連上房間',
       linkOff:'本機的 Starfix 沒開。先雙擊 Starfix，等視窗出現後再點一次。',
+      linkToast:'本機鏈路', linkRetry:'再試一次',
       locGuide:'你可以手動標位置，也可以用附帶程式試著自動讀日誌。手動：在星圖上右鍵，選「我在這裡」。自動：專案自帶 Starfix，源碼都在 companion/，可以先讀完再執行。它只讀本機 Game.log，不進遊戲、不讀記憶體、不改遊戲檔案。打開後點「連到這台電腦」，回視窗確認。網頁本身不讀遊戲資料夾。RSI 條款沒有書面允許讀日誌，開不開由你決定。'
     },
     en: {
@@ -143,6 +145,7 @@
       linkWait:'Confirm in the Starfix window.',
       linkOn:'Connected to',
       linkOff:'Starfix is not running. Double-click Starfix, wait for its window, then click again.',
+      linkToast:'Local link', linkRetry:'Try again',
       locGuide:'You can mark your place by hand, or try the bundled program to read the game log. By hand: right-click the map and choose “I am here.” Automatic: this project includes Starfix. All of its source is in companion/. Read it before you run it. It only reads Game.log on this computer. It does not enter the game, read memory, or change game files. Open it, choose “Connect this computer,” then confirm in its window. This page does not read the game folder. The RSI terms do not permit reading the log in writing. You decide.'
     },
     de: {
@@ -188,6 +191,7 @@
       linkWait:'Im Starfix-Fenster bestätigen.',
       linkOn:'Verbunden mit',
       linkOff:'Starfix läuft nicht. Starfix doppelklicken, auf das Fenster warten und erneut klicken.',
+      linkToast:'Lokale Verbindung', linkRetry:'Nochmal',
       locGuide:'Du kannst den Ort von Hand setzen oder das mitgelieferte Programm das Spiellog lesen lassen. Von Hand: Rechtsklick auf der Karte, dann „Ich bin hier“. Automatisch: das Projekt enthält Starfix. Der ganze Quelltext liegt in companion/. Lies ihn, bevor du ihn startest. Es liest nur die Game.log auf diesem Computer. Es betritt das Spiel nicht, liest keinen Speicher und ändert keine Spieldateien. Öffne es, wähle „Diesen Computer verbinden“ und bestätige im Fenster. Diese Seite liest keinen Spielordner. Die RSI-Bedingungen erlauben das Lesen des Logs nicht schriftlich. Du entscheidest.'
     }
   };
@@ -196,7 +200,7 @@
   function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
   function token(){ try{ return localStorage.getItem(TOKEN)||''; }catch(e){ return ''; } }
   function savedCode(){ try{ return localStorage.getItem(CODE)||''; }catch(e){ return ''; } }
-  var state = null, draft = [], marking = false, note = '', statusMsg = '', selected = '', API = '', entered = false, roomKind = '', linkState = '', linkMiss = 0, leaving = false, crewQ = '', picking = false, histInfo = {}, histKey = '', pubRooms = null, pubSig = null, pubAt = 0, alertHold = false, alertSeen = {}, alertFlash = null, alertTimer = 0, kickAsk = '', alertDeny = null, castCompose = false, castDraft = '', castErr = '', castIncoming = null, castAudio = null, ctxAt = null, ctxSig = '', recoverDraft = '', recoverFocus = '';
+  var state = null, draft = [], marking = false, note = '', statusMsg = '', selected = '', API = '', entered = false, roomKind = '', linkState = '', linkMiss = 0, linkToast = '', linkToastHold = false, linkTimer = 0, leaving = false, crewQ = '', picking = false, histInfo = {}, histKey = '', pubRooms = null, pubSig = null, pubAt = 0, alertHold = false, alertSeen = {}, alertFlash = null, alertTimer = 0, kickAsk = '', alertDeny = null, castCompose = false, castDraft = '', castErr = '', castIncoming = null, castAudio = null, ctxAt = null, ctxSig = '', recoverDraft = '', recoverFocus = '';
   var hornCompose = false, hornErr = '', hornWhen = '', hornOpen = false, hornSheet = false, hornId = '', hornNag = 0, hornTimer = 0;
   var plazaOn = false, plazaTab = 'hall', plazaMineOn = false, plazaPeople = [], plazaPosts = [], plazaErr = '', chatLast = 0, chatLines = [], plazaPulling = false;
   var pendingPost = '', linkedPost = '', linkedOnce = false, plazaPage = false;
@@ -502,6 +506,7 @@
       if(saved && typeof saved.ix==='number') placeIcon(ui.crewIco, saved.ix, saved.iy);
     }
     mountDockBar();
+    paintLinkToast();
     window.__stRouteOn = !!(state && state.status==='member' && marking && canDraw());
     window.__stRouteAdd = function(o){
       if(!window.__stRouteOn || !o) return;
@@ -1735,22 +1740,70 @@
     linkState = next;
     if(entered) paint();
   }
+  function scheduleLink(ms){
+    clearTimeout(linkTimer);
+    linkTimer = setTimeout(pullLink, ms);
+  }
   function pullLink(){
-    if(!entered || !state || state.status!=='member') return;
+    clearTimeout(linkTimer);
+    if(!entered || !state || state.status!=='member'){ scheduleLink(2000); return; }
     fetch('http://127.0.0.1:8780/api/status', {cache:'no-store'})
       .then(function(r){ if(!r.ok) throw new Error('status'); return r.json(); })
       .then(function(d){
         var room = String(d && d.room || '').toUpperCase();
         var pending = String(d && d.pendingRoom || '').toUpperCase();
         linkMiss = 0;
-        if(d && d.tokenSet && room===state.code) setLink('on');
+        if(d && d.tokenSet && room===state.code){
+          setLink('on');
+          if(linkToast==='off'){
+            linkToast = 'on';
+            linkToastHold = false;
+            paintLinkToast();
+            setTimeout(function(){ if(linkToast==='on'){ linkToast = ''; paintLinkToast(); } }, 2200);
+          }
+        }
         else if(pending===state.code) setLink('wait');
         else if(linkState==='on') setLink('');
+        scheduleLink(2000);
       })
       .catch(function(){
         linkMiss += 1;
         if(linkMiss>=3 && linkState==='on') setLink('');
+        if(linkState!=='wait' && !linkToastHold && linkToast!=='on'){
+          linkToast = 'off';
+          paintLinkToast();
+        }
       });
+  }
+  function armLinkWatch(){
+    linkMiss = 0;
+    pullLink();
+  }
+  function paintLinkToast(){
+    var host = root();
+    if(!host) return;
+    var box = document.getElementById('stLinkToast');
+    if(!box){
+      box = document.createElement('div');
+      box.id = 'stLinkToast';
+      host.appendChild(box);
+    }
+    var mode = (entered && linkToast && !linkToastHold) ? linkToast : '';
+    if(box.getAttribute('data-mode')===mode) return;
+    box.setAttribute('data-mode', mode);
+    if(!mode){ box.hidden = true; box.className = 'st-linktoast st-alert'; box.innerHTML = ''; return; }
+    box.hidden = false;
+    box.className = 'st-linktoast st-alert tone-'+(mode==='on' ? 'ok' : 'wait');
+    if(mode==='on'){
+      box.innerHTML = alertPlate('ok', 'linkOn', '', '', '');
+      return;
+    }
+    box.innerHTML = alertPlate('wait', 'linkToast', '', '<p class="st-alert-msg">'+esc(t('linkOff'))+'</p>',
+      '<div class="st-alert-acts"><button type="button" id="stLinkRetry">'+bi('linkRetry')+'</button><button type="button" id="stLinkLater">'+bi('castClose')+'</button></div>');
+    var retry = box.querySelector('#stLinkRetry');
+    if(retry) retry.onclick = function(){ linkToastHold = false; armLinkWatch(); };
+    var later = box.querySelector('#stLinkLater');
+    if(later) later.onclick = function(){ linkToastHold = true; paintLinkToast(); };
   }
   function linkPc(){
     var tok = token();
@@ -1759,11 +1812,11 @@
     fetch('http://127.0.0.1:8780/api/pair', {method:'POST', headers:{'Content-Type':'application/json'}, body: payload})
       .then(function(r){ if(!r.ok) throw new Error(r.status); return r.json(); })
       .then(function(d){ if(d && d.error) throw new Error(d.error); setLink('wait'); pullLink(); })
-      .catch(function(){ setLink('off'); });
+      .catch(function(){ setLink('off'); linkToast = 'off'; linkToastHold = false; paintLinkToast(); });
   }
   function mapTarget(node){
     if(!node || !node.closest) return false;
-    return !node.closest('.st-loc-card,.st-zoom,.stx,.st-side,.st-crumb,.st-top,.st-room,.st-crew,.st-float-ico,.st-gate,.st-call,.st-sfx,.st-ctrldlg,.st-locdlg,.st-alert,.st-ctx,.st-rally,.st-plaza,.st-lobby-pin');
+    return !node.closest('.st-loc-card,.st-zoom,.stx,.st-side,.st-crumb,.st-top,.st-room,.st-crew,.st-float-ico,.st-gate,.st-call,.st-sfx,.st-ctrldlg,.st-locdlg,.st-alert,.st-linktoast,.st-ctx,.st-rally,.st-plaza,.st-lobby-pin');
   }
   function closeCtx(){
     ctxAt = null;
@@ -1949,7 +2002,7 @@
   }
   function localLeave(){
     leaving = false;
-    state = null; draft = []; marking = false; note = ''; selected = ''; statusMsg = ''; entered = false; roomKind = ''; linkState = ''; linkMiss = 0;
+    state = null; draft = []; marking = false; note = ''; selected = ''; statusMsg = ''; entered = false; roomKind = ''; linkState = ''; linkMiss = 0; linkToast = ''; linkToastHold = false;
     castCompose = false; castDraft = ''; castErr = ''; castIncoming = null; ctxAt = null;
     try{ localStorage.removeItem(CODE); }catch(e){}
     window.__stRouteOn = false;
@@ -3006,7 +3059,14 @@
       }, 8000);
       if(!window.__stAgeTick) window.__stAgeTick=setInterval(tickAges, 1000);
       if(!window.__stPlazaPoll) window.__stPlazaPoll=setInterval(function(){ if(plazaOn) pullPlaza(); }, 2000);
-      if(!window.__stLinkWatch) window.__stLinkWatch=setInterval(pullLink, 2000);
+      if(!window.__stLinkWatch){
+        window.__stLinkWatch = 1;
+        armLinkWatch();
+        document.addEventListener('visibilitychange', function(){
+          if(document.hidden || !linkMiss || !entered) return;
+          armLinkWatch();
+        });
+      }
     if(!window.__stDdClose){
       window.__stDdClose=function(e){ if(e.target.closest&&e.target.closest('.st-dd')) return; document.querySelectorAll('.st-dd-list').forEach(function(n){ n.hidden=true; }); };
       document.addEventListener('click', window.__stDdClose);
