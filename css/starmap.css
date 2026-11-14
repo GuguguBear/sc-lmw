@@ -1385,7 +1385,21 @@ html{-webkit-text-size-adjust:100%}
     linear-gradient(var(--st-flash), var(--st-flash)) right 4px bottom 4px / 10px 1px no-repeat,
     linear-gradient(var(--st-flash), var(--st-flash)) right 4px bottom 4px / 1px 10px no-repeat,
     color-mix(in srgb, var(--sclmw-bg, #0c0e12) 62%, transparent);
-  animation:sclmw-need-edge .9s steps(1,end) infinite, sclmw-need-read 1.1s steps(1,end) infinite;
+  animation:sclmw-need-edge 2.4s linear infinite, sclmw-need-read 2.4s linear infinite;
+}
+.sc-lmw p.st-flash::after,
+.sc-lmw .st-need::after{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(100deg,
+    transparent 0%,
+    transparent 36%,
+    color-mix(in srgb, var(--st-flash, var(--sclmw-err, #ff6f8b)) 78%, white) 50%,
+    transparent 64%,
+    transparent 100%);
+  background-size:240% 100%;
+  background-repeat:no-repeat;
+  animation:sclmw-scope 2.4s linear infinite;
+  mix-blend-mode:screen;
 }
 .sc-lmw p.st-flash.is-quiet{--st-flash:var(--sclmw-cyan)}
 .sc-lmw p.st-flash:empty,.sc-lmw p.st-flash[hidden]{display:none}
@@ -1393,7 +1407,7 @@ html{-webkit-text-size-adjust:100%}
 .sc-lmw .st-chat-form.is-need{position:relative}
 .sc-lmw .st-post-form label.is-need :is(input,textarea),
 .sc-lmw .st-chat-form.is-need input{
-  animation:sclmw-need-edge .9s steps(1,end) infinite;
+  animation:sclmw-need-edge 2.4s linear infinite;
 }
 .sc-lmw .st-post-form label.is-need :is(input,textarea)::placeholder,
 .sc-lmw .st-chat-form.is-need input::placeholder{color:transparent}
@@ -1413,7 +1427,7 @@ html{-webkit-text-size-adjust:100%}
     linear-gradient(var(--sclmw-err), var(--sclmw-err)) right 3px bottom 3px / 9px 1px no-repeat,
     linear-gradient(var(--sclmw-err), var(--sclmw-err)) right 3px bottom 3px / 1px 9px no-repeat,
     color-mix(in srgb, var(--sclmw-bg, #0c0e12) 58%, transparent);
-  animation:sclmw-need-read 1.1s steps(1,end) infinite;
+  animation:sclmw-need-read 2.4s linear infinite;
 }
 .sc-lmw .st-plaza-body{flex:1;min-height:0;display:flex;padding:0;background:var(--sclmw-bg,#0c0e12);box-shadow:none}
 .sc-lmw .st-plaza-hall{flex:1;min-width:0;min-height:0;display:flex;gap:0}
@@ -1517,19 +1531,42 @@ html{-webkit-text-size-adjust:100%}
   .sc-lmw .st-post .st-bring{flex:1 1 100%;max-width:none;min-height:44px}
 }
 @keyframes sclmw-need-edge{
-  0%, 46%{
+  0%, 100%{
     box-shadow:
       inset 0 0 0 1px var(--st-flash, var(--sclmw-err, #ff6f8b)),
-      0 0 12px color-mix(in srgb, var(--st-flash, var(--sclmw-err, #ff6f8b)) 65%, transparent);
+      0 0 16px color-mix(in srgb, var(--st-flash, var(--sclmw-err, #ff6f8b)) 70%, transparent);
   }
-  54%, 100%{
+  12.5%, 87.5%{
     box-shadow:
-      inset 0 0 0 1px color-mix(in srgb, var(--st-flash, var(--sclmw-err, #ff6f8b)) 22%, transparent);
+      inset 0 0 0 1px color-mix(in srgb, var(--st-flash, var(--sclmw-err, #ff6f8b)) 82%, transparent),
+      0 0 13px color-mix(in srgb, var(--st-flash, var(--sclmw-err, #ff6f8b)) 54%, transparent);
+  }
+  25%, 75%{
+    box-shadow:
+      inset 0 0 0 1px color-mix(in srgb, var(--st-flash, var(--sclmw-err, #ff6f8b)) 58%, transparent),
+      0 0 9px color-mix(in srgb, var(--st-flash, var(--sclmw-err, #ff6f8b)) 34%, transparent);
+  }
+  37.5%, 62.5%{
+    box-shadow:
+      inset 0 0 0 1px color-mix(in srgb, var(--st-flash, var(--sclmw-err, #ff6f8b)) 36%, transparent),
+      0 0 5px color-mix(in srgb, var(--st-flash, var(--sclmw-err, #ff6f8b)) 18%, transparent);
+  }
+  50%{
+    box-shadow:
+      inset 0 0 0 1px color-mix(in srgb, var(--st-flash, var(--sclmw-err, #ff6f8b)) 24%, transparent),
+      0 0 3px color-mix(in srgb, var(--st-flash, var(--sclmw-err, #ff6f8b)) 10%, transparent);
   }
 }
 @keyframes sclmw-need-read{
-  0%, 46%{opacity:1}
-  54%, 100%{opacity:.38}
+  0%, 100%{opacity:1}
+  12.5%, 87.5%{opacity:.9}
+  25%, 75%{opacity:.72}
+  37.5%, 62.5%{opacity:.54}
+  50%{opacity:.42}
+}
+@keyframes sclmw-scope{
+  from{background-position:130% 0}
+  to{background-position:-130% 0}
 }
 @keyframes sclmw-field-glow{
   0%, 100%{
@@ -1566,8 +1603,11 @@ html{-webkit-text-size-adjust:100%}
   .sc-lmw .st-post-form label.is-need :is(input,textarea),
   .sc-lmw .st-chat-form.is-need input,
   .sc-lmw .st-need,
-  .sc-lmw p.st-flash{animation:none}
+  .sc-lmw .st-need::after,
+  .sc-lmw p.st-flash,
+  .sc-lmw p.st-flash::after{animation:none}
   .sc-lmw .st-need,.sc-lmw p.st-flash{opacity:1}
+  .sc-lmw .st-need::after,.sc-lmw p.st-flash::after{opacity:0}
   .sc-lmw .st-post-form label.is-need :is(input,textarea),
   .sc-lmw .st-chat-form.is-need input,
   .sc-lmw p.st-flash{

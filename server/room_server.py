@@ -965,7 +965,8 @@ def add_chat(con, me, body):
     }, None
 
 
-KEEP_SECONDS = (900, 1800, 3600, 10800, 21600, 32400, 43200, 86400, 172800, 345600, 604800)
+KEEP_SECONDS = (0, 900, 1800, 3600, 10800, 21600, 32400, 43200, 86400, 172800, 345600, 604800)
+KEEP_OPEN = 4102444800
 
 
 def clean_keep(body):
@@ -1128,7 +1129,7 @@ def add_board(con, me, body):
             contact_kind,
             contact,
             stamp,
-            stamp + keep,
+            KEEP_OPEN if keep == 0 else stamp + keep,
         ),
     )
     return None
