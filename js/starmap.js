@@ -685,6 +685,58 @@ function stantonScene(canvas,sysKey){
     const map=bodyMap(o,lk[0]);
     const m=new T.Mesh(irr?rockGeo(rad,irr):new T.SphereGeometry(rad,48,48),new T.MeshStandardMaterial({map:map,emissive:0xffffff,emissiveMap:map,emissiveIntensity:o.n==='ArcCorp'?.28:.07,roughness:SC.bodyRough(o.n),metalness:o.n==='ArcCorp'?.08:.02}));
     spin.push(m); return m; }
+  // A 1px line vanishes when the camera skims the orbital plane: the ellipse
+  // becomes thinner than a pixel and the rasterizer drops it. This ribbon
+  // keeps a constant width on screen, so the orbit stays visible edge-on.
+  function orbitRibbon(radius){
+    const n=240, pos=new Float32Array((n+1)*6), tan=new Float32Array((n+1)*6), side=new Float32Array((n+1)*2), idx=[];
+    for(let i=0;i<=n;i++){
+      const t=(i%n)/n*Math.PI*2, c=Math.cos(t), s=Math.sin(t);
+      for(let k=0;k<2;k++){
+        const v=i*2+k, p=v*3;
+        pos[p]=radius*c; pos[p+1]=0; pos[p+2]=radius*s;
+        tan[p]=-s; tan[p+1]=0; tan[p+2]=c;
+        side[v]=k?1:-1;
+      }
+      if(i<n){ const a=i*2, b=a+1, c0=a+2, d0=a+3; idx.push(a,c0,b,b,c0,d0); }
+    }
+    const g=new T.BufferGeometry();
+    g.setAttribute('position', new T.BufferAttribute(pos,3));
+    g.setAttribute('tangent', new T.BufferAttribute(tan,3));
+    g.setAttribute('side', new T.BufferAttribute(side,1));
+    g.setIndex(idx);
+    g.computeBoundingSphere();
+    const mat=new T.ShaderMaterial({
+      transparent:true, depthWrite:false,
+      uniforms:{
+        uColor:{value:new T.Color(0x5a78a8)},
+        uOpacity:{value:0.4},
+        uPx:{value:1.5},
+        uRes:{value:new T.Vector2(1,1)}
+      },
+      vertexShader:[
+        'attribute float side;',
+        'attribute vec3 tangent;',
+        'uniform vec2 uRes;',
+        'uniform float uPx;',
+        'void main(){',
+        '  vec4 clip=projectionMatrix*modelViewMatrix*vec4(position,1.0);',
+        '  vec4 ahead=projectionMatrix*modelViewMatrix*vec4(position+tangent,1.0);',
+        '  vec2 dir=ahead.xy/ahead.w-clip.xy/clip.w;',
+        '  float len=length(dir);',
+        '  dir=len<1e-5?vec2(1.0,0.0):dir/len;',
+        '  vec2 nrm=vec2(-dir.y,dir.x);',
+        '  vec2 res=max(uRes,vec2(1.0));',
+        '  gl_Position=clip;',
+        '  gl_Position.xy+=nrm*side*(uPx/res)*clip.w*2.0;',
+        '}'
+      ].join('\n'),
+      fragmentShader:'uniform vec3 uColor; uniform float uOpacity; void main(){ gl_FragColor=vec4(uColor,uOpacity); }'
+    });
+    const mesh=new T.Mesh(g, mat);
+    mesh.onBeforeRender=function(r){ r.getDrawingBufferSize(mat.uniforms.uRes.value); };
+    return mesh;
+  }
   function ringPoints(G,rin,rout,thick,n,color){ const a=new Float32Array(n*3); for(let i=0;i<n;i++){ const rr=rin+Math.random()*(rout-rin), th=Math.random()*6.283; a[i*3]=rr*Math.cos(th); a[i*3+1]=(Math.random()-0.5)*thick; a[i*3+2]=rr*Math.sin(th); }
     const g=new T.BufferGeometry(); g.setAttribute('position',new T.BufferAttribute(a,3)); const p=new T.Points(g,new T.PointsMaterial({color:color,size:1.5,sizeAttenuation:false})); G.add(p); return p; }
   let level={t:'sys',o:null}, grp=null, entries=[], spin=[], animNodes=[], lastEx=null, wormClock=null, wormMouths=[], wormStat=null, sysTick=0, sysGroups=[], bgAmt=0, spinHold=false;
@@ -721,7 +773,7 @@ function stantonScene(canvas,sysKey){
       const p=ringPoints(grp,b.belt.in*1e-6-w/2,b.belt.out*1e-6+w/2,Math.max(0.2,b.belt.depth*1e-6),S.k==='nyx'?7000:3000,look.belt); p.position.copy(pc); });
     (D.kids[star.id]||[]).filter(o=>o.k==='planet').forEach(pl=>{
       const pp=Vs(pl), d=pp.distanceTo(c0), rad=pSize(pl);
-      { const n=360, a=new Float32Array(n*3); for(let i=0;i<n;i++){ const t=i/n*Math.PI*2; a[i*3]=d*Math.cos(t); a[i*3+2]=d*Math.sin(t); } const g=new T.BufferGeometry(); g.setAttribute('position',new T.BufferAttribute(a,3)); const ol=new T.LineLoop(g,new T.LineBasicMaterial({color:0x5a78a8,transparent:true,opacity:.35})); ol.position.copy(c0); grp.add(ol); }
+      { const ol=orbitRibbon(d); ol.position.copy(c0); grp.add(ol); }
       const pivot=new T.Object3D(); pivot.position.copy(c0); grp.add(pivot); const holder=new T.Object3D(); holder.position.copy(pp).sub(c0); pivot.add(holder);
       const m=bodyMesh(pl,rad); holder.add(m); entries.push({o:pl,p:pp.clone(),body:true,r:rad,prio:3,node:holder});
       if(anim) animNodes.push({o:pivot,s:0.0012*Math.pow(12.85/d,1.5)});
