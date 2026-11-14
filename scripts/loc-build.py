@@ -42,10 +42,11 @@ def score(key):
     low = kl.lower()
     if BAD.search(kl) or kl.startswith(("mission_", "Event_", "Human_", "dfm_", "scan_")):
         return 80
-    if low.endswith("_desc") or kl.endswith("_Desc") or kl.startswith("item_Desc"):
+    # Any description key stays eligible when the map actually shows that sentence.
+    # Reststop_RR_desc_medium does not end in _desc, so a blanket "desc -> 70"
+    # used to drop it even though the panel prints the English verbatim.
+    if "desc" in low or kl.endswith("_Desc") or kl.startswith("item_Desc"):
         return 24
-    if "desc" in low:
-        return 70
     if kl.startswith("vehicle_Name") and kl.endswith("_short"):
         return 1
     if kl.startswith("vehicle_Name"):
@@ -162,6 +163,58 @@ def add_item_aliases(hans, hant, hans_ini, hant_ini):
     return added, {"hans": cls_hans, "hant": cls_hant}
 
 
+def old_desc_score(key):
+    """Score from before desc_shared blurbs were kept. Above 30 meant 'dropped'."""
+    kl = key.split(",")[0]
+    low = kl.lower()
+    if low.endswith("_desc") or kl.endswith("_Desc") or kl.startswith("item_Desc"):
+        return 24
+    if "desc" in low:
+        return 70
+    return score(key)
+
+
+SYS_DESC_KEY = {
+    "stanton": "StantonSystem_Desc",
+    "pyro": "PyroSystem_Desc",
+    "nyx": "NyxSystem_Desc",
+}
+
+
+def recover_blurbs(hans, hant, by_en, hans_ini, hant_ini):
+    """Sentences the map shows, whose official Chinese the old scorer threw away,
+    plus the three system blurbs whose English has drifted from the current label."""
+    gap_h, gap_t = {}, {}
+    for en, pairs in by_en.items():
+        if en not in hans:
+            continue
+        pairs = sorted(pairs)
+        best = pairs[0][0]
+        chosen = [k for sc, k in pairs if sc <= best + 1 and sc <= 30][:6]
+        key = None
+        for k in chosen:
+            if hans_ini.get(k) or hant_ini.get(k):
+                key = k
+                break
+        if key and old_desc_score(key) > 30:
+            gap_h[en] = hans[en]
+            gap_t[en] = hant.get(en, hans[en])
+    gal_path = DATA / "galaxy.json"
+    if gal_path.exists():
+        for s in json.loads(gal_path.read_text(encoding="utf-8")).get("systems") or []:
+            key = SYS_DESC_KEY.get(s.get("k"))
+            text = (s.get("d") or "").strip()
+            zh = hans_ini.get(key or "")
+            if not key or not text or not zh or zh == text:
+                continue
+            zt = hant_ini.get(key) or zh
+            hans[text] = zh
+            hant[text] = zt
+            gap_h[text] = zh
+            gap_t[text] = zt
+    return gap_h, gap_t
+
+
 def strip_maker(v):
     for m in MAKERS:
         if v.lower().startswith(m.lower() + " "):
@@ -273,9 +326,13 @@ def main():
             cased += 1
 
     pretty_n, classes = add_item_aliases(hans, hant, hans_ini, hant_ini)
+    gap_h, gap_t = recover_blurbs(hans, hant, by_en, hans_ini, hant_ini)
     out = DATA / "loc.json"
     C.write_json(out, {"hans": hans, "hant": hant, "alias": alias, "class": classes})
     C.write_json(DATA / "loc-keys.json", keys)
+    # data/ is not uploaded by a push. The site merges this file on top of the
+    # server's loc.json, so a blurb the old pack missed still shows in Chinese.
+    C.write_json(ROOT / "lang" / "loc-gap.json", {"hans": gap_h, "hant": gap_t})
     print("loc.json %d names (%d ship aliases, %d case aliases, %d item labels), %d class ids, %d keys, hans %d bytes" % (
         len(hans), aliased, cased, pretty_n, len(classes["hans"]), len(keys), out.stat().st_size))
     for sample in ("Hurston", "Lorville", "Area18", "Stanton", "Cutlass Black", "Agricium",

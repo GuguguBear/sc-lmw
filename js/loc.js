@@ -167,11 +167,18 @@
     if(packWait) return packWait;
     packWait=Promise.all([
       grabJson('data/loc.json').catch(function(){ return {hans:{},hant:{},alias:{}}; }),
-      grabJson('lang/item-class.json').catch(function(){ return {hans:{},hant:{}}; })
+      grabJson('lang/item-class.json').catch(function(){ return {hans:{},hant:{}}; }),
+      grabJson('lang/loc-gap.json').catch(function(){ return {hans:{},hant:{}}; })
     ]).then(function(pair){
       var d=pair[0];
       pack=d&&d.hans?d:{hans:{},hant:{},alias:{}};
       extraClass=pair[1]&&pair[1].hans?pair[1]:{hans:{},hant:{}};
+      var gap=pair[2]||{};
+      ['hans','hant'].forEach(function(lang){
+        var src=gap[lang]||{}, dst=pack[lang];
+        if(!dst) dst=pack[lang]={};
+        Object.keys(src).forEach(function(en){ if(src[en] && !dst[en]) dst[en]=src[en]; });
+      });
       return pack;
     });
     return packWait;

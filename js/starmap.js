@@ -192,9 +192,10 @@ async function stLoad(){ if(ST_DATA) return ST_DATA;
   objects.forEach(o=>{ by[o.id]=o; }); objects.forEach(o=>{ if(o.p&&by[o.p]) (kids[o.p]=kids[o.p]||[]).push(o); });
   ST_DATA={d:{objects,mining,nofix,version:parts[0].version},by,kids,sys,gal,get star(){ return (sys[ST_SYS]||sys.stanton).star; }}; return ST_DATA; }
 const stSysName=o=>{ const n=(ST_DATA&&o&&ST_DATA.sys[o.sy]||{}).n||''; return n?gn(n):''; };
-function stMineLabel(k){ if(k==='HPP_AaronHalo') return 'Aaron Halo'; if(k==='AsteroidCluster_Medium_Yield') return _t('mine.asteroid_cluster_medium'); if(k==='AsteroidCluster_Low_Yield') return _t('mine.asteroid_cluster_low'); if(k==='HPP_Lagrange_Occupied') return _t('mine.lagrange_occupied'); if(k==='HPP_Stanton2c_Belt') return _t('mine.yela_belt');
-  let m=k.match(/^HPP_Lagrange_(\w+)$/); if(m) return _t('mine.lagrange_type',{type:m[1]}); if(/^HPP_(Stanton|Pyro)\d/.test(k)) return _t('mine.surface'); if(k==='HPP_Pyro_DeepSpaceAsteroids') return _t('mine.deep_space_asteroids'); if(k==='HPP_Pyro_AkiroCluster') return 'Akiro Cluster';
-  if(k==='HPP_Nyx_KeegerBelt') return 'Keeger Belt'; if(k==='HPP_Nyx_GlaciemRing') return 'Glaciem Ring'; m=k.match(/^HPP_Pyro_(Cool|Warm)0?(\d+)$/); if(m) return _t('mine.lagrange_temp',{temp:_t(m[1]==='Cool'?'mine.cold':'mine.warm'),n:m[2]});
+function oreTier(t){ const k={common:'ore.common',uncommon:'ore.uncommon',rare:'ore.rare',epic:'ore.epic',legendary:'ore.legendary'}[String(t||'').toLowerCase()]; return k?_t(k):t; }
+function stMineLabel(k){ if(k==='HPP_AaronHalo') return gn('Aaron Halo'); if(k==='AsteroidCluster_Medium_Yield') return _t('mine.asteroid_cluster_medium'); if(k==='AsteroidCluster_Low_Yield') return _t('mine.asteroid_cluster_low'); if(k==='HPP_Lagrange_Occupied') return _t('mine.lagrange_occupied'); if(k==='HPP_Stanton2c_Belt') return _t('mine.yela_belt');
+  let m=k.match(/^HPP_Lagrange_(\w+)$/); if(m) return _t('mine.lagrange_type',{type:m[1]}); if(/^HPP_(Stanton|Pyro)\d/.test(k)) return _t('mine.surface'); if(k==='HPP_Pyro_DeepSpaceAsteroids') return _t('mine.deep_space_asteroids'); if(k==='HPP_Pyro_AkiroCluster') return gn('Akiro Cluster');
+  if(k==='HPP_Nyx_KeegerBelt') return gn('Keeger Belt'); if(k==='HPP_Nyx_GlaciemRing') return gn('Glaciem Ring'); m=k.match(/^HPP_Pyro_(Cool|Warm)0?(\d+)$/); if(m) return _t('mine.lagrange_temp',{temp:_t(m[1]==='Cool'?'mine.cold':'mine.warm'),n:m[2]});
   m=k.match(/^Loot_Caves_(Occupied|Unoccupied)_(Rock|Sand|Acidic)/); if(m) return _t('mine.cave',{material:_t({Rock:'mine.rock',Sand:'mine.sand',Acidic:'mine.acidic'}[m[2]]),occ:m[1]==='Occupied'?_t('mine.occupied_suffix'):''});
   return k.replace(/_/g,' '); }
 const ST_TY_DE={'Mercenary':'Söldner','Hauling - Planetary':'Fracht (Planet)','Delivery':'Lieferung','Hauling':'Fracht','Bounty Hunter':'Kopfgeldjagd',
@@ -2185,7 +2186,7 @@ function stMiningHTML(keys){ const D=ST_DATA; let h='<div class="st-slbl">'+_t('
   keys.forEach(k=>{ const gs=D.d.mining[k]; if(!gs) return; h+='<div class="st-mprov">'+esc(stMineLabel(k))+'</div>';
     gs.forEach(g=>{ h+='<div class="st-mgrp">'+esc(mineGroupLabel(g.g))+'</div>';
       g.deps.forEach(d=>{ const ores=stOreMerge(d.parts).filter(x=>!/^Inert/i.test(x.ore));
-        h+='<details class="st-dep"><summary><b>'+esc(gn(d.rock))+'</b>'+(d.tier?'<em class="t-'+esc(d.tier)+'">'+esc(d.tier)+'</em>':'')+'<span title="'+esc(_t('tooltip.rock_frequency'))+'">'+d.rel+' %</span></summary>'+
+        h+='<details class="st-dep"><summary><b>'+esc(gn(d.rock))+'</b>'+(d.tier?'<em class="t-'+esc(d.tier)+'">'+esc(oreTier(d.tier))+'</em>':'')+'<span title="'+esc(_t('tooltip.rock_frequency'))+'">'+d.rel+' %</span></summary>'+
           (ores.length?'<table><tr><th>'+esc(_t('table.ore'))+'</th><th title="'+esc(_t('tooltip.ore_in_rock'))+'">'+esc(_t('table.chance'))+'</th><th title="'+esc(_t('tooltip.ore_share_quality'))+'">'+esc(_t('table.share_quality'))+'</th></tr>'+ores.map(x=>'<tr><td>'+esc(gn(x.ore))+'</td><td>'+Math.round(x.p*100)+' %</td><td>'+x.b.map(b=>b.min+'–'+b.max+' %<small>Q '+b.q[0]+'–'+b.q[1]+'</small>').join('<br>')+'</td></tr>').join('')+'</table>':'<p class="st-flash is-quiet">'+_t('common.no_ore_data')+'</p>')+'</details>'; }); }); });
   return h; }
 function stNofixNote(k){ return /^AsteroidCluster_/.test(k)?_t('nofix.note_random'):_t('nofix.note_no_coords'); }
