@@ -3216,11 +3216,50 @@
     var done = function(){ if(btn) btn.textContent = t('postCopy'); };
     if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done).catch(done);
   }
+  function shareLine(label, value){
+    value = String(value==null ? '' : value).trim();
+    if(!value) return '';
+    var zh = lang()==='zh-Hans' || lang()==='zh-Hant';
+    return label+(zh ? '：' : ': ')+value;
+  }
+  function contactShare(p){
+    if(!p || !p.contact || !contactFace(p.contactKind)) return '';
+    var href = contactHref(p.contactKind, p.contact);
+    return contactFace(p.contactKind)+' '+(href || p.contact);
+  }
+  function postShare(p){
+    var kind = {ship:'shipTab', job:'jobTab', roam:'roamTab'}[p.kind];
+    var lines = [t('plaza')+' · '+t(kind || 'plaza')];
+    if(p.title) lines.push(p.title);
+    if(p.detail && p.detail!==p.title) lines.push('', p.detail);
+    var facts = [
+      shareLine(t('postBy'), p.nickname||''),
+      shareLine(t('postMission'), missionFace(p.mission||'')),
+      shareLine(t('postShip'), shipFace(p.ship||'')),
+      shareLine(t('postPlace'), p.name ? placeFace(p.name) : ''),
+      shareLine(t('postAt'), p.at ? rallyWhenLabel(p.at) : ''),
+      shareLine(t('postSeats'), p.seats ? String(p.seats) : ''),
+      shareLine(t('postServer'), serverFace(p.server||'')),
+      shareLine(t('postSpeech'), speechFace(p.speech||'')),
+      shareLine(t('postCrew'), p.standing ? t('postStanding') : t('postTemp')),
+      shareLine(t('postContact'), contactShare(p)),
+      p.expires ? dueText(p.expires) : ''
+    ].filter(Boolean);
+    if(facts.length) lines.push('', facts.join('\n'));
+    lines.push('', location.origin+location.pathname+'?view=plaza&post='+p.id);
+    return lines.join('\n');
+  }
   function copyPostLink(id, btn){
     if(!/^[0-9a-f]+$/i.test(id||'')) return;
-    var url = location.origin+location.pathname+'?view=plaza&post='+id;
-    var done = function(){ if(btn){ btn.textContent = t('postLink'); } };
-    if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(url).then(done).catch(done);
+    var post = null;
+    plazaPosts.forEach(function(p){ if(p && p.id===id) post = p; });
+    var text = post ? postShare(post) : (location.origin+location.pathname+'?view=plaza&post='+id);
+    var done = function(){
+      if(!btn) return;
+      btn.textContent = t('copied');
+      setTimeout(function(){ if(btn.textContent===t('copied')) btn.textContent = t('postLink'); }, 1200);
+    };
+    if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done).catch(done);
   }
   function sendBoardRsvp(id, going, raw){
     var send = function(){
