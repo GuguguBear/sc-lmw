@@ -17,10 +17,11 @@ import socket
 import sqlite3
 import threading
 import time
+import urllib.request
 from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from urllib.parse import parse_qs, unquote, urlparse
+from urllib.parse import parse_qs, quote, unquote, urlparse
 
 ROOT = Path(__file__).resolve().parent.parent
 DB = Path(__file__).resolve().parent / "rooms.sqlite"
@@ -274,19 +275,103 @@ def clean_label(raw, limit):
     return s[:limit]
 
 
+def _contact_url(raw):
+    text = str(raw or "").strip()
+    if not re.match(r"https?://", text, re.I) or any(ch.isspace() for ch in text):
+        return None
+    try:
+        url = urlparse(text)
+    except ValueError:
+        return None
+    if url.scheme.lower() not in ("http", "https") or url.username or url.password or url.port:
+        return None
+    return url
+
+
+def _contact_host(url):
+    host = (url.hostname or "").lower()
+    return host[4:] if host.startswith("www.") else host
+
+
+def _contact_path(url):
+    return [part for part in url.path.split("/") if part]
+
+
+def contact_link(kind, raw):
+    """A canonical invite link, '' when the text is a link we will not keep, or None."""
+    text = str(raw or "").strip()
+    if kind == "heibox" and re.fullmatch(r"(?=.*[a-z])(?=.*\d)[a-z0-9]{6,10}", text):
+        return "https://chat.xiaoheihe.cn/" + text
+    url = _contact_url(text)
+    if url is None:
+        return None
+    host = _contact_host(url)
+    seg = _contact_path(url)
+    if kind == "heibox":
+        if host == "chat.xiaoheihe.cn" and len(seg) == 1 and re.fullmatch(r"[A-Za-z0-9]{4,16}", seg[0]):
+            return "https://chat.xiaoheihe.cn/" + seg[0]
+        return ""
+    if kind == "kook":
+        if host in ("kook.top", "kook.vip") and len(seg) == 1 and re.fullmatch(r"[A-Za-z0-9]{4,16}", seg[0]):
+            return "https://kook.top/" + seg[0]
+        if host == "kookapp.cn" and len(seg) >= 2 and seg[-2] == "invite" and re.fullmatch(r"[A-Za-z0-9]{4,16}", seg[-1]):
+            return "https://kook.top/" + seg[-1]
+        return ""
+    if kind == "discord":
+        code = seg[0] if host == "discord.gg" and len(seg) == 1 else ""
+        if host in ("discord.com", "discordapp.com") and len(seg) == 2 and seg[0] == "invite":
+            code = seg[1]
+        if re.fullmatch(r"(?=.*[A-Za-z0-9])[A-Za-z0-9-]{2,32}", code or ""):
+            return "https://discord.gg/" + code
+        return ""
+    if kind == "qq":
+        code = seg[1] if host == "qm.qq.com" and seg[:1] == ["q"] and len(seg) >= 2 else ""
+        if not code and host in ("qm.qq.com", "jq.qq.com"):
+            code = (parse_qs(url.query).get("k") or [""])[0]
+        if re.fullmatch(r"[A-Za-z0-9]{4,24}", code or ""):
+            return "https://qm.qq.com/q/" + code
+        return ""
+    if kind == "telegram":
+        if host not in ("t.me", "telegram.me"):
+            return ""
+        if len(seg) == 1 and seg[0].startswith("+") and re.fullmatch(r"[A-Za-z0-9_-]{8,32}", seg[0][1:]):
+            return "https://t.me/+" + seg[0][1:]
+        if len(seg) == 2 and seg[0] == "joinchat" and re.fullmatch(r"[A-Za-z0-9_-]{8,32}", seg[1]):
+            return "https://t.me/joinchat/" + seg[1]
+        if len(seg) == 1 and re.fullmatch(r"[A-Za-z][A-Za-z0-9_]{4,31}", seg[0]):
+            return seg[0]
+        return ""
+    if kind == "whatsapp":
+        if host == "chat.whatsapp.com" and len(seg) == 1 and re.fullmatch(r"[A-Za-z0-9]{10,32}", seg[0]):
+            return "https://chat.whatsapp.com/" + seg[0]
+        if host == "wa.me" and len(seg) == 1:
+            return "".join(ch for ch in seg[0] if ch.isdigit())
+        if host == "api.whatsapp.com" and seg[:1] == ["send"]:
+            return "".join(ch for ch in (parse_qs(url.query).get("phone") or [""])[0] if ch.isdigit())
+        return ""
+    return None
+
+
 def clean_contact(kind, raw):
     kind = (clean_label(kind, 16) or "").lower()
-    text = clean_label(raw, 80) or ""
+    text = clean_label(raw, 240) or ""
     if kind not in ("spectrum", "qq", "wechat", "discord", "telegram", "kook", "heibox", "whatsapp", "mail") or not text:
         return None
+    linked = contact_link(kind, text)
+    if linked == "":
+        return None
+    if linked and linked.startswith("https://"):
+        return kind, linked
+    if linked:
+        text = linked
     if kind in ("telegram", "discord") and text.startswith("@"):
         text = text[1:]
     if kind == "qq":
         text = "".join(text.split())
-    if kind == "whatsapp":
+    if kind == "whatsapp" and not text.startswith("https://"):
         lead = "+" if text.strip().startswith("+") else ""
         text = lead + "".join(ch for ch in text if ch.isdigit())
-    if kind == "heibox":
+    if kind == "heibox" and not text.startswith("https://"):
         compact = "".join(text.split())
         if compact.isdigit():
             text = compact
@@ -306,6 +391,112 @@ def clean_contact(kind, raw):
     if not ok:
         return None
     return kind, text
+
+
+class _InviteRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        return None
+
+
+_INVITE_CACHE = {}
+_INVITE_LOCK = threading.Lock()
+
+
+def _invite_count(value):
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, str) and value.isdigit():
+        value = int(value)
+    if isinstance(value, float) and value.is_integer():
+        value = int(value)
+    if isinstance(value, int) and 0 <= value <= 10_000_000:
+        return value
+    return None
+
+
+def _invite_json(url, host):
+    req = urllib.request.Request(url, headers={"User-Agent": "sc-lmw", "Accept": "application/json"})
+    opener = urllib.request.build_opener(_InviteRedirect)
+    try:
+        with opener.open(req, timeout=3) as res:
+            if urlparse(res.geturl()).hostname != host:
+                return None
+            raw = res.read(65536)
+    except Exception:
+        return None
+    try:
+        data = json.loads(raw.decode("utf-8", "replace"))
+    except (UnicodeError, json.JSONDecodeError):
+        return None
+    return data if isinstance(data, dict) else None
+
+
+def _invite_fields(name, channel, online, members):
+    out = {}
+    name = clean_label(name, 40)
+    channel = clean_label(channel, 40)
+    if name:
+        out["name"] = name
+    if channel and channel != name:
+        out["channel"] = channel
+    online = _invite_count(online)
+    members = _invite_count(members)
+    if online is not None:
+        out["online"] = online
+    if members is not None:
+        out["members"] = members
+    return out
+
+
+def _fetch_invite(kind, contact):
+    code = contact.rstrip("/").rsplit("/", 1)[-1]
+    if kind == "discord":
+        data = _invite_json(
+            "https://discord.com/api/v10/invites/" + quote(code) + "?with_counts=true",
+            "discord.com",
+        )
+        guild = data.get("guild") if isinstance(data, dict) and isinstance(data.get("guild"), dict) else None
+        if not guild:
+            return {}
+        channel = data.get("channel") if isinstance(data.get("channel"), dict) else {}
+        return _invite_fields(guild.get("name"), channel.get("name"), data.get("approximate_presence_count"), data.get("approximate_member_count"))
+    if kind == "kook":
+        data = _invite_json("https://www.kookapp.cn/api/v3/invite/view?url_code=" + quote(code), "www.kookapp.cn")
+        payload = data.get("data") if isinstance(data, dict) and data.get("code") in (0, "0") and isinstance(data.get("data"), dict) else None
+        if payload is None:
+            data = _invite_json("https://www.kookapp.cn/api/v2/invites/" + quote(code), "www.kookapp.cn")
+            payload = data.get("data") if isinstance(data, dict) and data.get("code") in (0, "0") and isinstance(data.get("data"), dict) else None
+        if not isinstance(payload, dict):
+            return {}
+        guild = payload.get("guild") if isinstance(payload.get("guild"), dict) else payload
+        channel = payload.get("channel") if isinstance(payload.get("channel"), dict) else {}
+        return _invite_fields(
+            guild.get("name"),
+            channel.get("name"),
+            guild.get("online_count", payload.get("online_count")),
+            guild.get("user_count", payload.get("user_count")),
+        )
+    return {}
+
+
+def invite_card(kind, contact):
+    found = clean_contact(kind, contact)
+    if not found or not found[1].startswith("https://") or found[0] not in ("discord", "kook"):
+        return {}
+    key = found[0] + " " + found[1]
+    stamp = time.time()
+    with _INVITE_LOCK:
+        hit = _INVITE_CACHE.get(key)
+        if hit and hit[0] > stamp:
+            return hit[1]
+    card = _fetch_invite(found[0], found[1])
+    with _INVITE_LOCK:
+        _INVITE_CACHE[key] = (stamp + (120 if card else 45), card)
+        if len(_INVITE_CACHE) > 200:
+            fresh = {k: v for k, v in _INVITE_CACHE.items() if v[0] > stamp}
+            _INVITE_CACHE.clear()
+            _INVITE_CACHE.update(fresh)
+    return card
 
 
 def clean_when(raw):
@@ -731,7 +922,7 @@ def add_chat(con, me, body):
     }, None
 
 
-KEEP_SECONDS = (900, 1800, 3600, 10800, 21600, 32400, 43200, 86400, 172800, 345600)
+KEEP_SECONDS = (900, 1800, 3600, 10800, 21600, 32400, 43200, 86400, 172800, 345600, 604800)
 
 
 def clean_keep(body):
@@ -1845,6 +2036,15 @@ class Handler(BaseHTTPRequestHandler):
         if parts == ["api", "rooms", "public"]:
             with LOCK, db() as con:
                 self.send_json(200, {"rooms": public_rooms(con)})
+            return
+        if parts == ["api", "invite"]:
+            with LOCK, db() as con:
+                me = self.me(con)
+            if not me:
+                self.send_json(401, {"error": "auth"})
+                return
+            qs = parse_qs(urlparse(self.path).query)
+            self.send_json(200, invite_card((qs.get("kind") or [""])[0], (qs.get("contact") or [""])[0]))
             return
         with LOCK, db() as con:
             me = self.me(con)

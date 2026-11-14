@@ -34,7 +34,7 @@
       chatPh:'说一句', chatSend:'发送', chatEmpty:'先写一点内容。', chatFast:'说得太快了。',
       hallTab:'大厅', shipTab:'载具招募', jobTab:'任务招募', roamTab:'闲游招募',
       shipLead:'给自己的载具找队员。可以是散人队伍，也可以是固定队伍。', jobLead:'发布一项任务或一场活动，把需求写清楚。', roamLead:'找人一起闲逛。可以是散人队伍，也可以是固定队伍。',
-      postTitle:'标题', postDetail:'需求', postShip:'载具', postMission:'任务', postSeats:'人数', postSeatsPh:'1-9999', postSeatsBad:'人数写成 1，或 1-9999 这样的范围。', postCrew:'队伍', postStanding:'固定队伍', postTemp:'散人队伍', postServer:'服务器', srvAsia:'亚服', srvUs:'美服', srvAus:'澳服', srvEu:'欧服', postHours:'持续招募', keep15:'15分钟', keep30:'30分钟', keep1:'1小时', keep3:'3小时', keep6:'6小时', keep9:'9小时', keep12:'12小时', keep24:'24小时', keep48:'48小时', keep96:'96小时', postSend:'发布', postClear:'撤下', postNone:'还没有人发布。', postLimit:'每人最多同时挂两条。', postNeed:'先写标题。', postPlace:'地点', postAt:'时间', postBy:'来自', postLeft:'剩余 {t}', postLeftSoon:'剩余不到1分钟', postDay:'{d}天', postDayHour:'{d}天{h}小时', postHour:'{h}小时', postHourMin:'{h}小时{m}分', postMin:'{m}分钟', postBringPh:'我带的船或岗位', postLink:'链接', postSpeech:'语言', speechZh:'中文', speechEn:'英文', speechOther:'其他', speechAny:'不限', postContact:'联系方式', contactNeed:'先选择联系方式，并填写有效账号。', contactSpectrum:'光谱（推荐）', contactQq:'QQ', contactWechat:'微信', contactDiscord:'Discord', contactTelegram:'Telegram', contactKook:'KOOK', contactHeibox:'黑盒语音', contactWhatsapp:'WhatsApp', contactMail:'邮箱', contactPhSpectrum:'光谱用户名', contactPhQq:'QQ号', contactPhWechat:'微信号', contactPhDiscord:'Discord 用户名', contactPhTelegram:'Telegram 用户名', contactPhKook:'KOOK 用户名或编号', contactPhHeibox:'小黑盒编号或昵称', contactPhWhatsapp:'带国际区号的号码', contactPhMail:'邮箱地址', postCopy:'复制', roleFreight:'货运', roleAssault:'突击', roleMulti:'多用途', roleData:'数据运输', roleMerchant:'商船', roleMine:'布雷', roleBattle:'战列巡洋舰', roleTank:'坦克', roleMedical:'医疗', roleCrew:'{n}人',
+      postTitle:'标题', postDetail:'需求', postShip:'载具', postMission:'任务', postSeats:'人数', postSeatsPh:'1-9999', postSeatsBad:'人数写成 1，或 1-9999 这样的范围。', postCrew:'队伍', postStanding:'固定队伍', postTemp:'散人队伍', postServer:'服务器', srvAsia:'亚服', srvUs:'美服', srvAus:'澳服', srvEu:'欧服', postHours:'持续招募', keep15:'15分钟', keep30:'30分钟', keep1:'1小时', keep3:'3小时', keep6:'6小时', keep9:'9小时', keep12:'12小时', keep24:'24小时', keep48:'48小时', keep96:'96小时', keep168:'168小时', postSend:'发布', postClear:'撤下', postNone:'还没有人发布。', postLimit:'每人最多同时挂两条。', postNeed:'先写标题。', postPlace:'地点', postAt:'时间', postBy:'来自', postLeft:'剩余 {t}', postLeftSoon:'剩余不到1分钟', postDay:'{d}天', postDayHour:'{d}天{h}小时', postHour:'{h}小时', postHourMin:'{h}小时{m}分', postMin:'{m}分钟', postBringPh:'我带的船或岗位', postLink:'链接', postSpeech:'语言', speechZh:'中文', speechEn:'英文', speechOther:'其他', speechAny:'不限', postContact:'联系方式', contactNeed:'先选择联系方式，并填写有效账号。', contactSpectrum:'光谱（推荐）', contactQq:'QQ', contactWechat:'微信', contactDiscord:'Discord', contactTelegram:'Telegram', contactKook:'KOOK', contactHeibox:'黑盒语音', contactWhatsapp:'WhatsApp', contactMail:'邮箱', contactPhSpectrum:'光谱用户名', contactPhQq:'QQ号或群邀请链接', contactPhWechat:'微信号', contactPhDiscord:'邀请链接或用户名', contactPhTelegram:'用户名或 t.me 链接', contactPhKook:'邀请链接、用户名或编号', contactPhHeibox:'邀请链接、编号或昵称', contactPhWhatsapp:'号码或群邀请链接', contactPhMail:'邮箱地址', contactOnline:'{n} 在线', contactMembers:'{n} 人', postCopy:'复制', roleFreight:'货运', roleAssault:'突击', roleMulti:'多用途', roleData:'数据运输', roleMerchant:'商船', roleMine:'布雷', roleBattle:'战列巡洋舰', roleTank:'坦克', roleMedical:'医疗', roleCrew:'{n}人',
       handTitle:'离开前先交接', handLead:'把队长交给一位队员，或解散房间。', handSolo:'房间里只有你。离开会解散这个房间。',
       errNick:'请填写 1 到 32 个字的昵称。', errRoom:'没有这个房间。',
       agoNow:'刚刚', agoSec:'{n} 秒前', agoMin:'{n} 分钟前', agoHour:'{n} 小时前', agoDay:'{n} 天前',
@@ -80,7 +80,7 @@
       chatPh:'說一句', chatSend:'發送', chatEmpty:'先寫一點內容。', chatFast:'說得太快了。',
       hallTab:'大廳', shipTab:'載具招募', jobTab:'任務招募', roamTab:'閒遊招募',
       shipLead:'給自己的載具找隊員。可以是散人隊伍，也可以是固定隊伍。', jobLead:'發布一項任務或一場活動，把需求寫清楚。', roamLead:'找人一起閒逛。可以是散人隊伍，也可以是固定隊伍。',
-      postTitle:'標題', postDetail:'需求', postShip:'載具', postMission:'任務', postSeats:'人數', postSeatsPh:'1-9999', postSeatsBad:'人數寫成 1，或 1-9999 這樣的範圍。', postCrew:'隊伍', postStanding:'固定隊伍', postTemp:'散人隊伍', postServer:'伺服器', srvAsia:'亞服', srvUs:'美服', srvAus:'澳服', srvEu:'歐服', postHours:'持續招募', keep15:'15分鐘', keep30:'30分鐘', keep1:'1小時', keep3:'3小時', keep6:'6小時', keep9:'9小時', keep12:'12小時', keep24:'24小時', keep48:'48小時', keep96:'96小時', postSend:'發布', postClear:'撤下', postNone:'還沒有人發布。', postLimit:'每人最多同時掛兩條。', postNeed:'先寫標題。', postPlace:'地點', postAt:'時間', postBy:'來自', postLeft:'剩餘 {t}', postLeftSoon:'剩餘不到1分鐘', postDay:'{d}天', postDayHour:'{d}天{h}小時', postHour:'{h}小時', postHourMin:'{h}小時{m}分', postMin:'{m}分鐘', postBringPh:'我帶的船或崗位', postLink:'連結', postSpeech:'語言', speechZh:'中文', speechEn:'英文', speechOther:'其他', speechAny:'不限', postContact:'聯繫方式', contactNeed:'先選擇聯繫方式，並填寫有效帳號。', contactSpectrum:'光譜（推薦）', contactQq:'QQ', contactWechat:'微信', contactDiscord:'Discord', contactTelegram:'Telegram', contactKook:'KOOK', contactHeibox:'黑盒語音', contactWhatsapp:'WhatsApp', contactMail:'郵箱', contactPhSpectrum:'光譜用戶名', contactPhQq:'QQ號', contactPhWechat:'微信號', contactPhDiscord:'Discord 用戶名', contactPhTelegram:'Telegram 用戶名', contactPhKook:'KOOK 用戶名或編號', contactPhHeibox:'小黑盒編號或暱稱', contactPhWhatsapp:'帶國際區號的號碼', contactPhMail:'郵箱地址', postCopy:'複製', roleFreight:'貨運', roleAssault:'突擊', roleMulti:'多用途', roleData:'數據運輸', roleMerchant:'商船', roleMine:'佈雷', roleBattle:'戰列巡洋艦', roleTank:'坦克', roleMedical:'醫療', roleCrew:'{n}人',
+      postTitle:'標題', postDetail:'需求', postShip:'載具', postMission:'任務', postSeats:'人數', postSeatsPh:'1-9999', postSeatsBad:'人數寫成 1，或 1-9999 這樣的範圍。', postCrew:'隊伍', postStanding:'固定隊伍', postTemp:'散人隊伍', postServer:'伺服器', srvAsia:'亞服', srvUs:'美服', srvAus:'澳服', srvEu:'歐服', postHours:'持續招募', keep15:'15分鐘', keep30:'30分鐘', keep1:'1小時', keep3:'3小時', keep6:'6小時', keep9:'9小時', keep12:'12小時', keep24:'24小時', keep48:'48小時', keep96:'96小時', keep168:'168小時', postSend:'發布', postClear:'撤下', postNone:'還沒有人發布。', postLimit:'每人最多同時掛兩條。', postNeed:'先寫標題。', postPlace:'地點', postAt:'時間', postBy:'來自', postLeft:'剩餘 {t}', postLeftSoon:'剩餘不到1分鐘', postDay:'{d}天', postDayHour:'{d}天{h}小時', postHour:'{h}小時', postHourMin:'{h}小時{m}分', postMin:'{m}分鐘', postBringPh:'我帶的船或崗位', postLink:'連結', postSpeech:'語言', speechZh:'中文', speechEn:'英文', speechOther:'其他', speechAny:'不限', postContact:'聯繫方式', contactNeed:'先選擇聯繫方式，並填寫有效帳號。', contactSpectrum:'光譜（推薦）', contactQq:'QQ', contactWechat:'微信', contactDiscord:'Discord', contactTelegram:'Telegram', contactKook:'KOOK', contactHeibox:'黑盒語音', contactWhatsapp:'WhatsApp', contactMail:'郵箱', contactPhSpectrum:'光譜用戶名', contactPhQq:'QQ號或群邀請連結', contactPhWechat:'微信號', contactPhDiscord:'邀請連結或用戶名', contactPhTelegram:'用戶名或 t.me 連結', contactPhKook:'邀請連結、用戶名或編號', contactPhHeibox:'邀請連結、編號或暱稱', contactPhWhatsapp:'號碼或群邀請連結', contactPhMail:'郵箱地址', contactOnline:'{n} 在線', contactMembers:'{n} 人', postCopy:'複製', roleFreight:'貨運', roleAssault:'突擊', roleMulti:'多用途', roleData:'數據運輸', roleMerchant:'商船', roleMine:'佈雷', roleBattle:'戰列巡洋艦', roleTank:'坦克', roleMedical:'醫療', roleCrew:'{n}人',
       handTitle:'離開前先交接', handLead:'把隊長交給一位隊員，或解散房間。', handSolo:'房間裡只有你。離開會解散這個房間。',
       errNick:'請填寫 1 到 32 個字的暱稱。', errRoom:'沒有這個房間。',
       agoNow:'剛剛', agoSec:'{n} 秒前', agoMin:'{n} 分鐘前', agoHour:'{n} 小時前', agoDay:'{n} 天前',
@@ -126,7 +126,7 @@
       chatPh:'Say something', chatSend:'Send', chatEmpty:'Write something first.', chatFast:'Too fast.',
       hallTab:'Lobby', shipTab:'Vehicle crew', jobTab:'Missions', roamTab:'Roaming',
       shipLead:'Find crew for your vehicle. It can be a one-off or a standing crew.', jobLead:'Post a mission or an event and write what you need.', roamLead:'Find people to roam with. One-off or a standing group.',
-      postTitle:'Title', postDetail:'Details', postShip:'Vehicle', postMission:'Mission', postSeats:'Seats', postSeatsPh:'1-9999', postSeatsBad:'Use a number or a range, such as 1 or 1-9999.', postCrew:'Crew', postStanding:'Standing crew', postTemp:'Pickup crew', postServer:'Server', srvAsia:'Asia', srvUs:'US', srvAus:'Australia', srvEu:'Europe', postHours:'Duration', keep15:'15 minutes', keep30:'30 minutes', keep1:'1 hour', keep3:'3 hours', keep6:'6 hours', keep9:'9 hours', keep12:'12 hours', keep24:'24 hours', keep48:'48 hours', keep96:'96 hours', postSend:'Post', postClear:'Remove', postNone:'Nothing posted yet.', postLimit:'Two posts at a time.', postNeed:'Write a title first.', postPlace:'Place', postAt:'Time', postBy:'From', postLeft:'{t} left', postLeftSoon:'under 1 min left', postDay:'{d}d', postDayHour:'{d}d {h}h', postHour:'{h}h', postHourMin:'{h}h {m}m', postMin:'{m}m', postBringPh:'Ship or seat', postLink:'Link', postSpeech:'Language', speechZh:'Chinese', speechEn:'English', speechOther:'Other', speechAny:'Any', postContact:'Contact', contactNeed:'Choose a contact method and enter a valid account.', contactSpectrum:'Spectrum (recommended)', contactQq:'QQ', contactWechat:'WeChat', contactDiscord:'Discord', contactTelegram:'Telegram', contactKook:'KOOK', contactHeibox:'HeyBox', contactWhatsapp:'WhatsApp', contactMail:'Email', contactPhSpectrum:'Spectrum name', contactPhQq:'QQ number', contactPhWechat:'WeChat ID', contactPhDiscord:'Discord username', contactPhTelegram:'Telegram username', contactPhKook:'KOOK name or ID', contactPhHeibox:'HeyBox ID or name', contactPhWhatsapp:'Number with country code', contactPhMail:'Email address', postCopy:'Copy', roleFreight:'Freight', roleAssault:'Assault', roleMulti:'Multi', roleData:'Data running', roleMerchant:'Merchant', roleMine:'Minelayer', roleBattle:'Battlecruiser', roleTank:'Tank', roleMedical:'Medical', roleCrew:'{n} crew',
+      postTitle:'Title', postDetail:'Details', postShip:'Vehicle', postMission:'Mission', postSeats:'Seats', postSeatsPh:'1-9999', postSeatsBad:'Use a number or a range, such as 1 or 1-9999.', postCrew:'Crew', postStanding:'Standing crew', postTemp:'Pickup crew', postServer:'Server', srvAsia:'Asia', srvUs:'US', srvAus:'Australia', srvEu:'Europe', postHours:'Duration', keep15:'15 minutes', keep30:'30 minutes', keep1:'1 hour', keep3:'3 hours', keep6:'6 hours', keep9:'9 hours', keep12:'12 hours', keep24:'24 hours', keep48:'48 hours', keep96:'96 hours', keep168:'168 hours', postSend:'Post', postClear:'Remove', postNone:'Nothing posted yet.', postLimit:'Two posts at a time.', postNeed:'Write a title first.', postPlace:'Place', postAt:'Time', postBy:'From', postLeft:'{t} left', postLeftSoon:'under 1 min left', postDay:'{d}d', postDayHour:'{d}d {h}h', postHour:'{h}h', postHourMin:'{h}h {m}m', postMin:'{m}m', postBringPh:'Ship or seat', postLink:'Link', postSpeech:'Language', speechZh:'Chinese', speechEn:'English', speechOther:'Other', speechAny:'Any', postContact:'Contact', contactNeed:'Choose a contact method and enter a valid account.', contactSpectrum:'Spectrum (recommended)', contactQq:'QQ', contactWechat:'WeChat', contactDiscord:'Discord', contactTelegram:'Telegram', contactKook:'KOOK', contactHeibox:'HeyBox', contactWhatsapp:'WhatsApp', contactMail:'Email', contactPhSpectrum:'Spectrum name', contactPhQq:'QQ number or group invite', contactPhWechat:'WeChat ID', contactPhDiscord:'Invite link or username', contactPhTelegram:'Username or t.me link', contactPhKook:'Invite link, name, or ID', contactPhHeibox:'Invite link, ID, or name', contactPhWhatsapp:'Number or group invite', contactPhMail:'Email address', contactOnline:'{n} online', contactMembers:'{n} members', postCopy:'Copy', roleFreight:'Freight', roleAssault:'Assault', roleMulti:'Multi', roleData:'Data running', roleMerchant:'Merchant', roleMine:'Minelayer', roleBattle:'Battlecruiser', roleTank:'Tank', roleMedical:'Medical', roleCrew:'{n} crew',
       handTitle:'Hand off before leaving', handLead:'Give the captain role to a member, or close the room.', handSolo:'You are the only person here. Leaving closes the room.',
       errNick:'Use a nickname of 1 to 32 characters.', errRoom:'No room with that code.',
       agoNow:'Just now', agoSec:'{n}s ago', agoMin:'{n} min ago', agoHour:'{n} h ago', agoDay:'{n} d ago',
@@ -172,7 +172,7 @@
       chatPh:'Etwas sagen', chatSend:'Senden', chatEmpty:'Erst etwas schreiben.', chatFast:'Zu schnell.',
       hallTab:'Halle', shipTab:'Fahrzeugcrew', jobTab:'Aufträge', roamTab:'Streifzug',
       shipLead:'Besatzung für ein Fahrzeug suchen. Einmalig oder fest.', jobLead:'Einen Auftrag oder ein Treffen ausschreiben und den Bedarf dazu.', roamLead:'Leute zum Herumziehen suchen. Einmalig oder fest.',
-      postTitle:'Titel', postDetail:'Bedarf', postShip:'Fahrzeug', postMission:'Auftrag', postSeats:'Plätze', postSeatsPh:'1-9999', postSeatsBad:'Eine Zahl oder einen Bereich angeben, zum Beispiel 1 oder 1-9999.', postCrew:'Gruppe', postStanding:'Feste Gruppe', postTemp:'Offene Gruppe', postServer:'Server', srvAsia:'Asien', srvUs:'USA', srvAus:'Australien', srvEu:'Europa', postHours:'Dauer', keep15:'15 Minuten', keep30:'30 Minuten', keep1:'1 Stunde', keep3:'3 Stunden', keep6:'6 Stunden', keep9:'9 Stunden', keep12:'12 Stunden', keep24:'24 Stunden', keep48:'48 Stunden', keep96:'96 Stunden', postSend:'Veröffentlichen', postClear:'Zurückziehen', postNone:'Noch nichts ausgeschrieben.', postLimit:'Höchstens zwei gleichzeitig.', postNeed:'Zuerst einen Titel schreiben.', postPlace:'Ort', postAt:'Zeit', postBy:'Von', postLeft:'noch {t}', postLeftSoon:'unter 1 Min', postDay:'{d} T', postDayHour:'{d} T {h} Std', postHour:'{h} Std', postHourMin:'{h} Std {m} Min', postMin:'{m} Min', postBringPh:'Schiff oder Platz', postLink:'Link', postSpeech:'Sprache', speechZh:'Chinesisch', speechEn:'Englisch', speechOther:'Andere', speechAny:'Beliebig', postContact:'Kontakt', contactNeed:'Wähle einen Kontaktweg und gib ein gültiges Konto ein.', contactSpectrum:'Spectrum (empfohlen)', contactQq:'QQ', contactWechat:'WeChat', contactDiscord:'Discord', contactTelegram:'Telegram', contactKook:'KOOK', contactHeibox:'HeyBox', contactWhatsapp:'WhatsApp', contactMail:'E-Mail', contactPhSpectrum:'Spectrum-Name', contactPhQq:'QQ-Nummer', contactPhWechat:'WeChat-ID', contactPhDiscord:'Discord-Name', contactPhTelegram:'Telegram-Name', contactPhKook:'KOOK-Name oder ID', contactPhHeibox:'HeyBox-ID oder Name', contactPhWhatsapp:'Nummer mit Ländervorwahl', contactPhMail:'E-Mail-Adresse', postCopy:'Kopieren', roleFreight:'Fracht', roleAssault:'Sturm', roleMulti:'Mehrzweck', roleData:'Datenlauf', roleMerchant:'Händler', roleMine:'Minenleger', roleBattle:'Schlachtkreuzer', roleTank:'Panzer', roleMedical:'Medizin', roleCrew:'{n} Pers.',
+      postTitle:'Titel', postDetail:'Bedarf', postShip:'Fahrzeug', postMission:'Auftrag', postSeats:'Plätze', postSeatsPh:'1-9999', postSeatsBad:'Eine Zahl oder einen Bereich angeben, zum Beispiel 1 oder 1-9999.', postCrew:'Gruppe', postStanding:'Feste Gruppe', postTemp:'Offene Gruppe', postServer:'Server', srvAsia:'Asien', srvUs:'USA', srvAus:'Australien', srvEu:'Europa', postHours:'Dauer', keep15:'15 Minuten', keep30:'30 Minuten', keep1:'1 Stunde', keep3:'3 Stunden', keep6:'6 Stunden', keep9:'9 Stunden', keep12:'12 Stunden', keep24:'24 Stunden', keep48:'48 Stunden', keep96:'96 Stunden', keep168:'168 Stunden', postSend:'Veröffentlichen', postClear:'Zurückziehen', postNone:'Noch nichts ausgeschrieben.', postLimit:'Höchstens zwei gleichzeitig.', postNeed:'Zuerst einen Titel schreiben.', postPlace:'Ort', postAt:'Zeit', postBy:'Von', postLeft:'noch {t}', postLeftSoon:'unter 1 Min', postDay:'{d} T', postDayHour:'{d} T {h} Std', postHour:'{h} Std', postHourMin:'{h} Std {m} Min', postMin:'{m} Min', postBringPh:'Schiff oder Platz', postLink:'Link', postSpeech:'Sprache', speechZh:'Chinesisch', speechEn:'Englisch', speechOther:'Andere', speechAny:'Beliebig', postContact:'Kontakt', contactNeed:'Wähle einen Kontaktweg und gib ein gültiges Konto ein.', contactSpectrum:'Spectrum (empfohlen)', contactQq:'QQ', contactWechat:'WeChat', contactDiscord:'Discord', contactTelegram:'Telegram', contactKook:'KOOK', contactHeibox:'HeyBox', contactWhatsapp:'WhatsApp', contactMail:'E-Mail', contactPhSpectrum:'Spectrum-Name', contactPhQq:'QQ-Nummer oder Gruppeneinladung', contactPhWechat:'WeChat-ID', contactPhDiscord:'Einladungslink oder Name', contactPhTelegram:'Name oder t.me-Link', contactPhKook:'Einladungslink, Name oder ID', contactPhHeibox:'Einladungslink, ID oder Name', contactPhWhatsapp:'Nummer oder Gruppeneinladung', contactPhMail:'E-Mail-Adresse', contactOnline:'{n} online', contactMembers:'{n} Mitglieder', postCopy:'Kopieren', roleFreight:'Fracht', roleAssault:'Sturm', roleMulti:'Mehrzweck', roleData:'Datenlauf', roleMerchant:'Händler', roleMine:'Minenleger', roleBattle:'Schlachtkreuzer', roleTank:'Panzer', roleMedical:'Medizin', roleCrew:'{n} Pers.',
       handTitle:'Vor dem Gehen übergeben', handLead:'Captain an ein Mitglied geben, oder den Raum schließen.', handSolo:'Du bist allein. Gehen schließt den Raum.',
       errNick:'Nickname mit 1 bis 32 Zeichen.', errRoom:'Diesen Raum gibt es nicht.',
       agoNow:'Gerade', agoSec:'vor {n} s', agoMin:'vor {n} min', agoHour:'vor {n} h', agoDay:'vor {n} d',
@@ -202,7 +202,7 @@
   function savedCode(){ try{ return localStorage.getItem(CODE)||''; }catch(e){ return ''; } }
   var state = null, draft = [], marking = false, note = '', statusMsg = '', selected = '', API = '', entered = false, roomKind = '', linkState = '', linkMiss = 0, linkToast = '', linkToastHold = false, linkTimer = 0, leaving = false, crewQ = '', picking = false, histInfo = {}, histKey = '', pubRooms = null, pubSig = null, pubAt = 0, alertHold = false, alertSeen = {}, alertFlash = null, alertTimer = 0, kickAsk = '', alertDeny = null, castCompose = false, castDraft = '', castErr = '', castIncoming = null, castAudio = null, ctxAt = null, ctxSig = '', recoverDraft = '', recoverFocus = '';
   var hornCompose = false, hornErr = '', hornWhen = '', hornOpen = false, hornSheet = false, hornId = '', hornNag = 0, hornTimer = 0;
-  var plazaOn = false, plazaTab = 'hall', plazaMineOn = false, plazaPeople = [], plazaPosts = [], plazaErr = '', chatLast = 0, chatLines = [], plazaPulling = false;
+  var plazaOn = false, plazaTab = 'hall', plazaMineOn = false, plazaPeople = [], plazaPosts = [], plazaErr = '', plazaFault = '', chatLast = 0, chatLines = [], plazaPulling = false;
   var pendingPost = '', linkedPost = '', linkedOnce = false, plazaPage = false;
   try{
     var plazaQuery = new URLSearchParams(location.search);
@@ -680,6 +680,22 @@
     });
     pullPublic(false);
   }
+  function useHtml(){
+    var steps = [
+      ['home.use_room_h','home.use_room'],
+      ['home.use_map_h','home.use_map'],
+      ['home.use_fix_h','home.use_fix'],
+      ['home.use_log_h','home.use_log'],
+      ['home.use_plaza_h','home.use_plaza'],
+      ['home.use_horn_h','home.use_horn'],
+      ['home.use_route_h','home.use_route'],
+      ['home.use_cast_h','home.use_cast']
+    ];
+    return '<section class="st-home-card st-home-use"><h2>'+esc(ti('home.use_h'))+'</h2><dl>'+
+      steps.map(function(pair){
+        return '<div><dt>'+esc(ti(pair[0]))+'</dt><dd>'+esc(ti(pair[1]))+'</dd></div>';
+      }).join('')+'</dl></section>';
+  }
   function rsiHtml(){
     var lang = (SC.i18n && SC.i18n.getLang) ? SC.i18n.getLang() : 'en';
     var local = lang==='en' ? '' : '<p>'+esc(ti('home.rsi_local'))+'</p>';
@@ -771,6 +787,7 @@
         '<section class="st-home-card" id="stHomeStarfix">'+starfixFactsHtml()+'</section>'+
         '<section class="st-home-card st-home-join"><h2>'+esc(ti('home.join_h'))+'</h2>'+
         '<p><button type="button" id="stPlazaHome" class="st-plaza-entry">'+esc(t('plaza'))+'</button></p>'+roomBody+'</section>'+
+        useHtml()+
         pubHtml();
     var c = el.querySelector('#stRoomCreate'), j = el.querySelector('#stRoomJoin');
     if(c) c.onclick = function(){ act('create'); };
@@ -2298,7 +2315,7 @@
     if(list) list.hidden = true;
     paintShipFit(input);
   }
-  var shipFacts = {}, shipFactsWait = {};
+  var shipFacts = {}, shipFactsWait = {}, inviteCards = {};
   var ROLE_KEY = {Medical:'roleMedical', Freight:'roleFreight', Assault:'roleAssault', Multi:'roleMulti', 'Data Running':'roleData', Merchant:'roleMerchant', Minelayer:'roleMine', Battlecruiser:'roleBattle', Tank:'roleTank'};
   function roleFace(en){
     if(!en) return '';
@@ -2531,13 +2548,13 @@
     }
     return typed;
   }
-  function plazaField(name, key, kind){
+  function plazaField(name, key, kind, extra){
     var cap = '<span data-k="'+key+'"></span>';
     if(kind==='area') return '<label>'+cap+'<textarea name="'+name+'" maxlength="400"></textarea></label>';
     if(kind==='seats') return '<label>'+cap+'<input name="'+name+'" type="text" maxlength="9" data-ph="postSeatsPh" autocomplete="off" spellcheck="false"></label>';
     if(kind==='mission') return '<label>'+cap+'<div class="st-dd st-plaza-dd st-ship-find" data-find="mission"><input name="'+name+'" maxlength="80" autocomplete="off" spellcheck="false"><div class="st-dd-list st-ship-list" hidden></div></div></label>';
     if(kind==='ship') return '<label>'+cap+'<div class="st-dd st-plaza-dd st-ship-find" data-find="ship"><input name="'+name+'" maxlength="80" autocomplete="off" spellcheck="false"><div class="st-dd-list st-ship-list" hidden></div></div><p class="st-ship-fit" hidden></p></label>';
-    if(kind==='contact') return '<label class="st-plaza-contact">'+cap+'<div class="st-dd st-plaza-dd"><button type="button" class="st-dd-btn"><span data-dd-face></span></button><div class="st-dd-list" hidden><button type="button" data-pick="spectrum" data-k="contactSpectrum"></button><button type="button" data-pick="qq" data-k="contactQq"></button><button type="button" data-pick="wechat" data-k="contactWechat"></button><button type="button" data-pick="discord" data-k="contactDiscord"></button><button type="button" data-pick="telegram" data-k="contactTelegram"></button><button type="button" data-pick="kook" data-k="contactKook"></button><button type="button" data-pick="heibox" data-k="contactHeibox"></button><button type="button" data-pick="whatsapp" data-k="contactWhatsapp"></button><button type="button" data-pick="mail" data-k="contactMail"></button></div><input type="hidden" name="contactKind" value="spectrum" data-default="spectrum"></div><input name="contact" maxlength="64" data-ph="contactPhSpectrum" autocomplete="off" spellcheck="false"></label>';
+    if(kind==='contact') return '<label class="st-plaza-contact">'+cap+'<div class="st-dd st-plaza-dd"><button type="button" class="st-dd-btn"><span data-dd-face></span></button><div class="st-dd-list" hidden><button type="button" data-pick="spectrum" data-k="contactSpectrum"></button><button type="button" data-pick="qq" data-k="contactQq"></button><button type="button" data-pick="wechat" data-k="contactWechat"></button><button type="button" data-pick="discord" data-k="contactDiscord"></button><button type="button" data-pick="telegram" data-k="contactTelegram"></button><button type="button" data-pick="kook" data-k="contactKook"></button><button type="button" data-pick="heibox" data-k="contactHeibox"></button><button type="button" data-pick="whatsapp" data-k="contactWhatsapp"></button><button type="button" data-pick="mail" data-k="contactMail"></button></div><input type="hidden" name="contactKind" value="spectrum" data-default="spectrum"></div><input name="contact" maxlength="180" data-ph="contactPhSpectrum" autocomplete="off" spellcheck="false"></label>';
     if(kind==='region' || kind==='crew' || kind==='keep' || kind==='speech'){
       var preset = '';
       var opts = kind==='crew'
@@ -2545,7 +2562,7 @@
         : kind==='speech'
         ? '<button type="button" data-pick="zh" data-k="speechZh"></button><button type="button" data-pick="en" data-k="speechEn"></button><button type="button" data-pick="other" data-k="speechOther"></button><button type="button" data-pick="" data-k="speechAny"></button>'
         : kind==='keep'
-        ? '<button type="button" data-pick="900" data-k="keep15"></button><button type="button" data-pick="1800" data-k="keep30"></button><button type="button" data-pick="3600" data-k="keep1"></button><button type="button" data-pick="10800" data-k="keep3"></button><button type="button" data-pick="21600" data-k="keep6"></button><button type="button" data-pick="32400" data-k="keep9"></button><button type="button" data-pick="43200" data-k="keep12"></button><button type="button" data-pick="86400" data-k="keep24"></button><button type="button" data-pick="172800" data-k="keep48"></button><button type="button" data-pick="345600" data-k="keep96"></button>'
+        ? '<button type="button" data-pick="900" data-k="keep15"></button><button type="button" data-pick="1800" data-k="keep30"></button><button type="button" data-pick="3600" data-k="keep1"></button><button type="button" data-pick="10800" data-k="keep3"></button><button type="button" data-pick="21600" data-k="keep6"></button><button type="button" data-pick="32400" data-k="keep9"></button><button type="button" data-pick="43200" data-k="keep12"></button><button type="button" data-pick="86400" data-k="keep24"></button><button type="button" data-pick="172800" data-k="keep48"></button><button type="button" data-pick="345600" data-k="keep96"></button>'+(extra==='week'?'<button type="button" data-pick="604800" data-k="keep168"></button>':'')
         : '<button type="button" data-pick="asia" data-k="srvAsia"></button><button type="button" data-pick="us" data-k="srvUs"></button><button type="button" data-pick="aus" data-k="srvAus"></button><button type="button" data-pick="eu" data-k="srvEu"></button>';
       if(kind==='keep') preset = '21600';
       return '<label class="st-plaza-srv">'+cap+'<div class="st-dd st-plaza-dd"><button type="button" class="st-dd-btn"><span data-dd-face></span></button><div class="st-dd-list" hidden>'+opts+'</div><input type="hidden" name="'+name+'" value="'+preset+'" data-default="'+preset+'"></div></label>';
@@ -2574,11 +2591,11 @@
             '<form class="st-chat-form" id="stChatForm"><input id="stChatInput" maxlength="240" data-ph="chatPh" autocomplete="off"><button type="submit" data-k="chatSend"></button></form></section>'+
         '</section>'+
         '<section data-pane="ship" class="st-plaza-board" hidden>'+
-          '<form class="st-post-form" data-kind="ship">'+plazaField('title','postTitle')+plazaField('ship','postShip','ship')+plazaField('seats','postSeats','seats')+plazaField('server','postServer','region')+plazaField('keep','postHours','keep')+plazaField('standing','postCrew','crew')+plazaField('speech','postSpeech','speech')+plazaField('contact','postContact','contact')+plazaField('detail','postDetail','area')+'<button type="submit" data-k="postSend"></button></form><div class="st-post-list" data-list="ship"></div></section>'+
+          '<form class="st-post-form" data-kind="ship">'+plazaField('title','postTitle')+plazaField('ship','postShip','ship')+plazaField('seats','postSeats','seats')+plazaField('server','postServer','region')+plazaField('keep','postHours','keep','week')+plazaField('standing','postCrew','crew')+plazaField('speech','postSpeech','speech')+plazaField('contact','postContact','contact')+plazaField('detail','postDetail','area')+'<button type="submit" data-k="postSend"></button></form><div class="st-post-list" data-list="ship"></div></section>'+
         '<section data-pane="job" class="st-plaza-board" hidden>'+
-          '<form class="st-post-form" data-kind="job">'+plazaField('title','postTitle')+plazaField('mission','postMission','mission')+plazaField('seats','postSeats','seats')+plazaField('server','postServer','region')+plazaField('at','postAt','time')+plazaField('keep','postHours','keep')+plazaField('standing','postCrew','crew')+plazaField('speech','postSpeech','speech')+plazaField('contact','postContact','contact')+plazaField('detail','postDetail','area')+'<button type="submit" data-k="postSend"></button></form><div class="st-post-list" data-list="job"></div></section>'+
+          '<form class="st-post-form" data-kind="job">'+plazaField('title','postTitle')+plazaField('mission','postMission','mission')+plazaField('seats','postSeats','seats')+plazaField('server','postServer','region')+plazaField('keep','postHours','keep')+plazaField('standing','postCrew','crew')+plazaField('speech','postSpeech','speech')+plazaField('contact','postContact','contact')+plazaField('detail','postDetail','area')+'<button type="submit" data-k="postSend"></button></form><div class="st-post-list" data-list="job"></div></section>'+
         '<section data-pane="roam" class="st-plaza-board" hidden>'+
-          '<form class="st-post-form" data-kind="roam">'+plazaField('title','postTitle')+plazaField('seats','postSeats','seats')+plazaField('server','postServer','region')+plazaField('at','postAt','time')+plazaField('keep','postHours','keep')+plazaField('standing','postCrew','crew')+plazaField('speech','postSpeech','speech')+plazaField('contact','postContact','contact')+plazaField('detail','postDetail','area')+'<button type="submit" data-k="postSend"></button></form><div class="st-post-list" data-list="roam"></div></section>'+
+          '<form class="st-post-form" data-kind="roam">'+plazaField('title','postTitle')+plazaField('seats','postSeats','seats')+plazaField('server','postServer','region')+plazaField('keep','postHours','keep')+plazaField('standing','postCrew','crew')+plazaField('speech','postSpeech','speech')+plazaField('contact','postContact','contact')+plazaField('detail','postDetail','area')+'<button type="submit" data-k="postSend"></button></form><div class="st-post-list" data-list="roam"></div></section>'+
       '</div>';
   }
   function labelPlaza(el){
@@ -2696,6 +2713,78 @@
       asked[p.ship] = 1;
       loadFacts(p.ship).then(function(){ if(plazaOn) fillPosts(); });
     });
+    fillInvites();
+  }
+  function paintInvite(node, card){
+    var bits = [];
+    if(card && card.name) bits.push(card.name);
+    if(card && card.channel) bits.push(card.channel);
+    if(card && typeof card.online==='number') bits.push(t('contactOnline').replace('{n}', String(card.online)));
+    if(card && typeof card.members==='number') bits.push(t('contactMembers').replace('{n}', String(card.members)));
+    if(!bits.length){ node.hidden = true; node.textContent = ''; return; }
+    node.hidden = false;
+    node.textContent = bits.join(' · ');
+  }
+  function fillInvites(){
+    document.querySelectorAll('.st-invite-meta[data-invite]').forEach(function(node){
+      var kind = node.getAttribute('data-kind')||'';
+      var contact = node.getAttribute('data-invite')||'';
+      var key = kind+' '+contact;
+      if(Object.prototype.hasOwnProperty.call(inviteCards, key)){
+        if(inviteCards[key]) paintInvite(node, inviteCards[key]);
+        return;
+      }
+      inviteCards[key] = null;
+      api('/api/invite?kind='+encodeURIComponent(kind)+'&contact='+encodeURIComponent(contact)).then(function(d){
+        inviteCards[key] = d || {};
+        document.querySelectorAll('.st-invite-meta').forEach(function(n){
+          if((n.getAttribute('data-kind')||'')===kind && (n.getAttribute('data-invite')||'')===contact) paintInvite(n, inviteCards[key]);
+        });
+      }).catch(function(){ inviteCards[key] = {}; });
+    });
+  }
+  function paintFault(el){
+    var err = el.querySelector('.st-plaza-err');
+    var box = null;
+    if(plazaFault==='chat') box = document.getElementById('stChatInput');
+    else if(plazaFault){
+      var form = el.querySelector('.st-post-form[data-kind="'+plazaTab+'"]');
+      box = form && form.elements[plazaFault];
+    }
+    el.querySelectorAll('.is-need').forEach(function(host){
+      var same = box && host=== (box.closest('label') || box.parentElement);
+      if(same) return;
+      host.classList.remove('is-need');
+      host.removeAttribute('data-fault');
+      var old = host.querySelector(':scope > .st-need');
+      if(old) old.remove();
+      host.querySelectorAll('input,textarea').forEach(function(input){ input.style.minHeight = ''; });
+    });
+    if(!box || !plazaErr || !box.offsetParent){
+      if(err) err.textContent = plazaErr || '';
+      return;
+    }
+    var host = box.closest('label') || box.parentElement;
+    var fresh = !host.classList.contains('is-need');
+    host.classList.add('is-need');
+    host.setAttribute('data-fault', plazaFault);
+    var mark = host.querySelector(':scope > .st-need');
+    if(!mark){
+      mark = document.createElement('b');
+      mark.className = 'st-need';
+      host.appendChild(mark);
+    }
+    if(mark.textContent!==plazaErr) mark.textContent = plazaErr;
+    mark.style.left = box.offsetLeft+'px';
+    mark.style.width = box.offsetWidth+'px';
+    mark.style.height = 'auto';
+    mark.style.top = box.offsetTop+'px';
+    var h = Math.max(box.offsetHeight, mark.scrollHeight);
+    box.style.minHeight = h > box.offsetHeight+1 ? h+'px' : '';
+    mark.style.top = box.offsetTop+'px';
+    mark.style.height = box.offsetHeight+'px';
+    if(fresh && host.scrollIntoView) host.scrollIntoView({block:'nearest'});
+    if(err) err.textContent = '';
   }
   function paintPlaza(){
     var el = ensurePlaza();
@@ -2711,8 +2800,7 @@
     if(lead) lead.textContent = t({ship:'shipLead', job:'jobLead', roam:'roamLead'}[plazaTab] || 'plazaLead');
     el.querySelectorAll('[data-plaza]').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-plaza')===plazaTab); });
     el.querySelectorAll('[data-pane]').forEach(function(pane){ pane.hidden = pane.getAttribute('data-pane')!==plazaTab; });
-    var err = el.querySelector('.st-plaza-err');
-    if(err) err.textContent = plazaErr||'';
+    paintFault(el);
     fillPeople();
     fillChat();
     fillPosts();
@@ -2727,6 +2815,14 @@
     el.innerHTML = plazaHtml();
     root().appendChild(el);
     bindFrame(el, {key:PLAZA, minW:480, minH:280, bar:'.st-plaza-head', sheet:true});
+    el.addEventListener('input', function(ev){
+      var node = ev.target;
+      if(!plazaFault || !node) return;
+      if(node.name!==plazaFault && !(plazaFault==='chat' && node.id==='stChatInput')) return;
+      plazaFault = '';
+      plazaErr = '';
+      paintPlaza();
+    });
     el.addEventListener('click', function(ev){
       var node = ev.target && ev.target.nodeType===1 ? ev.target : (ev.target && ev.target.parentElement);
       if(!node || !node.closest) return;
@@ -2765,7 +2861,7 @@
         return;
       }
       var tab = node.closest('[data-plaza]');
-      if(tab && el.contains(tab)){ plazaTab = tab.getAttribute('data-plaza'); plazaErr=''; paintPlaza(); return; }
+      if(tab && el.contains(tab)){ plazaTab = tab.getAttribute('data-plaza'); plazaErr=''; plazaFault=''; paintPlaza(); return; }
       if(node.closest('.st-plaza-x')){
         if(plazaPage){ location.href = location.origin+location.pathname; return; }
         plazaOn = false; el.hidden = true; return;
@@ -2788,12 +2884,12 @@
       if(name==='clear') clearBoard(act.getAttribute('data-id'));
     });
     el.querySelectorAll('[data-plaza]').forEach(function(b){
-      b.onclick = function(ev){ ev.preventDefault(); plazaTab = b.getAttribute('data-plaza'); plazaErr=''; paintPlaza(); };
+      b.onclick = function(ev){ ev.preventDefault(); plazaTab = b.getAttribute('data-plaza'); plazaErr=''; plazaFault=''; paintPlaza(); };
     });
     el.querySelector('#stLobbyOn').onclick = function(){ setLobby(!plazaMineOn); };
     el.querySelector('#stLobbyHere').onclick = function(){
       var place = lobbyPlaceBody();
-      if(!place.code){ plazaErr = t('plazaNeed'); paintPlaza(); return; }
+      if(!place.code){ plazaErr = t('plazaNeed'); plazaFault = ''; paintPlaza(); return; }
       setLobby(true, place);
     };
     el.querySelector('#stChatForm').onsubmit = function(ev){ ev.preventDefault(); sendChat(); };
@@ -2841,18 +2937,21 @@
     var body = place || (on ? lobbyPlaceBody() : {});
     body.on = !!on;
     plazaErr = '';
+    plazaFault = '';
     api('/api/lobby', {method:'POST', body:body}).then(takePlaza).catch(fail);
   }
   function sendChat(){
     var input = document.getElementById('stChatInput');
     var text = input ? input.value.trim() : '';
-    if(!text){ plazaErr = t('chatEmpty'); paintPlaza(); return; }
+    if(!text){ plazaErr = t('chatEmpty'); plazaFault = 'chat'; paintPlaza(); return; }
     plazaErr = '';
+    plazaFault = '';
     api('/api/lobby/chat', {method:'POST', body:{body:text}}).then(function(d){
       if(input) input.value = '';
       takePlaza(d);
     }).catch(function(e){
       plazaErr = e && e.body && e.body.error==='fast' ? t('chatFast') : (e && e.body && e.body.error==='empty' ? t('chatEmpty') : t('errNet'));
+      plazaFault = e && e.body && e.body.error==='empty' ? 'chat' : '';
       paintPlaza();
     });
   }
@@ -2873,11 +2972,76 @@
   function contactPh(kind){
     return {spectrum:'contactPhSpectrum', qq:'contactPhQq', wechat:'contactPhWechat', discord:'contactPhDiscord', telegram:'contactPhTelegram', kook:'contactPhKook', heibox:'contactPhHeibox', whatsapp:'contactPhWhatsapp', mail:'contactPhMail'}[kind] || 'contactPhSpectrum';
   }
+  function contactUrl(raw){
+    var text = String(raw||'').trim();
+    if(!/^https?:\/\//i.test(text) || /\s/.test(text)) return null;
+    try{
+      var url = new URL(text);
+      if(url.username || url.password || url.port) return null;
+      if(url.protocol!=='http:' && url.protocol!=='https:') return null;
+      url.host = url.hostname.toLowerCase().replace(/^www\./, '');
+      return url;
+    }catch(e){ return null; }
+  }
+  function contactPath(url){
+    return url.pathname.split('/').filter(Boolean);
+  }
+  function contactCode(text){
+    return /^[A-Za-z0-9]{4,24}$/.test(text) ? text : '';
+  }
+  function contactLink(kind, raw){
+    var text = String(raw||'').trim();
+    if(kind==='heibox' && /^(?=.*[a-z])(?=.*\d)[a-z0-9]{6,10}$/.test(text)) return 'https://chat.xiaoheihe.cn/'+text;
+    var url = contactUrl(text);
+    if(!url) return null;
+    var host = url.hostname.toLowerCase().replace(/^www\./, '');
+    var seg = contactPath(url);
+    if(kind==='heibox'){
+      if(host==='chat.xiaoheihe.cn' && seg.length===1 && /^[A-Za-z0-9]{4,16}$/.test(seg[0])) return 'https://chat.xiaoheihe.cn/'+seg[0];
+      return '';
+    }
+    if(kind==='kook'){
+      if((host==='kook.top' || host==='kook.vip') && seg.length===1 && /^[A-Za-z0-9]{4,16}$/.test(seg[0])) return 'https://kook.top/'+seg[0];
+      if(host==='kookapp.cn' && seg.length>=2 && seg[seg.length-2]==='invite' && /^[A-Za-z0-9]{4,16}$/.test(seg[seg.length-1])) return 'https://kook.top/'+seg[seg.length-1];
+      return '';
+    }
+    if(kind==='discord'){
+      var code = host==='discord.gg' && seg.length===1 ? seg[0] : ((host==='discord.com' || host==='discordapp.com') && seg.length===2 && seg[0]==='invite' ? seg[1] : '');
+      if(/^(?=.*[A-Za-z0-9])[A-Za-z0-9-]{2,32}$/.test(code)) return 'https://discord.gg/'+code;
+      return '';
+    }
+    if(kind==='qq'){
+      var q = host==='qm.qq.com' && seg[0]==='q' ? seg[1] : '';
+      if(!q && (host==='qm.qq.com' || host==='jq.qq.com')) q = url.searchParams.get('k')||'';
+      return contactCode(q) ? 'https://qm.qq.com/q/'+q : '';
+    }
+    if(kind==='telegram'){
+      if(host!=='t.me' && host!=='telegram.me') return '';
+      if(seg.length===1 && seg[0].charAt(0)==='+'){
+        var plus = seg[0].slice(1);
+        return /^[A-Za-z0-9_-]{8,32}$/.test(plus) ? 'https://t.me/+'+plus : '';
+      }
+      if(seg.length===2 && seg[0]==='joinchat' && /^[A-Za-z0-9_-]{8,32}$/.test(seg[1])) return 'https://t.me/joinchat/'+seg[1];
+      if(seg.length===1 && /^[A-Za-z][A-Za-z0-9_]{4,31}$/.test(seg[0])) return seg[0];
+      return '';
+    }
+    if(kind==='whatsapp'){
+      if(host==='chat.whatsapp.com' && seg.length===1 && /^[A-Za-z0-9]{10,32}$/.test(seg[0])) return 'https://chat.whatsapp.com/'+seg[0];
+      if(host==='wa.me' && seg.length===1) return seg[0].replace(/\D/g, '');
+      if(host==='api.whatsapp.com' && seg[0]==='send') return String(url.searchParams.get('phone')||'').replace(/\D/g, '');
+      return '';
+    }
+    return null;
+  }
   function contactNorm(kind, raw){
     var text = String(raw||'').trim().replace(/\s+/g, ' ');
+    var linked = contactLink(kind, text);
+    if(linked==='') return '';
+    if(linked && linked.indexOf('https://')===0) return linked;
+    if(linked) text = linked;
     if(kind==='telegram' || kind==='discord') text = text.replace(/^@+/, '');
     if(kind==='qq') text = text.replace(/\s+/g, '');
-    if(kind==='whatsapp'){
+    if(kind==='whatsapp' && text.indexOf('https://')!==0){
       var lead = text.trim().charAt(0)==='+' ? '+' : '';
       text = lead + text.replace(/\D/g, '');
     }
@@ -2898,16 +3062,24 @@
     return '';
   }
   function contactHref(kind, value){
+    if(/^https:\/\/(?:chat\.xiaoheihe\.cn|kook\.top|discord\.gg|qm\.qq\.com|t\.me|chat\.whatsapp\.com)\//.test(value)) return value;
     if(kind==='telegram') return 'https://t.me/'+value;
     if(kind==='mail') return 'mailto:'+value;
     if(kind==='whatsapp') return 'https://wa.me/'+String(value).replace(/^\+/, '');
     return '';
   }
+  function contactShown(value){
+    var m = String(value||'').match(/^https:\/\/[^/]+\/(.+)$/);
+    if(!m) return value;
+    try{ return decodeURIComponent(m[1]); }catch(e){ return m[1]; }
+  }
   function contactHtml(p){
     if(!p || !p.contact || !contactFace(p.contactKind)) return '';
     var href = contactHref(p.contactKind, p.contact);
-    var value = href ? '<a href="'+esc(href)+'" target="_blank" rel="noreferrer">'+esc(p.contact)+'</a>' : '<b>'+esc(p.contact)+'</b>';
-    return '<div class="st-post-contact"><span>'+esc(contactFace(p.contactKind))+'</span>'+value+'<button type="button" data-act="copy" data-copy="'+esc(p.contact)+'" data-k="postCopy"></button></div>';
+    var shown = contactShown(p.contact);
+    var value = href ? '<a href="'+esc(href)+'" target="_blank" rel="noreferrer">'+esc(shown)+'</a>' : '<b>'+esc(shown)+'</b>';
+    var meta = href && (p.contactKind==='discord' || p.contactKind==='kook') ? '<em class="st-invite-meta" hidden data-kind="'+esc(p.contactKind)+'" data-invite="'+esc(p.contact)+'"></em>' : '';
+    return '<div class="st-post-contact"><span>'+esc(contactFace(p.contactKind))+'</span>'+value+'<button type="button" data-act="copy" data-copy="'+esc(p.contact)+'" data-k="postCopy"></button>'+meta+'</div>';
   }
   function serverFace(id){
     var key = {asia:'srvAsia', us:'srvUs', aus:'srvAus', eu:'srvEu'}[id];
@@ -2927,24 +3099,22 @@
     var mission = missionSend(form);
     var title = String(formValue(form, 'title')||'').trim();
     if(!title && mission) title = missionShown(mission) || mission;
-    if(!title){ plazaErr = t('postNeed'); paintPlaza(); return; }
+    if(!title){ plazaErr = t('postNeed'); plazaFault = 'title'; paintPlaza(); return; }
     var place = lobbyPlaceBody();
-    var atRaw = formValue(form, 'at');
-    var at = atRaw ? Date.parse(atRaw) : 0;
-    if(atRaw && isNaN(at)){ plazaErr = t('hornTime'); paintPlaza(); return; }
     var seats = seatText(formValue(form, 'seats'));
-    if(seats===null){ plazaErr = t('postSeatsBad'); paintPlaza(); return; }
+    if(seats===null){ plazaErr = t('postSeatsBad'); plazaFault = 'seats'; paintPlaza(); return; }
     var contactKind = formValue(form, 'contactKind') || 'spectrum';
     var contact = contactNorm(contactKind, formValue(form, 'contact'));
-    if(!contact){ plazaErr = t('contactNeed'); paintPlaza(); return; }
+    if(!contact){ plazaErr = t('contactNeed'); plazaFault = 'contact'; paintPlaza(); return; }
     plazaErr = '';
+    plazaFault = '';
     api('/api/board', {method:'POST', body:{
       kind:kind, title:title, detail:formValue(form, 'detail')||'',
       seats:seats, server:formValue(form, 'server')||'', ship:shipSend(form), mission:mission,
       keep:parseInt(formValue(form, 'keep'),10)||0, standing:!!formValue(form, 'standing'),
       speech:formValue(form, 'speech')||'', contactKind:contactKind, contact:contact,
       place:place.code||'', name:place.location||'', system:place.system||'',
-      at: at ? Math.round(at/1000) : 0
+      at: 0
     }}).then(function(d){
       form.reset();
       form.querySelectorAll('[data-canon]').forEach(function(input){ input.removeAttribute('data-canon'); });
@@ -2962,6 +3132,7 @@
     }).catch(function(e){
       var err = e && e.body && e.body.error;
       plazaErr = err==='limit' ? t('postLimit') : err==='title' ? t('postNeed') : err==='seats' ? t('postSeatsBad') : err==='contact' ? t('contactNeed') : t('errNet');
+      plazaFault = err==='title' ? 'title' : err==='seats' ? 'seats' : err==='contact' ? 'contact' : '';
       paintPlaza();
     });
   }
