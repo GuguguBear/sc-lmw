@@ -15,8 +15,8 @@
       s1:'填写昵称。建议用游戏里的名字，方便队长认出你。',
       s2:'队长建立房间，把房间码发给队员。',
       s3:'队员申请加入，队长确认后，大家只看得到这个房间。',
-      nick:'昵称', create:'建立房间', join:'加入房间', code:'房间码',
-      recover:'恢复码', recoverLead:'这组码只给你。换浏览器或清掉网站数据后，用房间码和它接管队长。请另外抄下来。', recoverCopy:'复制恢复码', recoverGo:'接管队长', recoverPh:'ABCD-EFGH-JKLM', errRecover:'恢复码不对。',
+      nick:'昵称', nickPh:'游戏里的名字', create:'建立房间', join:'加入房间', code:'房间码',
+      recover:'恢复码', recoverLead:'这组码只给你。换浏览器或清掉网站数据后，用房间码和它接管队长。请另外抄下来。', recoverCopy:'复制恢复码', recoverRoll:'刷新恢复码', recoverGo:'接管队长', recoverPh:'ABCD-EFGH-JKLM', errRecover:'恢复码不对。',
       wait:'已提交申请，等待队长确认。', copy:'复制房间码', copied:'已复制',
       enter:'进入星图', leave:'离开房间', pending:'待确认', approve:'通过', reject:'拒绝', alertLater:'稍后',
       here:'我在这里', hereNeed:'右键要落在一个地点上。',
@@ -41,7 +41,7 @@
       noPlace:'星图上对不上这个地点。',
       errNet:'房间服务没连上。请在项目目录运行 python server/room_server.py，然后打开 http://127.0.0.1:8770/ 。', published:'已发布的路线', by:'来自',
       yours:'你的房间', switchRoom:'建立或加入别的房间',
-      hist:'最近的房间', histWait:'正在查看', histAlive:'还在', histGone:'已不在', histOnline:'{n} 人', histBack:'返回这个房间',
+      hist:'最近的房间', histWait:'正在查看', histAlive:'还在', histGone:'已不在', histOnline:'{n} 人', histEmpty:'还没有去过的房间', histBack:'返回这个房间',
       visTitle:'对外', visPublic:'公开', visPrivate:'私人', visLead:'公开后，这个房间会出现在首页，别人可以直接进入。',
       visCool:'{n}后可再改', visSec:'{n} 秒', visMin:'{n} 分钟',
       pubTitle:'公开房间', pubEmpty:'现在没有公开房间', pubPeople:'{n} 人',
@@ -61,8 +61,8 @@
       s1:'填寫暱稱。建議用遊戲裡的名字，方便隊長認出你。',
       s2:'隊長建立房間，把房間碼發給隊員。',
       s3:'隊員申請加入，隊長確認後，大家只看得到這個房間。',
-      nick:'暱稱', create:'建立房間', join:'加入房間', code:'房間碼',
-      recover:'恢復碼', recoverLead:'這組碼只給你。換瀏覽器或清掉網站資料後，用房間碼和它接管隊長。請另外抄下來。', recoverCopy:'複製恢復碼', recoverGo:'接管隊長', recoverPh:'ABCD-EFGH-JKLM', errRecover:'恢復碼不對。',
+      nick:'暱稱', nickPh:'遊戲裡的名字', create:'建立房間', join:'加入房間', code:'房間碼',
+      recover:'恢復碼', recoverLead:'這組碼只給你。換瀏覽器或清掉網站資料後，用房間碼和它接管隊長。請另外抄下來。', recoverCopy:'複製恢復碼', recoverRoll:'刷新恢復碼', recoverGo:'接管隊長', recoverPh:'ABCD-EFGH-JKLM', errRecover:'恢復碼不對。',
       wait:'已送出申請，等待隊長確認。', copy:'複製房間碼', copied:'已複製',
       enter:'進入星圖', leave:'離開房間', pending:'待確認', approve:'通過', reject:'拒絕', alertLater:'稍後',
       here:'我在這裡', hereNeed:'右鍵要落在一個地點上。',
@@ -87,7 +87,7 @@
       noPlace:'星圖上對不上這個地點。',
       errNet:'房間服務沒連上。請在專案目錄執行 python server/room_server.py，然後打開 http://127.0.0.1:8770/ 。', published:'已發布的路線', by:'來自',
       yours:'你的房間', switchRoom:'建立或加入別的房間',
-      hist:'最近的房間', histWait:'正在查看', histAlive:'還在', histGone:'已不在', histOnline:'{n} 人', histBack:'返回這個房間',
+      hist:'最近的房間', histWait:'正在查看', histAlive:'還在', histGone:'已不在', histOnline:'{n} 人', histEmpty:'還沒有去過的房間', histBack:'返回這個房間',
       visTitle:'對外', visPublic:'公開', visPrivate:'私人', visLead:'公開後，這個房間會出現在首頁，別人可以直接進入。',
       visCool:'{n}後可再改', visSec:'{n} 秒', visMin:'{n} 分鐘',
       pubTitle:'公開房間', pubEmpty:'現在沒有公開房間', pubPeople:'{n} 人',
@@ -107,8 +107,8 @@
       s1:'Pick a nickname. Your in-game name makes you easy to recognize.',
       s2:'The captain creates a room and shares the code.',
       s3:'Members apply. After the captain accepts, only this room can see each other.',
-      nick:'Nickname', create:'Create room', join:'Join room', code:'Room code',
-      recover:'Recovery code', recoverLead:'This code is only for you. After a new browser or cleared site data, use it with the room code to take the captain role. Copy it somewhere else.', recoverCopy:'Copy recovery code', recoverGo:'Take captain', recoverPh:'ABCD-EFGH-JKLM', errRecover:'That recovery code does not match.',
+      nick:'Nickname', nickPh:'In-game name', create:'Create room', join:'Join room', code:'Room code',
+      recover:'Recovery code', recoverLead:'This code is only for you. After a new browser or cleared site data, use it with the room code to take the captain role. Copy it somewhere else.', recoverCopy:'Copy recovery code', recoverRoll:'New recovery code', recoverGo:'Take captain', recoverPh:'ABCD-EFGH-JKLM', errRecover:'That recovery code does not match.',
       wait:'Request sent. Waiting for the captain.', copy:'Copy code', copied:'Copied',
       enter:'Enter map', leave:'Leave room', pending:'Waiting', approve:'Accept', reject:'Decline', alertLater:'Later',
       here:'I am here', hereNeed:'Right-click a place on the map.',
@@ -133,7 +133,7 @@
       noPlace:'This place is not on the map.',
       errNet:'Room service is not reachable. Run python server/room_server.py and open http://127.0.0.1:8770/ .', published:'Published routes', by:'by',
       yours:'Your room', switchRoom:'Create or join a different room',
-      hist:'Recent rooms', histWait:'Checking', histAlive:'Open', histGone:'Gone', histOnline:'{n} people', histBack:'Back to this room',
+      hist:'Recent rooms', histWait:'Checking', histAlive:'Open', histGone:'Gone', histOnline:'{n} people', histEmpty:'No rooms yet', histBack:'Back to this room',
       visTitle:'Access', visPublic:'Public', visPrivate:'Private', visLead:'A public room is listed on the home page. People can enter directly.',
       visCool:'Change again in {n}', visSec:'{n}s', visMin:'{n} min',
       pubTitle:'Public rooms', pubEmpty:'No public rooms right now', pubPeople:'{n} people',
@@ -153,8 +153,8 @@
       s1:'Nickname eintragen. Der Name aus dem Spiel hilft dem Captain.',
       s2:'Der Captain legt einen Raum an und gibt den Code weiter.',
       s3:'Mitglieder fragen an. Nach dem Ja sieht nur dieser Raum einander.',
-      nick:'Nickname', create:'Raum anlegen', join:'Raum beitreten', code:'Raumcode',
-      recover:'Wiederherstellungscode', recoverLead:'Dieser Code ist nur für dich. Nach einem neuen Browser oder gelöschten Websitedaten übernimmst du damit zusammen mit dem Raumcode den Captain. Kopiere ihn extra.', recoverCopy:'Code kopieren', recoverGo:'Captain übernehmen', recoverPh:'ABCD-EFGH-JKLM', errRecover:'Der Wiederherstellungscode stimmt nicht.',
+      nick:'Nickname', nickPh:'Name im Spiel', create:'Raum anlegen', join:'Raum beitreten', code:'Raumcode',
+      recover:'Wiederherstellungscode', recoverLead:'Dieser Code ist nur für dich. Nach einem neuen Browser oder gelöschten Websitedaten übernimmst du damit zusammen mit dem Raumcode den Captain. Kopiere ihn extra.', recoverCopy:'Code kopieren', recoverRoll:'Code erneuern', recoverGo:'Captain übernehmen', recoverPh:'ABCD-EFGH-JKLM', errRecover:'Der Wiederherstellungscode stimmt nicht.',
       wait:'Anfrage ist raus. Der Captain muss zustimmen.', copy:'Code kopieren', copied:'Kopiert',
       enter:'Zur Karte', leave:'Raum verlassen', pending:'Offen', approve:'Annehmen', reject:'Ablehnen', alertLater:'Später',
       here:'Ich bin hier', hereNeed:'Der Rechtsklick muss auf einem Ort liegen.',
@@ -179,7 +179,7 @@
       noPlace:'Dieser Ort ist nicht auf der Karte.',
       errNet:'Der Raumdienst ist nicht erreichbar. python server/room_server.py starten und http://127.0.0.1:8770/ öffnen.', published:'Veröffentlichte Routen', by:'von',
       yours:'Dein Raum', switchRoom:'Anderen Raum anlegen oder beitreten',
-      hist:'Letzte Räume', histWait:'Prüfung', histAlive:'Offen', histGone:'Weg', histOnline:'{n} Personen', histBack:'Zurück zu diesem Raum',
+      hist:'Letzte Räume', histWait:'Prüfung', histAlive:'Offen', histGone:'Weg', histOnline:'{n} Personen', histEmpty:'Noch keine Räume', histBack:'Zurück zu diesem Raum',
       visTitle:'Zugang', visPublic:'Öffentlich', visPrivate:'Privat', visLead:'Ein öffentlicher Raum steht auf der Startseite. Man kann direkt eintreten.',
       visCool:'Wieder änderbar in {n}', visSec:'{n} s', visMin:'{n} min',
       pubTitle:'Öffentliche Räume', pubEmpty:'Gerade keine öffentlichen Räume', pubPeople:'{n} Personen',
@@ -200,7 +200,7 @@
   function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
   function token(){ try{ return localStorage.getItem(TOKEN)||''; }catch(e){ return ''; } }
   function savedCode(){ try{ return localStorage.getItem(CODE)||''; }catch(e){ return ''; } }
-  var state = null, draft = [], marking = false, note = '', statusMsg = '', selected = '', API = '', entered = false, roomKind = '', linkState = '', linkMiss = 0, linkToast = '', linkToastHold = false, linkTimer = 0, leaving = false, crewQ = '', picking = false, histInfo = {}, histKey = '', pubRooms = null, pubSig = null, pubAt = 0, alertHold = false, alertSeen = {}, alertFlash = null, alertTimer = 0, kickAsk = '', alertDeny = null, castCompose = false, castDraft = '', castErr = '', castIncoming = null, castAudio = null, ctxAt = null, ctxSig = '', recoverDraft = '', recoverFocus = '';
+  var state = null, draft = [], marking = false, note = '', statusMsg = '', selected = '', API = '', entered = false, roomKind = '', linkState = '', linkMiss = 0, linkToast = '', linkToastHold = false, linkTimer = 0, leaving = false, crewQ = '', picking = false, histInfo = {}, histKey = '', pubRooms = null, pubSig = null, pubAt = 0, alertHold = false, alertSeen = {}, alertFlash = null, alertTimer = 0, kickAsk = '', alertDeny = null, castCompose = false, castDraft = '', castErr = '', castIncoming = null, castAudio = null, ctxAt = null, ctxSig = '', recoverDraft = '', recoverFocus = '', newPair = null, previewWait = false, previewUntil = 0, homePane = 'join';
   var hornCompose = false, hornErr = '', hornWhen = '', hornOpen = false, hornSheet = false, hornId = '', hornNag = 0, hornTimer = 0;
   var plazaOn = false, plazaTab = 'hall', plazaMineOn = false, plazaPeople = [], plazaPosts = [], plazaErr = '', plazaFault = '', chatLast = 0, chatLines = [], plazaPulling = false;
   var pendingPost = '', linkedPost = '', linkedOnce = false, plazaPage = false;
@@ -585,12 +585,13 @@
   }
   function histHtml(){
     var list = readHist();
-    if(!list.length) return '';
-    return '<div class="st-home-hist"><h2>'+esc(t('hist'))+'</h2><div class="st-home-hist-list">'+
-      list.map(function(x){
-        var cur = state && state.code===x.code ? ' is-cur' : '';
-        return '<button type="button" class="st-past'+cur+'" data-hist="'+esc(x.code)+'"><b>'+esc(x.code)+'</b><span>'+esc(histLine(x.code))+'</span></button>';
-      }).join('')+'</div></div>';
+    var rows = list.map(function(x){
+      var cur = state && state.code===x.code ? ' is-cur' : '';
+      return '<button type="button" class="st-past'+cur+'" data-hist="'+esc(x.code)+'"><b>'+esc(x.code)+'</b><span>'+esc(histLine(x.code))+'</span></button>';
+    }).join('');
+    return '<div class="st-home-hist">'+
+      (rows ? '<div class="st-home-hist-list">'+rows+'</div>' : '<p>'+esc(t('histEmpty'))+'</p>')+
+      '</div>';
   }
   function pullHist(){
     var list = readHist();
@@ -691,10 +692,10 @@
       ['home.use_route_h','home.use_route'],
       ['home.use_cast_h','home.use_cast']
     ];
-    return '<section class="st-home-card st-home-use"><h2>'+esc(ti('home.use_h'))+'</h2><dl>'+
+    return '<div class="st-home-use"><dl>'+
       steps.map(function(pair){
         return '<div><dt>'+esc(ti(pair[0]))+'</dt><dd>'+esc(ti(pair[1]))+'</dd></div>';
-      }).join('')+'</dl></section>';
+      }).join('')+'</dl></div>';
   }
   function rsiHtml(){
     var lang = (SC.i18n && SC.i18n.getLang) ? SC.i18n.getLang() : 'en';
@@ -769,28 +770,43 @@
           '<p class="st-room-code">'+esc(state.code)+'</p>'+
           recoverHtml('stGateRecover')
         ) : (
-          '<label>'+esc(t('nick'))+'<input id="stRoomNick" maxlength="32" value="'+esc(nick)+'"></label>'+
+          '<label>'+esc(t('nick'))+'<input id="stRoomNick" maxlength="32" value="'+esc(nick)+'" placeholder="'+esc(t('nickPh'))+'"></label>'+
+          '<p class="st-room-dim">'+esc(t('s1'))+'</p>'+
+          '<div class="st-issued"><span>'+esc(t('code'))+'</span><b>'+esc(newPair?newPair.code:'—')+'</b></div>'+
+          '<div class="st-issued"><span>'+esc(t('recover'))+'</span><b>'+esc(newPair?newPair.recover:'—')+'</b>'+
+          '<button type="button" id="stRecoverRoll"'+(previewLeft()?' disabled':'')+'>'+esc(t('recoverRoll'))+'</button>'+
+          (previewLeft() ? '<em data-cool="'+(previewUntil)+'">'+esc(t('visCool').replace('{n}', coolLabel(previewLeft())))+'</em>' : '')+
+          '</div>'+
+          '<div class="row"><button type="button" class="act" id="stRoomCreate">'+esc(t('create'))+'</button></div>'+
           '<label>'+esc(t('code'))+'<input id="stRoomCode" maxlength="9" value="'+esc(pre)+'" placeholder="K7MQ-4R2P"></label>'+
+          '<div class="row"><button type="button" id="stRoomJoin">'+esc(t('join'))+'</button></div>'+
           '<label>'+esc(t('recover'))+'<input id="stRoomRecover" maxlength="14" value="'+esc(recoverDraft)+'" placeholder="'+esc(t('recoverPh'))+'" autocomplete="off"></label>'+
-          '<div class="row"><button type="button" class="act" id="stRoomCreate">'+esc(t('create'))+'</button>'+
-          '<button type="button" id="stRoomJoin">'+esc(t('join'))+'</button>'+
-          '<button type="button" id="stRoomRecoverGo">'+esc(t('recoverGo'))+'</button></div>'+
+          '<div class="row"><button type="button" id="stRoomRecoverGo">'+esc(t('recoverGo'))+'</button></div>'+
           (state && state.status==='member' ? '<button type="button" id="stHistBack" class="st-room-link">'+esc(t('histBack'))+'</button>' : '')
         )+
-        (statusMsg ? '<p class="st-room-err">'+esc(statusMsg)+'</p>' : '')+
-        histHtml();
+        (statusMsg ? '<p class="st-room-err">'+esc(statusMsg)+'</p>' : '');
     var home = mountHome(el, false);
     home.innerHTML =
         '<header class="st-home-hero"><div class="st-home-kicker">SC LMW · '+esc(ti('home.kicker'))+'</div>'+
           '<h1>'+esc(t('title'))+'</h1><p>'+esc(ti('home.lead'))+'</p>'+(SC.fontControlHtml?SC.fontControlHtml():'')+'</header>'+
         rsiHtml()+
         '<section class="st-home-card" id="stHomeStarfix">'+starfixFactsHtml()+'</section>'+
-        '<section class="st-home-card st-home-join"><h2>'+esc(ti('home.join_h'))+'</h2>'+
-        '<p><button type="button" id="stPlazaHome" class="st-plaza-entry">'+esc(t('plaza'))+'</button></p>'+roomBody+'</section>'+
-        useHtml()+
+        '<section class="st-home-card st-home-join">'+
+        '<p><button type="button" id="stPlazaHome" class="st-plaza-entry">'+esc(t('plaza'))+'</button></p>'+
+        '<div class="st-home-tabs">'+
+          '<button type="button" data-home="join"'+(homePane==='join'?' class="on"':'')+'>'+esc(ti('home.join_h'))+'</button>'+
+          '<button type="button" data-home="hist"'+(homePane==='hist'?' class="on"':'')+'>'+esc(t('hist'))+'</button>'+
+          '<button type="button" data-home="use"'+(homePane==='use'?' class="on"':'')+'>'+esc(ti('home.use_h'))+'</button>'+
+        '</div>'+
+        '<div'+(homePane==='join'?'':' hidden')+'>'+roomBody+'</div>'+
+        '<div'+(homePane==='hist'?'':' hidden')+'>'+histHtml()+'</div>'+
+        '<div'+(homePane==='use'?'':' hidden')+'>'+useHtml()+'</div></section>'+
         pubHtml();
     var c = el.querySelector('#stRoomCreate'), j = el.querySelector('#stRoomJoin');
     if(c) c.onclick = function(){ act('create'); };
+    var roll = el.querySelector('#stRecoverRoll');
+    if(roll) roll.onclick = rollPreview;
+    ensurePreview();
     if(j) j.onclick = function(){ act('join'); };
     var recIn = el.querySelector('#stRoomRecover');
     if(recIn) recIn.oninput = function(){ recoverDraft = recIn.value; };
@@ -812,6 +828,13 @@
     var back = el.querySelector('#stHistBack');
     if(back) back.onclick = function(){ picking = false; statusMsg = ''; paint(); };
     bindHist(el);
+    el.querySelectorAll('[data-home]').forEach(function(b){
+      b.onclick = function(){
+        var next = b.getAttribute('data-home');
+        homePane = next==='hist' || next==='use' ? next : 'join';
+        paint();
+      };
+    });
     bindOpen(el);
     bindPub(el);
     var plazaHome = el.querySelector('#stPlazaHome');
@@ -1198,7 +1221,7 @@
   function rememberNick(n){ try{ localStorage.setItem(NICK, n); }catch(e){} }
   function recoverHtml(where){
     if(state && state.role==='captain' && state.status==='member' && state.recover){
-      return '<div class="st-recover"><span>'+esc(t('recoverLead'))+'</span><b>'+esc(state.recover)+'</b><button type="button" id="'+where+'Copy">'+esc(t('recoverCopy'))+'</button></div>';
+      return '<div class="st-recover"><span>'+esc(t('recoverLead'))+'</span><b>'+esc(state.recover)+'</b><button type="button" id="'+where+'Copy">'+esc(t('recoverCopy'))+'</button><button type="button" id="'+where+'Roll"'+(recoverLeft()?' disabled':'')+'>'+esc(t('recoverRoll'))+'</button>'+(recoverLeft()?'<em data-cool="'+state.recoverUntil+'">'+esc(t('visCool').replace('{n}', coolLabel(recoverLeft())))+'</em>':'')+'</div>';
     }
     if(!state || state.role==='captain') return '';
     return '<div class="st-recover"><span>'+esc(t('recover'))+'</span><input id="'+where+'In" maxlength="14" value="'+esc(recoverDraft)+'" placeholder="'+esc(t('recoverPh'))+'" autocomplete="off"><button type="button" id="'+where+'Go">'+esc(t('recoverGo'))+'</button></div>';
@@ -1220,6 +1243,8 @@
       var code = (state && state.code) || '';
       reclaimFrom(nick, code, input ? input.value : recoverDraft);
     };
+    var roll = rootEl.querySelector('#'+where+'Roll');
+    if(roll) roll.onclick = rollRecover;
   }
   function reclaimFrom(nick, code, secret){
     nick = String(nick || '').trim();
@@ -1271,6 +1296,46 @@
       return api('/api/rooms/'+encodeURIComponent(code)+'/join', {method:'POST', body:{}});
     }).then(function(st){ if(st){ picking = false; take(st); } }).catch(fail);
   }
+  function previewLeft(){
+    return Math.max(0, Math.ceil((previewUntil - Date.now()) / 1000));
+  }
+  function recoverLeft(){
+    if(!state || !state.recoverUntil) return 0;
+    return Math.max(0, Math.ceil((state.recoverUntil - Date.now()) / 1000));
+  }
+  function ensurePreview(){
+    if(newPair || previewWait) return;
+    var nick = nickValue() || savedNick();
+    if(!nick) return;
+    previewWait = true;
+    var start = token() ? Promise.resolve() : api('/api/session', {method:'POST', body:{nickname:nick}}).then(function(s){
+      try{ localStorage.setItem(TOKEN, s.token); }catch(e){}
+    });
+    start.then(function(){
+      return api('/api/rooms/preview', {method:'POST', body:{}});
+    }).then(function(d){
+      previewWait = false;
+      if(d && d.code && d.recover && d.sig){ newPair = d; paint(); }
+    }).catch(function(){ previewWait = false; });
+  }
+  function rollPreview(){
+    if(!newPair || previewLeft()>0) return;
+    api('/api/rooms/preview', {method:'POST', body:{refresh:true, code:newPair.code, recover:newPair.recover, sig:newPair.sig}}).then(function(d){
+      if(d && d.code && d.recover && d.sig){
+        newPair = d;
+        previewUntil = Date.now()+30000;
+        paint();
+      }
+    }).catch(function(e){
+      var wait = e && e.body && e.body.wait || 30;
+      if(e && e.body && e.body.error==='cooldown') previewUntil = Date.now()+wait*1000;
+      paint();
+    });
+  }
+  function rollRecover(){
+    if(!state || state.role!=='captain' || !state.code || recoverLeft()>0) return;
+    api('/api/rooms/'+encodeURIComponent(state.code)+'/recover/roll', {method:'POST', body:{}}).then(take).catch(fail);
+  }
   function act(kind){
     var nick = nickValue();
     if(!nick || nick.length>32){ statusMsg=t('errNick'); paint(); return; }
@@ -1279,11 +1344,11 @@
     rememberNick(nick);
     api('/api/session', {method:'POST', body:{nickname:nick}}).then(function(s){
       try{ localStorage.setItem(TOKEN, s.token); }catch(e){}
-      if(kind==='create') return api('/api/rooms', {method:'POST', body:{}});
+      if(kind==='create') return api('/api/rooms', {method:'POST', body: newPair ? {code:newPair.code, recover:newPair.recover, sig:newPair.sig} : {}});
       var code = codeValue();
       if(!code){ statusMsg=t('errRoom'); paint(); return null; }
       return api('/api/rooms/'+encodeURIComponent(code)+'/join', {method:'POST', body:{}});
-    }).then(function(st){ if(st){ picking = false; take(st); } }).catch(fail);
+    }).then(function(st){ if(st){ if(kind==='create') newPair = null; picking = false; take(st); } }).catch(fail);
   }
 
   var mapArming = false;
@@ -1320,6 +1385,7 @@
   function take(st){
     var prevCode = state && state.code;
     if(st && typeof st.openWait==='number') st.openUntil = Date.now()+st.openWait*1000;
+    if(st && typeof st.recoverWait==='number') st.recoverUntil = Date.now()+st.recoverWait*1000;
     state = st;
     statusMsg = '';
     if(st && st.code && st.code!==prevCode) rememberHist(st.code);
@@ -1335,7 +1401,9 @@
     if(e && e.body && e.body.error==='room') statusMsg = t('errRoom');
     else if(e && e.body && e.body.error==='cooldown'){
       var wait = e.body.wait||0;
-      if(state) state.openUntil = Date.now()+wait*1000;
+      if(e.body.what==='recover'){
+        if(state) state.recoverUntil = Date.now()+wait*1000;
+      } else if(state) state.openUntil = Date.now()+wait*1000;
       statusMsg = t('visCool').replace('{n}', coolLabel(wait));
     }
     else if(e && e.body && e.body.error==='recover') statusMsg = t('errRecover');

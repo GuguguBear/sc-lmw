@@ -9,6 +9,8 @@
 #   people on the same network open http://<this-computer>:8770/
 
 import argparse
+import hashlib
+import hmac
 import json
 import os
 import re
@@ -28,6 +30,9 @@ DB = Path(__file__).resolve().parent / "rooms.sqlite"
 HOST = "127.0.0.1"
 PORT = 8770
 ALPH = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
+ROLL_S = 30
+SIGN_KEY = secrets.token_bytes(32)
+PREVIEW_ROLL = {}
 # These stay on disk for local builds. The room site must not hand them out.
 BLOCK_DIR = {"language", ".cache", ".git", ".test", "__pycache__", "server", "companion"}
 BLOCK_EXT = {".sqlite", ".ini", ".pyc", ".spec"}
@@ -219,6 +224,8 @@ def init_db():
             con.execute("ALTER TABLE room ADD COLUMN open_at REAL NOT NULL DEFAULT 0")
         if "recover" not in room_cols:
             con.execute("ALTER TABLE room ADD COLUMN recover TEXT")
+        if "recover_at" not in room_cols:
+            con.execute("ALTER TABLE room ADD COLUMN recover_at REAL NOT NULL DEFAULT 0")
         board_cols = {row[1] for row in con.execute("PRAGMA table_info(board)")}
         if "mission" not in board_cols:
             con.execute("ALTER TABLE board ADD COLUMN mission TEXT")
@@ -574,6 +581,14 @@ def new_recover():
     return raw[:4] + "-" + raw[4:8] + "-" + raw[8:]
 
 
+def clean_code(raw):
+    chars = [ch for ch in str(raw or "").upper() if ch in ALPH]
+    if len(chars) != 8:
+        return ""
+    raw = "".join(chars)
+    return raw[:4] + "-" + raw[4:]
+
+
 def clean_recover(raw):
     chars = [ch for ch in str(raw or "").upper() if ch in ALPH]
     if len(chars) != 12:
@@ -633,6 +648,34 @@ def settle_room(con, code):
         return True
     wipe_room(con, code)
     return False
+
+
+def roll_left(stamp):
+    try:
+        stamp = float(stamp or 0)
+    except (TypeError, ValueError):
+        return 0
+    if stamp <= 0:
+        return 0
+    left = int(stamp + ROLL_S - now() + 0.999)
+    return left if left > 0 else 0
+
+
+def pair_sig(code, recover):
+    return hmac.new(SIGN_KEY, (code + "\n" + recover).encode("utf-8"), hashlib.sha256).hexdigest()
+
+
+def pair_ok(code, recover, sig):
+    if not code or not recover or not sig:
+        return False
+    return secrets.compare_digest(pair_sig(code, recover), str(sig))
+
+
+def issue_pair(con, code=""):
+    if not code or con.execute("SELECT 1 FROM room WHERE code=?", (code,)).fetchone():
+        code = new_code(con)
+    recover = new_recover()
+    return {"code": code, "recover": recover, "sig": pair_sig(code, recover)}
 
 
 def ensure_recover(con, room):
@@ -1313,6 +1356,7 @@ def room_state(con, code, me):
         "routeMode": room["route_mode"],
         "open": room_is_open(room),
         "openWait": open_wait(room),
+        "recoverWait": roll_left(room["recover_at"]) if "recover_at" in room.keys() else 0,
         "members": members,
         "routes": routes,
         "cast": latest_cast(con, code),
@@ -1636,13 +1680,41 @@ class Handler(BaseHTTPRequestHandler):
                         codes.append(code)
                 self.send_json(200, {"rooms": [room_brief(con, code) for code in codes]})
                 return
+            if parts == ["api", "rooms", "preview"]:
+                given = body if isinstance(body, dict) else {}
+                code = clean_code(given.get("code"))
+                recover = clean_recover(given.get("recover"))
+                if given.get("refresh"):
+                    if not pair_ok(code, recover, given.get("sig")):
+                        self.send_json(400, {"error": "code"})
+                        return
+                    left = roll_left(PREVIEW_ROLL.get(me["id"]))
+                    if left:
+                        self.send_json(429, {"error": "cooldown", "wait": left, "what": "recover"})
+                        return
+                    PREVIEW_ROLL[me["id"]] = now()
+                    self.send_json(200, issue_pair(con, code))
+                    return
+                self.send_json(200, issue_pair(con, ""))
+                return
             if parts == ["api", "rooms"]:
                 release_other_rooms(con, me)
-                code = new_code(con)
+                given = body if isinstance(body, dict) else {}
+                code = clean_code(given.get("code"))
+                recover = clean_recover(given.get("recover"))
+                if (
+                    not pair_ok(code, recover, given.get("sig"))
+                    or con.execute("SELECT 1 FROM room WHERE code=?", (code,)).fetchone()
+                ):
+                    code = new_code(con)
+                    recover = new_recover()
                 stamp = now()
+                rolled = PREVIEW_ROLL.get(me["id"]) or 0
+                if roll_left(rolled) <= 0:
+                    rolled = 0
                 con.execute(
-                    "INSERT INTO room (code, captain, route_mode, created, recover) VALUES (?,?,?,?,?)",
-                    (code, me["id"], "captain", stamp, new_recover()),
+                    "INSERT INTO room (code, captain, route_mode, created, recover, recover_at) VALUES (?,?,?,?,?,?)",
+                    (code, me["id"], "captain", stamp, recover, rolled),
                 )
                 con.execute(
                     "INSERT INTO membership (room, member, status, created, touched) VALUES (?,?,?,?,?)",
@@ -1673,6 +1745,29 @@ class Handler(BaseHTTPRequestHandler):
                       status=excluded.status, touched=excluded.touched
                     """,
                     (code, me["id"], status, stamp, stamp),
+                )
+                self.send_json(200, room_state(con, code, me))
+                return
+            if len(parts) == 5 and parts[:2] == ["api", "rooms"] and parts[3:] == ["recover", "roll"]:
+                code = parts[2].upper()
+                if not settle_room(con, code):
+                    self.send_json(404, {"error": "room"})
+                    return
+                room = con.execute("SELECT * FROM room WHERE code=?", (code,)).fetchone()
+                ship = con.execute(
+                    "SELECT status FROM membership WHERE room=? AND member=?",
+                    (code, me["id"]),
+                ).fetchone()
+                if not room or not ship or ship["status"] != "member" or room["captain"] != me["id"]:
+                    self.send_json(403, {"error": "forbidden"})
+                    return
+                left = roll_left(room["recover_at"] if "recover_at" in room.keys() else 0)
+                if left:
+                    self.send_json(429, {"error": "cooldown", "wait": left, "what": "recover"})
+                    return
+                con.execute(
+                    "UPDATE room SET recover=?, recover_at=? WHERE code=?",
+                    (new_recover(), now(), code),
                 )
                 self.send_json(200, room_state(con, code, me))
                 return
