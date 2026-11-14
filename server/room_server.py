@@ -1076,7 +1076,7 @@ def add_board(con, me, body):
         "SELECT COUNT(*) AS n FROM board WHERE member=? AND expires>?",
         (me["id"], now()),
     ).fetchone()["n"]
-    if int(n) >= 2:
+    if int(n) >= 9:
         return "limit"
     standing = 1 if body.get("standing") in (True, 1, "1") else 0
     sweep_board(con)

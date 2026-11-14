@@ -34,7 +34,7 @@
       chatPh:'说一句', chatSend:'发送', chatEmpty:'先写一点内容。', chatFast:'说得太快了。',
       hallTab:'大厅', shipTab:'载具招募', jobTab:'任务招募', roamTab:'闲游招募',
       shipLead:'给自己的载具找队员。可以是散人队伍，也可以是固定队伍。', jobLead:'发布一项任务或一场活动，把需求写清楚。', roamLead:'找人一起闲逛。可以是散人队伍，也可以是固定队伍。',
-      postTitle:'标题', postDetail:'需求', postShip:'载具', postMission:'任务', postSeats:'人数', postSeatsPh:'1-9999', postSeatsBad:'人数写成 1，或 1-9999 这样的范围。', postCrew:'队伍', postStanding:'固定队伍', postTemp:'散人队伍', postServer:'服务器', srvAsia:'亚服', srvUs:'美服', srvAus:'澳服', srvEu:'欧服', postHours:'持续招募', keep15:'15分钟', keep30:'30分钟', keep1:'1小时', keep3:'3小时', keep6:'6小时', keep9:'9小时', keep12:'12小时', keep24:'24小时', keep48:'48小时', keep96:'96小时', keep168:'168小时', postSend:'发布', postClear:'撤下', postNone:'还没有人发布。', postLimit:'每人最多同时挂两条。', postNeed:'先写标题。', postPlace:'地点', postAt:'时间', postBy:'来自', postLeft:'剩余 {t}', postLeftSoon:'剩余不到1分钟', postDay:'{d}天', postDayHour:'{d}天{h}小时', postHour:'{h}小时', postHourMin:'{h}小时{m}分', postMin:'{m}分钟', postBringPh:'我带的船或岗位', postLink:'链接', postSpeech:'语言', speechZh:'中文', speechEn:'英文', speechOther:'其他', speechAny:'不限', postContact:'联系方式', contactNeed:'先选择联系方式，并填写有效账号。', contactSpectrum:'光谱（推荐）', contactQq:'QQ', contactWechat:'微信', contactDiscord:'Discord', contactTelegram:'Telegram', contactKook:'KOOK', contactHeibox:'黑盒语音', contactWhatsapp:'WhatsApp', contactMail:'邮箱', contactPhSpectrum:'光谱用户名', contactPhQq:'QQ号或群邀请链接', contactPhWechat:'微信号', contactPhDiscord:'邀请链接或用户名', contactPhTelegram:'用户名或 t.me 链接', contactPhKook:'邀请链接、用户名或编号', contactPhHeibox:'邀请链接、编号或昵称', contactPhWhatsapp:'号码或群邀请链接', contactPhMail:'邮箱地址', contactOnline:'{n} 在线', contactMembers:'{n} 人', postCopy:'复制', roleFreight:'货运', roleAssault:'突击', roleMulti:'多用途', roleData:'数据运输', roleMerchant:'商船', roleMine:'布雷', roleBattle:'战列巡洋舰', roleTank:'坦克', roleMedical:'医疗', roleCrew:'{n}人',
+      postTitle:'标题', postDetail:'需求', postShip:'载具', postMission:'任务', postSeats:'人数', postSeatsPh:'1-9999', postSeatsBad:'人数写成 1，或 1-9999 这样的范围。', postCrew:'队伍', postStanding:'固定队伍', postTemp:'散人队伍', postServer:'服务器', srvAsia:'亚服', srvUs:'美服', srvAus:'澳服', srvEu:'欧服', postHours:'持续招募', keep15:'15分钟', keep30:'30分钟', keep1:'1小时', keep3:'3小时', keep6:'6小时', keep9:'9小时', keep12:'12小时', keep24:'24小时', keep48:'48小时', keep96:'96小时', keep168:'168小时', postSend:'发布', postClear:'撤下', postNone:'还没有人发布。', postLimit:'每人最多同时挂九条。', postNeed:'先写标题。', postPlace:'地点', postAt:'时间', postBy:'来自', postLeft:'剩余 {t}', postLeftSoon:'剩余不到1分钟', postDay:'{d}天', postDayHour:'{d}天{h}小时', postHour:'{h}小时', postHourMin:'{h}小时{m}分', postMin:'{m}分钟', postBringPh:'我带的船或岗位', postLink:'链接', postSpeech:'语言', speechZh:'中文', speechEn:'英文', speechOther:'其他', speechAny:'不限', postContact:'联系方式', contactNeed:'先选择联系方式，并填写有效账号。', contactSpectrum:'光谱（推荐）', contactQq:'QQ', contactWechat:'微信', contactDiscord:'Discord', contactTelegram:'Telegram', contactKook:'KOOK', contactHeibox:'黑盒语音', contactWhatsapp:'WhatsApp', contactMail:'邮箱', contactPhSpectrum:'光谱用户名', contactPhQq:'QQ号或群邀请链接', contactPhWechat:'微信号', contactPhDiscord:'邀请链接或用户名', contactPhTelegram:'用户名或 t.me 链接', contactPhKook:'邀请链接、用户名或编号', contactPhHeibox:'邀请链接、编号或昵称', contactPhWhatsapp:'号码或群邀请链接', contactPhMail:'邮箱地址', contactOnline:'{n} 在线', contactMembers:'{n} 人', postCopy:'复制', roleFreight:'货运', roleAssault:'突击', roleMulti:'多用途', roleData:'数据运输', roleMerchant:'商船', roleMine:'布雷', roleBattle:'战列巡洋舰', roleTank:'坦克', roleMedical:'医疗', roleCrew:'{n}人',
       handTitle:'离开前先交接', handLead:'把队长交给一位队员，或解散房间。', handSolo:'房间里只有你。离开会解散这个房间。',
       errNick:'请填写 1 到 32 个字的昵称。', errRoom:'没有这个房间。',
       agoNow:'刚刚', agoSec:'{n} 秒前', agoMin:'{n} 分钟前', agoHour:'{n} 小时前', agoDay:'{n} 天前',
@@ -80,7 +80,7 @@
       chatPh:'說一句', chatSend:'發送', chatEmpty:'先寫一點內容。', chatFast:'說得太快了。',
       hallTab:'大廳', shipTab:'載具招募', jobTab:'任務招募', roamTab:'閒遊招募',
       shipLead:'給自己的載具找隊員。可以是散人隊伍，也可以是固定隊伍。', jobLead:'發布一項任務或一場活動，把需求寫清楚。', roamLead:'找人一起閒逛。可以是散人隊伍，也可以是固定隊伍。',
-      postTitle:'標題', postDetail:'需求', postShip:'載具', postMission:'任務', postSeats:'人數', postSeatsPh:'1-9999', postSeatsBad:'人數寫成 1，或 1-9999 這樣的範圍。', postCrew:'隊伍', postStanding:'固定隊伍', postTemp:'散人隊伍', postServer:'伺服器', srvAsia:'亞服', srvUs:'美服', srvAus:'澳服', srvEu:'歐服', postHours:'持續招募', keep15:'15分鐘', keep30:'30分鐘', keep1:'1小時', keep3:'3小時', keep6:'6小時', keep9:'9小時', keep12:'12小時', keep24:'24小時', keep48:'48小時', keep96:'96小時', keep168:'168小時', postSend:'發布', postClear:'撤下', postNone:'還沒有人發布。', postLimit:'每人最多同時掛兩條。', postNeed:'先寫標題。', postPlace:'地點', postAt:'時間', postBy:'來自', postLeft:'剩餘 {t}', postLeftSoon:'剩餘不到1分鐘', postDay:'{d}天', postDayHour:'{d}天{h}小時', postHour:'{h}小時', postHourMin:'{h}小時{m}分', postMin:'{m}分鐘', postBringPh:'我帶的船或崗位', postLink:'連結', postSpeech:'語言', speechZh:'中文', speechEn:'英文', speechOther:'其他', speechAny:'不限', postContact:'聯繫方式', contactNeed:'先選擇聯繫方式，並填寫有效帳號。', contactSpectrum:'光譜（推薦）', contactQq:'QQ', contactWechat:'微信', contactDiscord:'Discord', contactTelegram:'Telegram', contactKook:'KOOK', contactHeibox:'黑盒語音', contactWhatsapp:'WhatsApp', contactMail:'郵箱', contactPhSpectrum:'光譜用戶名', contactPhQq:'QQ號或群邀請連結', contactPhWechat:'微信號', contactPhDiscord:'邀請連結或用戶名', contactPhTelegram:'用戶名或 t.me 連結', contactPhKook:'邀請連結、用戶名或編號', contactPhHeibox:'邀請連結、編號或暱稱', contactPhWhatsapp:'號碼或群邀請連結', contactPhMail:'郵箱地址', contactOnline:'{n} 在線', contactMembers:'{n} 人', postCopy:'複製', roleFreight:'貨運', roleAssault:'突擊', roleMulti:'多用途', roleData:'數據運輸', roleMerchant:'商船', roleMine:'佈雷', roleBattle:'戰列巡洋艦', roleTank:'坦克', roleMedical:'醫療', roleCrew:'{n}人',
+      postTitle:'標題', postDetail:'需求', postShip:'載具', postMission:'任務', postSeats:'人數', postSeatsPh:'1-9999', postSeatsBad:'人數寫成 1，或 1-9999 這樣的範圍。', postCrew:'隊伍', postStanding:'固定隊伍', postTemp:'散人隊伍', postServer:'伺服器', srvAsia:'亞服', srvUs:'美服', srvAus:'澳服', srvEu:'歐服', postHours:'持續招募', keep15:'15分鐘', keep30:'30分鐘', keep1:'1小時', keep3:'3小時', keep6:'6小時', keep9:'9小時', keep12:'12小時', keep24:'24小時', keep48:'48小時', keep96:'96小時', keep168:'168小時', postSend:'發布', postClear:'撤下', postNone:'還沒有人發布。', postLimit:'每人最多同時掛九條。', postNeed:'先寫標題。', postPlace:'地點', postAt:'時間', postBy:'來自', postLeft:'剩餘 {t}', postLeftSoon:'剩餘不到1分鐘', postDay:'{d}天', postDayHour:'{d}天{h}小時', postHour:'{h}小時', postHourMin:'{h}小時{m}分', postMin:'{m}分鐘', postBringPh:'我帶的船或崗位', postLink:'連結', postSpeech:'語言', speechZh:'中文', speechEn:'英文', speechOther:'其他', speechAny:'不限', postContact:'聯繫方式', contactNeed:'先選擇聯繫方式，並填寫有效帳號。', contactSpectrum:'光譜（推薦）', contactQq:'QQ', contactWechat:'微信', contactDiscord:'Discord', contactTelegram:'Telegram', contactKook:'KOOK', contactHeibox:'黑盒語音', contactWhatsapp:'WhatsApp', contactMail:'郵箱', contactPhSpectrum:'光譜用戶名', contactPhQq:'QQ號或群邀請連結', contactPhWechat:'微信號', contactPhDiscord:'邀請連結或用戶名', contactPhTelegram:'用戶名或 t.me 連結', contactPhKook:'邀請連結、用戶名或編號', contactPhHeibox:'邀請連結、編號或暱稱', contactPhWhatsapp:'號碼或群邀請連結', contactPhMail:'郵箱地址', contactOnline:'{n} 在線', contactMembers:'{n} 人', postCopy:'複製', roleFreight:'貨運', roleAssault:'突擊', roleMulti:'多用途', roleData:'數據運輸', roleMerchant:'商船', roleMine:'佈雷', roleBattle:'戰列巡洋艦', roleTank:'坦克', roleMedical:'醫療', roleCrew:'{n}人',
       handTitle:'離開前先交接', handLead:'把隊長交給一位隊員，或解散房間。', handSolo:'房間裡只有你。離開會解散這個房間。',
       errNick:'請填寫 1 到 32 個字的暱稱。', errRoom:'沒有這個房間。',
       agoNow:'剛剛', agoSec:'{n} 秒前', agoMin:'{n} 分鐘前', agoHour:'{n} 小時前', agoDay:'{n} 天前',
@@ -126,7 +126,7 @@
       chatPh:'Say something', chatSend:'Send', chatEmpty:'Write something first.', chatFast:'Too fast.',
       hallTab:'Lobby', shipTab:'Vehicle crew', jobTab:'Missions', roamTab:'Roaming',
       shipLead:'Find crew for your vehicle. It can be a one-off or a standing crew.', jobLead:'Post a mission or an event and write what you need.', roamLead:'Find people to roam with. One-off or a standing group.',
-      postTitle:'Title', postDetail:'Details', postShip:'Vehicle', postMission:'Mission', postSeats:'Seats', postSeatsPh:'1-9999', postSeatsBad:'Use a number or a range, such as 1 or 1-9999.', postCrew:'Crew', postStanding:'Standing crew', postTemp:'Pickup crew', postServer:'Server', srvAsia:'Asia', srvUs:'US', srvAus:'Australia', srvEu:'Europe', postHours:'Duration', keep15:'15 minutes', keep30:'30 minutes', keep1:'1 hour', keep3:'3 hours', keep6:'6 hours', keep9:'9 hours', keep12:'12 hours', keep24:'24 hours', keep48:'48 hours', keep96:'96 hours', keep168:'168 hours', postSend:'Post', postClear:'Remove', postNone:'Nothing posted yet.', postLimit:'Two posts at a time.', postNeed:'Write a title first.', postPlace:'Place', postAt:'Time', postBy:'From', postLeft:'{t} left', postLeftSoon:'under 1 min left', postDay:'{d}d', postDayHour:'{d}d {h}h', postHour:'{h}h', postHourMin:'{h}h {m}m', postMin:'{m}m', postBringPh:'Ship or seat', postLink:'Link', postSpeech:'Language', speechZh:'Chinese', speechEn:'English', speechOther:'Other', speechAny:'Any', postContact:'Contact', contactNeed:'Choose a contact method and enter a valid account.', contactSpectrum:'Spectrum (recommended)', contactQq:'QQ', contactWechat:'WeChat', contactDiscord:'Discord', contactTelegram:'Telegram', contactKook:'KOOK', contactHeibox:'HeyBox', contactWhatsapp:'WhatsApp', contactMail:'Email', contactPhSpectrum:'Spectrum name', contactPhQq:'QQ number or group invite', contactPhWechat:'WeChat ID', contactPhDiscord:'Invite link or username', contactPhTelegram:'Username or t.me link', contactPhKook:'Invite link, name, or ID', contactPhHeibox:'Invite link, ID, or name', contactPhWhatsapp:'Number or group invite', contactPhMail:'Email address', contactOnline:'{n} online', contactMembers:'{n} members', postCopy:'Copy', roleFreight:'Freight', roleAssault:'Assault', roleMulti:'Multi', roleData:'Data running', roleMerchant:'Merchant', roleMine:'Minelayer', roleBattle:'Battlecruiser', roleTank:'Tank', roleMedical:'Medical', roleCrew:'{n} crew',
+      postTitle:'Title', postDetail:'Details', postShip:'Vehicle', postMission:'Mission', postSeats:'Seats', postSeatsPh:'1-9999', postSeatsBad:'Use a number or a range, such as 1 or 1-9999.', postCrew:'Crew', postStanding:'Standing crew', postTemp:'Pickup crew', postServer:'Server', srvAsia:'Asia', srvUs:'US', srvAus:'Australia', srvEu:'Europe', postHours:'Duration', keep15:'15 minutes', keep30:'30 minutes', keep1:'1 hour', keep3:'3 hours', keep6:'6 hours', keep9:'9 hours', keep12:'12 hours', keep24:'24 hours', keep48:'48 hours', keep96:'96 hours', keep168:'168 hours', postSend:'Post', postClear:'Remove', postNone:'Nothing posted yet.', postLimit:'Nine posts at a time.', postNeed:'Write a title first.', postPlace:'Place', postAt:'Time', postBy:'From', postLeft:'{t} left', postLeftSoon:'under 1 min left', postDay:'{d}d', postDayHour:'{d}d {h}h', postHour:'{h}h', postHourMin:'{h}h {m}m', postMin:'{m}m', postBringPh:'Ship or seat', postLink:'Link', postSpeech:'Language', speechZh:'Chinese', speechEn:'English', speechOther:'Other', speechAny:'Any', postContact:'Contact', contactNeed:'Choose a contact method and enter a valid account.', contactSpectrum:'Spectrum (recommended)', contactQq:'QQ', contactWechat:'WeChat', contactDiscord:'Discord', contactTelegram:'Telegram', contactKook:'KOOK', contactHeibox:'HeyBox', contactWhatsapp:'WhatsApp', contactMail:'Email', contactPhSpectrum:'Spectrum name', contactPhQq:'QQ number or group invite', contactPhWechat:'WeChat ID', contactPhDiscord:'Invite link or username', contactPhTelegram:'Username or t.me link', contactPhKook:'Invite link, name, or ID', contactPhHeibox:'Invite link, ID, or name', contactPhWhatsapp:'Number or group invite', contactPhMail:'Email address', contactOnline:'{n} online', contactMembers:'{n} members', postCopy:'Copy', roleFreight:'Freight', roleAssault:'Assault', roleMulti:'Multi', roleData:'Data running', roleMerchant:'Merchant', roleMine:'Minelayer', roleBattle:'Battlecruiser', roleTank:'Tank', roleMedical:'Medical', roleCrew:'{n} crew',
       handTitle:'Hand off before leaving', handLead:'Give the captain role to a member, or close the room.', handSolo:'You are the only person here. Leaving closes the room.',
       errNick:'Use a nickname of 1 to 32 characters.', errRoom:'No room with that code.',
       agoNow:'Just now', agoSec:'{n}s ago', agoMin:'{n} min ago', agoHour:'{n} h ago', agoDay:'{n} d ago',
@@ -172,7 +172,7 @@
       chatPh:'Etwas sagen', chatSend:'Senden', chatEmpty:'Erst etwas schreiben.', chatFast:'Zu schnell.',
       hallTab:'Halle', shipTab:'Fahrzeugcrew', jobTab:'Aufträge', roamTab:'Streifzug',
       shipLead:'Besatzung für ein Fahrzeug suchen. Einmalig oder fest.', jobLead:'Einen Auftrag oder ein Treffen ausschreiben und den Bedarf dazu.', roamLead:'Leute zum Herumziehen suchen. Einmalig oder fest.',
-      postTitle:'Titel', postDetail:'Bedarf', postShip:'Fahrzeug', postMission:'Auftrag', postSeats:'Plätze', postSeatsPh:'1-9999', postSeatsBad:'Eine Zahl oder einen Bereich angeben, zum Beispiel 1 oder 1-9999.', postCrew:'Gruppe', postStanding:'Feste Gruppe', postTemp:'Offene Gruppe', postServer:'Server', srvAsia:'Asien', srvUs:'USA', srvAus:'Australien', srvEu:'Europa', postHours:'Dauer', keep15:'15 Minuten', keep30:'30 Minuten', keep1:'1 Stunde', keep3:'3 Stunden', keep6:'6 Stunden', keep9:'9 Stunden', keep12:'12 Stunden', keep24:'24 Stunden', keep48:'48 Stunden', keep96:'96 Stunden', keep168:'168 Stunden', postSend:'Veröffentlichen', postClear:'Zurückziehen', postNone:'Noch nichts ausgeschrieben.', postLimit:'Höchstens zwei gleichzeitig.', postNeed:'Zuerst einen Titel schreiben.', postPlace:'Ort', postAt:'Zeit', postBy:'Von', postLeft:'noch {t}', postLeftSoon:'unter 1 Min', postDay:'{d} T', postDayHour:'{d} T {h} Std', postHour:'{h} Std', postHourMin:'{h} Std {m} Min', postMin:'{m} Min', postBringPh:'Schiff oder Platz', postLink:'Link', postSpeech:'Sprache', speechZh:'Chinesisch', speechEn:'Englisch', speechOther:'Andere', speechAny:'Beliebig', postContact:'Kontakt', contactNeed:'Wähle einen Kontaktweg und gib ein gültiges Konto ein.', contactSpectrum:'Spectrum (empfohlen)', contactQq:'QQ', contactWechat:'WeChat', contactDiscord:'Discord', contactTelegram:'Telegram', contactKook:'KOOK', contactHeibox:'HeyBox', contactWhatsapp:'WhatsApp', contactMail:'E-Mail', contactPhSpectrum:'Spectrum-Name', contactPhQq:'QQ-Nummer oder Gruppeneinladung', contactPhWechat:'WeChat-ID', contactPhDiscord:'Einladungslink oder Name', contactPhTelegram:'Name oder t.me-Link', contactPhKook:'Einladungslink, Name oder ID', contactPhHeibox:'Einladungslink, ID oder Name', contactPhWhatsapp:'Nummer oder Gruppeneinladung', contactPhMail:'E-Mail-Adresse', contactOnline:'{n} online', contactMembers:'{n} Mitglieder', postCopy:'Kopieren', roleFreight:'Fracht', roleAssault:'Sturm', roleMulti:'Mehrzweck', roleData:'Datenlauf', roleMerchant:'Händler', roleMine:'Minenleger', roleBattle:'Schlachtkreuzer', roleTank:'Panzer', roleMedical:'Medizin', roleCrew:'{n} Pers.',
+      postTitle:'Titel', postDetail:'Bedarf', postShip:'Fahrzeug', postMission:'Auftrag', postSeats:'Plätze', postSeatsPh:'1-9999', postSeatsBad:'Eine Zahl oder einen Bereich angeben, zum Beispiel 1 oder 1-9999.', postCrew:'Gruppe', postStanding:'Feste Gruppe', postTemp:'Offene Gruppe', postServer:'Server', srvAsia:'Asien', srvUs:'USA', srvAus:'Australien', srvEu:'Europa', postHours:'Dauer', keep15:'15 Minuten', keep30:'30 Minuten', keep1:'1 Stunde', keep3:'3 Stunden', keep6:'6 Stunden', keep9:'9 Stunden', keep12:'12 Stunden', keep24:'24 Stunden', keep48:'48 Stunden', keep96:'96 Stunden', keep168:'168 Stunden', postSend:'Veröffentlichen', postClear:'Zurückziehen', postNone:'Noch nichts ausgeschrieben.', postLimit:'Höchstens neun gleichzeitig.', postNeed:'Zuerst einen Titel schreiben.', postPlace:'Ort', postAt:'Zeit', postBy:'Von', postLeft:'noch {t}', postLeftSoon:'unter 1 Min', postDay:'{d} T', postDayHour:'{d} T {h} Std', postHour:'{h} Std', postHourMin:'{h} Std {m} Min', postMin:'{m} Min', postBringPh:'Schiff oder Platz', postLink:'Link', postSpeech:'Sprache', speechZh:'Chinesisch', speechEn:'Englisch', speechOther:'Andere', speechAny:'Beliebig', postContact:'Kontakt', contactNeed:'Wähle einen Kontaktweg und gib ein gültiges Konto ein.', contactSpectrum:'Spectrum (empfohlen)', contactQq:'QQ', contactWechat:'WeChat', contactDiscord:'Discord', contactTelegram:'Telegram', contactKook:'KOOK', contactHeibox:'HeyBox', contactWhatsapp:'WhatsApp', contactMail:'E-Mail', contactPhSpectrum:'Spectrum-Name', contactPhQq:'QQ-Nummer oder Gruppeneinladung', contactPhWechat:'WeChat-ID', contactPhDiscord:'Einladungslink oder Name', contactPhTelegram:'Name oder t.me-Link', contactPhKook:'Einladungslink, Name oder ID', contactPhHeibox:'Einladungslink, ID oder Name', contactPhWhatsapp:'Nummer oder Gruppeneinladung', contactPhMail:'E-Mail-Adresse', contactOnline:'{n} online', contactMembers:'{n} Mitglieder', postCopy:'Kopieren', roleFreight:'Fracht', roleAssault:'Sturm', roleMulti:'Mehrzweck', roleData:'Datenlauf', roleMerchant:'Händler', roleMine:'Minenleger', roleBattle:'Schlachtkreuzer', roleTank:'Panzer', roleMedical:'Medizin', roleCrew:'{n} Pers.',
       handTitle:'Vor dem Gehen übergeben', handLead:'Captain an ein Mitglied geben, oder den Raum schließen.', handSolo:'Du bist allein. Gehen schließt den Raum.',
       errNick:'Nickname mit 1 bis 32 Zeichen.', errRoom:'Diesen Raum gibt es nicht.',
       agoNow:'Gerade', agoSec:'vor {n} s', agoMin:'vor {n} min', agoHour:'vor {n} h', agoDay:'vor {n} d',
@@ -594,7 +594,7 @@
       return '<button type="button" class="st-past'+cur+'" data-hist="'+esc(x.code)+'"><b>'+esc(x.code)+'</b><span>'+esc(histLine(x.code))+'</span></button>';
     }).join('');
     return '<div class="st-home-hist">'+
-      (rows ? '<div class="st-home-hist-list">'+rows+'</div>' : '<p>'+esc(t('histEmpty'))+'</p>')+
+      (rows ? '<div class="st-home-hist-list">'+rows+'</div>' : '<p class="st-flash is-quiet">'+esc(t('histEmpty'))+'</p>')+
       '</div>';
   }
   function pullHist(){
@@ -659,7 +659,7 @@
       return '<button type="button" class="st-past" data-pub="'+esc(r.code)+'"><b>'+esc(r.code)+'</b><span>'+meta+'</span></button>';
     }).join('');
     return '<section class="st-home-card st-home-pub"><h2>'+esc(t('pubTitle'))+'</h2>'+
-      (rows ? '<div class="st-home-hist-list">'+rows+'</div>' : '<p>'+esc(t('pubEmpty'))+'</p>')+
+      (rows ? '<div class="st-home-hist-list">'+rows+'</div>' : '<p class="st-flash is-quiet">'+esc(t('pubEmpty'))+'</p>')+
       '</section>';
   }
   function pullPublic(force){
@@ -788,7 +788,7 @@
           '<div class="row"><button type="button" id="stRoomRecoverGo">'+esc(t('recoverGo'))+'</button></div>'+
           (state && state.status==='member' ? '<button type="button" id="stHistBack" class="st-room-link">'+esc(t('histBack'))+'</button>' : '')
         )+
-        (statusMsg ? '<p class="st-room-err">'+esc(statusMsg)+'</p>' : '');
+        (statusMsg ? '<p class="st-flash'+(statusMsg===t('copied')?' is-quiet':'')+'">'+esc(statusMsg)+'</p>' : '');
     var home = mountHome(el, false);
     home.innerHTML =
         '<header class="st-home-hero"><div class="st-home-kicker">SC LMW · '+esc(ti('home.kicker'))+'</div>'+
@@ -907,7 +907,7 @@
             '</div></div>';
         }).join('') || '<div class="st-room-dim">—</div>')+
       '</div>'+
-      (statusMsg ? '<p class="st-room-err">'+esc(statusMsg)+'</p>' : '')+
+      (statusMsg ? '<p class="st-flash'+(statusMsg===t('copied')?' is-quiet':'')+'">'+esc(statusMsg)+'</p>' : '')+
       '</div>'+
       edgeHtml();
     bindRecover(el, 'stDockRecover');
@@ -1028,7 +1028,7 @@
     var html = '';
     if(on.length) html += '<div class="st-crew-sec">'+esc(t('sfxOn'))+' '+on.length+(split.mixed?' · '+esc(t('server'))+' '+split.kinds:'')+'</div>'+on.map(function(m){ return memberRow(m, split); }).join('');
     if(off.length) html += '<div class="st-crew-sec">'+esc(t('sfxOff'))+' '+off.length+'</div>'+off.map(function(m){ return memberRow(m, split); }).join('');
-    list.innerHTML = html || '<div class="st-room-dim">'+(q ? esc(t('none')) : '—')+'</div>';
+    list.innerHTML = html || (q ? '<p class="st-flash is-quiet">'+esc(t('none'))+'</p>' : '<div class="st-room-dim">—</div>');
     rollCrew(list);
     list.querySelectorAll('[data-mate]').forEach(function(b){ b.onclick=function(){ jumpMember(b.getAttribute('data-mate')); }; });
     list.querySelectorAll('[data-cap]').forEach(function(b){ b.onclick=function(){
@@ -1707,7 +1707,7 @@
       box.hidden = false;
       box.className = 'st-alert tone-cast';
       var field = '<textarea id="stCastBody" maxlength="120" placeholder="'+esc(t('castPh'))+'">'+esc(castDraft)+'</textarea>'+
-        (castErr ? '<p class="st-alert-sub"><span>'+esc(castErr)+'</span></p>' : '');
+        (castErr ? '<p class="st-flash">'+esc(castErr)+'</p>' : '');
       var acts = '<div class="st-alert-acts"><button type="button" id="stCastSend">'+bi('castSend')+'</button><button type="button" id="stCastCancel">'+bi('cancel')+'</button>'+castSoundHtml()+'</div>';
       box.innerHTML = alertPlate('cast', 'cast', 'castLead', field, acts);
       var area = box.querySelector('#stCastBody');
@@ -1739,7 +1739,7 @@
       box.className = 'st-alert tone-horn';
       var placeLine = '<p class="st-alert-msg">'+esc(picked ? placeFace(picked.name) : t('hornNeed'))+'</p>'+
         '<input id="stHornTime" type="datetime-local" value="'+esc(hornWhen)+'">'+
-        (hornErr ? '<p class="st-alert-sub"><span>'+esc(hornErr)+'</span></p>' : '');
+        (hornErr ? '<p class="st-flash">'+esc(hornErr)+'</p>' : '');
       var hornActs = '<div class="st-alert-acts"><button type="button" id="stHornSend">'+bi('hornSend')+'</button>'+
         (state.rally ? '<button type="button" id="stHornClear">'+bi('hornClear')+'</button>' : '')+
         '<button type="button" id="stHornCancel">'+bi('cancel')+'</button>'+castSoundHtml()+'</div>';
@@ -2650,7 +2650,7 @@
         '<button type="button" data-plaza="roam" data-k="roamTab"></button>'+
       '</div>'+(SC.fontControlHtml?SC.fontControlHtml():'')+'<button type="button" class="st-plaza-page" data-act="page" data-k="plazaPage"></button><button type="button" class="st-plaza-x" aria-label="close">×</button></header>'+
       '<p class="st-plaza-lead" data-k="plazaLead"></p>'+
-      '<p class="st-plaza-err"></p>'+
+      '<p class="st-flash st-plaza-err" hidden></p>'+
       '<div class="st-plaza-body">'+
         '<section data-pane="hall" class="st-plaza-hall">'+
           '<aside class="st-plaza-people"><div class="st-plaza-acts">'+
@@ -2693,7 +2693,7 @@
   function fillPeople(){
     var box = document.getElementById('stLobbyList');
     if(!box) return;
-    if(!plazaPeople.length){ box.innerHTML = '<p>'+esc(t('plazaEmpty'))+'</p>'; return; }
+    if(!plazaPeople.length){ box.innerHTML = '<p class="st-flash is-quiet">'+esc(t('plazaEmpty'))+'</p>'; return; }
     box.innerHTML = plazaPeople.map(function(p){
       return '<button type="button" class="st-lobby-row'+(p.mine?' mine':'')+'" data-fly="'+esc(p.code||'')+'"><b>'+esc(p.nickname||'')+(p.mine?' · '+esc(t('you')):'')+'</b><span>'+esc(lobbyMeta(p))+'</span></button>';
     }).join('');
@@ -2768,7 +2768,7 @@
       var box = document.querySelector('.st-post-list[data-list="'+kind+'"]');
       if(!box) return;
       var rows = plazaPosts.filter(function(p){ return p.kind===kind; });
-      box.innerHTML = rows.length ? rows.map(postCard).join('') : '<p>'+esc(t('postNone'))+'</p>';
+      box.innerHTML = rows.length ? rows.map(postCard).join('') : '<p class="st-flash is-quiet">'+esc(t('postNone'))+'</p>';
       box.querySelectorAll('[data-k]').forEach(function(node){ node.textContent = t(node.getAttribute('data-k')); });
       box.querySelectorAll('[data-ph]').forEach(function(node){ node.placeholder = t(node.getAttribute('data-ph')); });
     });
@@ -2831,7 +2831,10 @@
       host.querySelectorAll('input,textarea').forEach(function(input){ input.style.minHeight = ''; });
     });
     if(!box || !plazaErr || !box.offsetParent){
-      if(err) err.textContent = plazaErr || '';
+      if(err){
+        err.hidden = !plazaErr;
+        err.textContent = plazaErr || '';
+      }
       return;
     }
     var host = box.closest('label') || box.parentElement;
@@ -2854,7 +2857,7 @@
     mark.style.top = box.offsetTop+'px';
     mark.style.height = box.offsetHeight+'px';
     if(fresh && host.scrollIntoView) host.scrollIntoView({block:'nearest'});
-    if(err) err.textContent = '';
+    if(err){ err.hidden = true; err.textContent = ''; }
   }
   function paintPlaza(){
     var el = ensurePlaza();

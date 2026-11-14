@@ -342,8 +342,8 @@
       return '<button type="button" class="st-hist-row'+on+'" data-i="'+i+'">'+
         '<time>'+esc(when(ev))+'</time><b>'+rowHtml(ev)+'</b>'+shop+'</button>';
     }).join('');
-    var body = list || '<p class="st-hist-empty">'+esc(note || t('empty'))+'</p>';
-    var warn = rows.length && stops.length < 2 ? '<p class="st-hist-empty">'+esc(t('nopoint'))+'</p>' : '';
+    var body = list || '<p class="st-flash is-quiet">'+esc(note || t('empty'))+'</p>';
+    var warn = rows.length && stops.length < 2 ? '<p class="st-flash">'+esc(t('nopoint'))+'</p>' : '';
     box.innerHTML = '<header><b>'+esc(t('title'))+'</b><button type="button" id="stHistClose">'+esc(t('close'))+'</button></header>'+
       '<p class="st-hist-lead">'+esc(t('lead'))+'</p>'+
       '<div class="st-hist-play"><button type="button" id="stHistPlay">'+esc(play.on ? t('pause') : t('play'))+'</button>'+speeds+
