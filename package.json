@@ -6,6 +6,10 @@
   "private": true,
   "scripts": {
     "build-data": "python3 scripts/build-all.py",
-    "serve": "python3 -m http.server 8000"
+    "serve": "python3 -m http.server 8000",
+    "stage-site": "python scripts/stage_site.py"
+  },
+  "devDependencies": {
+    "wrangler": "^4.165.0"
   }
 }

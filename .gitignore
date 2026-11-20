@@ -33,3 +33,9 @@ companion/*.spec
 # Local game-language files used to build Chinese names. Kept on disk only,
 # the same way as the downloaded German INI.
 /Language/
+
+# Cloudflare Worker build output and local credentials.
+/node_modules/
+/site/
+.wrangler/
+.dev.vars
