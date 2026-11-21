@@ -47,8 +47,8 @@
     });
   }
   function loadCss(href){
-    if(document.querySelector('link[data-sclmw-css]')) return;
-    var l=document.createElement('link'); l.rel='stylesheet'; l.href=href; l.setAttribute('data-sclmw-css','1');
+    if(document.querySelector('link[data-sclmw-css="'+href+'"]')) return;
+    var l=document.createElement('link'); l.rel='stylesheet'; l.href=href; l.setAttribute('data-sclmw-css', href);
     document.head.appendChild(l);
   }
 
@@ -84,12 +84,15 @@
     if(window.SCLMW.room) window.SCLMW.room.start();
   }
 
-  loadCss(base+'css/starmap.css');
-  // js/i18n.js zuerst (definiert window.SCLMW.i18n), dann holo.js (definiert window.SCLMW.xyz),
-  // dann starmap.js (definiert window.SCLMW.mount/unmount und ruft beide auf).
-  // js/i18n.js first (defines window.SCLMW.i18n), then holo.js (defines window.SCLMW.xyz), then
-  // starmap.js (defines window.SCLMW.mount/unmount and calls both).
-  loadScript(base+'js/i18n.js')
+  loadScript(base+'js/shell.js').catch(function(){}).then(function(){
+    loadCss(base+'css/starmap.css');
+    loadCss(base+'css/hand.css');
+    // js/i18n.js zuerst (definiert window.SCLMW.i18n), dann holo.js (definiert window.SCLMW.xyz),
+    // dann starmap.js (definiert window.SCLMW.mount/unmount und ruft beide auf).
+    // js/i18n.js first (defines window.SCLMW.i18n), then holo.js (defines window.SCLMW.xyz), then
+    // starmap.js (defines window.SCLMW.mount/unmount and calls both).
+    return loadScript(base+'js/i18n.js');
+  })
     .then(function(){ return loadScript(base+'js/icons.js'); })
     .then(function(){ return loadScript(base+'js/holo.js'); })
     .then(function(){ return loadScript(base+'js/guides.js'); })

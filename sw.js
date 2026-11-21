@@ -1,6 +1,6 @@
 /* SC LMW shell. Same-origin pages and files stay available offline after one visit.
    Room APIs and other sites are left to the network. */
-var CACHE = 'sclmw-pwa-1';
+var CACHE = 'sclmw-pwa-2';
 var SHELL = [
   './',
   './index.html',
@@ -8,6 +8,8 @@ var SHELL = [
   './config.js',
   './favicon.ico',
   './css/starmap.css',
+  './css/hand.css',
+  './js/shell.js',
   './js/i18n.js',
   './js/icons.js',
   './js/loc.js',

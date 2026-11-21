@@ -193,7 +193,7 @@
     if(!box){
       box = document.createElement('section');
       box.id = 'stHist';
-      box.className = 'st-hist';
+      box.className = 'st-hist st-dock';
       box.hidden = true;
       host.appendChild(box);
     }

@@ -247,7 +247,7 @@
     if(!dock){
       dock = document.createElement('div');
       dock.id = 'stRoom';
-      dock.className = 'st-room';
+      dock.className = 'st-room st-dock';
       dock.hidden = true;
       root().appendChild(dock);
       bindFrame(dock, {key:FRAME, minW:280, minH:220});
@@ -266,13 +266,13 @@
     if(!crew){
       crew = document.createElement('div');
       crew.id = 'stCrew';
-      crew.className = 'st-room st-crew';
+      crew.className = 'st-room st-crew st-dock';
       crew.hidden = true;
       root().appendChild(crew);
       crewIco = document.createElement('button');
       crewIco.type = 'button';
       crewIco.id = 'stCrewIco';
-      crewIco.className = 'st-float-ico';
+      crewIco.className = 'st-float-ico st-crew-ico';
       crewIco.hidden = true;
       root().appendChild(crewIco);
       bindFrame(crew, {key:CREW, minW:220, minH:160});
@@ -291,7 +291,12 @@
     try{ localStorage.setItem(key, JSON.stringify(s)); }catch(e){}
     return s;
   }
+  function touchShell(){
+    var s = document.documentElement.getAttribute('data-sclmw-shell');
+    return s==='hand' || s==='slab';
+  }
   function sheetLayout(){
+    if(touchShell()) return true;
     var host = root();
     var w = host.clientWidth||999, h = host.clientHeight||999;
     return w<=700 || (w<=900 && h<=500);
@@ -324,7 +329,7 @@
     dock.style.height = h+'px';
   }
   function saveFrame(dock, key){
-    if(!dock || dock.hidden || dock.offsetWidth<40) return;
+    if(touchShell() || !dock || dock.hidden || dock.offsetWidth<40) return;
     var host = root().getBoundingClientRect();
     var box = dock.getBoundingClientRect();
     patchFrame(key || FRAME, {
@@ -362,6 +367,7 @@
     }
     dock.addEventListener('pointerdown', function(e){
       if(e.button!==0) return;
+      if(touchShell()) return;
       if(plazaPage && dock.id==='stPlaza') return;
       if(opt.sheet && sheetLayout()) return;
       var edge = e.target.closest && e.target.closest('[data-resize]');
@@ -417,6 +423,7 @@
     var drag = null, moved = false;
     ico.addEventListener('pointerdown', function(e){
       if(e.button!==0) return;
+      if(touchShell()) return;
       var host = root().getBoundingClientRect();
       var box = ico.getBoundingClientRect();
       drag = {x:e.clientX, y:e.clientY, l:box.left-host.left, t:box.top-host.top};
@@ -441,6 +448,7 @@
     }
     ico.addEventListener('pointerup', end);
     ico.addEventListener('pointercancel', end);
+    ico.addEventListener('click', function(){ if(touchShell()) onOpen(); });
   }
   function edgeHtml(){
     return '<i class="st-room-edge n" data-resize="n"></i><i class="st-room-edge s" data-resize="s"></i>'+
@@ -558,7 +566,7 @@
     if(!box){
       box = document.createElement('div');
       box.id = 'stSfx';
-      box.className = 'st-sfx';
+      box.className = 'st-sfx st-dock';
       root().appendChild(box);
     }
     box.hidden = false;
@@ -2885,7 +2893,7 @@
     if(el) return el;
     el = document.createElement('section');
     el.id = 'stPlaza';
-    el.className = 'st-plaza';
+    el.className = 'st-plaza st-dock';
     el.hidden = true;
     el.innerHTML = plazaHtml();
     root().appendChild(el);
@@ -3317,6 +3325,7 @@
         }
       };
       window.addEventListener('resize', window.__stRoomFit);
+      document.addEventListener('sclmw-shell', window.__stRoomFit);
       if(window.ResizeObserver) new ResizeObserver(window.__stRoomFit).observe(root());
       requestAnimationFrame(window.__stRoomFit);
     }

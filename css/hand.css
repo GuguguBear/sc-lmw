@@ -1,0 +1,229 @@
+/* Phones and tablets. Every rule is gated on data-sclmw-shell, so a mouse or
+   trackpad keeps css/starmap.css exactly as it is. A new floating window is
+   picked up when it has st-dock: shell.js makes one st-front and parks the
+   others as st-hold. Do not add a fresh @media block for each new panel.
+   Handy und Tablet. Jede Regel haengt an data-sclmw-shell, damit Maus und
+   Trackpad css/starmap.css unveraendert lassen. Ein neues schwebendes Fenster
+   mit st-dock wird von shell.js als st-front oder st-hold eingeordnet. */
+
+html[data-sclmw-shell="hand"] .sc-lmw .st-compass,
+html[data-sclmw-shell="slab"] .sc-lmw .st-compass,
+html[data-sclmw-shell="hand"] .sc-lmw .st-hint,
+html[data-sclmw-shell="slab"] .sc-lmw .st-hint,
+html[data-sclmw-shell="hand"] .sc-lmw .st-room-edge,
+html[data-sclmw-shell="slab"] .sc-lmw .st-room-edge{display:none}
+
+html[data-sclmw-shell="hand"] .sc-lmw .st-top,
+html[data-sclmw-shell="slab"] .sc-lmw .st-top{z-index:30}
+
+html[data-sclmw-shell="hand"] .sc-lmw.st-explore .st-top,
+html[data-sclmw-shell="slab"] .sc-lmw.st-explore .st-top{top:0;left:0;right:0;gap:4px}
+
+html[data-sclmw-shell="hand"] .sc-lmw.st-explore .st-top-row,
+html[data-sclmw-shell="slab"] .sc-lmw.st-explore .st-top-row{
+  flex-wrap:wrap;height:auto;min-height:44px;gap:6px;align-items:stretch
+}
+
+html[data-sclmw-shell="hand"] .sc-lmw.st-explore .st-sys,
+html[data-sclmw-shell="slab"] .sc-lmw.st-explore .st-sys,
+html[data-sclmw-shell="hand"] .sc-lmw.st-explore .st-sbox,
+html[data-sclmw-shell="slab"] .sc-lmw.st-explore .st-sbox,
+html[data-sclmw-shell="hand"] .sc-lmw.st-explore .st-zoom,
+html[data-sclmw-shell="slab"] .sc-lmw.st-explore .st-zoom,
+html[data-sclmw-shell="hand"] .sc-lmw.st-explore .st-crumb,
+html[data-sclmw-shell="slab"] .sc-lmw.st-explore .st-crumb{
+  height:auto;min-height:44px;max-height:none;align-self:stretch
+}
+
+html[data-sclmw-shell="hand"] .sc-lmw.st-explore .st-sbox,
+html[data-sclmw-shell="slab"] .sc-lmw.st-explore .st-sbox{
+  flex:1 1 100%;width:auto;min-width:0;max-width:none
+}
+
+html[data-sclmw-shell="hand"] .sc-lmw.st-explore .st-cats,
+html[data-sclmw-shell="slab"] .sc-lmw.st-explore .st-cats,
+html[data-sclmw-shell="hand"] .sc-lmw.st-explore .st-tabs,
+html[data-sclmw-shell="slab"] .sc-lmw.st-explore .st-tabs{
+  flex:1 1 100%;min-width:0;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch
+}
+
+html[data-sclmw-shell="hand"] .sc-lmw.st-explore .st-sys button,
+html[data-sclmw-shell="slab"] .sc-lmw.st-explore .st-sys button,
+html[data-sclmw-shell="hand"] .sc-lmw.st-explore .st-cats button,
+html[data-sclmw-shell="slab"] .sc-lmw.st-explore .st-cats button,
+html[data-sclmw-shell="hand"] .sc-lmw.st-explore .st-tabs button,
+html[data-sclmw-shell="slab"] .sc-lmw.st-explore .st-tabs button,
+html[data-sclmw-shell="hand"] .sc-lmw .st-room button,
+html[data-sclmw-shell="slab"] .sc-lmw .st-room button,
+html[data-sclmw-shell="hand"] .sc-lmw .st-plaza button,
+html[data-sclmw-shell="slab"] .sc-lmw .st-plaza button,
+html[data-sclmw-shell="hand"] .sc-lmw .st-gate button:not(.st-room-link),
+html[data-sclmw-shell="slab"] .sc-lmw .st-gate button:not(.st-room-link){
+  min-height:44px;height:auto;max-height:none
+}
+
+html[data-sclmw-shell="hand"] .sc-lmw.st-explore .st-tabs button.st-sq,
+html[data-sclmw-shell="slab"] .sc-lmw.st-explore .st-tabs button.st-sq,
+html[data-sclmw-shell="hand"] .sc-lmw.st-explore .st-zoom .st-pause,
+html[data-sclmw-shell="slab"] .sc-lmw.st-explore .st-zoom .st-pause,
+html[data-sclmw-shell="hand"] .sc-lmw.st-explore .st-top-row>.stx,
+html[data-sclmw-shell="slab"] .sc-lmw.st-explore .st-top-row>.stx{
+  position:static;width:44px;min-width:44px;height:44px;min-height:44px;max-height:none;flex:0 0 44px;padding:0
+}
+
+html[data-sclmw-shell="hand"] .sc-lmw .st-sbox input,
+html[data-sclmw-shell="slab"] .sc-lmw .st-sbox input,
+html[data-sclmw-shell="hand"] .sc-lmw input,
+html[data-sclmw-shell="slab"] .sc-lmw input,
+html[data-sclmw-shell="hand"] .sc-lmw textarea,
+html[data-sclmw-shell="slab"] .sc-lmw textarea,
+html[data-sclmw-shell="hand"] .sc-lmw select,
+html[data-sclmw-shell="slab"] .sc-lmw select{
+  font-size:clamp(12px, calc(16px * var(--sclmw-fs, 12) / 12), 28px)
+}
+
+html[data-sclmw-shell="hand"] .sc-lmw .st-top>.st-res,
+html[data-sclmw-shell="slab"] .sc-lmw .st-top>.st-res{
+  left:0;right:0;top:100%;width:auto;max-height:min(50dvh, 420px)
+}
+
+html[data-sclmw-shell="hand"] .sc-lmw .st-hold,
+html[data-sclmw-shell="slab"] .sc-lmw .st-hold{
+  position:absolute;left:8px;right:8px;top:auto;width:auto;height:auto;min-width:0;min-height:0;max-height:none;
+  bottom:calc(var(--dock-lift, 0px) + var(--sclmw-bottom-gap, 0px));
+  z-index:24;overflow:hidden;margin:0
+}
+
+html[data-sclmw-shell="hand"] .sc-lmw .st-front,
+html[data-sclmw-shell="slab"] .sc-lmw .st-front{
+  position:absolute;left:8px;right:8px;top:auto;width:auto;height:auto;min-width:0;min-height:0;
+  bottom:calc(var(--dock-lift, 0px) + var(--sclmw-bottom-gap, 0px));
+  max-height:calc(100vh - var(--st-chrome, 96px) - var(--dock-lift, 0px) - var(--sclmw-bottom-gap, 0px) - 12px);
+  max-height:calc(100dvh - var(--st-chrome, 96px) - var(--dock-lift, 0px) - var(--sclmw-bottom-gap, 0px) - 12px);
+  z-index:26;margin:0
+}
+
+html[data-sclmw-shell="hand"] .sc-lmw .st-hold .st-room-body,
+html[data-sclmw-shell="slab"] .sc-lmw .st-hold .st-room-body,
+html[data-sclmw-shell="hand"] .sc-lmw .st-hold .st-call-body,
+html[data-sclmw-shell="slab"] .sc-lmw .st-hold .st-call-body,
+html[data-sclmw-shell="hand"] .sc-lmw .st-hold .st-loc-body,
+html[data-sclmw-shell="slab"] .sc-lmw .st-hold .st-loc-body,
+html[data-sclmw-shell="hand"] .sc-lmw .st-hold .st-sfx-b,
+html[data-sclmw-shell="slab"] .sc-lmw .st-hold .st-sfx-b,
+html[data-sclmw-shell="hand"] .sc-lmw .st-hold .st-hist-list,
+html[data-sclmw-shell="slab"] .sc-lmw .st-hold .st-hist-list,
+html[data-sclmw-shell="hand"] .sc-lmw .st-hold .st-hist-lead,
+html[data-sclmw-shell="slab"] .sc-lmw .st-hold .st-hist-lead,
+html[data-sclmw-shell="hand"] .sc-lmw .st-hold .st-hist-play,
+html[data-sclmw-shell="slab"] .sc-lmw .st-hold .st-hist-play{display:none}
+
+html[data-sclmw-shell="hand"] .sc-lmw .st-side.st-hold,
+html[data-sclmw-shell="slab"] .sc-lmw .st-side.st-hold,
+html[data-sclmw-shell="hand"] .sc-lmw .st-plaza.st-hold,
+html[data-sclmw-shell="slab"] .sc-lmw .st-plaza.st-hold{max-height:44px}
+
+html[data-sclmw-shell="hand"] .sc-lmw .st-room:not(.st-crew):not(.st-sheet-open) .st-room-body,
+html[data-sclmw-shell="slab"] .sc-lmw .st-room:not(.st-crew):not(.st-sheet-open) .st-room-body{display:none}
+
+html[data-sclmw-shell="hand"] .sc-lmw.is-plaza-page .st-plaza,
+html[data-sclmw-shell="slab"] .sc-lmw.is-plaza-page .st-plaza{
+  left:0;right:0;top:0;bottom:var(--sclmw-bottom-gap, 0px);width:auto;height:auto;max-height:none
+}
+
+html[data-sclmw-shell="hand"] .sc-lmw .st-float-ico,
+html[data-sclmw-shell="slab"] .sc-lmw .st-float-ico{
+  left:auto;top:auto;right:8px;bottom:calc(8px + var(--sclmw-bottom-gap, 0px));width:48px;height:48px;z-index:32
+}
+html[data-sclmw-shell="hand"] .sc-lmw .st-room-ico,
+html[data-sclmw-shell="slab"] .sc-lmw .st-room-ico{bottom:calc(64px + var(--sclmw-bottom-gap, 0px))}
+html[data-sclmw-shell="hand"] .sc-lmw .st-call-ico,
+html[data-sclmw-shell="slab"] .sc-lmw .st-call-ico{bottom:calc(120px + var(--sclmw-bottom-gap, 0px))}
+
+html[data-sclmw-shell="hand"] .sc-lmw .st-gate,
+html[data-sclmw-shell="slab"] .sc-lmw .st-gate{
+  justify-content:flex-start;align-items:stretch;overflow:auto;
+  bottom:var(--sclmw-bottom-gap, 0px);
+  padding:12px 16px calc(var(--sclmw-bottom-gap, 32px) + 16px)
+}
+html[data-sclmw-shell="hand"] .sc-lmw .st-home,
+html[data-sclmw-shell="slab"] .sc-lmw .st-home,
+html[data-sclmw-shell="hand"] .sc-lmw .st-home-narrow,
+html[data-sclmw-shell="slab"] .sc-lmw .st-home-narrow{
+  display:grid;grid-template-columns:1fr;grid-template-rows:none;width:100%;height:auto;max-height:none;overflow:visible;
+  backdrop-filter:none;-webkit-backdrop-filter:none
+}
+html[data-sclmw-shell="hand"] .sc-lmw .st-home-card,
+html[data-sclmw-shell="slab"] .sc-lmw .st-home-card,
+html[data-sclmw-shell="hand"] .sc-lmw .st-home-hero,
+html[data-sclmw-shell="slab"] .sc-lmw .st-home-hero,
+html[data-sclmw-shell="hand"] .sc-lmw .st-home-pub,
+html[data-sclmw-shell="slab"] .sc-lmw .st-home-pub{
+  grid-column:1;grid-row:auto;height:auto;overflow:visible;max-height:none;min-height:0
+}
+
+html[data-sclmw-shell="hand"] .sc-lmw .st-ctrldlg,
+html[data-sclmw-shell="slab"] .sc-lmw .st-ctrldlg,
+html[data-sclmw-shell="hand"] .sc-lmw .st-locdlg,
+html[data-sclmw-shell="slab"] .sc-lmw .st-locdlg{align-items:flex-end;padding:8px}
+html[data-sclmw-shell="hand"] .sc-lmw .st-ctrldlg-card,
+html[data-sclmw-shell="slab"] .sc-lmw .st-ctrldlg-card,
+html[data-sclmw-shell="hand"] .sc-lmw .st-locdlg-card,
+html[data-sclmw-shell="slab"] .sc-lmw .st-locdlg-card{width:100%;max-height:min(92dvh, 720px)}
+html[data-sclmw-shell="hand"] .sc-lmw .st-ctrldlg-x,
+html[data-sclmw-shell="slab"] .sc-lmw .st-ctrldlg-x,
+html[data-sclmw-shell="hand"] .sc-lmw .st-locdlg button,
+html[data-sclmw-shell="slab"] .sc-lmw .st-locdlg button{min-height:44px;height:auto}
+
+html[data-sclmw-shell="hand"] .sc-lmw .st-home-grid,
+html[data-sclmw-shell="slab"] .sc-lmw .st-home-grid,
+html[data-sclmw-shell="hand"] .sc-lmw .st-home-hero::after,
+html[data-sclmw-shell="slab"] .sc-lmw .st-home-hero::after,
+html[data-sclmw-shell="hand"] .sc-lmw .st-alert-haze,
+html[data-sclmw-shell="slab"] .sc-lmw .st-alert-haze,
+html[data-sclmw-shell="hand"] .sc-lmw .st-alert-grain,
+html[data-sclmw-shell="slab"] .sc-lmw .st-alert-grain,
+html[data-sclmw-shell="hand"] .sc-lmw .st-alert-bar,
+html[data-sclmw-shell="slab"] .sc-lmw .st-alert-bar,
+html[data-sclmw-shell="hand"] .sc-lmw .st-alert-plate .c,
+html[data-sclmw-shell="slab"] .sc-lmw .st-alert-plate .c,
+html[data-sclmw-shell="hand"] .sc-lmw .st-alert-en,
+html[data-sclmw-shell="slab"] .sc-lmw .st-alert-en,
+html[data-sclmw-shell="hand"] .sc-lmw .st-link.wait,
+html[data-sclmw-shell="slab"] .sc-lmw .st-link.wait,
+html[data-sclmw-shell="hand"] .sc-lmw .st-mk .sc-ico,
+html[data-sclmw-shell="slab"] .sc-lmw .st-mk .sc-ico,
+html[data-sclmw-shell="hand"] .sc-lmw .st-mk::after,
+html[data-sclmw-shell="slab"] .sc-lmw .st-mk::after,
+html[data-sclmw-shell="hand"] .sc-lmw .st-leader line,
+html[data-sclmw-shell="slab"] .sc-lmw .st-leader line,
+html[data-sclmw-shell="hand"] .sc-lmw .st-rally i,
+html[data-sclmw-shell="slab"] .sc-lmw .st-rally i,
+html[data-sclmw-shell="hand"] .sc-lmw .st-call-pip.on,
+html[data-sclmw-shell="slab"] .sc-lmw .st-call-pip.on,
+html[data-sclmw-shell="hand"] .sc-lmw .st-mate-row.st-kick-ask,
+html[data-sclmw-shell="slab"] .sc-lmw .st-mate-row.st-kick-ask{animation:none}
+
+html[data-sclmw-shell="hand"] .sc-lmw .st-alert-haze,
+html[data-sclmw-shell="slab"] .sc-lmw .st-alert-haze,
+html[data-sclmw-shell="hand"] .sc-lmw .st-alert-grain,
+html[data-sclmw-shell="slab"] .sc-lmw .st-alert-grain{display:none}
+
+html[data-sclmw-shell="hand"] .sc-lmw .st-alert-plate,
+html[data-sclmw-shell="slab"] .sc-lmw .st-alert-plate{backdrop-filter:none;-webkit-backdrop-filter:none}
+
+html[data-sclmw-shell="hand"] .sc-lmw .st-mate-row.st-kick-ask,
+html[data-sclmw-shell="slab"] .sc-lmw .st-mate-row.st-kick-ask{background:rgba(255,45,85,.28)}
+
+html[data-sclmw-shell="hand"] .sc-lmw .st-lbl,
+html[data-sclmw-shell="slab"] .sc-lmw .st-lbl{will-change:auto;filter:none}
+
+html[data-sclmw-shell="hand"] .sc-lmw .st-leader line,
+html[data-sclmw-shell="slab"] .sc-lmw .st-leader line{filter:none}
+
+@media (max-height:520px){
+  html[data-sclmw-shell="hand"] .sc-lmw.st-explore .st-top-row{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+  html[data-sclmw-shell="hand"] .sc-lmw.st-explore .st-sbox{flex:1 1 140px;min-width:120px}
+  html[data-sclmw-shell="hand"] .sc-lmw.st-explore .st-cats,
+  html[data-sclmw-shell="hand"] .sc-lmw.st-explore .st-tabs{flex:0 0 auto;width:auto}
+}
