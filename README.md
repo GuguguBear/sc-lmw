@@ -13,9 +13,9 @@ A free, open-source 3D map of Star Citizen: Stanton, Pyro and Nyx, with search, 
 | | Address | What it is |
 |---|---|---|
 | Public name | https://sclmw.cltbbs.com/ | The address visitors should use. The browser stays on this name. |
-| Earlier host | https://gugugubear.pythonanywhere.com/ | That account is closed. A push updates the Cloudflare Worker. |
+| Earlier host | https://gugugubear.pythonanywhere.com/ | That account is closed. A push updates the Cloudflare Worker when the checkout contains the built map data. |
 
-`sclmw.cltbbs.com` is the Worker `sclmw` on Cloudflare zone `cltbbs.com`. The source is [worker/](worker/), and [wrangler.jsonc](wrangler.jsonc) sets the account, the custom hostname, and D1 database `sclmw`. A push updates that Worker. The PythonAnywhere account is closed.
+`sclmw.cltbbs.com` is the Worker `sclmw` on Cloudflare zone `cltbbs.com`. The source is [worker/](worker/), and [wrangler.jsonc](wrangler.jsonc) sets the account, the custom hostname, and D1 database `sclmw`. A push updates that Worker when `data/galaxy.json` is present. Without that built map data, the Action leaves the live site unchanged. The PythonAnywhere account is closed.
 
 Room calls and map files use relative paths, so a page opened on the public name stays there. Starfix 1.0.16 still accepts a pairing that names the earlier host. See [companion/README.md](companion/README.md).
 

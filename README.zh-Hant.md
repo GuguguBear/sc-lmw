@@ -13,9 +13,9 @@
 | | 網址 | 是什麼 |
 |---|---|---|
 | 對外名稱 | https://sclmw.cltbbs.com/ | 給訪客用的網址。瀏覽器網址列保持這個名字。 |
-| 早前的站點 | https://gugugubear.pythonanywhere.com/ | 這個帳號已經關閉。推送更新的是 Cloudflare Worker。 |
+| 早前的站點 | https://gugugubear.pythonanywhere.com/ | 這個帳號已經關閉。检出裡有已經生成的地圖資料時，推送才更新 Cloudflare Worker。 |
 
-`sclmw.cltbbs.com` 是 Cloudflare 區域 `cltbbs.com` 上的 Worker `sclmw`。原始碼在 [worker/](worker/)，[wrangler.jsonc](wrangler.jsonc) 寫著帳戶、自訂主機名和 D1 資料庫 `sclmw`。推送更新的是這個 Worker。PythonAnywhere 帳號已經關閉。
+`sclmw.cltbbs.com` 是 Cloudflare 區域 `cltbbs.com` 上的 Worker `sclmw`。原始碼在 [worker/](worker/)，[wrangler.jsonc](wrangler.jsonc) 寫著帳戶、自訂主機名和 D1 資料庫 `sclmw`。检出裡有 `data/galaxy.json` 時，推送才更新這個 Worker。沒有這份地圖資料時，Action 不會替換線上的站點。PythonAnywhere 帳號已經關閉。
 
 房間請求和地圖檔案都用相對路徑，所以從對外名稱打開，就留在這個名字上。Starfix 1.0.16 仍接受寫著早前站點的連線。見 [companion/README.md](companion/README.md)。
 

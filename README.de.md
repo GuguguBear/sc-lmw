@@ -13,9 +13,9 @@ Eine freie, quelloffene 3D-Karte von Star Citizen: Stanton, Pyro und Nyx, mit Su
 | | Adresse | Bedeutung |
 |---|---|---|
 | Öffentlicher Name | https://sclmw.cltbbs.com/ | Die Adresse für Besucher. Die Adresszeile bleibt auf diesem Namen. |
-| Früherer Host | https://gugugubear.pythonanywhere.com/ | Dieses Konto ist geschlossen. Ein Push aktualisiert den Cloudflare-Worker. |
+| Früherer Host | https://gugugubear.pythonanywhere.com/ | Dieses Konto ist geschlossen. Ein Push aktualisiert den Cloudflare-Worker, wenn die Arbeitskopie die gebauten Kartendaten enthält. |
 
-`sclmw.cltbbs.com` ist der Worker `sclmw` in der Cloudflare-Zone `cltbbs.com`. Der Quelltext liegt in [worker/](worker/), und [wrangler.jsonc](wrangler.jsonc) setzt das Konto, den Custom Hostname und die D1-Datenbank `sclmw`. Ein Push aktualisiert diesen Worker. Das PythonAnywhere-Konto ist geschlossen.
+`sclmw.cltbbs.com` ist der Worker `sclmw` in der Cloudflare-Zone `cltbbs.com`. Der Quelltext liegt in [worker/](worker/), und [wrangler.jsonc](wrangler.jsonc) setzt das Konto, den Custom Hostname und die D1-Datenbank `sclmw`. Ein Push aktualisiert diesen Worker, wenn `data/galaxy.json` vorhanden ist. Ohne diese gebauten Kartendaten lässt die Action die live Seite unverändert. Das PythonAnywhere-Konto ist geschlossen.
 
 Raumaufrufe und Kartendateien sind relativ, deshalb bleibt eine Seite auf dem öffentlichen Namen. Starfix 1.0.16 nimmt weiterhin eine Verbindung an, die den früheren Host nennt. Siehe [companion/README.md](companion/README.md).
 

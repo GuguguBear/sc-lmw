@@ -3,6 +3,13 @@ name: Update the live site
 on:
   push:
     branches: [master]
+    paths-ignore:
+      - "companion/**"
+      - "README.md"
+      - "README.de.md"
+      - "README.zh-Hans.md"
+      - "README.zh-Hant.md"
+      - ".github/workflows/starfix-release.yml"
   workflow_dispatch:
 
 concurrency:
@@ -17,6 +24,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -25,7 +34,24 @@ jobs:
         run: npm ci
       - name: Stage the public site
         run: python3 scripts/stage_site.py
+      - name: Keep the live map when this checkout has no map data
+        id: mapdata
+        run: |
+          if [ -f site/data/galaxy.json ]; then
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "This checkout has no data/galaxy.json."
+          echo "Not uploading. That would replace the live map with an empty site."
+          names=$(git diff --name-only HEAD^ HEAD || true)
+          echo "$names"
+          if echo "$names" | grep -Eq '^(js/|css/|index\.html|sw\.js|worker/|wrangler\.jsonc|config\.js)'; then
+            echo "This push changes the site. Build data/ and deploy from that machine."
+            exit 1
+          fi
+          echo "skip=true" >> "$GITHUB_OUTPUT"
       - name: Deploy the Worker
+        if: steps.mapdata.outputs.skip != 'true'
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: f1bc2c35209fc5a627f8b92e33f5a43a
