@@ -13,19 +13,19 @@ A free, open-source 3D map of Star Citizen: Stanton, Pyro and Nyx, with search, 
 | | Address | What it is |
 |---|---|---|
 | Public name | https://sclmw.cltbbs.com/ | The address visitors should use. The browser stays on this name. |
-| Origin | https://gugugubear.pythonanywhere.com/ | The PythonAnywhere app. Same pages, reached directly. Also the deploy target. |
+| Earlier host | https://gugugubear.pythonanywhere.com/ | That account is closed. A push updates the Cloudflare Worker. |
 
-`sclmw.cltbbs.com` is a reverse proxy, not a redirect and not a CNAME to the origin. Cloudflare zone `cltbbs.com`, Worker `sclmw-proxy`, custom hostname `sclmw.cltbbs.com`. The Worker fetches `https://gugugubear.pythonanywhere.com` with that host's `Host` header, and rewrites a `Location` that would reveal the origin. This repository does not contain the Worker script. Change the origin by editing the Worker's `ORIGIN` constant and uploading the script again.
+`sclmw.cltbbs.com` is the Worker `sclmw` on Cloudflare zone `cltbbs.com`. The source is [worker/](worker/), and [wrangler.jsonc](wrangler.jsonc) sets the account, the custom hostname, and D1 database `sclmw`. A push updates that Worker. The PythonAnywhere account is closed.
 
-Both addresses serve one application. Room calls and map files use relative paths, so a page opened on either name stays there. Starfix 1.0.14 accepts a pairing from either name. See [companion/README.md](companion/README.md).
+Room calls and map files use relative paths, so a page opened on the public name stays there. Starfix 1.0.14 still accepts a pairing that names the earlier host. See [companion/README.md](companion/README.md).
 
-Cloudflare can keep a static file for several hours. A check on 30 Oct 2026 showed `js/starmap.js` on the public name with `cache-control: max-age=14400` and `cf-cache-status: HIT`, while the origin already had the newer file. After a deploy, the origin updates when the Action finishes. The public name can lag until that cache expires. Room API responses from [server/room_server.py](server/room_server.py) send `Cache-Control: no-store`. The page shell is not a private document. Login state is a bearer token in `localStorage`, not a cookie.
+Cloudflare can keep a static file for several hours. A check on 30 Oct 2026 showed `js/starmap.js` on the public name with `cache-control: max-age=14400` and `cf-cache-status: HIT`, while the origin already had the newer file. That check was the old proxy. The Action now updates the Worker on the public name. Room API responses from [server/room_server.py](server/room_server.py) send `Cache-Control: no-store`. The page shell is not a private document. Login state is a bearer token in `localStorage`, not a cookie.
 
 ## What to know before you change anything
 
 - The website never reads the game folder. Only Starfix, on the computer where you start it, opens the one log file you choose.
 - `data/` is built on a machine and is not in git. A push does not upload it and does not replace the copy already on the server. Rebuild steps are below.
-- Do not commit `companion/config.json`, `server/*.sqlite`, `data/loc.json`, `.env`, or a PythonAnywhere token. The deploy secret is `PA_API_TOKEN` in the GitHub Actions secrets.
+- Do not commit `companion/config.json`, `server/*.sqlite`, `data/loc.json`, `.env`, or an API token. The deploy secret is `CLOUDFLARE_API_TOKEN` in the GitHub Actions secrets.
 - A fourth star system does not appear by itself. [scripts/systems-build.py](scripts/systems-build.py) lists Stanton, Pyro and Nyx. The page buttons match that list.
 - Chinese place names come from a local game Language folder through `python scripts/loc-build.py`. That step is not part of `scripts/build-all.py`. The generated `data/loc.json` stays off git.
 - Shop and facility labels on the map use the game's own strings where those strings exist. Names without an official shop title stay in English.
@@ -64,22 +64,17 @@ Starfix allows these page origins, plus `http://127.0.0.1` and `http://localhost
 
 A new window fills in `https://sclmw.cltbbs.com`. If the saved address is still the previous built-in `https://gugugubear.pythonanywhere.com`, the next start of this version replaces it. Pairing from a page stores that page's own address.
 
-Pairing from a page stores that page's origin as the API base. An older install keeps the PythonAnywhere address until you pair again. Both addresses work once the proxy is in front.
+Pairing from a page stores that page's origin as the API base. An older install keeps the PythonAnywhere address until you pair again. The public name is the one that answers.
 
 ## Deploy this copy
 
-A push to `master` starts [.github/workflows/deploy.yml](.github/workflows/deploy.yml). The job checks out the repo and runs [scripts/deploy_pythonanywhere.py](scripts/deploy_pythonanywhere.py).
+A push to `master` starts [.github/workflows/deploy.yml](.github/workflows/deploy.yml). The job checks out the repo, runs [scripts/stage_site.py](scripts/stage_site.py), and deploys Worker `sclmw` with Wrangler 4.165.0.
 
-That script:
+The job reads `CLOUDFLARE_API_TOKEN` from the GitHub Actions secret of the same name. Create that token in the Cloudflare dashboard with the Edit Cloudflare Workers template, on the GuguguBear account, and include D1 edit. Do not put the token in the repo or in chat. The account id in the workflow is the one already written in `wrangler.jsonc`.
 
-1. Reads `PA_API_TOKEN` from the environment. On GitHub that is the Actions secret of the same name. Create the token on the PythonAnywhere account page.
-2. Lists files with `git ls-files`. Untracked and gitignored files are not uploaded.
-3. Uploads those files to `/home/GuguguBear/sc-lmw` on `www.pythonanywhere.com` for user `GuguguBear`.
-4. Reloads the web app `gugugubear.pythonanywhere.com`.
+The staged tree is `site/`. Room rows stay in D1 database `sclmw`. A deploy does not replace that database and does not upload gitignored files. After a data rebuild, the new JSON has to be on the machine that stages `site/` before the deploy.
 
-It does not delete extra files on the server, and it does not replace `data/` or the room database that already live there. After a data rebuild, copy the new JSON onto the server yourself.
-
-The public name is not registered by this script. DNS and the Worker stay in Cloudflare. Shipping a webpage update is: commit, push `master`, wait until the Action "Update the live site" succeeds, then remember the public name may still serve cached JS and CSS for a few hours.
+Shipping a webpage update is: commit, push `master`, and wait until the Action "Update the live site" succeeds.
 
 Pull requests are the normal path on GitHub. An admin push to `master` can bypass that ruleset. The bypass message is expected for that kind of push.
 

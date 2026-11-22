@@ -13,19 +13,19 @@
 | | 地址 | 是什么 |
 |---|---|---|
 | 对外名称 | https://sclmw.cltbbs.com/ | 给访客用的地址。浏览器地址栏保持这个名字。 |
-| 源站 | https://gugugubear.pythonanywhere.com/ | PythonAnywhere 上的应用。同一套页面，也可以直接打开。部署也发到这里。 |
+| 早前的站点 | https://gugugubear.pythonanywhere.com/ | 这个账号已经关闭。推送更新的是 Cloudflare Worker。 |
 
-`sclmw.cltbbs.com` 是反向代理，不是跳转，也不是把 CNAME 指到源站。Cloudflare 区域 `cltbbs.com`，Worker 名 `sclmw-proxy`，自定义主机名 `sclmw.cltbbs.com`。Worker 去取 `https://gugugubear.pythonanywhere.com`，请求头 `Host` 用源站的主机名；如果上游的 `Location` 会露出源站，就改回当前主机名。Worker 脚本不在这个仓库里。要换源站，改 Worker 里的 `ORIGIN` 常量，再把脚本上传一次。
+`sclmw.cltbbs.com` 是 Cloudflare 区域 `cltbbs.com` 上的 Worker `sclmw`。源码在 [worker/](worker/)，[wrangler.jsonc](wrangler.jsonc) 写着账户、自定义主机名和 D1 数据库 `sclmw`。推送更新的是这个 Worker。PythonAnywhere 账号已经关闭。
 
-两个地址是同一套应用。房间请求和地图文件都用相对路径，所以从哪个名字打开，就留在哪个名字上。Starfix 1.0.14 接受从这两个名字发起的连接。见 [companion/README.md](companion/README.md)。
+房间请求和地图文件都用相对路径，所以从对外名称打开，就留在这个名字上。Starfix 1.0.14 仍接受写着早前站点的连接。见 [companion/README.md](companion/README.md)。
 
-Cloudflare 可能把静态文件留几个小时。2026 年 10 月 30 日查过：对外名称上的 `js/starmap.js` 是 `cache-control: max-age=14400`、`cf-cache-status: HIT`，源站当时已经是更新的文件。部署完成后，源站在 Action 成功时就换好了。对外名称要等这份缓存过期。房间接口来自 [server/room_server.py](server/room_server.py)，响应带 `Cache-Control: no-store`。页面本身不是私人文档。登录态是 `localStorage` 里的 Bearer 令牌，不是 Cookie。
+Cloudflare 可能把静态文件留几个小时。2026 年 10 月 30 日查过：对外名称上的 `js/starmap.js` 是 `cache-control: max-age=14400`、`cf-cache-status: HIT`，源站当时已经是更新的文件。那次检查针对的是当时的反向代理。现在 Action 更新的是对外名称上的 Worker。房间接口来自 [server/room_server.py](server/room_server.py)，响应带 `Cache-Control: no-store`。页面本身不是私人文档。登录态是 `localStorage` 里的 Bearer 令牌，不是 Cookie。
 
 ## 改之前要知道的
 
 - 网站不读游戏目录。只有你在自己电脑上启动的 Starfix，才会打开你选定的那一个日志文件。
 - `data/` 在一台机器上生成，不进 git。推送不会上传它，也不会换掉服务器上已经放着的那一份。生成步骤写在下面。
-- 不要提交 `companion/config.json`、`server/*.sqlite`、`data/loc.json`、`.env`，也不要提交 PythonAnywhere 令牌。部署用的密钥是 GitHub Actions 机密 `PA_API_TOKEN`。
+- 不要提交 `companion/config.json`、`server/*.sqlite`、`data/loc.json`、`.env`，也不要提交 API 令牌。部署用的密钥是 GitHub Actions 机密 `CLOUDFLARE_API_TOKEN`。
 - 第四个星系不会自己出现。[scripts/systems-build.py](scripts/systems-build.py) 里写的是斯坦顿、派罗、尼克斯。页面上的按钮跟这份名单一致。
 - 中文地名来自本机的游戏 Language 目录，用 `python scripts/loc-build.py` 生成。这一步不在 `scripts/build-all.py` 里。生成的 `data/loc.json` 不进 git。
 - 地图上的商店和设施，有官方文本就用官方文本。没有正式店名的，保持英文。
@@ -64,22 +64,17 @@ Starfix 允许这些页面来源，另外还有 `http://127.0.0.1` 和 `http://l
 
 新打开的窗口里，星图地址是 `https://sclmw.cltbbs.com`。如果保存的地址还是以前内置的 `https://gugugubear.pythonanywhere.com`，这个版本下次启动时会换成新地址。从某个页面连过来时，存的是那个页面自己的地址。
 
-从某个页面点「连到这台电脑」，就会把那个页面的来源存成接口地址。更早安装的程序会一直用 PythonAnywhere，直到你再连一次。代理在前面时，两个地址都可以用。
+从某个页面点「连到这台电脑」，就会把那个页面的来源存成接口地址。更早安装的程序会一直用 PythonAnywhere，直到你再连一次。现在应答的是对外名称。
 
 ## 部署这一份网站
 
-推送到 `master` 会启动 [.github/workflows/deploy.yml](.github/workflows/deploy.yml)。任务检出仓库，再运行 [scripts/deploy_pythonanywhere.py](scripts/deploy_pythonanywhere.py)。
+推送到 `master` 会启动 [.github/workflows/deploy.yml](.github/workflows/deploy.yml)。任务检出仓库，运行 [scripts/stage_site.py](scripts/stage_site.py)，再用 Wrangler 4.165.0 部署 Worker `sclmw`。
 
-这个脚本会：
+任务从 GitHub Actions 机密 `CLOUDFLARE_API_TOKEN` 读取同名令牌。在 Cloudflare 控制台用「编辑 Cloudflare Workers」模板创建，账户选 GuguguBear，并带上 D1 编辑权限。不要把令牌放进仓库或聊天。工作流里的账户编号就是 `wrangler.jsonc` 里已经写着的那一个。
 
-1. 从环境变量读 `PA_API_TOKEN`。在 GitHub 上，这是同名的 Actions 机密。令牌在 PythonAnywhere 账户页创建。
-2. 用 `git ls-files` 列出文件。未跟踪和被 git 忽略的文件不会上传。
-3. 把这些文件上传到 `www.pythonanywhere.com` 上用户 `GuguguBear` 的 `/home/GuguguBear/sc-lmw`。
-4. 重新加载 Web 应用 `gugugubear.pythonanywhere.com`。
+整理出来的目录是 `site/`。房间记录留在 D1 数据库 `sclmw`。一次部署不会换掉这个数据库，也不会上传被 git 忽略的文件。数据重新生成之后，要先出现在执行部署、整理 `site/` 的那台机器上。
 
-它不会删除服务器上多出来的文件，也不会换掉已经在服务器上的 `data/` 或房间数据库。数据重新生成之后，要自己把新的 JSON 拷到服务器。
-
-对外名称不是这个脚本登记的。DNS 和 Worker 在 Cloudflare。发布一次网页改动就是：提交，推送 `master`，等到名为 “Update the live site” 的 Action 成功，并记住对外名称可能还会把缓存里的 JS 和 CSS 再留几个小时。
+发布一次网页改动就是：提交，推送 `master`，等到名为 “Update the live site” 的 Action 成功。
 
 GitHub 上平时走 Pull Request。管理员直接推 `master` 可以绕过这条规则。这种推送出现绕过提示是预期情况。
 

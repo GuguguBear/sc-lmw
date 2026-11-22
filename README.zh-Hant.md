@@ -13,19 +13,19 @@
 | | 網址 | 是什麼 |
 |---|---|---|
 | 對外名稱 | https://sclmw.cltbbs.com/ | 給訪客用的網址。瀏覽器網址列保持這個名字。 |
-| 來源站 | https://gugugubear.pythonanywhere.com/ | PythonAnywhere 上的應用。同一套頁面，也可以直接打開。部署也發到這裡。 |
+| 早前的站點 | https://gugugubear.pythonanywhere.com/ | 這個帳號已經關閉。推送更新的是 Cloudflare Worker。 |
 
-`sclmw.cltbbs.com` 是反向代理，不是重新導向，也不是把 CNAME 指到來源站。Cloudflare 區域 `cltbbs.com`，Worker 名 `sclmw-proxy`，自訂主機名 `sclmw.cltbbs.com`。Worker 去取 `https://gugugubear.pythonanywhere.com`，請求標頭 `Host` 用來來源站的主機名；如果上游的 `Location` 會露出來源站，就改回目前主機名。Worker 指令碼不在這個儲存庫裡。要換來源站，改 Worker 裡的 `ORIGIN` 常數，再把指令碼上傳一次。
+`sclmw.cltbbs.com` 是 Cloudflare 區域 `cltbbs.com` 上的 Worker `sclmw`。原始碼在 [worker/](worker/)，[wrangler.jsonc](wrangler.jsonc) 寫著帳戶、自訂主機名和 D1 資料庫 `sclmw`。推送更新的是這個 Worker。PythonAnywhere 帳號已經關閉。
 
-兩個網址是同一套應用。房間請求和地圖檔案都用相對路徑，所以從哪個名字打開，就留在哪個名字上。Starfix 1.0.14 接受從這兩個名字發起的連線。見 [companion/README.md](companion/README.md)。
+房間請求和地圖檔案都用相對路徑，所以從對外名稱打開，就留在這個名字上。Starfix 1.0.14 仍接受寫著早前站點的連線。見 [companion/README.md](companion/README.md)。
 
-Cloudflare 可能把靜態檔案留幾個小時。2026 年 10 月 30 日查過：對外名稱上的 `js/starmap.js` 是 `cache-control: max-age=14400`、`cf-cache-status: HIT`，來源站當時已經是更新的檔案。部署完成後，來源站在 Action 成功時就換好了。對外名稱要等這份快取過期。房間介面來自 [server/room_server.py](server/room_server.py)，回應帶 `Cache-Control: no-store`。頁面本身不是私人文件。登入狀態是 `localStorage` 裡的 Bearer 權杖，不是 Cookie。
+Cloudflare 可能把靜態檔案留幾個小時。2026 年 10 月 30 日查過：對外名稱上的 `js/starmap.js` 是 `cache-control: max-age=14400`、`cf-cache-status: HIT`，來源站當時已經是更新的檔案。那次檢查針對的是當時的反向代理。現在 Action 更新的是對外名稱上的 Worker。房間介面來自 [server/room_server.py](server/room_server.py)，回應帶 `Cache-Control: no-store`。頁面本身不是私人文件。登入狀態是 `localStorage` 裡的 Bearer 權杖，不是 Cookie。
 
 ## 改之前要知道的
 
 - 網站不讀遊戲資料夾。只有你在自己電腦上啟動的 Starfix，才會打開你選定的那一個日誌檔。
 - `data/` 在一台機器上產生，不進 git。推送不會上傳它，也不會換掉伺服器上已經放著的那一份。產生步驟寫在下面。
-- 不要提交 `companion/config.json`、`server/*.sqlite`、`data/loc.json`、`.env`，也不要提交 PythonAnywhere 權杖。部署用的密鑰是 GitHub Actions 祕密 `PA_API_TOKEN`。
+- 不要提交 `companion/config.json`、`server/*.sqlite`、`data/loc.json`、`.env`，也不要提交 API 權杖。部署用的密鑰是 GitHub Actions 祕密 `CLOUDFLARE_API_TOKEN`。
 - 第四個星系不會自己出現。[scripts/systems-build.py](scripts/systems-build.py) 裡寫的是斯坦頓、派羅、尼克斯。頁面上的按鈕跟這份名單一致。
 - 中文地名來自我方電腦的遊戲 Language 資料夾，用 `python scripts/loc-build.py` 產生。這一步不在 `scripts/build-all.py` 裡。產生的 `data/loc.json` 不進 git。
 - 地圖上的商店和設施，有官方文字就用官方文字。沒有正式店名的，保持英文。
@@ -64,22 +64,17 @@ Starfix 允許這些頁面來源，另外還有 `http://127.0.0.1` 和 `http://l
 
 新打開的視窗裡，星圖位址是 `https://sclmw.cltbbs.com`。如果保存的位址還是以前內建的 `https://gugugubear.pythonanywhere.com`，這個版本下次啟動時會換成新位址。從某個頁面連過來時，存的是那個頁面自己的位址。
 
-從某個頁面點「連到這台電腦」，就會把那個頁面的來源存成介面位址。更早安裝的程式會一直用 PythonAnywhere，直到你再連一次。代理在前面時，兩個網址都可以用。
+從某個頁面點「連到這台電腦」，就會把那個頁面的來源存成介面位址。更早安裝的程式會一直用 PythonAnywhere，直到你再連一次。現在應答的是對外名稱。
 
 ## 部署這一份網站
 
-推送到 `master` 會啟動 [.github/workflows/deploy.yml](.github/workflows/deploy.yml)。工作取出儲存庫，再執行 [scripts/deploy_pythonanywhere.py](scripts/deploy_pythonanywhere.py)。
+推送到 `master` 會啟動 [.github/workflows/deploy.yml](.github/workflows/deploy.yml)。工作取出儲存庫，執行 [scripts/stage_site.py](scripts/stage_site.py)，再用 Wrangler 4.165.0 部署 Worker `sclmw`。
 
-這個指令碼會：
+工作從 GitHub Actions 祕密 `CLOUDFLARE_API_TOKEN` 讀取同名權杖。在 Cloudflare 控制台用「編輯 Cloudflare Workers」範本建立，帳戶選 GuguguBear，並帶上 D1 編輯權限。不要把權杖放進儲存庫或聊天。工作流程裡的帳戶編號就是 `wrangler.jsonc` 裡已經寫著的那一個。
 
-1. 從環境變數讀 `PA_API_TOKEN`。在 GitHub 上，這是同名的 Actions 祕密。權杖在 PythonAnywhere 帳戶頁建立。
-2. 用 `git ls-files` 列出檔案。未追蹤和被 git 忽略的檔案不會上傳。
-3. 把這些檔案上傳到 `www.pythonanywhere.com` 上使用者 `GuguguBear` 的 `/home/GuguguBear/sc-lmw`。
-4. 重新載入 Web 應用 `gugugubear.pythonanywhere.com`。
+整理出來的目錄是 `site/`。房間記錄留在 D1 資料庫 `sclmw`。一次部署不會換掉這個資料庫，也不會上傳被 git 忽略的檔案。資料重新產生之後，要先出現在執行部署、整理 `site/` 的那台機器上。
 
-它不會刪除伺服器上多出來的檔案，也不會換掉已經在伺服器上的 `data/` 或房間資料庫。資料重新產生之後，要自己把新的 JSON 拷到伺服器。
-
-對外名稱不是這個指令碼登記的。DNS 和 Worker 在 Cloudflare。發布一次網頁改動就是：提交，推送 `master`，等到名為 “Update the live site” 的 Action 成功，並記住對外名稱可能還會把快取裡的 JS 和 CSS 再留幾個小時。
+發布一次網頁改動就是：提交，推送 `master`，等到名為 “Update the live site” 的 Action 成功。
 
 GitHub 上平時走 Pull Request。管理員直接推 `master` 可以繞過這條規則。這種推送出現繞過提示是預期情況。
 

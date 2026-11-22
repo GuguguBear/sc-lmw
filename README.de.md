@@ -13,19 +13,19 @@ Eine freie, quelloffene 3D-Karte von Star Citizen: Stanton, Pyro und Nyx, mit Su
 | | Adresse | Bedeutung |
 |---|---|---|
 | Öffentlicher Name | https://sclmw.cltbbs.com/ | Die Adresse für Besucher. Die Adresszeile bleibt auf diesem Namen. |
-| Ursprung | https://gugugubear.pythonanywhere.com/ | Die App auf PythonAnywhere. Dieselben Seiten, direkt erreichbar. Auch das Ziel der Bereitstellung. |
+| Früherer Host | https://gugugubear.pythonanywhere.com/ | Dieses Konto ist geschlossen. Ein Push aktualisiert den Cloudflare-Worker. |
 
-`sclmw.cltbbs.com` ist ein Reverse-Proxy, kein Redirect und kein CNAME auf den Ursprung. Cloudflare-Zone `cltbbs.com`, Worker `sclmw-proxy`, Custom Hostname `sclmw.cltbbs.com`. Der Worker holt `https://gugugubear.pythonanywhere.com` mit dem `Host`-Header dieses Ursprungs und schreibt ein `Location` um, das den Ursprung zeigen würde. Das Worker-Skript liegt nicht in diesem Repository. Den Ursprung ändert man in der Konstante `ORIGIN` des Workers und lädt das Skript neu hoch.
+`sclmw.cltbbs.com` ist der Worker `sclmw` in der Cloudflare-Zone `cltbbs.com`. Der Quelltext liegt in [worker/](worker/), und [wrangler.jsonc](wrangler.jsonc) setzt das Konto, den Custom Hostname und die D1-Datenbank `sclmw`. Ein Push aktualisiert diesen Worker. Das PythonAnywhere-Konto ist geschlossen.
 
-Beide Adressen liefern eine Anwendung. Raumaufrufe und Kartendateien sind relativ, deshalb bleibt eine geöffnete Seite auf ihrem Namen. Starfix 1.0.14 nimmt eine Verbindung von beiden Namen an. Siehe [companion/README.md](companion/README.md).
+Raumaufrufe und Kartendateien sind relativ, deshalb bleibt eine Seite auf dem öffentlichen Namen. Starfix 1.0.14 nimmt weiterhin eine Verbindung an, die den früheren Host nennt. Siehe [companion/README.md](companion/README.md).
 
-Cloudflare kann eine statische Datei mehrere Stunden behalten. Eine Prüfung am 30. Okt. 2026 zeigte `js/starmap.js` auf dem öffentlichen Namen mit `cache-control: max-age=14400` und `cf-cache-status: HIT`, während der Ursprung die neuere Datei schon hatte. Nach einer Bereitstellung ist der Ursprung fertig, sobald die Action durch ist. Der öffentliche Name kann hinterherhinken, bis dieser Cache abläuft. Raum-API-Antworten aus [server/room_server.py](server/room_server.py) senden `Cache-Control: no-store`. Die Seite selbst ist kein privates Dokument. Der Anmeldestand ist ein Bearer-Token in `localStorage`, kein Cookie.
+Cloudflare kann eine statische Datei mehrere Stunden behalten. Eine Prüfung am 30. Okt. 2026 zeigte `js/starmap.js` auf dem öffentlichen Namen mit `cache-control: max-age=14400` und `cf-cache-status: HIT`, während der Ursprung die neuere Datei schon hatte. Diese Prüfung galt dem alten Proxy. Die Action aktualisiert jetzt den Worker auf dem öffentlichen Namen. Raum-API-Antworten aus [server/room_server.py](server/room_server.py) senden `Cache-Control: no-store`. Die Seite selbst ist kein privates Dokument. Der Anmeldestand ist ein Bearer-Token in `localStorage`, kein Cookie.
 
 ## Was man wissen sollte
 
 - Die Website liest nie den Spielordner. Nur Starfix, auf dem Rechner, auf dem man es startet, öffnet die eine Logdatei, die man auswählt.
 - `data/` wird auf einem Rechner gebaut und liegt nicht in Git. Ein Push lädt es nicht hoch und ersetzt die Kopie auf dem Server nicht. Der Bau steht unten.
-- Nicht committen: `companion/config.json`, `server/*.sqlite`, `data/loc.json`, `.env`, ein PythonAnywhere-Token. Das Geheimnis der Bereitstellung heißt `PA_API_TOKEN` in den GitHub-Actions-Secrets.
+- Nicht committen: `companion/config.json`, `server/*.sqlite`, `data/loc.json`, `.env`, ein API-Token. Das Geheimnis der Bereitstellung heißt `CLOUDFLARE_API_TOKEN` in den GitHub-Actions-Secrets.
 - Ein viertes Sternsystem erscheint nicht von allein. [scripts/systems-build.py](scripts/systems-build.py) nennt Stanton, Pyro und Nyx. Die Knöpfe der Seite folgen dieser Liste.
 - Chinesische Ortsnamen kommen aus einem lokalen Language-Ordner des Spiels über `python scripts/loc-build.py`. Dieser Schritt gehört nicht zu `scripts/build-all.py`. Die erzeugte `data/loc.json` bleibt außerhalb von Git.
 - Laden- und Einrichtungsnamen auf der Karte nutzen die Texte des Spiels, wo es sie gibt. Namen ohne offiziellen Ladentitel bleiben Englisch.
@@ -64,22 +64,17 @@ Starfix lässt diese Seiten-Ursprünge zu, dazu `http://127.0.0.1` und `http://l
 
 Ein neues Fenster trägt `https://sclmw.cltbbs.com` ein. Steht in der gespeicherten Konfiguration noch die frühere Vorgabe `https://gugugubear.pythonanywhere.com`, setzt der nächste Start dieser Version sie um. Eine Verbindung von einer Seite speichert die Adresse dieser Seite.
 
-Eine Verbindung von einer Seite speichert den Ursprung dieser Seite als API-Basis. Eine ältere Installation behält die PythonAnywhere-Adresse, bis man erneut verbindet. Beide Adressen gehen, sobald der Proxy davor steht.
+Eine Verbindung von einer Seite speichert den Ursprung dieser Seite als API-Basis. Eine ältere Installation behält die PythonAnywhere-Adresse, bis man erneut verbindet. Der öffentliche Name ist der, der antwortet.
 
 ## Diese Ausgabe bereitstellen
 
-Ein Push auf `master` startet [.github/workflows/deploy.yml](.github/workflows/deploy.yml). Der Job holt das Repo und führt [scripts/deploy_pythonanywhere.py](scripts/deploy_pythonanywhere.py) aus.
+Ein Push auf `master` startet [.github/workflows/deploy.yml](.github/workflows/deploy.yml). Der Job holt das Repo, führt [scripts/stage_site.py](scripts/stage_site.py) aus und stellt den Worker `sclmw` mit Wrangler 4.165.0 bereit.
 
-Das Skript:
+Der Job liest `CLOUDFLARE_API_TOKEN` aus dem gleichnamigen GitHub-Actions-Secret. Den Token legt man im Cloudflare-Dashboard mit der Vorlage „Edit Cloudflare Workers“ an, für das Konto GuguguBear, einschließlich D1-Bearbeitung. Den Token nicht ins Repo und nicht in den Chat legen. Die Konto-ID im Workflow ist die schon in `wrangler.jsonc` stehende.
 
-1. Liest `PA_API_TOKEN` aus der Umgebung. Auf GitHub ist das das Actions-Secret desselben Namens. Den Token legt man auf der PythonAnywhere-Kontoseite an.
-2. Listet Dateien mit `git ls-files`. Nicht verfolgte und von Git ignorierte Dateien werden nicht hochgeladen.
-3. Lädt diese Dateien nach `/home/GuguguBear/sc-lmw` auf `www.pythonanywhere.com` für den Benutzer `GuguguBear`.
-4. Lädt die Web-App `gugugubear.pythonanywhere.com` neu.
+Das vorbereitete Verzeichnis ist `site/`. Raumzeilen bleiben in der D1-Datenbank `sclmw`. Eine Bereitstellung ersetzt diese Datenbank nicht und lädt keine von Git ignorierten Dateien hoch. Nach einem Neubau der Daten muss das neue JSON auf der Maschine liegen, die `site/` vorbereitet.
 
-Es löscht keine zusätzlichen Dateien auf dem Server und ersetzt weder `data/` noch die Raumdatenbank, die dort schon liegen. Nach einem Neubau der Daten kopiert man das neue JSON selbst auf den Server.
-
-Den öffentlichen Namen trägt dieses Skript nicht ein. DNS und der Worker bleiben bei Cloudflare. Eine Seitenänderung ausliefern heißt: committen, `master` pushen, warten bis die Action „Update the live site“ fertig ist, und daran denken, dass der öffentliche Name JS und CSS noch ein paar Stunden aus dem Cache liefern kann.
+Eine Seitenänderung ausliefern heißt: committen, `master` pushen und warten, bis die Action „Update the live site“ fertig ist.
 
 Pull Requests sind der normale Weg auf GitHub. Ein Admin-Push auf `master` kann diese Regel umgehen. Die Umgehungsmeldung ist bei einem solchen Push erwartet.
 
