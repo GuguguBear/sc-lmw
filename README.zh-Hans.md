@@ -1,6 +1,6 @@
 # SC LMW – 星际公民星图
 
-**版本 1.1.0** · AGPL-3.0 · Starfix 1.0.14
+**版本 1.1.0** · AGPL-3.0 · Starfix 1.0.15
 
 [English](README.md) · [Deutsch](README.de.md) · **简体中文** · [繁體中文](README.zh-Hant.md)
 
@@ -17,7 +17,7 @@
 
 `sclmw.cltbbs.com` 是 Cloudflare 区域 `cltbbs.com` 上的 Worker `sclmw`。源码在 [worker/](worker/)，[wrangler.jsonc](wrangler.jsonc) 写着账户、自定义主机名和 D1 数据库 `sclmw`。推送更新的是这个 Worker。PythonAnywhere 账号已经关闭。
 
-房间请求和地图文件都用相对路径，所以从对外名称打开，就留在这个名字上。Starfix 1.0.14 仍接受写着早前站点的连接。见 [companion/README.md](companion/README.md)。
+房间请求和地图文件都用相对路径，所以从对外名称打开，就留在这个名字上。Starfix 1.0.15 仍接受写着早前站点的连接。见 [companion/README.md](companion/README.md)。
 
 Cloudflare 可能把静态文件留几个小时。2026 年 10 月 30 日查过：对外名称上的 `js/starmap.js` 是 `cache-control: max-age=14400`、`cf-cache-status: HIT`，源站当时已经是更新的文件。那次检查针对的是当时的反向代理。现在 Action 更新的是对外名称上的 Worker。房间接口来自 [server/room_server.py](server/room_server.py)，响应带 `Cache-Control: no-store`。页面本身不是私人文档。登录态是 `localStorage` 里的 Bearer 令牌，不是 Cookie。
 
@@ -51,7 +51,7 @@ Cloudflare 可能把静态文件留几个小时。2026 年 10 月 30 日查过�
 
 Starfix 读取这台电脑上的 `Game.log`。你确认之后，它把地点代码发到房间。它不进游戏进程，不读内存，不上传整份日志。运行源码之前先读 [companion/README.md](companion/README.md)。
 
-已发布的安装包：[Starfix 1.0.14](https://github.com/GuguguBear/sc-lmw/releases/tag/starfix-1.0.14)。程序拿 `companion/VERSION` 和名为 `starfix-X.Y.Z` 的 GitHub Release 比较。把 `companion/**` 或 [.github/workflows/starfix-release.yml](.github/workflows/starfix-release.yml) 推到 `master`，如果这个标签还不存在，就会打出 exe。[companion/write_version_info.py](companion/write_version_info.py) 用同一个版本号写 Windows 的版本信息。
+已发布的安装包：[Starfix 1.0.15](https://github.com/GuguguBear/sc-lmw/releases/tag/starfix-1.0.15)。程序拿 `companion/VERSION` 和名为 `starfix-X.Y.Z` 的 GitHub Release 比较。把 `companion/**` 或 [.github/workflows/starfix-release.yml](.github/workflows/starfix-release.yml) 推到 `master`，如果这个标签还不存在，就会打出 exe。[companion/write_version_info.py](companion/write_version_info.py) 用同一个版本号写 Windows 的版本信息。
 
 更新时，窗口用你已经选好的主题，显示箱子装进集装箱的进度。下载结束后，辅助程序把新文件盖到你刚才打开的那个文件上。Windows PowerShell 的 `Move-Item -Force` 换不掉已经存在的 exe，所以辅助程序用 `System.IO.File.Copy`。如果你打开的文件名叫 `Starfix 1.0.6.exe`，新文件会是 `Starfix 1.0.8.exe`，旧名字会去掉。文件名就是 `Starfix.exe` 的，继续用这个名字。
 

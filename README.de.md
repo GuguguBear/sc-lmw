@@ -1,6 +1,6 @@
 # SC LMW – Star Citizen LiveMap Wiki
 
-**Version 1.1.0** · AGPL-3.0 · Starfix 1.0.14
+**Version 1.1.0** · AGPL-3.0 · Starfix 1.0.15
 
 [English](README.md) · **Deutsch** · [简体中文](README.zh-Hans.md) · [繁體中文](README.zh-Hant.md)
 
@@ -17,7 +17,7 @@ Eine freie, quelloffene 3D-Karte von Star Citizen: Stanton, Pyro und Nyx, mit Su
 
 `sclmw.cltbbs.com` ist der Worker `sclmw` in der Cloudflare-Zone `cltbbs.com`. Der Quelltext liegt in [worker/](worker/), und [wrangler.jsonc](wrangler.jsonc) setzt das Konto, den Custom Hostname und die D1-Datenbank `sclmw`. Ein Push aktualisiert diesen Worker. Das PythonAnywhere-Konto ist geschlossen.
 
-Raumaufrufe und Kartendateien sind relativ, deshalb bleibt eine Seite auf dem öffentlichen Namen. Starfix 1.0.14 nimmt weiterhin eine Verbindung an, die den früheren Host nennt. Siehe [companion/README.md](companion/README.md).
+Raumaufrufe und Kartendateien sind relativ, deshalb bleibt eine Seite auf dem öffentlichen Namen. Starfix 1.0.15 nimmt weiterhin eine Verbindung an, die den früheren Host nennt. Siehe [companion/README.md](companion/README.md).
 
 Cloudflare kann eine statische Datei mehrere Stunden behalten. Eine Prüfung am 30. Okt. 2026 zeigte `js/starmap.js` auf dem öffentlichen Namen mit `cache-control: max-age=14400` und `cf-cache-status: HIT`, während der Ursprung die neuere Datei schon hatte. Diese Prüfung galt dem alten Proxy. Die Action aktualisiert jetzt den Worker auf dem öffentlichen Namen. Raum-API-Antworten aus [server/room_server.py](server/room_server.py) senden `Cache-Control: no-store`. Die Seite selbst ist kein privates Dokument. Der Anmeldestand ist ein Bearer-Token in `localStorage`, kein Cookie.
 
@@ -51,7 +51,7 @@ Optional. Die Karte geht auch ohne: Rechtsklick und „Ich bin hier“.
 
 Starfix liest `Game.log` auf diesem Rechner und sendet nach der Bestätigung den Ortscode an den Raum. Es hängt sich nicht an das Spiel, liest keinen Speicher und lädt das Log nicht hoch. Vor dem Start der Quellen [companion/README.md](companion/README.md) lesen.
 
-Veröffentlichter Bau: [Starfix 1.0.14](https://github.com/GuguguBear/sc-lmw/releases/tag/starfix-1.0.14). Das Programm vergleicht `companion/VERSION` mit GitHub-Releases namens `starfix-X.Y.Z`. Ein Push von `companion/**` oder [.github/workflows/starfix-release.yml](.github/workflows/starfix-release.yml) auf `master` baut die exe, wenn es das Tag noch nicht gibt. [companion/write_version_info.py](companion/write_version_info.py) schreibt die Windows-Versionsangabe aus derselben Zahl.
+Veröffentlichter Bau: [Starfix 1.0.15](https://github.com/GuguguBear/sc-lmw/releases/tag/starfix-1.0.15). Das Programm vergleicht `companion/VERSION` mit GitHub-Releases namens `starfix-X.Y.Z`. Ein Push von `companion/**` oder [.github/workflows/starfix-release.yml](.github/workflows/starfix-release.yml) auf `master` baut die exe, wenn es das Tag noch nicht gibt. [companion/write_version_info.py](companion/write_version_info.py) schreibt die Windows-Versionsangabe aus derselben Zahl.
 
 Beim Update zeigt ein Fenster im bereits gewählten Thema, wie Kisten in einen Container geladen werden. Danach kopiert ein Helfer die neue Datei über die gestartete. `Move-Item -Force` in Windows PowerShell ersetzt eine vorhandene exe nicht, deshalb nutzt der Helfer `System.IO.File.Copy`. Heißt die gestartete Datei `Starfix 1.0.6.exe`, wird die neue `Starfix 1.0.8.exe`, und der alte Name verschwindet. Eine Datei, die nur `Starfix.exe` heißt, behält diesen Namen.
 
