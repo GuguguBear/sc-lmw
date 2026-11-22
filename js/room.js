@@ -30,7 +30,7 @@
       kick:'踢出', kickYes:'确定', kicked:'你已被移出这个房间。', denied:'队长拒绝了这次申请。',
       cast:'广播', castLead:'发给这个房间里的所有人。', castPh:'写一句给小队的话', castSend:'发送', castFrom:'来自', castClose:'知道了', castSound:'广播音效', castOn:'开', castOff:'关', castEmpty:'先写一点内容。',
       horn:'集合号角', hornLead:'指定一个地点和时间。队员会反复看到这声号角，直到选择参加或不参加。', hornPlace:'地点', hornNeed:'先在星图上点一个地点。', hornTime:'集合时间', hornSend:'吹响', hornClear:'取消号角', hornJoin:'参加', hornSkip:'不参加', hornLook:'查看地点', hornLater:'稍后', hornGoing:'参加', hornGone:'不参加', hornPin:'集合',
-      plaza:'鬼市酒吧', plazaPage:'独立页面', plazaBack:'返回星图', plazaLead:'大厅里的人彼此看得到位置，聊天室可以说话。招募和你的小队房间是分开的。', plazaOn:'出现在大厅', plazaOff:'离开大厅', plazaHere:'用当前地点', plazaNeed:'先在星图上点一个地点，或打开 Starfix。', plazaEmpty:'还没有人出现在大厅。',
+      plaza:'鬼市酒吧', plazaPage:'独立页面', plazaBack:'返回星图', plazaLead:'大厅里只显示昵称，聊天室可以说话。招募和你的小队房间是分开的。', plazaOn:'出现在大厅', plazaOff:'离开大厅', plazaHere:'用当前地点', plazaNeed:'先在星图上点一个地点，或打开 Starfix。', plazaEmpty:'还没有人出现在大厅。',
       chatPh:'说一句', chatSend:'发送', chatEmpty:'先写一点内容。', chatFast:'说得太快了。',
       hallTab:'大厅', shipTab:'载具招募', jobTab:'任务招募', roamTab:'闲游招募',
       shipLead:'给自己的载具找队员。可以是散人队伍，也可以是固定队伍。', jobLead:'发布一项任务或一场活动，把需求写清楚。', roamLead:'找人一起闲逛。可以是散人队伍，也可以是固定队伍。',
@@ -76,7 +76,7 @@
       kick:'踢出', kickYes:'確定', kicked:'你已被移出這個房間。', denied:'隊長拒絕了這次申請。',
       cast:'廣播', castLead:'發給這個房間裡的所有人。', castPh:'寫一句給小隊的話', castSend:'發送', castFrom:'來自', castClose:'知道了', castSound:'廣播音效', castOn:'開', castOff:'關', castEmpty:'先寫一點內容。',
       horn:'集合號角', hornLead:'指定一個地點和時間。隊員會反覆看到這聲號角，直到選擇參加或不參加。', hornPlace:'地點', hornNeed:'先在星圖上點一個地點。', hornTime:'集合時間', hornSend:'吹響', hornClear:'取消號角', hornJoin:'參加', hornSkip:'不參加', hornLook:'查看地點', hornLater:'稍後', hornGoing:'參加', hornGone:'不參加', hornPin:'集合',
-      plaza:'鬼市酒吧', plazaPage:'獨立頁面', plazaBack:'返回星圖', plazaLead:'大廳裡的人彼此看得到位置，聊天室可以說話。招募和你的小隊房間是分開的。', plazaOn:'出現在大廳', plazaOff:'離開大廳', plazaHere:'用目前地點', plazaNeed:'先在星圖上點一個地點，或打開 Starfix。', plazaEmpty:'還沒有人出現在大廳。',
+      plaza:'鬼市酒吧', plazaPage:'獨立頁面', plazaBack:'返回星圖', plazaLead:'大廳裡只顯示暱稱，聊天室可以說話。招募和你的小隊房間是分開的。', plazaOn:'出現在大廳', plazaOff:'離開大廳', plazaHere:'用目前地點', plazaNeed:'先在星圖上點一個地點，或打開 Starfix。', plazaEmpty:'還沒有人出現在大廳。',
       chatPh:'說一句', chatSend:'發送', chatEmpty:'先寫一點內容。', chatFast:'說得太快了。',
       hallTab:'大廳', shipTab:'載具招募', jobTab:'任務招募', roamTab:'閒遊招募',
       shipLead:'給自己的載具找隊員。可以是散人隊伍，也可以是固定隊伍。', jobLead:'發布一項任務或一場活動，把需求寫清楚。', roamLead:'找人一起閒逛。可以是散人隊伍，也可以是固定隊伍。',
@@ -122,7 +122,7 @@
       kick:'Remove', kickYes:'Confirm', kicked:'You were removed from this room.', denied:'The captain declined this request.',
       cast:'Broadcast', castLead:'Send this to everyone in the room.', castPh:'A note for the squad', castSend:'Send', castFrom:'From', castClose:'Got it', castSound:'Broadcast sound', castOn:'On', castOff:'Off', castEmpty:'Write something first.',
       horn:'Rally', hornLead:'Pick a place and a time. The site keeps reminding the team until each member joins or declines.', hornPlace:'Place', hornNeed:'Click a place on the map first.', hornTime:'Time', hornSend:'Sound it', hornClear:'Cancel rally', hornJoin:'Join', hornSkip:'Decline', hornLook:'Show place', hornLater:'Later', hornGoing:'Going', hornGone:'Not going', hornPin:'Rally',
-      plaza:'Ghost Market Bar', plazaPage:'Own page', plazaBack:'Back to map', plazaLead:'People who appear here can see each other, and the chat stays open beside the list. Recruitment is separate from your crew room.', plazaOn:'Appear in the lobby', plazaOff:'Leave the lobby', plazaHere:'Use the selected place', plazaNeed:'Click a place on the map first, or run Starfix.', plazaEmpty:'Nobody is in the lobby yet.',
+      plaza:'Ghost Market Bar', plazaPage:'Own page', plazaBack:'Back to map', plazaLead:'The lobby lists nicknames, and the chat stays open beside the list. Recruitment is separate from your crew room.', plazaOn:'Appear in the lobby', plazaOff:'Leave the lobby', plazaHere:'Use the selected place', plazaNeed:'Click a place on the map first, or run Starfix.', plazaEmpty:'Nobody is in the lobby yet.',
       chatPh:'Say something', chatSend:'Send', chatEmpty:'Write something first.', chatFast:'Too fast.',
       hallTab:'Lobby', shipTab:'Vehicle crew', jobTab:'Missions', roamTab:'Roaming',
       shipLead:'Find crew for your vehicle. It can be a one-off or a standing crew.', jobLead:'Post a mission or an event and write what you need.', roamLead:'Find people to roam with. One-off or a standing group.',
@@ -168,7 +168,7 @@
       kick:'Entfernen', kickYes:'Wirklich', kicked:'Du wurdest aus diesem Raum entfernt.', denied:'Der Captain hat diese Anfrage abgelehnt.',
       cast:'Durchsage', castLead:'Das geht an alle in diesem Raum.', castPh:'Ein Satz für die Gruppe', castSend:'Senden', castFrom:'Von', castClose:'Verstanden', castSound:'Durchsage-Ton', castOn:'An', castOff:'Aus', castEmpty:'Erst etwas schreiben.',
       horn:'Sammelruf', hornLead:'Ort und Zeit festlegen. Die Seite erinnert, bis jede Person zusagt oder absagt.', hornPlace:'Ort', hornNeed:'Zuerst einen Ort auf der Karte antippen.', hornTime:'Zeit', hornSend:'Blasen', hornClear:'Ruf aufheben', hornJoin:'Dabei', hornSkip:'Nicht dabei', hornLook:'Ort zeigen', hornLater:'Später', hornGoing:'Dabei', hornGone:'Nicht dabei', hornPin:'Ruf',
-      plaza:'Geistermarkt-Bar', plazaPage:'Eigene Seite', plazaBack:'Zur Karte', plazaLead:'Wer hier erscheint, sieht die anderen. Der Chat bleibt daneben offen. Anwerbung bleibt getrennt vom Gruppenraum.', plazaOn:'In der Halle erscheinen', plazaOff:'Halle verlassen', plazaHere:'Gewählten Ort nehmen', plazaNeed:'Zuerst einen Ort auf der Karte antippen, oder Starfix laufen lassen.', plazaEmpty:'Noch niemand in der Halle.',
+      plaza:'Geistermarkt-Bar', plazaPage:'Eigene Seite', plazaBack:'Zur Karte', plazaLead:'Die Halle zeigt nur Namen. Der Chat bleibt daneben offen. Anwerbung bleibt getrennt vom Gruppenraum.', plazaOn:'In der Halle erscheinen', plazaOff:'Halle verlassen', plazaHere:'Gewählten Ort nehmen', plazaNeed:'Zuerst einen Ort auf der Karte antippen, oder Starfix laufen lassen.', plazaEmpty:'Noch niemand in der Halle.',
       chatPh:'Etwas sagen', chatSend:'Senden', chatEmpty:'Erst etwas schreiben.', chatFast:'Zu schnell.',
       hallTab:'Halle', shipTab:'Fahrzeugcrew', jobTab:'Aufträge', roamTab:'Streifzug',
       shipLead:'Besatzung für ein Fahrzeug suchen. Einmalig oder fest.', jobLead:'Einen Auftrag oder ein Treffen ausschreiben und den Bedarf dazu.', roamLead:'Leute zum Herumziehen suchen. Einmalig oder fest.',
@@ -2159,16 +2159,6 @@
     if(!o || !o.id || o.k==='player' || o.grp) return {};
     return {location:String(o.n||''), system:o.sy||'', code:String(o.id)};
   }
-  function lobbyMeta(p){
-    var bits = [];
-    var place = placeFace(p.location||'');
-    if(place) bits.push(place);
-    if(p.ship) bits.push(p.ship);
-    if(p.server) bits.push(p.server);
-    bits.push(p.starfix ? t('sfxOn') : t('sfxOff'));
-    bits.push(p.game ? t('gameOn') : t('gameOff'));
-    return bits.join(' · ');
-  }
   function mergeChat(lines){
     (lines||[]).forEach(function(line){
       if(!line || line.id==null) return;
@@ -2199,9 +2189,7 @@
     }
     if(d.chat) mergeChat(d.chat);
     if(d.line) mergeChat([d.line]);
-    window.__stLobbyPeople = plazaPeople.filter(function(p){ return p.code; }).map(function(p){
-      return {id:p.id, place:p.code, label:p.nickname||''};
-    });
+    window.__stLobbyPeople = [];
     if(plazaOn) paintPlaza();
   }
   function pullPlaza(){
@@ -2685,6 +2673,8 @@
     el.querySelectorAll('[data-ph]').forEach(function(node){ node.placeholder = t(node.getAttribute('data-ph')); });
     var on = el.querySelector('#stLobbyOn');
     if(on) on.textContent = plazaMineOn ? t('plazaOff') : t('plazaOn');
+    var here = el.querySelector('#stLobbyHere');
+    if(here) here.hidden = true;
     el.querySelectorAll('.st-plaza-dd').forEach(function(dd){
       var input = dd.querySelector('input');
       var val = input ? input.value : '';
@@ -2703,7 +2693,7 @@
     if(!box) return;
     if(!plazaPeople.length){ box.innerHTML = '<p class="st-flash is-quiet">'+esc(t('plazaEmpty'))+'</p>'; return; }
     box.innerHTML = plazaPeople.map(function(p){
-      return '<button type="button" class="st-lobby-row'+(p.mine?' mine':'')+'" data-fly="'+esc(p.code||'')+'"><b>'+esc(p.nickname||'')+(p.mine?' · '+esc(t('you')):'')+'</b><span>'+esc(lobbyMeta(p))+'</span></button>';
+      return '<div class="st-lobby-row'+(p.mine?' mine':'')+'"><b>'+esc(p.nickname||'')+(p.mine?' · '+esc(t('you')):'')+'</b></div>';
     }).join('');
   }
   function fillChat(){
