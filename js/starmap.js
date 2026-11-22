@@ -561,7 +561,7 @@ function stantonScene(canvas,sysKey){
   if(window.__stCtl&&window.__stCtl._cleanup){ try{ window.__stCtl._cleanup(); }catch(e){} }   // nie zwei Karten gleichzeitig (doppelte Listener, Zombie-Schleife)
   if(sysKey) ST_SYS=sysKey;
   const T=THREE;
-  const renderer=new T.WebGLRenderer({canvas:canvas,antialias:true,alpha:true});
+  const renderer=new T.WebGLRenderer({canvas:canvas,antialias:true,alpha:true,preserveDrawingBuffer:true});
   renderer.setPixelRatio(touchShell()?1:Math.min(window.devicePixelRatio||1,2));
   const scene=new T.Scene();
   const camera=new T.PerspectiveCamera(42,1,0.004,4000);
@@ -768,7 +768,7 @@ function stantonScene(canvas,sysKey){
       const pt=new T.Points(g,new T.PointsMaterial({color:(ST_KIND[k]||{}).c||'#fff',size:sz,sizeAttenuation:false,map:ic||dotTex,transparent:true,alphaTest:0.15,depthWrite:false}));
       pt.renderOrder=5; grp.add(pt); }); }
   // Dashboard: nur das gewaehlte System, Planeten kreisen. Karte: alle drei Systeme, echte Positionen, Wurmloecher.
-  function buildSys(){ const D=ST_DATA, anim=!explore(); sunLight.intensity=0;
+  function buildSys(full){ const D=ST_DATA, anim=!full; sunLight.intensity=0;
     (anim?[D.sys[ST_SYS]||D.sys.stanton]:Object.values(D.sys)).forEach(S=>buildOneSys(S,anim));
     if(!anim) buildLinks(); }
   function buildOneSys(S,anim){ const G0=grp, sg=new T.Group(); sg.userData.sys=S.k; G0.add(sg); sysGroups.push(sg); grp=sg; const e0=entries.length;
@@ -803,7 +803,7 @@ function stantonScene(canvas,sysKey){
   }
   // Spieler: an ihrem Ort; liegt der Ort auf einem Planeten/Mond, sitzt die Figur ueber dessen Kugel
   let plPts=[];
-  function buildPlayers(){ plPts=[]; if(!explore()||!ST_PL||!ST_PL.length||!ST_VIS.player) return; const D=ST_DATA, byAnchor={}, on=[], off=[];
+  function buildPlayers(){ plPts.length=0; if(!explore()||!ST_PL||!ST_PL.length||!ST_VIS.player) return; const D=ST_DATA, byAnchor={}, on=[], off=[];
     // Mehrere Spieler am selben Ort (Nico, 28.09.2026): EIN Schild "Levski · 4 Spieler", Tippen klappt die Liste auf
     const seen=[];
     ST_PL.forEach(p=>{ if(p.online?!ST_PL_ON:!ST_PL_OFF) return; const po=stPlayerObj(p); if(!po) return; let pos=null, key, anc=po.loc;
@@ -939,15 +939,65 @@ function stantonScene(canvas,sysKey){
     addMarkers(descendants(F.id,c=>c.k==='moon'),o=>{ const v=rel(o); if(v.length()<lift) v.setLength(lift); return v; });
   }
   function dispose(g){ const kept=Object.values(BODY_MAP); g.traverse(x=>{ if(x.geometry) x.geometry.dispose(); if(x.material){ if(x.material.map&&x.material.map!==dotTex&&x.material.map!==sunGlowTex&&x.material.map!==neb&&!Object.values(ICON).includes(x.material.map)&&kept.indexOf(x.material.map)<0) x.material.map.dispose(); x.material.dispose(); } }); }
-  function rebuild(){ wormClock=null; wormMouths=[]; wormStat=null; sysNeb.length=0; if(!ST_DATA) return;
-    if(grp){ scene.remove(grp); dispose(grp); } grp=new T.Group(); scene.add(grp); entries=[]; spin=[]; animNodes=[]; sysGroups=[]; lblLayer.innerHTML='';
-    camera.near=level.t==='sys'?0.05:0.004; camera.updateProjectionMatrix();
-    if(level.t==='sys') buildSys(); else buildBody(level.o);
-    buildPlayers();
-    entries.sort((a,b)=>b.prio-a.prio);
-    entries.forEach(e=>{ const d=document.createElement('div'); d.className='st-lbl p'+e.prio; d.textContent=e.o.k==='player'?e.o.n:gn(e.o.n); lblLayer.appendChild(d); e.el=d; });
+  // Entering the map used to throw the current meshes away and rebuild every
+  // system plus the wormholes on the main thread. The canvas stays on its dark
+  // background until that finishes, so the chrome sat on black for a few seconds.
+  // Each view is built once and kept. The next entry only shows it again.
+  const viewCache=new Map();
+  let viewGen=0;
+  function viewKey(full){ if(level.t!=='sys') return ''; return (full?'map':'dash:'+ST_SYS)+':'+viewGen; }
+  function detachLabels(list){ (list||[]).forEach(function(e){ if(e.el&&e.el.parentNode) e.el.parentNode.removeChild(e.el); }); }
+  function groupCached(g){ var hit=false; viewCache.forEach(function(v){ if(v.grp===g) hit=true; }); return hit; }
+  function snap(){ return {grp:grp, entries:entries, spin:spin, animNodes:animNodes, sysGroups:sysGroups, wormClock:wormClock, wormMouths:wormMouths, wormStat:wormStat, sysNeb:sysNeb.slice(), plPts:plPts}; }
+  function adopt(v){
+    if(grp&&grp!==v.grp){ detachLabels(entries); scene.remove(grp); }
+    grp=v.grp; entries=v.entries; spin=v.spin; animNodes=v.animNodes; sysGroups=v.sysGroups;
+    wormClock=v.wormClock; wormMouths=v.wormMouths; wormStat=v.wormStat; plPts=v.plPts;
+    sysNeb.length=0; v.sysNeb.forEach(function(s){ sysNeb.push(s); });
+    if(grp.parent!==scene) scene.add(grp);
+    entries.forEach(function(e){ if(e.el&&e.el.parentNode!==lblLayer) lblLayer.appendChild(e.el); });
     if(typeof drawHl==='function') drawHl();
-    if(window.__stCtl&&window.__stCtl.onLevel) window.__stCtl.onLevel(level); }
+  }
+  function dropViews(){
+    viewCache.forEach(function(v){ detachLabels(v.entries); if(v.grp&&v.grp!==grp) dispose(v.grp); });
+    viewCache.clear();
+  }
+  function clearPlayers(){
+    for(var i=entries.length-1;i>=0;i--){ var e=entries[i]; if(e.o&&e.o.k==='player'){ if(e.el) e.el.remove(); entries.splice(i,1); } }
+    plPts.forEach(function(p){ if(p.parent) p.parent.remove(p); if(p.geometry) p.geometry.dispose(); if(p.material){ p.material.map=null; p.material.dispose(); } });
+    plPts.length=0;
+  }
+  function paintLabels(){
+    entries.forEach(function(e){ if(e.el) return; var d=document.createElement('div'); d.className='st-lbl p'+e.prio; d.textContent=e.o.k==='player'?e.o.n:gn(e.o.n); lblLayer.appendChild(d); e.el=d; });
+  }
+  function syncPlayers(){ clearPlayers(); buildPlayers(); entries.sort(function(a,b){ return b.prio-a.prio; }); paintLabels(); }
+  function releaseGrp(){
+    if(!grp) return;
+    detachLabels(entries); scene.remove(grp);
+    if(!groupCached(grp)) dispose(grp);
+    grp=null;
+  }
+  function buildFresh(full, key){
+    releaseGrp();
+    wormClock=null; wormMouths=[]; wormStat=null; sysNeb.length=0;
+    grp=new T.Group(); scene.add(grp); entries=[]; spin=[]; animNodes=[]; sysGroups=[]; plPts=[];
+    camera.near=level.t==='sys'?0.05:0.004; camera.updateProjectionMatrix();
+    if(level.t==='sys') buildSys(!!full); else buildBody(level.o);
+    buildPlayers();
+    entries.sort(function(a,b){ return b.prio-a.prio; });
+    paintLabels();
+    if(key) viewCache.set(key, snap());
+    if(typeof drawHl==='function') drawHl();
+  }
+  function rebuild(force){
+    if(force){ viewGen++; dropViews(); }
+    if(!ST_DATA) return;
+    var full=level.t==='sys'&&explore();
+    var key=viewKey(full);
+    if(key&&viewCache.has(key)){ adopt(viewCache.get(key)); syncPlayers(); if(window.__stCtl&&window.__stCtl.onLevel) window.__stCtl.onLevel(level); return; }
+    buildFresh(full, key);
+    if(window.__stCtl&&window.__stCtl.onLevel) window.__stCtl.onLevel(level);
+  }
   // Blickziel: ausserhalb des Easter-Eggs immer die Sonne, im Erkunden-Modus frei verschiebbar (nur Systemebene)
   const tgt=new T.Vector3(), tgtT=new T.Vector3();
   function focus(o){
@@ -1234,7 +1284,10 @@ function stantonScene(canvas,sysKey){
   }
   function stepBg(target){
     const now=performance.now();
-    if(bgShown<0){ bgShown=target; bgStamp=now; bgMove=0; return bgShown; }
+    // The blur path clears the canvas before it draws. Snapping to full blur on
+    // the first explore frame left a black map until that pass finished. Start
+    // sharp so the system is visible, then ease the other systems out.
+    if(bgShown<0){ bgShown=0; bgStamp=now; bgMove=0; }
     const dt=Math.min(0.08, Math.max(0.001, (now-bgStamp)/1000));
     bgStamp=now;
     const prev=bgShown;
@@ -1313,12 +1366,12 @@ function stantonScene(canvas,sysKey){
     renderer.render(scene, camera);
     renderer.autoClear=true;
   }
-  function cleanup(){ cancelAnimationFrame(raf); if(blurRT){ blurRT.dispose(); blurRT2.dispose(); blurRT=null; blurRT2=null; } if(blurMat){ blurMat.dispose(); mosaicMat.dispose(); blitMat.dispose(); if(blurQuad&&blurQuad.geometry) blurQuad.geometry.dispose(); blurMat=null; } if(routeLine){ scene.remove(routeLine); routeLine.geometry.dispose(); routeLine.material.dispose(); routeLine=null; } if(typeof clearTrail==='function') clearTrail(); window.__stCtl=null; canvas.removeEventListener('mousedown',down); window.removeEventListener('mouseup',up); window.removeEventListener('mousemove',move); if(ro) ro.disconnect(); else window.removeEventListener('resize',size); canvas.removeEventListener('wheel',wheel); canvas.removeEventListener('contextmenu',ctxm); canvas.removeEventListener('auxclick',aux); ROOT.removeEventListener('keydown',key); canvas.removeEventListener('touchstart',tStart); canvas.removeEventListener('touchmove',touch); canvas.removeEventListener('touchend',touchEnd); if(grp) dispose(grp); lblLayer.remove(); try{ renderer.dispose(); }catch(e){} }
+  function cleanup(){ cancelAnimationFrame(raf); if(blurRT){ blurRT.dispose(); blurRT2.dispose(); blurRT=null; blurRT2=null; } if(blurMat){ blurMat.dispose(); mosaicMat.dispose(); blitMat.dispose(); if(blurQuad&&blurQuad.geometry) blurQuad.geometry.dispose(); blurMat=null; } if(routeLine){ scene.remove(routeLine); routeLine.geometry.dispose(); routeLine.material.dispose(); routeLine=null; } if(typeof clearTrail==='function') clearTrail(); if(SC.revealMap===revealMap) SC.revealMap=null; window.__stCtl=null; canvas.removeEventListener('mousedown',down); window.removeEventListener('mouseup',up); window.removeEventListener('mousemove',move); if(ro) ro.disconnect(); else window.removeEventListener('resize',size); canvas.removeEventListener('wheel',wheel); canvas.removeEventListener('contextmenu',ctxm); canvas.removeEventListener('auxclick',aux); ROOT.removeEventListener('keydown',key); canvas.removeEventListener('touchstart',tStart); canvas.removeEventListener('touchmove',touch); canvas.removeEventListener('touchend',touchEnd); dropViews(); if(grp) dispose(grp); lblLayer.remove(); try{ renderer.dispose(); }catch(e){} }
   let loopErr=false;
   function loop(){ if(!canvas.isConnected){ cleanup(); return; } raf=requestAnimationFrame(loop); try{
     if(!ST_PAUSE&&!spinHold&&!dragging&&!panning) azT+=explore()?0.0003:0.00045;
     if(!ST_PAUSE&&!spinHold) spin.forEach(m=>{ m.rotation.y+=0.0012; });
-    const ex=explore(); if(ex!==lastEx){ lastEx=ex; if(ST_DATA&&level.t==='sys') rebuild(); }
+    const ex=explore(); if(ex!==lastEx){ lastEx=ex; if(ST_DATA&&level.t==='sys'){ const key=viewKey(ex); if(!ex||viewCache.has(key)) rebuild(); } }
     if(!ex){ if(level.t!=='sys') focus(null); tgtT.copy(offOf(ST_SYS)); }
     else if(level.t==='sys'&&ST_DATA&&++sysTick%30===0){ let bk=null,bd=1e9; Object.keys(ST_DATA.sys).forEach(k=>{ const dd=offOf(k).distanceTo(tgtT); if(dd<bd){ bd=dd; bk=k; } }); if(bd<180) setSys(bk); }
     if(wormClock) wormClock.value=performance.now()*0.001;
@@ -1459,7 +1512,44 @@ function stantonScene(canvas,sysKey){
     tgtT.copy(c); RT=Math.max(16, Math.min(LV.sys.max*0.85, reach));
     return cur;
   }
-  window.__stCtl={ _cleanup:cleanup, getAz:()=>az, holdSpin:on=>{ spinHold=!!on; }, level:()=>level, focus, flyTo, rebuild, home, zoomBy, pan, highlight, showRoute, clearTrail, playTrail, frameTrail, goSystem, galaxy, onSys:null,
+  function placeCamera(){
+    camera.position.set(tgt.x+R*Math.cos(el)*Math.sin(az),tgt.y+R*Math.sin(el),tgt.z+R*Math.cos(el)*Math.cos(az));
+    camera.lookAt(tgt); sky.position.copy(camera.position);
+  }
+  function present(){ size(); placeCamera(); renderer.setRenderTarget(null); renderer.autoClear=true; renderer.render(scene, camera); }
+  function primeGpu(){
+    try{
+      ensureBlur(); allocBlur(false); placeCamera();
+      renderer.setRenderTarget(blurRT); renderer.clear(true,true,true); renderer.render(scene, camera);
+      blurQuad.material=blurMat; blurMat.uniforms.tDiffuse.value=blurRT.texture; blurMat.uniforms.uDir.value.set(1/Math.max(blurRT.width,1),0);
+      renderer.setRenderTarget(blurRT2); renderer.clear(true,true,true); renderer.render(blurScene, blurCam);
+      renderer.setRenderTarget(null);
+    }catch(e){}
+  }
+  function markReady(){ if(window.__stCtl) window.__stCtl.mapReady=true; }
+  function warmMap(){
+    if(!ST_DATA||level.t!=='sys') return;
+    var key='map:'+viewGen;
+    if(!viewCache.has(key)){
+      if(grp&&!groupCached(grp)){ var bk=viewKey(false); if(bk) viewCache.set(bk, snap()); }
+      var back=grp?snap():null;
+      buildFresh(true, key);
+      primeGpu();
+      if(explore()) present(); else if(back) adopt(back);
+    }
+    markReady();
+  }
+  function revealMap(){
+    var key='map:'+viewGen;
+    if(ST_DATA&&viewCache.has(key)) adopt(viewCache.get(key));
+    if(ST_DATA) present();
+    enterStExplore();
+    if(ST_DATA&&!viewCache.has(key)){ var run=function(){ warmMap(); }; if(window.requestAnimationFrame) requestAnimationFrame(run); else setTimeout(run, 16); }
+  }
+  SC.revealMap=revealMap;
+  let readyOk=function(){};
+  const ready=new Promise(function(ok){ readyOk=ok; });
+  window.__stCtl={ _cleanup:cleanup, getAz:()=>az, holdSpin:on=>{ spinHold=!!on; }, level:()=>level, focus, flyTo, rebuild, warmMap, revealMap, ready, mapReady:false, home, zoomBy, pan, highlight, showRoute, clearTrail, playTrail, frameTrail, goSystem, galaxy, onSys:null,
     hitAt:function(cx,cy){ const p=relXY(cx,cy); const hit=nearest(p.x,p.y,isMobile?22:16); return hit&&hit.o&&hit.o.k!=='player'?hit.o:null; },
     focusId:function(id){ const o=ST_DATA&&ST_DATA.by&&ST_DATA.by[id]; if(o) flyTo(o); },
     place:function(id){ const o=ST_DATA&&ST_DATA.by&&ST_DATA.by[id]; return o?{id:o.id,sy:o.sy||'',n:o.n||'',k:o.k||''}:null; },
@@ -1472,7 +1562,11 @@ function stantonScene(canvas,sysKey){
     reset:()=>{ hl=null; hover=null; hlSet=null; drawHl(); if(level.t!=='sys') focus(null);
       const th=document.querySelector('.cmd'), tk=th&&ST_THEME_SYS[th.getAttribute('data-dtheme')]; if(tk){ ST_SYS=tk; tintSky(tk); } bgScale(); tgtT.copy(offOf(ST_SYS)); RT=LV.sys.def*BGK; }, onLevel:null };
   applySky();
-  stLoad().then(()=>{ bgScale(); tgtT.copy(offOf(ST_SYS)); tgt.copy(tgtT); RT=R=LV.sys.def*BGK; rebuild(); }).catch(()=>{});
+  stLoad().then(function(){
+    bgScale(); tgtT.copy(offOf(ST_SYS)); tgt.copy(tgtT); RT=R=LV.sys.def*BGK; rebuild(); present(); markReady(); readyOk();
+    var kick=function(){ if(level.t==='sys'&&!viewCache.has('map:'+viewGen)) warmMap(); };
+    if(window.requestIdleCallback) requestIdleCallback(function(){ kick(); },{timeout:700}); else setTimeout(kick, 280);
+  }).catch(function(){ readyOk(); });
   loop();
   return cleanup;
 }
@@ -1711,7 +1805,7 @@ function paintSysNames(){
 }
 function refreshGameText(){
   paintSysNames();
-  if(window.__stCtl) window.__stCtl.rebuild();
+  if(window.__stCtl) window.__stCtl.rebuild(true);
   const lp=$('stLoc'); if(lp&&lp.__re) lp.__re();
   const box=$('stRes'); if(box&&!box.hidden) stSearch();
   stPlList();
@@ -2158,9 +2252,9 @@ function stLegend(){ const box=$('stLegend'); if(!box||!ST_DATA) return; const c
   box.innerHTML='<div class="st-slbl">'+_t('legend.players_heading')+'</div>'+'<label class="st-lg"><input type="checkbox" id="'+ID('stPlOn')+'"'+(ST_PL_ON?' checked':'')+'>'+sigil('mklive','#4dff9a','mk-live')+esc(_t('status.online'))+'<span>'+pOn+'</span></label><label class="st-lg"><input type="checkbox" id="'+ID('stPlOff')+'"'+(ST_PL_OFF?' checked':'')+'>'+sigil('mkoff','#8a93a6')+esc(_t('status.offline_last_location'))+'<span>'+pOff+'</span></label>'+'<p class="st-lg-note">'+esc(_t('legend.other_note'))+'</p>'+'<label class="st-lg"><input type="checkbox" id="'+ID('stPlOtherOn')+'"'+(ST_PL_OTHER.on?' checked':'')+'>'+esc(_t('legend.other_on'))+'</label><label class="st-lg"><input type="checkbox" id="'+ID('stPlOtherOff')+'"'+(ST_PL_OTHER.off?' checked':'')+'>'+esc(_t('legend.other_off'))+'</label>'+(ST_PL_ERR?'<p class="st-flash">'+esc(ST_PL_ERR)+'</p>':'')+'<div class="st-slbl">'+_t('legend.show_heading')+'</div>'+rows+
     '<label class="st-lg st-lg-h"><input type="checkbox" id="'+ID('stHid')+'"'+(ST_HID?' checked':'')+'>'+sigil('mkhid','#9aa6c0')+esc(_t('legend.hidden_places'))+'<span>'+Object.values(hid).reduce((a,b)=>a+b,0)+'</span></label>'+
     '<p class="st-mnote">'+esc(_t('legend.note',{version:(ST_DATA.d.version||'').replace(/-LIVE.*/,'')}))+'</p>';
-  box.querySelectorAll('[data-k]').forEach(c=>c.onchange=()=>{ ST_VIS[c.getAttribute('data-k')]=c.checked; window.__stCtl&&window.__stCtl.rebuild(); });
-  const h=$('stHid'); if(h) h.onchange=()=>{ ST_HID=h.checked; window.__stCtl&&window.__stCtl.rebuild(); };
-  const a1=$('stPlOn'), a2=$('stPlOff'); if(a1) a1.onchange=()=>{ ST_PL_ON=a1.checked; window.__stCtl&&window.__stCtl.rebuild(); }; if(a2) a2.onchange=()=>{ ST_PL_OFF=a2.checked; window.__stCtl&&window.__stCtl.rebuild(); };
+  box.querySelectorAll('[data-k]').forEach(c=>c.onchange=()=>{ ST_VIS[c.getAttribute('data-k')]=c.checked; window.__stCtl&&window.__stCtl.rebuild(true); });
+  const h=$('stHid'); if(h) h.onchange=()=>{ ST_HID=h.checked; window.__stCtl&&window.__stCtl.rebuild(true); };
+  const a1=$('stPlOn'), a2=$('stPlOff'); if(a1) a1.onchange=()=>{ ST_PL_ON=a1.checked; window.__stCtl&&window.__stCtl.rebuild(true); }; if(a2) a2.onchange=()=>{ ST_PL_OFF=a2.checked; window.__stCtl&&window.__stCtl.rebuild(true); };
   const o1=$('stPlOtherOn'), o2=$('stPlOtherOff'); if(o1) o1.onchange=()=>{ ST_PL_OTHER.on=o1.checked; savePlOther(); }; if(o2) o2.onchange=()=>{ ST_PL_OTHER.off=o2.checked; savePlOther(); };
 }
 function stOreMerge(parts){ const m={}; (parts||[]).forEach(pt=>{ const x=m[pt.ore]||(m[pt.ore]={ore:pt.ore,p:0,b:[]}); x.p=Math.max(x.p,pt.p||0); x.b.push(pt); }); return Object.values(m); }
@@ -2185,7 +2279,7 @@ function stOpenMisGroup(g){ const locs=g.locs.map(id=>ST_DATA.by[id]).filter(Boo
 function showMapBack(){
   if(!ROOT||$('stBack')) return;
   const b=document.createElement('button'); b.type='button'; b.className='stx st-back'; b.id=ID('stBack'); b.title=_t('ui.show_map'); b.innerHTML=SC.ico?SC.ico('menu'):'';
-  b.onclick=function(){ b.remove(); enterStExplore(); };
+  b.onclick=function(){ b.remove(); if(SC.revealMap) SC.revealMap(); else enterStExplore(); };
   ROOT.appendChild(b);
 }
 function exitStExplore(){
@@ -2407,10 +2501,10 @@ function mount(el, opts){
   if(opts.pollMs!=null) window.LIVEMAP_CONFIG.PLAYERS_POLL_MS=opts.pollMs;
   var canvas=$('stCanvas');
   if(!canvas){ canvas=document.createElement('canvas'); canvas.id=ID('stCanvas'); canvas.className='st-canvas'; ROOT.appendChild(canvas); }
-  // Die Startseite braucht die Karte nicht. three.js, das Ortsnamenpaket und der Szenenaufbau
-  // blockieren den Hauptthread; das passiert erst, wenn jemand die Karte oeffnet.
-  // The home page does not need the map. three.js, the place-name pack and the scene build
-  // block the main thread; that waits until someone opens the map.
+  // Die Raumtuer startet die Szene im Hintergrund. Die Sternenkarte selbst (und ihr Chrome)
+  // kommt erst, wenn das aktuelle System schon gezeichnet ist, sonst sitzt die Leiste auf Schwarz.
+  // The room gate starts the scene in the background. The star map itself, and its chrome,
+  // waits until the current system has been drawn, so the bar is not sitting on black.
   var sceneArm=null;
   function armScene(){
     if(sceneArm) return sceneArm;
@@ -2421,8 +2515,14 @@ function mount(el, opts){
       catch(e){ fail(e); return; }
       if(!window.__stCtl){ setTimeout(boot,50); return; }
       if(opts.standalone) ROOT.classList.add('st-standalone');
-      try{ enterStExplore(); }catch(e){ fail(e); return; }
-      done();
+      var ctl=window.__stCtl;
+      var finish=function(){
+        try{ if(!SC.room){ if(SC.revealMap) SC.revealMap(); else enterStExplore(); } }
+        catch(e){ fail(e); return; }
+        done();
+      };
+      if(ctl.ready&&ctl.ready.then) ctl.ready.then(finish).catch(finish);
+      else finish();
     }
     var locP=(SC.loc&&SC.loc.index)?SC.loc.index():((SC.loc&&SC.loc.ready)?SC.loc.ready():Promise.resolve());
     var threeP=SC.loadThreeCore?SC.loadThreeCore():(SC.loadThree?SC.loadThree():Promise.resolve());

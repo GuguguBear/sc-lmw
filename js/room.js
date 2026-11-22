@@ -533,6 +533,7 @@
     armRally();
     syncCtx();
     syncPlazaBtn();
+    if(state && state.status==='member' && !onMap && window.SCLMW && window.SCLMW.armScene) window.SCLMW.armScene();
     if(recoverFocus){
       var again = document.getElementById(recoverFocus);
       if(again) again.focus();
@@ -1374,25 +1375,24 @@
     if(!state || state.status!=='member') return;
     if(mapArming) return;
     var arm = window.SCLMW && window.SCLMW.armScene;
-    if(arm && !window.__stCtl){
+    var go = function(){
+      mapArming = false;
+      try{ if(window.SCLMW && window.SCLMW.revealMap) window.SCLMW.revealMap(); }catch(e){}
+      entered = true;
+      bindPlayers();
+      paint();
+      pullLink();
+    };
+    if(arm && !(window.__stCtl && window.__stCtl.mapReady)){
       mapArming = true;
       markEnterWait();
-      arm().then(function(){
-        mapArming = false;
-        entered = true;
-        bindPlayers();
-        paint();
-        pullLink();
-      }).catch(function(){
+      Promise.resolve(arm()).then(go).catch(function(){
         mapArming = false;
         paint();
       });
       return;
     }
-    entered = true;
-    bindPlayers();
-    paint();
-    pullLink();
+    go();
   }
   function take(st){
     var prevCode = state && state.code;
