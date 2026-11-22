@@ -1,6 +1,6 @@
 # SC LMW – Star Citizen LiveMap Wiki
 
-**Version 1.1.0** · AGPL-3.0 · Starfix 1.0.16
+**Version 1.1.0** · AGPL-3.0 · Starfix 1.0.17
 
 **English** · [Deutsch](README.de.md) · [简体中文](README.zh-Hans.md) · [繁體中文](README.zh-Hant.md)
 
@@ -17,7 +17,7 @@ A free, open-source 3D map of Star Citizen: Stanton, Pyro and Nyx, with search, 
 
 `sclmw.cltbbs.com` is the Worker `sclmw` on Cloudflare zone `cltbbs.com`. The source is [worker/](worker/), and [wrangler.jsonc](wrangler.jsonc) sets the account, the custom hostname, and D1 database `sclmw`. A push updates that Worker when `data/galaxy.json` is present. Without that built map data, the Action leaves the live site unchanged. The PythonAnywhere account is closed.
 
-Room calls and map files use relative paths, so a page opened on the public name stays there. Starfix 1.0.16 still accepts a pairing that names the earlier host. See [companion/README.md](companion/README.md).
+Room calls and map files use relative paths, so a page opened on the public name stays there. Starfix 1.0.17 still accepts a pairing that names the earlier host. See [companion/README.md](companion/README.md).
 
 Cloudflare can keep a static file for several hours. A check on 30 Oct 2026 showed `js/starmap.js` on the public name with `cache-control: max-age=14400` and `cf-cache-status: HIT`, while the origin already had the newer file. That check was the old proxy. The Action now updates the Worker on the public name. Room API responses from [server/room_server.py](server/room_server.py) send `Cache-Control: no-store`. The page shell is not a private document. Login state is a bearer token in `localStorage`, not a cookie.
 
@@ -51,7 +51,7 @@ Optional. The map works without it: right-click and choose "I am here".
 
 Starfix reads `Game.log` on that computer and, after you confirm, posts the place code to the room. It does not attach to the game, read memory, or upload the log. Read [companion/README.md](companion/README.md) before you run the source.
 
-Published build: [Starfix 1.0.16](https://github.com/GuguguBear/sc-lmw/releases/tag/starfix-1.0.16). The program compares `companion/VERSION` with GitHub Releases named `starfix-X.Y.Z`. Pushing `companion/**` or [.github/workflows/starfix-release.yml](.github/workflows/starfix-release.yml) to `master` builds the exe when that tag does not exist yet. [companion/write_version_info.py](companion/write_version_info.py) writes the Windows version resource from the same number.
+Published build: [Starfix 1.0.17](https://github.com/GuguguBear/sc-lmw/releases/tag/starfix-1.0.17). The program compares `companion/VERSION` with GitHub Releases named `starfix-X.Y.Z`. Pushing `companion/**` or [.github/workflows/starfix-release.yml](.github/workflows/starfix-release.yml) to `master` builds the exe when that tag does not exist yet. [companion/write_version_info.py](companion/write_version_info.py) writes the Windows version resource from the same number.
 
 On update, a window in the theme you already chose shows crates loading into a container. When the download finishes, a helper copies the new file over the one you started. `Move-Item -Force` in Windows PowerShell does not replace an existing exe, so the helper uses `System.IO.File.Copy`. If the file you launched is named like `Starfix 1.0.6.exe`, the new file is `Starfix 1.0.8.exe` and the old name is removed. A file that is just `Starfix.exe` keeps that name.
 

@@ -1,6 +1,6 @@
 # SC LMW – 星際公民星圖
 
-**版本 1.1.0** · AGPL-3.0 · Starfix 1.0.16
+**版本 1.1.0** · AGPL-3.0 · Starfix 1.0.17
 
 [English](README.md) · [Deutsch](README.de.md) · [简体中文](README.zh-Hans.md) · **繁體中文**
 
@@ -17,7 +17,7 @@
 
 `sclmw.cltbbs.com` 是 Cloudflare 區域 `cltbbs.com` 上的 Worker `sclmw`。原始碼在 [worker/](worker/)，[wrangler.jsonc](wrangler.jsonc) 寫著帳戶、自訂主機名和 D1 資料庫 `sclmw`。检出裡有 `data/galaxy.json` 時，推送才更新這個 Worker。沒有這份地圖資料時，Action 不會替換線上的站點。PythonAnywhere 帳號已經關閉。
 
-房間請求和地圖檔案都用相對路徑，所以從對外名稱打開，就留在這個名字上。Starfix 1.0.16 仍接受寫著早前站點的連線。見 [companion/README.md](companion/README.md)。
+房間請求和地圖檔案都用相對路徑，所以從對外名稱打開，就留在這個名字上。Starfix 1.0.17 仍接受寫著早前站點的連線。見 [companion/README.md](companion/README.md)。
 
 Cloudflare 可能把靜態檔案留幾個小時。2026 年 10 月 30 日查過：對外名稱上的 `js/starmap.js` 是 `cache-control: max-age=14400`、`cf-cache-status: HIT`，來源站當時已經是更新的檔案。那次檢查針對的是當時的反向代理。現在 Action 更新的是對外名稱上的 Worker。房間介面來自 [server/room_server.py](server/room_server.py)，回應帶 `Cache-Control: no-store`。頁面本身不是私人文件。登入狀態是 `localStorage` 裡的 Bearer 權杖，不是 Cookie。
 
@@ -51,7 +51,7 @@ Cloudflare 可能把靜態檔案留幾個小時。2026 年 10 月 30 日查過�
 
 Starfix 讀取這台電腦上的 `Game.log`。你確認之後，它把地點代碼發到房間。它不進遊戲行程，不讀記憶體，不上傳整份日誌。執行原始碼之前先讀 [companion/README.md](companion/README.md)。
 
-已發布的安裝包：[Starfix 1.0.16](https://github.com/GuguguBear/sc-lmw/releases/tag/starfix-1.0.16)。程式拿 `companion/VERSION` 和名為 `starfix-X.Y.Z` 的 GitHub Release 比較。把 `companion/**` 或 [.github/workflows/starfix-release.yml](.github/workflows/starfix-release.yml) 推到 `master`，如果這個標籤還不存在，就會打出 exe。[companion/write_version_info.py](companion/write_version_info.py) 用同一個版本號寫 Windows 的版本資訊。
+已發布的安裝包：[Starfix 1.0.17](https://github.com/GuguguBear/sc-lmw/releases/tag/starfix-1.0.17)。程式拿 `companion/VERSION` 和名為 `starfix-X.Y.Z` 的 GitHub Release 比較。把 `companion/**` 或 [.github/workflows/starfix-release.yml](.github/workflows/starfix-release.yml) 推到 `master`，如果這個標籤還不存在，就會打出 exe。[companion/write_version_info.py](companion/write_version_info.py) 用同一個版本號寫 Windows 的版本資訊。
 
 更新時，視窗用你已經選好的主題，顯示箱子裝進貨櫃的進度。下載結束後，輔助程式把新檔案蓋到你剛才打開的那個檔案上。Windows PowerShell 的 `Move-Item -Force` 換不掉已經存在的 exe，所以輔助程式用 `System.IO.File.Copy`。如果你打開的檔案名叫 `Starfix 1.0.6.exe`，新檔案會是 `Starfix 1.0.8.exe`，舊名字會去掉。檔名就是 `Starfix.exe` 的，繼續用這個名字。
 

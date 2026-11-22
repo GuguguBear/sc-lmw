@@ -62,7 +62,7 @@ jobs:
         run: |
           python -m pip install --disable-pip-version-check pyinstaller
           python write_version_info.py
-          python -m PyInstaller --noconfirm --clean --onefile --windowed --name Starfix --icon icon.ico --version-file file_version.txt --hidden-import history --hidden-import names --add-data "icon.png;." --add-data "icon.ico;." --add-data "index.html;." --add-data "VERSION;." --add-data "..\css\starmap.css;css" app.py
+          python -m PyInstaller --noconfirm --clean --onefile --windowed --name Starfix --icon icon.ico --version-file file_version.txt --hidden-import history --hidden-import names --add-data "icon.png;." --add-data "icon.ico;." --add-data "index.html;." --add-data "VERSION;." --add-data "names-pack.json;." --add-data "..\css\starmap.css;css" app.py
       - name: Publish the release
         if: steps.rel.outputs.exists != 'true'
         uses: softprops/action-gh-release@v2

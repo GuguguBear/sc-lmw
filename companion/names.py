@@ -1,6 +1,7 @@
 # Turn a log label into words the window can show.
-# zh-Hans and zh-Hant use the official Chinese name from data/loc.json.
-# English and German keep English. A raw item id never stays on screen.
+# Chinese modes use the official Chinese name. English and German use the
+# official English name, including when the game client wrote Chinese.
+# A raw item id never stays on screen. A name is kept whole when only part of it matches.
 
 import json
 import re
@@ -15,6 +16,9 @@ MAKERS = (
 DENY = {"MAX", "MISC", "RSI", "CO", "GS", "Mk", "PTV", "STV", "ROC", "UTV", "The", "This", "From"}
 CODE_TOKEN = re.compile(r"\b[A-Za-z][A-Za-z0-9]*(?:_[A-Za-z0-9]+){1,}\b")
 SPAN = re.compile(r"[A-Za-z][A-Za-z0-9'+.-]*(?:[ /-]+[A-Za-z0-9][A-Za-z0-9'+.-]*)*")
+GLOSS = re.compile(r"([^\s()（）]*[\u4e00-\u9fff][^\s()（）]*)\s*[（(]([A-Za-z][^()（）]*)[）)]")
+MARK = re.compile(r"Mk\.?\s*[IVX0-9]+", re.I)
+DUP = re.compile(r"([^\s()（）]{1,48})\s*[（(]\1[）)]")
 ITEM_MAKER = {"grin": "Greycat Industrial", "shin": "Shubin Interstellar"}
 HANT_MAKER = {
     "AEGS": "宙斯盾", "ANVL": "鐵砧", "DRAK": "德雷克", "ORIG": "起源",
@@ -25,31 +29,87 @@ HANT_MAKER = {
 
 _PACK = None
 _INDEX = None
+_REV = None
 _CACHE = {}
+_CJK_RUN = re.compile(r"[\u4e00-\u9fff]+")
+_CONN = set("的上之于")
 
 
-def _load():
-    global _PACK, _INDEX
-    if _PACK is not None:
-        return
-    _PACK = {"hans": {}, "hant": {}}
-    _INDEX = {}
-    here = Path(__file__).resolve().parent
-    candidates = [
-        here.parent / "data" / "loc.json",
-        here / "data" / "loc.json",
-        Path(getattr(__import__("sys"), "_MEIPASS", here)).parent / "data" / "loc.json",
-    ]
-    path = next((item for item in candidates if item.is_file()), None)
-    if path is None:
-        return
+def _read_pack(path):
     try:
         raw = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
-        return
+        return {}, {}, {}
+    if not isinstance(raw, dict):
+        return {}, {}, {}
     hans = raw.get("hans") if isinstance(raw.get("hans"), dict) else {}
     hant = raw.get("hant") if isinstance(raw.get("hant"), dict) else {}
+    rev = raw.get("rev") if isinstance(raw.get("rev"), dict) else {}
+    return hans, hant, rev
+
+
+def _name_key(key):
+    text = " ".join(str(key or "").split())
+    if not text or len(text) > 48 or len(text.split()) > 6:
+        return ""
+    if text[0].islower() or "~" in text or any(ch in text for ch in ".?!"):
+        return ""
+    return text
+
+
+def _better(old, new):
+    if not old:
+        return new
+
+    def rank(text):
+        return (len(text.replace(" ", "")), -text.count(" "), len(text), text.lower())
+
+    return new if rank(new) < rank(old) else old
+
+
+def _remember(rev, value, key):
+    chosen = _name_key(key)
+    if not chosen or not isinstance(value, str):
+        return
+    text = " ".join(value.split())
+    cjk = sum(1 for ch in text if "\u4e00" <= ch <= "\u9fff")
+    if cjk < 2 or len(text) > 32 or any(ch in text for ch in "。！？?!"):
+        return
+    rev[text] = _better(rev.get(text, ""), chosen)
+
+
+def _load():
+    global _PACK, _INDEX, _REV
+    if _PACK is not None:
+        return
+    here = Path(__file__).resolve().parent
+    bundled = Path(getattr(__import__("sys"), "_MEIPASS", here))
+    candidates = [
+        here / "names-pack.json",
+        bundled / "names-pack.json",
+        here.parent / "data" / "loc.json",
+        here / "data" / "loc.json",
+        bundled.parent / "data" / "loc.json",
+    ]
+    hans, hant = {}, {}
+    rev = {}
+    seen = set()
+    for path in candidates:
+        if path in seen or not path.is_file():
+            continue
+        seen.add(path)
+        block_h, block_t, block_r = _read_pack(path)
+        hans.update(block_h)
+        hant.update(block_t)
+        for zh, en in block_r.items():
+            if isinstance(zh, str) and isinstance(en, str) and zh not in rev:
+                rev[zh] = en
+    for table in (hans, hant):
+        for key, value in table.items():
+            _remember(rev, value, key)
     _PACK = {"hans": hans, "hant": hant}
+    _REV = rev
+    _INDEX = {}
     for key in hans:
         if not key or len(key) > 48 or "\n" in key or ". " in key:
             continue
@@ -193,6 +253,71 @@ def _cover(span, lang):
     return " ".join(out)
 
 
+def _ungloss(text):
+    def repl(match):
+        inner = " ".join(match.group(2).split())
+        if MARK.fullmatch(inner):
+            return match.group(0)
+        return match.group(1)
+
+    return DUP.sub(r"\1", GLOSS.sub(repl, text))
+
+
+def _gloss_en(text):
+    def repl(match):
+        inner = " ".join(match.group(2).split())
+        if MARK.fullmatch(inner) or not re.search(r"[A-Za-z]", inner):
+            return match.group(0)
+        return inner
+
+    return GLOSS.sub(repl, text)
+
+
+def _segment(run):
+    parts = []
+    index = 0
+    size = len(run)
+    while index < size:
+        if run[index] in _CONN and parts and any(ch not in _CONN for ch in run[index + 1:]):
+            index += 1
+            continue
+        found = ""
+        take = 0
+        for length in range(min(32, size - index), 1, -1):
+            hit = _REV.get(run[index:index + length])
+            if hit:
+                found = hit
+                take = length
+                break
+        if not take:
+            return ""
+        parts.append(found)
+        index += take
+    return " ".join(parts)
+
+
+def _from_zh(text):
+    _load()
+    glossed = _gloss_en(text)
+    exact = _REV.get(" ".join(glossed.split()))
+    if exact:
+        return exact
+    runs = list(_CJK_RUN.finditer(glossed))
+    if not runs:
+        return glossed
+    out = []
+    cursor = 0
+    for match in runs:
+        spoken = _segment(match.group(0))
+        if not spoken:
+            return glossed
+        out.append(glossed[cursor:match.start()])
+        out.append(spoken)
+        cursor = match.end()
+    out.append(glossed[cursor:])
+    return "".join(out)
+
+
 def speak(lang, text):
     raw = " ".join(str(text or "").split())
     if not raw:
@@ -201,6 +326,13 @@ def speak(lang, text):
     cached = _CACHE.get(key)
     if cached is not None:
         return cached
+    if lang in ("en", "de"):
+        shown = _from_zh(raw)
+        _CACHE[key] = shown
+        return shown
+    zh = lang in ("zh-Hans", "zh-Hant")
+    if zh:
+        raw = _ungloss(raw)
 
     def code_sub(match):
         phrase = _phrase(match.group(0))
@@ -208,5 +340,7 @@ def speak(lang, text):
 
     folded = CODE_TOKEN.sub(code_sub, raw)
     shown = SPAN.sub(lambda match: _cover(match.group(0), lang), folded)
+    if zh:
+        shown = _ungloss(shown)
     _CACHE[key] = shown
     return shown
