@@ -1839,21 +1839,23 @@ def main():
     finish_pending_install()
     maybe_update()
     ThreadingHTTPServer.allow_reuse_address = True
+    httpd = None
     try:
         httpd = ThreadingHTTPServer((HOST, PORT), Handler)
     except OSError:
-        tell("8780 端口被别的程序占用，Starfix 开不了。")
-        return
-    HTTPD = httpd
-    threading.Thread(target=httpd.serve_forever, daemon=True).start()
+        httpd = None
+    if httpd:
+        HTTPD = httpd
+        threading.Thread(target=httpd.serve_forever, daemon=True).start()
+        threading.Thread(target=beat_loop, daemon=True).start()
     threading.Thread(target=lambda: history.backfill(CFG["logPath"]), daemon=True).start()
-    threading.Thread(target=beat_loop, daemon=True).start()
     try:
         desk.open_window(sys.modules[__name__])
     finally:
         leave_room()
         request_stop()
-        httpd.server_close()
+        if httpd:
+            httpd.server_close()
         if frozen():
             end_starfix_pids(other_starfix_pids())
 
@@ -2087,6 +2089,37 @@ if __name__ == "__main__":
         live = snapshot(stocked)["card"]
         assert live["board"] is False and live["kills"] == 1 and live["down"] == "down", live
         assert live["fps"] == 48 and live["crash"] == "gpu" and live["crime"] == 2, live
+        grouped = history.group_days([
+            {"t": "2026-01-01T02:00:00.000Z", "kind": "online"},
+            {"t": "2026-01-01T03:00:00.000Z", "kind": "place", "code": "RR_HUR_L1"},
+            {"t": "2026-01-03T02:00:00.000Z", "kind": "online"},
+            {"t": "2026-01-03T04:00:00.000Z", "kind": "ship", "ship": "Aegis Cutter"},
+        ])
+        assert len(grouped) == 2, grouped
+        assert grouped[0]["day"] == history.local_day("2026-01-03T02:00:00.000Z")
+        assert grouped[1]["day"] == history.local_day("2026-01-01T02:00:00.000Z")
+        assert grouped[0]["day"] != grouped[1]["day"]
+        assert grouped[0]["sessions"][0]["ships"] == ["Aegis Cutter"]
+        assert grouped[1]["sessions"][0]["places"] == ["RR_HUR_L1"]
+        rated = history.parse(
+            '<2026-01-03T05:00:00.000Z> Added notification "犯罪等级 2" [9] to queue.',
+            trail,
+        )
+        assert rated and rated[-1]["kind"] == "crime" and rated[-1]["level"] == 2, rated
+        told = history.parse(
+            '<2026-01-03T06:00:00.000Z> Added notification "已接受合约：运送补给:" [9] to queue.',
+            trail,
+        )
+        assert any(row.get("kind") == "pact" and row.get("phase") == "accept" for row in told), told
+        quiet = history.parse(
+            '<2026-01-03T06:01:00.000Z> Added notification "正在进入禁火区 - 禁止一切战斗行为:" [9] to queue.',
+            trail,
+        )
+        assert any(row.get("kind") == "armistice" and row.get("side") == "in" for row in quiet), quiet
+        assert history.parse(
+            '<2026-01-03T06:02:00.000Z> Added notification "正在进入禁火区 - 禁止一切战斗行为:" [9] to queue.',
+            trail,
+        ) == []
         assert packaged_app() is False
         assert choose_data_dir(True, r"C:\app", r"C:\Users\a\AppData\Local") == Path(r"C:\Users\a\AppData\Local\Starfix")
         assert choose_data_dir(False, r"C:\app", r"C:\Users\a\AppData\Local") == Path(r"C:\app")

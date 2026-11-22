@@ -9,6 +9,8 @@ import tkinter as tk
 from pathlib import Path
 from tkinter import filedialog
 
+import names
+
 THEMES = {
     "classic": {
         "bg": "#070a12", "panel": "#101829", "ink": "#eef2fb", "muted": "#94a2c2",
@@ -39,6 +41,7 @@ THEME_NAMES = (
     ("scifi", "科幻"),
 )
 FONT = ("Microsoft YaHei UI", 9)
+MISSION_NOISE = ("已接受合约", "新任务", "新的任务", "任务完成", "合约完成", "合约失败", "任务撤销", "合约共享", "Contract Accepted", "Contract Complete", "Contract Failed", "Contract Shared", "New Objective", "Objective Complete", "Objective Withdrawn")
 FONT_PLACE = ("Microsoft YaHei UI", 9)
 LANGS = (
     ("zh-Hans", "简体中文"),
@@ -62,6 +65,7 @@ TEXT = {
         "log": "GAME.LOG", "browse": "浏览",
         "api": "星图地址", "room": "房间码", "token": "房间令牌",
         "lang": "语言", "look": "外观",
+        "split": "分离", "dock": "收回", "pane.live": "状态",
         "theme.classic": "经典", "theme.compact": "紧凑", "theme.practical": "实用", "theme.chassis": "机壳", "theme.scifi": "科幻",
         "watch": "开始监视", "watch_stop": "停止监视", "scan": "读最近地点",
         "place_none": "还没有地点", "quit": "退出", "back": "后台运行",
@@ -73,6 +77,58 @@ TEXT = {
         "err_need_link": "先在星图里点「连到这台电脑」，再回到这里确认",
         "err_nolog": "找不到这份日志", "err_room": "房间码不对", "err_token": "令牌不对",
         "err_addr": "地址不对", "err_nopair": "没有待确认的连接", "err_http": "房间服务返回",
+        "trail_title": "过程",
+        "trail_hint": "按日期分开。一次登录画成一条。记录只留在这台电脑上。",
+        "trail_empty": "还没有能串起来的过程。开始监视之后，每次登录会画成一条。",
+        "trail_span": "{start} – {end}",
+        "trail_places": "{n} 处",
+        "trail_contract": "合约 {n}",
+        "trail_buy": "买 {n}",
+        "trail_sell": "卖 {n}",
+        "trail_mission": "任务 {n}",
+        "trail_steps": "{n} 步",
+        "kind.online": "上线",
+        "kind.place": "进入 {code}",
+        "kind.done": "合约完成",
+        "kind.fail": "合约失败",
+        "kind.abandon": "合约放弃",
+        "kind.buy": "购买 {item} × {qty}",
+        "kind.sell": "出售 {item} × {qty}",
+        "kind.ship": "驾驶 {ship}",
+        "kind.aim": "选定 {where}",
+        "kind.jump": "从 {start} 前往 {where}",
+        "kind.arrive": "到达 {where}",
+        "kind.down.npc": "被击倒",
+        "kind.down.player": "被另一名玩家击倒",
+        "kind.wreck": "飞船被毁",
+        "kind.strike": "击倒目标",
+        "kind.clear": "犯罪等级清除",
+        "kind.crime": "犯罪等级 {n}",
+        "kind.crash.gpu": "显卡崩溃",
+        "kind.crash.freeze": "游戏冻结",
+        "kind.crash.ram": "内存不足",
+        "kind.crash.vram": "显存不足",
+        "kind.crash.fault": "游戏故障",
+        "kind.universe": "进入持久宇宙",
+        "kind.leave": "离开游戏",
+        "kind.law": "进入{where}管辖",
+        "kind.watch.in": "进入监管区域",
+        "kind.watch.out": "离开监管区域",
+        "kind.armistice.in": "进入禁火区",
+        "kind.armistice.out": "离开禁火区",
+        "kind.hangar.ask": "机库申请已通过",
+        "kind.hangar.ready": "机库已就绪",
+        "kind.hurt": "身体局部瘫痪",
+        "kind.heal": "接受治疗",
+        "kind.unseat": "离开驾驶位",
+        "kind.pact.accept": "接取「{title}」",
+        "kind.pact.done": "完成「{title}」",
+        "kind.pact.fail": "未能完成「{title}」",
+        "kind.pact.share": "收到共享「{title}」",
+        "kind.travel": "从 {start} 前往 {where}",
+        "kind.travel_done": "从 {start} 跃迁抵达 {where}",
+        "kind.beacon": "任务信标",
+        "kind.somewhere": "某处",
         "update_title": "正在更新", "update_lead": "正在把 {version} 装进程序",
         "update_bytes": "{done} / {total}", "update_swap": "正在换上新版本", "update_unknown": "正在下载",
     },
@@ -91,6 +147,7 @@ TEXT = {
         "log": "GAME.LOG", "browse": "瀏覽",
         "api": "星圖地址", "room": "房間碼", "token": "房間令牌",
         "lang": "語言", "look": "外觀",
+        "split": "分離", "dock": "收回", "pane.live": "狀態",
         "theme.classic": "經典", "theme.compact": "緊湊", "theme.practical": "實用", "theme.chassis": "機殼", "theme.scifi": "科幻",
         "watch": "開始監視", "watch_stop": "停止監視", "scan": "讀最近地點",
         "place_none": "還沒有地點", "quit": "退出", "back": "背景執行",
@@ -102,6 +159,58 @@ TEXT = {
         "err_need_link": "先在星圖裡點「連到這台電腦」，再回到這裡確認",
         "err_nolog": "找不到這份日誌", "err_room": "房間碼不對", "err_token": "令牌不對",
         "err_addr": "地址不對", "err_nopair": "沒有待確認的連接", "err_http": "房間服務返回",
+        "trail_title": "過程",
+        "trail_hint": "按日期分開。一次登入畫成一條。記錄只留在這台電腦上。",
+        "trail_empty": "還沒有能串起來的過程。開始監視之後，每次登入會畫成一條。",
+        "trail_span": "{start} – {end}",
+        "trail_places": "{n} 處",
+        "trail_contract": "合約 {n}",
+        "trail_buy": "買 {n}",
+        "trail_sell": "賣 {n}",
+        "trail_mission": "任務 {n}",
+        "trail_steps": "{n} 步",
+        "kind.online": "上線",
+        "kind.place": "進入 {code}",
+        "kind.done": "合約完成",
+        "kind.fail": "合約失敗",
+        "kind.abandon": "合約放棄",
+        "kind.buy": "購買 {item} × {qty}",
+        "kind.sell": "出售 {item} × {qty}",
+        "kind.ship": "駕駛 {ship}",
+        "kind.aim": "選定 {where}",
+        "kind.jump": "從 {start} 前往 {where}",
+        "kind.arrive": "到達 {where}",
+        "kind.down.npc": "被擊倒",
+        "kind.down.player": "被另一名玩家擊倒",
+        "kind.wreck": "飛船被毀",
+        "kind.strike": "擊倒目標",
+        "kind.clear": "犯罪等級清除",
+        "kind.crime": "犯罪等級 {n}",
+        "kind.crash.gpu": "顯示卡當掉",
+        "kind.crash.freeze": "遊戲凍結",
+        "kind.crash.ram": "記憶體不足",
+        "kind.crash.vram": "顯示記憶體不足",
+        "kind.crash.fault": "遊戲故障",
+        "kind.universe": "進入持久宇宙",
+        "kind.leave": "離開遊戲",
+        "kind.law": "進入{where}管轄",
+        "kind.watch.in": "進入監管區域",
+        "kind.watch.out": "離開監管區域",
+        "kind.armistice.in": "進入禁火區",
+        "kind.armistice.out": "離開禁火區",
+        "kind.hangar.ask": "機庫申請已通過",
+        "kind.hangar.ready": "機庫已就緒",
+        "kind.hurt": "身體局部癱瘓",
+        "kind.heal": "接受治療",
+        "kind.unseat": "離開駕駛位",
+        "kind.pact.accept": "接取「{title}」",
+        "kind.pact.done": "完成「{title}」",
+        "kind.pact.fail": "未能完成「{title}」",
+        "kind.pact.share": "收到共享「{title}」",
+        "kind.travel": "從 {start} 前往 {where}",
+        "kind.travel_done": "從 {start} 躍遷抵達 {where}",
+        "kind.beacon": "任務信標",
+        "kind.somewhere": "某處",
         "update_title": "正在更新", "update_lead": "正在把 {version} 裝進程式",
         "update_bytes": "{done} / {total}", "update_swap": "正在換上新版本", "update_unknown": "正在下載",
     },
@@ -120,6 +229,7 @@ TEXT = {
         "log": "GAME.LOG", "browse": "Browse",
         "api": "Map address", "room": "Room code", "token": "Room token",
         "lang": "Language", "look": "Appearance",
+        "split": "Split", "dock": "Dock", "pane.live": "Status",
         "theme.classic": "Classic", "theme.compact": "Compact", "theme.practical": "Practical", "theme.chassis": "Chassis", "theme.scifi": "Sci-fi",
         "watch": "Start watch", "watch_stop": "Stop watch", "scan": "Latest place",
         "place_none": "No place yet", "quit": "Quit", "back": "Background",
@@ -131,6 +241,58 @@ TEXT = {
         "err_need_link": "On the map, choose Connect this computer, then confirm here",
         "err_nolog": "Cannot find this log", "err_room": "Room code is not valid", "err_token": "Token is not valid",
         "err_addr": "Address is not valid", "err_nopair": "Nothing is waiting to confirm", "err_http": "Room service returned",
+        "trail_title": "Sessions",
+        "trail_hint": "Split by date. One login is one line. The record stays on this computer.",
+        "trail_empty": "No session to draw yet. After watch starts, each login becomes one line.",
+        "trail_span": "{start} – {end}",
+        "trail_places": "{n} places",
+        "trail_contract": "contracts {n}",
+        "trail_buy": "bought {n}",
+        "trail_sell": "sold {n}",
+        "trail_mission": "tasks {n}",
+        "trail_steps": "{n} steps",
+        "kind.online": "Signed in",
+        "kind.place": "Entered {code}",
+        "kind.done": "Contract complete",
+        "kind.fail": "Contract failed",
+        "kind.abandon": "Contract abandoned",
+        "kind.buy": "Bought {item} × {qty}",
+        "kind.sell": "Sold {item} × {qty}",
+        "kind.ship": "Flew {ship}",
+        "kind.aim": "Selected {where}",
+        "kind.jump": "From {start} to {where}",
+        "kind.arrive": "Arrived {where}",
+        "kind.down.npc": "Downed",
+        "kind.down.player": "Downed by another player",
+        "kind.wreck": "Ship destroyed",
+        "kind.strike": "Downed a target",
+        "kind.clear": "Crime rating cleared",
+        "kind.crime": "Crime rating {n}",
+        "kind.crash.gpu": "GPU crash",
+        "kind.crash.freeze": "Game froze",
+        "kind.crash.ram": "Out of memory",
+        "kind.crash.vram": "Out of video memory",
+        "kind.crash.fault": "Game fault",
+        "kind.universe": "Entered the universe",
+        "kind.leave": "Left the game",
+        "kind.law": "Entered {where} jurisdiction",
+        "kind.watch.in": "Entered monitored space",
+        "kind.watch.out": "Left monitored space",
+        "kind.armistice.in": "Entered an armistice zone",
+        "kind.armistice.out": "Left the armistice zone",
+        "kind.hangar.ask": "Hangar request accepted",
+        "kind.hangar.ready": "Hangar ready",
+        "kind.hurt": "Partially incapacitated",
+        "kind.heal": "Treated",
+        "kind.unseat": "Left the pilot seat",
+        "kind.pact.accept": "Accepted “{title}”",
+        "kind.pact.done": "Finished “{title}”",
+        "kind.pact.fail": "Failed “{title}”",
+        "kind.pact.share": "Received shared “{title}”",
+        "kind.travel": "From {start} toward {where}",
+        "kind.travel_done": "Jumped from {start} to {where}",
+        "kind.beacon": "mission beacon",
+        "kind.somewhere": "somewhere",
         "update_title": "Updating", "update_lead": "Loading {version} into the program",
         "update_bytes": "{done} / {total}", "update_swap": "Replacing this copy", "update_unknown": "Downloading",
     },
@@ -149,6 +311,7 @@ TEXT = {
         "log": "GAME.LOG", "browse": "Suchen",
         "api": "Kartenadresse", "room": "Raumcode", "token": "Raumtoken",
         "lang": "Sprache", "look": "Aussehen",
+        "split": "Trennen", "dock": "Zurück", "pane.live": "Status",
         "theme.classic": "Klassisch", "theme.compact": "Kompakt", "theme.practical": "Praktisch", "theme.chassis": "Gehäuse", "theme.scifi": "Science-Fiction",
         "watch": "Überwachen", "watch_stop": "Stoppen", "scan": "Letzten Ort",
         "place_none": "Noch kein Ort", "quit": "Beenden", "back": "Hintergrund",
@@ -160,6 +323,58 @@ TEXT = {
         "err_need_link": "In der Karte „Diesen Computer verbinden“, dann hier bestätigen",
         "err_nolog": "Dieses Log wurde nicht gefunden", "err_room": "Raumcode ungültig", "err_token": "Token ungültig",
         "err_addr": "Adresse ungültig", "err_nopair": "Nichts wartet auf Bestätigung", "err_http": "Raumdienst antwortete",
+        "trail_title": "Verlauf",
+        "trail_hint": "Nach Datum getrennt. Eine Anmeldung ist eine Linie. Der Verlauf bleibt auf diesem Computer.",
+        "trail_empty": "Noch kein Verlauf. Nach dem Start der Überwachung wird jede Anmeldung eine Linie.",
+        "trail_span": "{start} – {end}",
+        "trail_places": "{n} Orte",
+        "trail_contract": "Aufträge {n}",
+        "trail_buy": "gekauft {n}",
+        "trail_sell": "verkauft {n}",
+        "trail_mission": "Aufgaben {n}",
+        "trail_steps": "{n} Schritte",
+        "kind.online": "Angemeldet",
+        "kind.place": "Zone {code}",
+        "kind.done": "Auftrag abgeschlossen",
+        "kind.fail": "Auftrag fehlgeschlagen",
+        "kind.abandon": "Auftrag abgebrochen",
+        "kind.buy": "Gekauft {item} × {qty}",
+        "kind.sell": "Verkauft {item} × {qty}",
+        "kind.ship": "Geflogen {ship}",
+        "kind.aim": "Ziel {where}",
+        "kind.jump": "Von {start} nach {where}",
+        "kind.arrive": "Ankunft {where}",
+        "kind.down.npc": "Kampfunfähig",
+        "kind.down.player": "Von einem anderen Spieler kampfunfähig",
+        "kind.wreck": "Schiff zerstört",
+        "kind.strike": "Ziel ausgeschaltet",
+        "kind.clear": "Verbrechensstufe gelöscht",
+        "kind.crime": "Verbrechensstufe {n}",
+        "kind.crash.gpu": "GPU-Absturz",
+        "kind.crash.freeze": "Spiel eingefroren",
+        "kind.crash.ram": "Arbeitsspeicher voll",
+        "kind.crash.vram": "Videospeicher voll",
+        "kind.crash.fault": "Spielfehler",
+        "kind.universe": "Universum betreten",
+        "kind.leave": "Spiel verlassen",
+        "kind.law": "Zuständigkeit {where} betreten",
+        "kind.watch.in": "Überwachtes Gebiet betreten",
+        "kind.watch.out": "Überwachtes Gebiet verlassen",
+        "kind.armistice.in": "Waffenruhe betreten",
+        "kind.armistice.out": "Waffenruhe verlassen",
+        "kind.hangar.ask": "Hangar-Anfrage angenommen",
+        "kind.hangar.ready": "Hangar bereit",
+        "kind.hurt": "Teilweise kampfunfähig",
+        "kind.heal": "Behandelt",
+        "kind.unseat": "Pilotensitz verlassen",
+        "kind.pact.accept": "Angenommen „{title}“",
+        "kind.pact.done": "Abgeschlossen „{title}“",
+        "kind.pact.fail": "Gescheitert „{title}“",
+        "kind.pact.share": "Geteilt erhalten „{title}“",
+        "kind.travel": "Von {start} nach {where}",
+        "kind.travel_done": "Sprung von {start} nach {where}",
+        "kind.beacon": "Auftragsbake",
+        "kind.somewhere": "irgendwo",
         "update_title": "Aktualisierung", "update_lead": "{version} wird ins Programm geladen",
         "update_bytes": "{done} / {total}", "update_swap": "Diese Datei wird ersetzt", "update_unknown": "Download",
     },
@@ -226,9 +441,12 @@ def _asset(name):
 
 def theme_scroll(parent, target, colors):
     bar = tk.Canvas(parent, width=12, highlightthickness=0, bd=0, bg=colors["bg"], cursor="hand2")
+    bar._colors = colors
 
     def paint(_event=None):
         bar.delete("thumb")
+        look = getattr(bar, "_colors", colors)
+        bar.configure(bg=look["bg"])
         try:
             first, last = target.yview()
         except tk.TclError:
@@ -242,7 +460,7 @@ def theme_scroll(parent, target, colors):
             mid = (top + bot) // 2
             top = max(0, mid - 14)
             bot = min(height, top + 28)
-        bar.create_rectangle(3, top + 2, 9, max(top + 6, bot - 2), fill=colors["accent"], width=0, tags="thumb")
+        bar.create_rectangle(3, top + 2, 9, max(top + 6, bot - 2), fill=look["accent"], width=0, tags="thumb")
 
     def jump(event):
         height = max(1, bar.winfo_height())
@@ -436,6 +654,13 @@ class Desktop:
         self._drag = None
         self._geom = None
         self._zoomed = False
+        self._snap = None
+        self._drag_zone = ""
+        self._ghost = None
+        self._snap_menu = None
+        self._snap_wait = None
+        self._panes = []
+        self._split_saved = None
         self._ready = False
         self._linked = False
         self._link_until = 0
@@ -455,6 +680,15 @@ class Desktop:
         self._placing = False
         self._guard_on = False
         self._resume_frame = False
+        self._trail_days = []
+        self._trail_sig = None
+        self._trail_day = ""
+        self._trail_seed = ""
+        self._trail_picked = False
+        self._trail_open = set()
+        self._trail_hits = []
+        self._trail_rail = None
+        self._trail_width = 0
         _dpi()
         self.root = tk.Tk()
         self.root.after(50, self._tray_pump)
@@ -512,6 +746,10 @@ class Desktop:
             widget.bind("<ButtonPress-1>", self._drag_start)
             widget.bind("<B1-Motion>", self._drag_move)
             widget.bind("<Double-Button-1>", lambda _e: self._toggle_zoom())
+        self.titlebar.bind("<B1-Motion>", self._drag_move)
+        self.titlebar.bind("<ButtonRelease-1>", self._drag_end)
+        self.btn_max.bind("<Enter>", self._snap_menu_arm, add="+")
+        self.btn_max.bind("<Leave>", self._snap_menu_away, add="+")
 
         self.rule = tk.Canvas(shell, height=3, highlightthickness=0, bd=0)
         self.rule.pack(fill="x")
@@ -552,40 +790,62 @@ class Desktop:
         self.room_label, self.room = self._field(self.manual, "房间码")
         self.manual.pack(fill="x", pady=(8, 0))
 
-        self.lang_label = tk.Label(card, text="", font=FONT, anchor="w")
-        self.lang_label.pack(fill="x", pady=(8, 4))
-        lang_row = tk.Frame(card)
+        design = tk.Frame(card)
+        design.pack(side="bottom", fill="x", pady=(8, 0))
+        self.design = design
+        lang_row = tk.Frame(design)
         lang_row.pack(fill="x")
         self.lang_row = lang_row
+        self.lang_label = tk.Label(lang_row, text="", font=FONT, anchor="w")
+        self.lang_label.pack(side="left", padx=(0, 6))
+        self.split_btn = self._button(lang_row, "分离", self._toggle_split, padx=8, pady=2)
+        self.split_btn.pack(side="right")
         self.lang_buttons = {}
         for key, name in LANGS:
-            btn = self._button(lang_row, name, lambda k=key: self._pick_lang(k))
+            btn = self._button(lang_row, name, lambda k=key: self._pick_lang(k), padx=8, pady=2)
             btn._lang = key
             btn.pack(side="left", padx=(0, 4))
             self.lang_buttons[key] = btn
 
-        self.look = tk.Label(card, text="外观", font=FONT, anchor="w")
-        self.look.pack(fill="x", pady=(8, 4))
-        theme_row = tk.Frame(card)
-        theme_row.pack(fill="x")
+        theme_row = tk.Frame(design)
+        theme_row.pack(fill="x", pady=(4, 0))
         self.theme_row = theme_row
+        self.actions = theme_row
+        self.scan = self._button(theme_row, "读最近地点", self._scan, padx=8, pady=2)
+        self.scan.pack(side="right")
+        self.watch = self._button(theme_row, "开始监视", self._toggle_watch, primary=True, padx=8, pady=2)
+        self.watch.pack(side="right", padx=(0, 6))
+        self.look = tk.Label(theme_row, text="外观", font=FONT, anchor="w")
+        self.look.pack(side="left", padx=(0, 6))
         self.theme_buttons = {}
         for key, name in THEME_NAMES:
-            btn = self._button(theme_row, name, lambda k=key: self._pick_theme(k))
+            btn = self._button(theme_row, name, lambda k=key: self._pick_theme(k), padx=8, pady=2)
             btn._theme = key
             btn.pack(side="left", padx=(0, 4))
             self.theme_buttons[key] = btn
 
-        actions = tk.Frame(card)
-        actions.pack(fill="x", pady=(8, 0))
-        self.actions = actions
-        self.watch = self._button(actions, "开始监视", self._toggle_watch, primary=True)
-        self.watch.pack(side="left")
-        self.scan = self._button(actions, "读最近地点", self._scan)
-        self.scan.pack(side="left", padx=(6, 0))
+        self.trail_slot = tk.Frame(card)
+        self.trail_slot.pack(fill="both", expand=True, pady=(10, 0))
+        self.trail_pane = self._make_pane(self.trail_slot, "trail", "trail_title", (420, 360))
+        trail_body = self.trail_pane._body
+        self.trail_title = tk.Label(trail_body, text="过程", font=FONT, anchor="w")
+        self.trail_title.pack(fill="x", pady=(0, 2))
+        self.trail_hint = tk.Label(trail_body, text="", font=FONT, anchor="w", justify="left", wraplength=490)
+        self.trail_hint.pack(fill="x")
+        self.trail_box = tk.Frame(trail_body)
+        self.trail_box.pack(fill="both", expand=True, pady=(6, 0))
+        self.trail = tk.Canvas(self.trail_box, height=220, highlightthickness=0, bd=0)
+        self.trail.pack(side="left", fill="both", expand=True)
+        self.trail_scroll = theme_scroll(self.trail_box, self.trail, self._colors())
+        self.trail_scroll.pack(side="right", fill="y")
+        self.trail.bind("<MouseWheel>", self._trail_wheel)
+        self.trail.bind("<Button-1>", self._trail_click)
+        self.trail.bind("<Configure>", self._trail_sized)
 
         self.err = tk.Label(card, text="", font=FONT, anchor="w", justify="left", wraplength=490)
-        self.feed = tk.Canvas(shell, height=96, highlightthickness=0, bd=0)
+        self.live_slot = tk.Frame(shell)
+        self.live_pane = self._make_pane(self.live_slot, "live", "pane.live", (360, 140))
+        self.feed = tk.Canvas(self.live_pane._body, height=96, highlightthickness=0, bd=0)
         self._feed = {"place": "", "ship": "", "gear": "", "on": False}
         card.bind("<Configure>", self._fit_wrap)
 
@@ -602,7 +862,8 @@ class Desktop:
         self.back.pack(side="right", padx=(8, 0), pady=4)
         foot.pack(side="bottom", fill="x")
         foot_rule.pack(side="bottom", fill="x")
-        self.feed.pack(side="bottom", fill="x")
+        self.feed.pack(fill="x")
+        self.live_slot.pack(side="bottom", fill="x")
         card.pack(fill="both", expand=True)
 
         self._apply_copy()
@@ -611,17 +872,19 @@ class Desktop:
         self.root.after(400, self._tick)
         self.root.after(32, self._animate)
         self.root.update_idletasks()
-        width, height = 520, self.shell.winfo_reqheight() + 4
-        if height < 560:
-            height = 560
         screen_w = self.root.winfo_screenwidth()
         screen_h = self.root.winfo_screenheight()
+        width, height = 540, self.shell.winfo_reqheight() + 8
+        if height < 760:
+            height = 760
+        if height > screen_h - 48:
+            height = max(640, screen_h - 48)
         self._normal = "%dx%d+%d+%d" % (
             width, height,
             max(0, (screen_w - width) // 2),
             max(40, (screen_h - height) // 6),
         )
-        self.root.minsize(420, 520)
+        self.root.minsize(420, 640)
         self.root.geometry(self._normal)
         self.root.bind("<Map>", self._on_map)
         self._mount_grips()
@@ -706,6 +969,7 @@ class Desktop:
         set_long(hwnd, -20, extra)
         user32.SetWindowPos(hwnd, None, 0, 0, 0, 0, 0x0001 | 0x0002 | 0x0004 | 0x0010 | 0x0020)
         hide_window_border(self.root, self._colors()["panel"])
+        self._apply_window_icon()
         self._taskbar_add()
 
     def _seat_taskbar(self):
@@ -766,12 +1030,629 @@ class Desktop:
             widget.configure(bg=c["accent"], fg=c["on"])
 
     def _drag_start(self, event):
+        self._hide_snap_menu()
+        if self._snap:
+            self._restore_free()
+            width = max(self.root.winfo_width(), 420)
+            left = event.x_root - min(max(event.x, 24), width - 48)
+            top = event.y_root - max(event.y, 0)
+            self.root.geometry("+%d+%d" % (left, top))
         self._drag = (event.x_root - self.root.winfo_x(), event.y_root - self.root.winfo_y())
+        self._drag_zone = ""
+        try:
+            self.titlebar.grab_set()
+        except tk.TclError:
+            pass
 
     def _drag_move(self, event):
-        if self._zoomed or not self._drag:
+        if not self._drag or self._zoomed:
             return
         self.root.geometry("+%d+%d" % (event.x_root - self._drag[0], event.y_root - self._drag[1]))
+        area = self._work_at(event.x_root, event.y_root)
+        kind = self._snap_kind(event.x_root, event.y_root, area)
+        self._drag_zone = kind
+        if kind:
+            self._show_ghost(self._snap_box(kind, area))
+        else:
+            self._hide_ghost()
+
+    def _drag_end(self, event):
+        zone = self._drag_zone
+        area = self._work_at(event.x_root, event.y_root)
+        self._drag = None
+        self._drag_zone = ""
+        try:
+            self.titlebar.grab_release()
+        except tk.TclError:
+            pass
+        self._hide_ghost()
+        if zone:
+            self._apply_snap(zone, area)
+        elif not self._snap:
+            self._normal = self.root.geometry()
+
+    def _work_at(self, x, y):
+        if sys.platform == "win32":
+            try:
+                import ctypes
+                from ctypes import wintypes
+
+                class POINT(ctypes.Structure):
+                    _fields_ = [("x", ctypes.c_long), ("y", ctypes.c_long)]
+
+                class MONITORINFO(ctypes.Structure):
+                    _fields_ = [
+                        ("cbSize", wintypes.DWORD),
+                        ("rcMonitor", wintypes.RECT),
+                        ("rcWork", wintypes.RECT),
+                        ("dwFlags", wintypes.DWORD),
+                    ]
+
+                user32 = ctypes.WinDLL("user32", use_last_error=True)
+                user32.MonitorFromPoint.argtypes = [POINT, wintypes.DWORD]
+                user32.MonitorFromPoint.restype = wintypes.HMONITOR
+                user32.GetMonitorInfoW.argtypes = [wintypes.HMONITOR, ctypes.POINTER(MONITORINFO)]
+                user32.GetMonitorInfoW.restype = wintypes.BOOL
+                info = MONITORINFO()
+                info.cbSize = ctypes.sizeof(info)
+                mon = user32.MonitorFromPoint(POINT(int(x), int(y)), 2)
+                if mon and user32.GetMonitorInfoW(mon, ctypes.byref(info)):
+                    box = info.rcWork
+                    return box.left, box.top, max(420, box.right - box.left), max(320, box.bottom - box.top)
+            except (AttributeError, OSError, ValueError):
+                pass
+        return self._work_area()
+
+    def _snap_kind(self, px, py, area):
+        left, top, width, height = area
+        right, bottom = left + width, top + height
+        edge = 18
+        corner = 72
+        if px - left <= corner and py - top <= corner:
+            return "tl"
+        if right - px <= corner and py - top <= corner:
+            return "tr"
+        if px - left <= corner and bottom - py <= corner:
+            return "bl"
+        if right - px <= corner and bottom - py <= corner:
+            return "br"
+        if py - top <= edge:
+            return "full"
+        if px - left <= edge:
+            return "left"
+        if right - px <= edge:
+            return "right"
+        return ""
+
+    def _snap_box(self, kind, area):
+        left, top, width, height = area
+        half_w, half_h = width // 2, height // 2
+        boxes = {
+            "full": (left, top, width, height),
+            "left": (left, top, half_w, height),
+            "right": (left + half_w, top, width - half_w, height),
+            "tl": (left, top, half_w, half_h),
+            "tr": (left + half_w, top, width - half_w, half_h),
+            "bl": (left, top + half_h, half_w, height - half_h),
+            "br": (left + half_w, top + half_h, width - half_w, height - half_h),
+        }
+        return boxes.get(kind)
+
+    def _show_ghost(self, box):
+        if not box:
+            return
+        x, y, w, h = box
+        ghost = self._ghost
+        if ghost is None or not ghost.winfo_exists():
+            ghost = tk.Toplevel(self.root)
+            ghost.overrideredirect(True)
+            try:
+                ghost.attributes("-topmost", True)
+                ghost.attributes("-alpha", 0.28)
+            except tk.TclError:
+                pass
+            self._ghost = ghost
+        ghost.configure(bg=self._colors()["accent"])
+        ghost.geometry("%dx%d+%d+%d" % (int(w), int(h), int(x), int(y)))
+        ghost.deiconify()
+        ghost.lift()
+
+    def _hide_ghost(self):
+        ghost = self._ghost
+        if ghost is not None and ghost.winfo_exists():
+            ghost.withdraw()
+
+    def _apply_snap(self, kind, area=None):
+        if not self._snap:
+            self._normal = self.root.geometry()
+        if area is None:
+            area = self._work_at(self.root.winfo_pointerx(), self.root.winfo_pointery())
+        box = self._snap_box(kind, area)
+        if not box:
+            return
+        x, y, w, h = box
+        self._hide_ghost()
+        self._hide_snap_menu()
+        self.root.geometry("%dx%d+%d+%d" % (int(w), int(h), int(x), int(y)))
+        self._snap = kind
+        self._zoomed = kind == "full"
+        self.btn_max.configure(text="❐")
+        self._grips_follow()
+
+    def _restore_free(self):
+        self.root.geometry(self._normal)
+        self._snap = None
+        self._zoomed = False
+        self.btn_max.configure(text="□")
+        self._grips_follow()
+
+    def _pointer_in(self, widget):
+        try:
+            if widget is None or not widget.winfo_exists():
+                return False
+            px, py = self.root.winfo_pointerxy()
+            x, y = widget.winfo_rootx(), widget.winfo_rooty()
+            return x <= px < x + widget.winfo_width() and y <= py < y + widget.winfo_height()
+        except tk.TclError:
+            return False
+
+    def _snap_menu_arm(self, _event):
+        if self._snap_wait:
+            self.root.after_cancel(self._snap_wait)
+        self._snap_wait = self.root.after(280, self._show_snap_menu)
+
+    def _snap_menu_away(self, _event):
+        if self._snap_wait:
+            self.root.after_cancel(self._snap_wait)
+            self._snap_wait = None
+        self.root.after(200, self._snap_menu_close_if_out)
+
+    def _snap_menu_close_if_out(self):
+        if self._pointer_in(self.btn_max) or self._pointer_in(self._snap_menu):
+            return
+        self._hide_snap_menu()
+
+    def _hide_snap_menu(self):
+        menu = self._snap_menu
+        self._snap_menu = None
+        if menu is not None:
+            try:
+                menu.destroy()
+            except tk.TclError:
+                pass
+
+    def _show_snap_menu(self):
+        self._snap_wait = None
+        if not self._pointer_in(self.btn_max):
+            return
+        self._hide_snap_menu()
+        colors = self._colors()
+        menu = tk.Toplevel(self.root)
+        menu.overrideredirect(True)
+        try:
+            menu.attributes("-topmost", True)
+        except tk.TclError:
+            pass
+        menu.configure(bg=colors["line"])
+        sheet = tk.Frame(menu, bg=colors["panel"], padx=8, pady=8)
+        sheet.pack(padx=1, pady=1)
+        order = (
+            ("left", 0, 0), ("right", 0, 1), ("full", 0, 2),
+            ("tl", 1, 0), ("tr", 1, 1), ("bl", 1, 2), ("br", 1, 3),
+        )
+        for kind, row, column in order:
+            cell = tk.Canvas(sheet, width=52, height=36, highlightthickness=0, bd=0, bg=colors["bg"], cursor="hand2")
+            cell.grid(row=row, column=column, padx=3, pady=3)
+            self._draw_layout(cell, kind, colors)
+            cell.bind("<Button-1>", lambda _event, name=kind: self._apply_snap(name))
+            cell.bind("<Enter>", lambda _event, widget=cell: widget.configure(bg=colors["accent"]))
+            cell.bind("<Leave>", lambda _event, widget=cell: widget.configure(bg=colors["bg"]))
+        menu.bind("<Enter>", lambda _event: None)
+        menu.bind("<Leave>", self._snap_menu_away)
+        self._snap_menu = menu
+        menu.update_idletasks()
+        width = menu.winfo_reqwidth()
+        height = menu.winfo_reqheight()
+        x = self.btn_max.winfo_rootx() + self.btn_max.winfo_width() - width
+        y = self.btn_max.winfo_rooty() + self.btn_max.winfo_height() + 6
+        area = self._work_at(x, y)
+        if x < area[0]:
+            x = area[0]
+        if x + width > area[0] + area[2]:
+            x = area[0] + area[2] - width
+        if y + height > area[1] + area[3]:
+            y = self.btn_max.winfo_rooty() - height - 6
+        menu.geometry("+%d+%d" % (int(x), int(y)))
+
+    def _draw_layout(self, canvas, kind, colors):
+        filled = {
+            "left": {(0, 0), (0, 1)},
+            "right": {(1, 0), (1, 1)},
+            "tl": {(0, 0)},
+            "tr": {(1, 0)},
+            "bl": {(0, 1)},
+            "br": {(1, 1)},
+            "full": {(0, 0), (1, 0), (0, 1), (1, 1)},
+        }[kind]
+        pad, cols, rows = 5, 2, 2
+        cell_w, cell_h = 20, 12
+        for col in range(cols):
+            for row in range(rows):
+                x0 = pad + col * (cell_w + 2)
+                y0 = pad + row * (cell_h + 2)
+                on = (col, row) in filled
+                canvas.create_rectangle(
+                    x0, y0, x0 + cell_w, y0 + cell_h,
+                    fill=colors["accent"] if on else colors["panel"],
+                    outline=colors["line"],
+                )
+
+    def _toggle_zoom(self):
+        self._hide_snap_menu()
+        if self._snap:
+            self._restore_free()
+            return
+        self._apply_snap("full")
+
+    def _make_pane(self, slot, key, title_key, min_size):
+        pane = tk.Frame(slot)
+        pane.pack(fill="both", expand=True)
+        pane._key = key
+        pane._title_key = title_key
+        pane._slot = slot
+        pane._min = min_size
+        pane._out = False
+        pane._drag = None
+        pane._zone = ""
+        pane._snap = None
+        pane._zoomed = False
+        pane._normal = ""
+        pane._geom = None
+        pane._grips = []
+        bar = tk.Frame(pane, height=36)
+        bar.pack_propagate(False)
+        pane._bar = bar
+        title = tk.Label(bar, text="", font=FONT, anchor="w")
+        title.pack(side="left", padx=8)
+        pane._title = title
+        dock = self._button(bar, "", lambda p=pane: self._dock_pane(p), padx=8, pady=2)
+        dock.pack(side="right", padx=(0, 8), pady=4)
+        pane._dock_btn = dock
+        close = self._chrome_btn(bar, "×", lambda p=pane: self._dock_pane(p), "close")
+        close.pack(side="right", fill="y")
+        maxb = self._chrome_btn(bar, "□", lambda p=pane: self._pane_zoom(p), "max")
+        maxb.pack(side="right", fill="y")
+        pane._max = maxb
+        body = tk.Frame(pane)
+        body.pack(fill="both", expand=True)
+        pane._body = body
+        for widget in (bar, title):
+            widget.bind("<ButtonPress-1>", lambda event, p=pane: self._pane_drag_start(event, p))
+            widget.bind("<B1-Motion>", lambda event, p=pane: self._pane_drag_move(event, p))
+            widget.bind("<ButtonRelease-1>", lambda event, p=pane: self._pane_drag_end(event, p))
+            widget.bind("<Double-Button-1>", lambda _event, p=pane: self._pane_zoom(p))
+        self._panes.append(pane)
+        return pane
+
+    def _pane_by(self, key):
+        for pane in self._panes:
+            if pane._key == key:
+                return pane
+        return None
+
+    def _screens(self):
+        found = []
+        if sys.platform == "win32":
+            try:
+                import ctypes
+                from ctypes import wintypes
+
+                class MONITORINFO(ctypes.Structure):
+                    _fields_ = [
+                        ("cbSize", wintypes.DWORD),
+                        ("rcMonitor", wintypes.RECT),
+                        ("rcWork", wintypes.RECT),
+                        ("dwFlags", wintypes.DWORD),
+                    ]
+
+                user32 = ctypes.WinDLL("user32", use_last_error=True)
+                user32.GetMonitorInfoW.argtypes = [wintypes.HMONITOR, ctypes.POINTER(MONITORINFO)]
+                user32.GetMonitorInfoW.restype = wintypes.BOOL
+
+                @ctypes.WINFUNCTYPE(wintypes.BOOL, wintypes.HMONITOR, wintypes.HDC, ctypes.POINTER(wintypes.RECT), wintypes.LPARAM)
+                def each(monitor, _hdc, _rect, _data):
+                    info = MONITORINFO()
+                    info.cbSize = ctypes.sizeof(info)
+                    if user32.GetMonitorInfoW(monitor, ctypes.byref(info)):
+                        box = info.rcWork
+                        found.append((box.left, box.top, max(420, box.right - box.left), max(320, box.bottom - box.top)))
+                    return True
+
+                user32.EnumDisplayMonitors(None, None, each, 0)
+            except (AttributeError, OSError, ValueError):
+                found = []
+        return found or [self._work_area()]
+
+    def _toggle_split(self):
+        if any(pane._out for pane in self._panes):
+            for pane in list(self._panes):
+                self._dock_pane(pane)
+            self._restore_console()
+        else:
+            self._split_open()
+        self._split_label()
+
+    def _split_open(self):
+        areas = self._screens()
+        here = self._work_at(self.root.winfo_rootx() + 20, self.root.winfo_rooty() + 20)
+        target = here
+        for area in areas:
+            if area != here:
+                target = area
+                break
+        left, top, width, height = target
+        pane_w = min(640, max(420, width - 80))
+        if target == here:
+            x = self.root.winfo_x() + self.root.winfo_width() + 16
+            y = max(top, self.root.winfo_y())
+            if x + pane_w > left + width:
+                x = left + 24
+        else:
+            x = left + 32
+            y = top + 32
+        live_h = 168
+        gap = 12
+        y_cursor = y
+        short = [pane for pane in self._panes if pane._min[1] <= 180]
+        tall = [pane for pane in self._panes if pane._min[1] > 180]
+        for pane in short:
+            self._detach(pane, pane_w, live_h, x, y_cursor)
+            y_cursor += live_h + gap
+        room = top + height - y_cursor - 16
+        count = max(1, len(tall))
+        each = max(360, min(720, room // count)) if tall else 0
+        if tall and y_cursor + each * len(tall) > top + height:
+            each = max(360, room // count)
+        for pane in tall:
+            self._detach(pane, pane_w, each, x, y_cursor)
+            y_cursor += each + gap
+        self._fit_console()
+
+    def _detach(self, pane, width, height, x, y):
+        if pane is None or pane._out:
+            return
+        pane._slot.pack_forget()
+        pane._bar.pack(side="top", fill="x", before=pane._body)
+        self.root.tk.call("wm", "manage", pane)
+        self.root.tk.call("wm", "overrideredirect", pane, True)
+        self.root.tk.call("wm", "title", pane, tr(self.lang, pane._title_key))
+        self.root.tk.call("wm", "geometry", pane, "%dx%d+%d+%d" % (int(width), int(height), int(x), int(y)))
+        pane._normal = "%dx%d+%d+%d" % (int(width), int(height), int(x), int(y))
+        pane._out = True
+        pane._snap = None
+        pane._zoomed = False
+        pane._max.configure(text="□")
+        self._mount_pane_grips(pane)
+        hide_window_border(pane, self._colors()["panel"])
+        self._trail_sig = None
+
+    def _dock_pane(self, pane):
+        if pane is None or not pane._out:
+            return
+        self._hide_ghost()
+        try:
+            pane._bar.grab_release()
+        except tk.TclError:
+            pass
+        for grip in pane._grips:
+            grip.destroy()
+        pane._grips = []
+        pane._drag = None
+        pane._geom = None
+        self.root.tk.call("wm", "forget", pane)
+        pane._bar.pack_forget()
+        pane.pack(fill="both", expand=True)
+        if pane._key == "trail":
+            self.trail_slot.pack(fill="both", expand=True, pady=(10, 0))
+        else:
+            self.live_slot.pack(side="bottom", fill="x")
+        pane._out = False
+        pane._snap = None
+        pane._zoomed = False
+        pane._max.configure(text="□")
+        self._trail_sig = None
+        self._feed_sig = None
+
+    def _fit_console(self):
+        if self._split_saved is None and not self._snap:
+            self._split_saved = self.root.geometry()
+        if self._snap or self._zoomed:
+            return
+        self.root.update_idletasks()
+        height = max(360, self.shell.winfo_reqheight() + 12)
+        self.root.minsize(420, 360)
+        self.root.geometry("%dx%d+%d+%d" % (
+            self.root.winfo_width(), height, self.root.winfo_x(), self.root.winfo_y(),
+        ))
+
+    def _restore_console(self):
+        self.root.minsize(420, 640)
+        if self._split_saved and not self._snap and not self._zoomed:
+            self.root.geometry(self._split_saved)
+            self._normal = self._split_saved
+        self._split_saved = None
+
+    def _split_label(self):
+        opened = any(pane._out for pane in self._panes)
+        self.split_btn.configure(text=tr(self.lang, "dock" if opened else "split"))
+        for pane in self._panes:
+            pane._title.configure(text=tr(self.lang, pane._title_key))
+            pane._dock_btn.configure(text=tr(self.lang, "dock"))
+            if pane._out:
+                try:
+                    self.root.tk.call("wm", "title", pane, tr(self.lang, pane._title_key))
+                except tk.TclError:
+                    pass
+
+    def _pane_drag_start(self, event, pane):
+        if not pane._out:
+            return
+        if pane._snap:
+            self._pane_restore(pane)
+            width = max(pane.winfo_width(), pane._min[0])
+            left = event.x_root - min(max(event.x, 24), width - 48)
+            top = event.y_root - max(event.y, 0)
+            self.root.tk.call("wm", "geometry", pane, "+%d+%d" % (left, top))
+        pane._drag = (event.x_root - pane.winfo_x(), event.y_root - pane.winfo_y())
+        pane._zone = ""
+        try:
+            pane._bar.grab_set()
+        except tk.TclError:
+            pass
+
+    def _pane_drag_move(self, event, pane):
+        if not pane._drag or pane._zoomed:
+            return
+        self.root.tk.call("wm", "geometry", pane, "+%d+%d" % (
+            event.x_root - pane._drag[0], event.y_root - pane._drag[1],
+        ))
+        area = self._work_at(event.x_root, event.y_root)
+        kind = self._snap_kind(event.x_root, event.y_root, area)
+        pane._zone = kind
+        if kind:
+            self._show_ghost(self._snap_box(kind, area))
+        else:
+            self._hide_ghost()
+
+    def _pane_drag_end(self, event, pane):
+        zone = pane._zone
+        area = self._work_at(event.x_root, event.y_root)
+        pane._drag = None
+        pane._zone = ""
+        try:
+            pane._bar.grab_release()
+        except tk.TclError:
+            pass
+        self._hide_ghost()
+        if zone:
+            self._pane_apply(pane, zone, area)
+        elif not pane._snap:
+            pane._normal = pane.winfo_geometry()
+
+    def _pane_apply(self, pane, kind, area=None):
+        if not pane._snap:
+            pane._normal = pane.winfo_geometry()
+        if area is None:
+            area = self._work_at(pane.winfo_pointerx(), pane.winfo_pointery())
+        box = self._snap_box(kind, area)
+        if not box:
+            return
+        x, y, w, h = box
+        self._hide_ghost()
+        self.root.tk.call("wm", "geometry", pane, "%dx%d+%d+%d" % (int(w), int(h), int(x), int(y)))
+        pane._snap = kind
+        pane._zoomed = kind == "full"
+        pane._max.configure(text="❐")
+        self._pane_grips_follow(pane)
+
+    def _pane_restore(self, pane):
+        if pane._normal:
+            self.root.tk.call("wm", "geometry", pane, pane._normal)
+        pane._snap = None
+        pane._zoomed = False
+        pane._max.configure(text="□")
+        self._pane_grips_follow(pane)
+
+    def _pane_zoom(self, pane):
+        if not pane._out:
+            return
+        if pane._snap:
+            self._pane_restore(pane)
+            return
+        self._pane_apply(pane, "full")
+
+    def _mount_pane_grips(self, pane):
+        cursors = {
+            "n": "size_ns", "s": "size_ns", "e": "size_we", "w": "size_we",
+            "nw": "size_nw_se", "se": "size_nw_se", "ne": "size_ne_sw", "sw": "size_ne_sw",
+        }
+        specs = (
+            ("n", {"relx": 0, "rely": 0, "relwidth": 1, "height": 6, "anchor": "nw"}),
+            ("s", {"relx": 0, "rely": 1, "relwidth": 1, "height": 6, "anchor": "sw"}),
+            ("w", {"relx": 0, "rely": 0, "relheight": 1, "width": 6, "anchor": "nw"}),
+            ("e", {"relx": 1, "rely": 0, "relheight": 1, "width": 6, "anchor": "ne"}),
+            ("nw", {"relx": 0, "rely": 0, "width": 14, "height": 14, "anchor": "nw"}),
+            ("ne", {"relx": 1, "rely": 0, "width": 14, "height": 14, "anchor": "ne"}),
+            ("sw", {"relx": 0, "rely": 1, "width": 14, "height": 14, "anchor": "sw"}),
+            ("se", {"relx": 1, "rely": 1, "width": 14, "height": 14, "anchor": "se"}),
+        )
+        pane._grips = []
+        for edge, opts in specs:
+            grip = tk.Frame(pane, cursor=cursors[edge], bg=self._colors()["panel"])
+            grip._cursor = cursors[edge]
+            grip.place(**opts)
+            grip.bind("<ButtonPress-1>", lambda event, name=edge, p=pane: self._pane_resize_start(event, name, p))
+            grip.bind("<B1-Motion>", lambda event, p=pane: self._pane_resize_move(event, p))
+            grip.bind("<ButtonRelease-1>", lambda event, p=pane: self._pane_resize_end(event, p))
+            pane._grips.append(grip)
+        self._pane_grips_follow(pane)
+
+    def _pane_grips_follow(self, pane):
+        live = not pane._zoomed
+        for grip in pane._grips:
+            try:
+                grip.configure(cursor=grip._cursor if live else "arrow")
+            except tk.TclError:
+                pass
+
+    def _pane_resize_start(self, event, edge, pane):
+        if pane._zoomed:
+            return
+        pane._geom = {
+            "edge": edge,
+            "x": event.x_root, "y": event.y_root,
+            "w": pane.winfo_width(), "h": pane.winfo_height(),
+            "px": pane.winfo_x(), "py": pane.winfo_y(),
+        }
+
+    def _pane_resize_move(self, event, pane):
+        g = pane._geom
+        if not g:
+            return
+        dx = event.x_root - g["x"]
+        dy = event.y_root - g["y"]
+        x, y, w, h = g["px"], g["py"], g["w"], g["h"]
+        edge = g["edge"]
+        if "e" in edge:
+            w = g["w"] + dx
+        if "s" in edge:
+            h = g["h"] + dy
+        if "w" in edge:
+            w = g["w"] - dx
+            x = g["px"] + dx
+        if "n" in edge:
+            h = g["h"] - dy
+            y = g["py"] + dy
+        min_w, min_h = pane._min
+        if w < min_w:
+            if "w" in edge:
+                x -= min_w - w
+            w = min_w
+        if h < min_h:
+            if "n" in edge:
+                y -= min_h - h
+            h = min_h
+        self.root.tk.call("wm", "geometry", pane, "%dx%d+%d+%d" % (int(w), int(h), int(x), int(y)))
+
+    def _pane_resize_end(self, _event, pane):
+        if not pane._geom:
+            return
+        pane._geom = None
+        if pane._snap and pane._snap != "full":
+            pane._snap = None
+            pane._max.configure(text="□")
+        if not pane._zoomed:
+            pane._normal = pane.winfo_geometry()
 
     def _minimize(self):
         # Leave the window borderless. Toggling the frame here makes Windows
@@ -809,20 +1690,140 @@ class Desktop:
                 pass
         return 0, 0, self.root.winfo_screenwidth(), self.root.winfo_screenheight()
 
-    def _toggle_zoom(self):
-        if self._zoomed:
-            self.root.geometry(self._normal)
-            self._zoomed = False
-            self.btn_max.configure(text="□")
+    def _apply_window_icon(self):
+        # withdraw() drops the icon set before the window is shown, so the
+        # taskbar falls back to the host program. Put the Starfix mark back
+        # on this window after the frame is settled.
+        path = _asset("icon.ico")
+        if not path:
             return
-        self._normal = self.root.geometry()
-        x, y, w, h = self._work_area()
-        self.root.geometry("%dx%d+%d+%d" % (w, h, x, y))
-        self._zoomed = True
-        self.btn_max.configure(text="❐")
+        try:
+            self.root.iconbitmap(default=str(path))
+        except tk.TclError:
+            try:
+                self.root.iconbitmap(str(path))
+            except tk.TclError:
+                pass
+        if sys.platform != "win32":
+            return
+        try:
+            import ctypes
+            from ctypes import wintypes
+            user32 = ctypes.WinDLL("user32", use_last_error=True)
+            big, small = self._window_icons(user32)
+            if not big and not small:
+                return
+            user32.SendMessageW.argtypes = [wintypes.HWND, wintypes.UINT, wintypes.WPARAM, wintypes.LPARAM]
+            user32.SendMessageW.restype = ctypes.c_ssize_t
+            set_class = getattr(user32, "SetClassLongPtrW", user32.SetClassLongW)
+            set_class.argtypes = [wintypes.HWND, ctypes.c_int, ctypes.c_ssize_t]
+            set_class.restype = ctypes.c_ssize_t
+            hwnd = self._hwnd()
 
-    def _button(self, parent, text, command, primary=False):
-        label = tk.Label(parent, text=text, font=FONT, padx=10, pady=4, cursor="hand2")
+            def handle(icon):
+                return int(getattr(icon, "value", icon) or 0)
+
+            if big:
+                user32.SendMessageW(hwnd, 0x0080, 1, handle(big))
+                set_class(hwnd, -14, handle(big))
+            if small:
+                user32.SendMessageW(hwnd, 0x0080, 0, handle(small))
+                set_class(hwnd, -34, handle(small))
+            self._window_identity(hwnd)
+        except (AttributeError, OSError, tk.TclError, ValueError):
+            return
+
+    def _window_identity(self, hwnd):
+        # Without its own identity, Windows paints this window with the
+        # Python icon because that is the program that opened it.
+        import ctypes
+        from ctypes import wintypes
+
+        class GUID(ctypes.Structure):
+            _fields_ = [
+                ("Data1", ctypes.c_ulong),
+                ("Data2", ctypes.c_ushort),
+                ("Data3", ctypes.c_ushort),
+                ("Data4", ctypes.c_ubyte * 8),
+            ]
+
+        class PROPERTYKEY(ctypes.Structure):
+            _fields_ = [("fmtid", GUID), ("pid", ctypes.c_ulong)]
+
+        class PROPVARIANT(ctypes.Structure):
+            _fields_ = [
+                ("vt", ctypes.c_ushort),
+                ("r1", ctypes.c_ushort),
+                ("r2", ctypes.c_ushort),
+                ("r3", ctypes.c_ushort),
+                ("psz", wintypes.LPWSTR),
+                ("pad", ctypes.c_ulonglong),
+            ]
+
+        def guid(text):
+            flat = text.replace("-", "")
+            item = GUID()
+            item.Data1 = int(flat[0:8], 16)
+            item.Data2 = int(flat[8:12], 16)
+            item.Data3 = int(flat[12:16], 16)
+            raw = bytes.fromhex(flat[16:])
+            for index, value in enumerate(raw):
+                item.Data4[index] = value
+            return item
+
+        shell32 = ctypes.WinDLL("shell32", use_last_error=True)
+        shell32.SHGetPropertyStoreForWindow.argtypes = [
+            wintypes.HWND, ctypes.POINTER(GUID), ctypes.POINTER(ctypes.c_void_p),
+        ]
+        shell32.SHGetPropertyStoreForWindow.restype = ctypes.c_long
+        store = ctypes.c_void_p()
+        if shell32.SHGetPropertyStoreForWindow(hwnd, ctypes.byref(guid("886D8EEB-8CF2-4446-8D02-CDBA1DBDCF99")), ctypes.byref(store)) < 0 or not store.value:
+            return
+        vtbl = ctypes.cast(store, ctypes.POINTER(ctypes.POINTER(ctypes.c_void_p))).contents
+        set_value = ctypes.WINFUNCTYPE(
+            ctypes.c_long, ctypes.c_void_p, ctypes.POINTER(PROPERTYKEY), ctypes.POINTER(PROPVARIANT),
+        )(vtbl[6])
+        commit = ctypes.WINFUNCTYPE(ctypes.c_long, ctypes.c_void_p)(vtbl[7])
+        release = ctypes.WINFUNCTYPE(ctypes.c_ulong, ctypes.c_void_p)(vtbl[2])
+        key = PROPERTYKEY()
+        key.fmtid = guid("9F4C2855-9F79-4B39-A8D0-E1D42DE1D5F3")
+        key.pid = 5
+        value = PROPVARIANT()
+        value.vt = 31
+        value.psz = "GuguguBear.Starfix"
+        try:
+            if set_value(store, ctypes.byref(key), ctypes.byref(value)) >= 0:
+                commit(store)
+        finally:
+            release(store)
+
+    def _window_icons(self, user32):
+        cached = getattr(self, "_win_icons", None)
+        if cached:
+            return cached
+        path = _asset("icon.ico")
+        if not path:
+            return (0, 0)
+        import ctypes
+        from ctypes import wintypes
+        user32.LoadImageW.argtypes = [
+            wintypes.HINSTANCE, wintypes.LPCWSTR, wintypes.UINT,
+            ctypes.c_int, ctypes.c_int, wintypes.UINT,
+        ]
+        user32.LoadImageW.restype = wintypes.HICON
+        user32.GetSystemMetrics.argtypes = [ctypes.c_int]
+        user32.GetSystemMetrics.restype = ctypes.c_int
+        wide = user32.GetSystemMetrics(11) or 32
+        high = user32.GetSystemMetrics(12) or 32
+        small_w = user32.GetSystemMetrics(49) or 16
+        small_h = user32.GetSystemMetrics(50) or 16
+        big = user32.LoadImageW(None, str(path), 1, wide, high, 0x10)
+        small = user32.LoadImageW(None, str(path), 1, small_w, small_h, 0x10)
+        self._win_icons = (big, small)
+        return self._win_icons
+
+    def _button(self, parent, text, command, primary=False, padx=10, pady=4):
+        label = tk.Label(parent, text=text, font=FONT, padx=padx, pady=pady, cursor="hand2")
         label._primary = primary
         label.bind("<Button-1>", lambda _event: command())
         self.buttons.append(label)
@@ -846,6 +1847,7 @@ class Desktop:
         self.titlebar.configure(bg=c["panel"])
         self.rule.configure(bg=c["panel"])
         self.card.configure(bg=c["panel"])
+        self.design.configure(bg=c["panel"])
         self.foot.configure(bg=c["panel"])
         self.foot_rule.configure(bg=c["line"])
         self.mark.configure(bg=c["panel"], fg=c["accent"])
@@ -853,16 +1855,34 @@ class Desktop:
         self.bar_sub.configure(bg=c["panel"], fg=c["muted"])
         for widget in self.chrome:
             widget.configure(bg=c["panel"], fg=c["ink"])
-        for widget in (self.lead, self.tos, self.linked, self.log_label, self.lang_label, self.look, self.meta, self.api_label, self.room_label):
+        for widget in (self.lead, self.tos, self.linked, self.log_label, self.lang_label, self.look, self.meta, self.api_label, self.room_label, self.trail_hint):
             widget.configure(bg=c["panel"], fg=c["muted"])
+        self.trail_title.configure(bg=c["panel"], fg=c["accent"])
+        self.trail_box.configure(bg=c["panel"])
+        self.trail.configure(bg=c["bg"])
+        self.trail_scroll._colors = c
         self.linked.configure(fg=c["ink"])
         self.feed.configure(bg=c["bg"])
+        self.trail_slot.configure(bg=c["panel"])
+        self.live_slot.configure(bg=c["panel"])
+        for pane in self._panes:
+            pane.configure(bg=c["panel"])
+            pane._bar.configure(bg=c["panel"])
+            pane._body.configure(bg=c["panel"])
+            pane._title.configure(bg=c["panel"], fg=c["accent"])
+            for grip in pane._grips:
+                grip.configure(bg=c["panel"])
+            if pane._out:
+                hide_window_border(pane, c["panel"])
         for grip in getattr(self, "_grips", []):
             grip.configure(bg=c["panel"])
         hide_window_border(self.root, c["panel"])
+        self._trail_sig = None
+        self._trail_refresh()
         self.log_label.configure(fg=c["accent"])
         self.lang_label.configure(fg=c["accent"])
         self.look.configure(fg=c["accent"])
+        self.trail_title.configure(fg=c["accent"])
         self.err.configure(bg=c["panel"], fg=c["err"])
         self.pair.configure(bg=c["bg"], highlightbackground=c["accent"])
         self.pair_text.configure(bg=c["bg"], fg=c["ink"])
@@ -920,8 +1940,8 @@ class Desktop:
             text = tr(self.lang, "place_none")
         names = [item.get("name") for item in (place.get("gear") or []) if item.get("name")]
         self._feed = {
-            "place": text,
-            "ship": place.get("ship") or "",
+            "place": self._shown(text),
+            "ship": self._shown(place.get("ship") or ""),
             "gear": "  ·  ".join(names[:8]),
             "on": bool(state.get("running")),
         }
@@ -981,6 +2001,10 @@ class Desktop:
         self.back.configure(text=tr(self.lang, "back"))
         self.pair_yes.configure(text=tr(self.lang, "pair_yes"))
         self.pair_no.configure(text=tr(self.lang, "pair_no"))
+        self.trail_title.configure(text=tr(self.lang, "trail_title"))
+        self.trail_hint.configure(text=tr(self.lang, "trail_hint"))
+        self._split_label()
+        self._trail_sig = None
         for key, btn in self.theme_buttons.items():
             btn.configure(text=tr(self.lang, "theme." + key))
 
@@ -998,6 +2022,8 @@ class Desktop:
         self.linked.configure(wraplength=wrap)
         self.pair_text.configure(wraplength=wrap)
         self.err.configure(wraplength=wrap)
+        hint = self.trail_pane.winfo_width() if self.trail_pane._out else width
+        self.trail_hint.configure(wraplength=max(180, hint - 24))
 
     def _refit(self):
         self._fit_wrap()
@@ -1020,16 +2046,60 @@ class Desktop:
         self._grips = []
         for edge, opts in specs:
             grip = tk.Frame(self.root, cursor=cursors[edge], bg=self._colors()["panel"])
+            grip._cursor = cursors[edge]
             grip.place(**opts)
             grip.bind("<ButtonPress-1>", lambda event, name=edge: self._resize_start(event, name))
             grip.bind("<B1-Motion>", self._resize_move)
             grip.bind("<ButtonRelease-1>", self._resize_end)
             self._grips.append(grip)
+        self._grips_follow()
+
+    def _grips_follow(self):
+        live = not self._zoomed
+        for grip in getattr(self, "_grips", []):
+            grip.configure(cursor=grip._cursor if live else "arrow")
+        self._size_border(live)
+
+    def _size_border(self, allow):
+        # A maximized window still carries the thick frame, so Windows keeps
+        # offering a resize along every edge. Drop that frame until it is restored.
+        if sys.platform != "win32":
+            return
+        try:
+            import ctypes
+            from ctypes import wintypes
+            user32 = ctypes.WinDLL("user32", use_last_error=True)
+            get_long = getattr(user32, "GetWindowLongPtrW", user32.GetWindowLongW)
+            set_long = getattr(user32, "SetWindowLongPtrW", user32.SetWindowLongW)
+            get_long.argtypes = [wintypes.HWND, ctypes.c_int]
+            get_long.restype = ctypes.c_ssize_t
+            set_long.argtypes = [wintypes.HWND, ctypes.c_int, ctypes.c_ssize_t]
+            set_long.restype = ctypes.c_ssize_t
+            user32.SetWindowPos.argtypes = [
+                wintypes.HWND, wintypes.HWND, ctypes.c_int, ctypes.c_int,
+                ctypes.c_int, ctypes.c_int, wintypes.UINT,
+            ]
+            user32.SetWindowPos.restype = wintypes.BOOL
+            thick = 0x00040000
+            hwnd = self._hwnd()
+            style = get_long(hwnd, -16)
+            if allow:
+                if not getattr(self, "_had_thick", False):
+                    return
+                style |= thick
+            else:
+                self._had_thick = bool(style & thick)
+                if not (style & thick):
+                    return
+                style &= ~thick
+            set_long(hwnd, -16, style)
+            user32.SetWindowPos(hwnd, None, 0, 0, 0, 0, 0x0001 | 0x0002 | 0x0004 | 0x0010 | 0x0020)
+        except (AttributeError, OSError, tk.TclError, ValueError):
+            return
 
     def _resize_start(self, event, edge):
         if self._zoomed:
-            self._zoomed = False
-            self.btn_max.configure(text="□")
+            return
         self._geom = {
             "edge": edge,
             "x": event.x_root, "y": event.y_root,
@@ -1069,6 +2139,9 @@ class Desktop:
         if not self._geom:
             return
         self._geom = None
+        if self._snap and self._snap != "full":
+            self._snap = None
+            self.btn_max.configure(text="□")
         if not self._zoomed:
             self._normal = self.root.geometry()
 
@@ -1109,10 +2182,374 @@ class Desktop:
         self.core.decline_pair()
         self._fill(self.core.public_state())
 
+    def _trail_wheel(self, event):
+        step = int(-event.delta / 120) if event.delta else 0
+        if step:
+            self.trail.yview_scroll(step, "units")
+
+    def _trail_sized(self, event):
+        if abs(event.width - self._trail_width) < 8:
+            return
+        self._trail_width = event.width
+        self._trail_sig = None
+        self._trail_refresh()
+
+    def _trail_clock(self, stamp):
+        text = str(stamp or "")
+        if text.endswith("Z"):
+            text = text[:-1] + "+00:00"
+        try:
+            from datetime import datetime
+            return datetime.fromisoformat(text).astimezone().strftime("%H:%M")
+        except ValueError:
+            return text[11:16]
+
+    def _trail_where(self, ev):
+        if ev.get("destKind") == "beacon":
+            return tr(self.lang, "kind.beacon")
+        if ev.get("dest"):
+            return ev["dest"]
+        if ev.get("code"):
+            return ev["code"]
+        return tr(self.lang, "kind.somewhere")
+
+    def _shown(self, text):
+        if not text:
+            return ""
+        return names.speak(self.lang, text)
+
+    def _trail_line(self, ev):
+        kind = ev.get("kind") or ""
+        if kind == "online":
+            return tr(self.lang, "kind.online")
+        if kind == "place":
+            return tr(self.lang, "kind.place", code=ev.get("code") or "")
+        if kind == "contract":
+            result = ev.get("result") or "complete"
+            key = {"fail": "kind.fail", "abandon": "kind.abandon"}.get(result, "kind.done")
+            return tr(self.lang, key)
+        if kind == "mission":
+            say = ev.get("say") or ""
+            if say.startswith(MISSION_NOISE) or say.startswith("新的任务") or say.startswith("新任務"):
+                return ""
+            return say[:72]
+        if kind == "pact":
+            phase = ev.get("phase") or "accept"
+            if phase not in ("accept", "done", "fail", "share"):
+                phase = "accept"
+            return tr(self.lang, "kind.pact." + phase, title=ev.get("title") or "")
+        if kind == "universe":
+            return tr(self.lang, "kind.universe")
+        if kind == "leave":
+            return tr(self.lang, "kind.leave")
+        if kind == "law":
+            return tr(self.lang, "kind.law", where=ev.get("where") or "")
+        if kind == "watch":
+            return tr(self.lang, "kind.watch." + ("out" if ev.get("side") == "out" else "in"))
+        if kind == "armistice":
+            return tr(self.lang, "kind.armistice." + ("out" if ev.get("side") == "out" else "in"))
+        if kind == "hangar":
+            return tr(self.lang, "kind.hangar." + ("ready" if ev.get("step") == "ready" else "ask"))
+        if kind == "hurt":
+            return tr(self.lang, "kind.hurt")
+        if kind == "heal":
+            return tr(self.lang, "kind.heal")
+        if kind == "unseat":
+            return tr(self.lang, "kind.unseat")
+        if kind in ("buy", "sell"):
+            return tr(self.lang, "kind." + kind, item=ev.get("item") or "", qty=ev.get("qty") or 0)
+        if kind == "ship":
+            return tr(self.lang, "kind.ship", ship=ev.get("ship") or "")
+        if kind == "aim":
+            return tr(self.lang, "kind.aim", where=self._trail_where(ev))
+        if kind == "jump":
+            return tr(self.lang, "kind.jump", start=ev.get("start") or tr(self.lang, "kind.somewhere"), where=self._trail_where(ev))
+        if kind == "arrive":
+            return tr(self.lang, "kind.arrive", where=self._trail_where(ev))
+        if kind == "down":
+            return tr(self.lang, "kind.down.player" if ev.get("by") == "player" else "kind.down.npc")
+        if kind == "wreck":
+            return tr(self.lang, "kind.wreck")
+        if kind == "strike":
+            return tr(self.lang, "kind.strike")
+        if kind == "crime":
+            level = ev.get("level") or 0
+            if not level:
+                return tr(self.lang, "kind.clear")
+            return tr(self.lang, "kind.crime", n=level)
+        if kind == "crash":
+            return tr(self.lang, "kind.crash." + (ev.get("how") or "fault"))
+        return ""
+
+    def _trail_tone(self, ev, colors):
+        kind = ev.get("kind")
+        if kind in ("crash", "wreck", "down", "strike", "hurt"):
+            return colors["err"]
+        if kind == "pact" and ev.get("phase") == "fail":
+            return colors["err"]
+        if kind == "crime":
+            return colors["err"] if ev.get("level") else colors["accent"]
+        if kind == "contract" and ev.get("result") in ("fail", "abandon"):
+            return colors["err"]
+        if kind in ("online", "jump", "arrive", "aim", "universe", "heal", "hangar"):
+            return colors["accent"]
+        return colors["ink"]
+
+    def _titled_near(self, rows, index):
+        result = rows[index].get("result") or "complete"
+        phase = {"fail": "fail", "abandon": "abandon"}.get(result, "done")
+        for ev in rows[max(0, index - 3):index + 4]:
+            if ev.get("kind") == "pact" and ev.get("phase") == phase:
+                return True
+        return False
+
+    def _story(self, events, colors):
+        # Objective spam stays in the file. The panel tells the trip:
+        # sign in, travel, take a contract, finish it, and what went wrong.
+        rows = list(events or [])
+        shown = []
+        index = 0
+        while index < len(rows):
+            ev = rows[index]
+            kind = ev.get("kind") or ""
+            nxt = rows[index + 1] if index + 1 < len(rows) else None
+            if kind == "contract" and not ev.get("title") and self._titled_near(rows, index):
+                index += 1
+                continue
+            if kind == "online" and nxt and nxt.get("kind") == "universe":
+                text = tr(self.lang, "kind.online") + "  ·  " + tr(self.lang, "kind.universe")
+                shown.append((self._trail_clock(ev.get("t")), text, colors["accent"]))
+                index += 2
+                continue
+            if kind == "aim" and nxt and nxt.get("kind") == "jump":
+                jump = nxt
+                landed = rows[index + 2] if index + 2 < len(rows) and rows[index + 2].get("kind") == "arrive" else None
+                start = jump.get("start") or tr(self.lang, "kind.somewhere")
+                where = self._trail_where(jump)
+                key = "kind.travel_done" if landed else "kind.travel"
+                shown.append((
+                    self._trail_clock(jump.get("t")),
+                    self._shown(tr(self.lang, key, start=start, where=where)),
+                    colors["accent"],
+                ))
+                index += 3 if landed else 2
+                continue
+            if kind == "jump" and nxt and nxt.get("kind") == "arrive":
+                shown.append((
+                    self._trail_clock(ev.get("t")),
+                    self._shown(tr(self.lang, "kind.travel_done", start=ev.get("start") or tr(self.lang, "kind.somewhere"), where=self._trail_where(ev))),
+                    colors["accent"],
+                ))
+                index += 2
+                continue
+            text = self._shown(self._trail_line(ev))
+            clock = self._trail_clock(ev.get("t"))
+            if text and not any(prev[0] == clock and prev[1] == text for prev in shown[-8:]):
+                shown.append((clock, text, self._trail_tone(ev, colors)))
+            index += 1
+        return shown
+
+    def _trail_summary(self, sess):
+        parts = []
+        if sess["places"]:
+            parts.append(tr(self.lang, "trail_places", n=len(sess["places"])))
+        if sess["ships"]:
+            parts.append(self._shown(sess["ships"][-1]))
+        contracts = sess["contracts"]
+        titled = 0
+        failed = 0
+        for ev in sess.get("events") or []:
+            if ev.get("kind") != "pact":
+                continue
+            if ev.get("phase") == "done":
+                titled += 1
+            elif ev.get("phase") == "fail":
+                failed += 1
+        bare = contracts.get("complete", 0) + contracts.get("fail", 0) + contracts.get("abandon", 0)
+        total = max(bare, titled + failed)
+        if total:
+            parts.append(tr(self.lang, "trail_contract", n=total))
+        if sess["bought"]:
+            parts.append(tr(self.lang, "trail_buy", n=sess["bought"]))
+        if sess["sold"]:
+            parts.append(tr(self.lang, "trail_sell", n=sess["sold"]))
+        if not parts:
+            parts.append(tr(self.lang, "trail_steps", n=sess["count"]))
+        return "  ·  ".join(parts)
+
+    def _trail_refresh(self):
+        try:
+            if not self.trail.winfo_exists():
+                return
+            rev = self.core.history.revision()
+        except (AttributeError, tk.TclError):
+            return
+        try:
+            days = self.core.history.days()
+        except AttributeError:
+            return
+        known = {day["day"] for day in days}
+        if days and (not self._trail_picked or self._trail_day not in known):
+            self._trail_day = days[0]["day"]
+        chosen = next((day for day in days if day["day"] == self._trail_day), None)
+        if chosen and not any(sess["key"] in self._trail_open for sess in chosen["sessions"]):
+            if self._trail_seed != self._trail_day:
+                self._trail_open.add(chosen["sessions"][-1]["key"])
+                self._trail_seed = self._trail_day
+        width = max(self.trail.winfo_width(), 2)
+        sig = (rev, self._trail_day, tuple(sorted(self._trail_open)), self.theme, self.lang, width)
+        if sig == self._trail_sig:
+            return
+        self._trail_days = days
+        self._trail_sig = sig
+        self._trail_draw(days, width)
+
+    def _trail_click(self, event):
+        x = self.trail.canvasx(event.x)
+        y = self.trail.canvasy(event.y)
+        for hit in self._trail_hits:
+            if hit["x0"] <= x <= hit["x1"] and hit["y0"] <= y <= hit["y1"]:
+                if hit["kind"] == "day":
+                    self._trail_picked = True
+                    self._trail_day = hit["key"]
+                    self._trail_open = set()
+                    self._trail_seed = ""
+                elif hit["key"] in self._trail_open:
+                    self._trail_open.remove(hit["key"])
+                else:
+                    self._trail_open.add(hit["key"])
+                self._trail_sig = None
+                self._trail_refresh()
+                return
+
+    def _trail_draw(self, days, width):
+        import tkinter.font as tkfont
+        box = self.trail
+        held = box.yview()[0] if days else 0
+        box.delete("all")
+        self._trail_hits = []
+        self._trail_rail = None
+        colors = self._colors()
+        box.configure(bg=colors["bg"])
+        if not days:
+            box.create_text(
+                16, 36, text=tr(self.lang, "trail_empty"), anchor="w", font=FONT,
+                fill=colors["muted"], width=max(120, width - 32),
+            )
+            box.configure(scrollregion=(0, 0, width, max(80, box.winfo_height())))
+            return
+        known = {day["day"] for day in days}
+        if self._trail_day not in known:
+            self._trail_day = days[0]["day"]
+            held = 0
+        measure = tkfont.Font(font=FONT)
+        x = 12
+        y = 14
+        limit = max(120, width - 16)
+        for day in days[:18]:
+            label = day["day"]
+            chip = measure.measure(label) + 18
+            if x + chip > limit and x > 12:
+                x = 12
+                y += 28
+            selected = day["day"] == self._trail_day
+            box.create_rectangle(
+                x, y, x + chip, y + 22,
+                fill=colors["accent"] if selected else colors["panel"],
+                outline=colors["accent"], width=1,
+            )
+            box.create_text(
+                x + 9, y + 11, text=label, anchor="w", font=FONT,
+                fill=colors["on"] if selected else colors["muted"],
+            )
+            self._trail_hits.append({
+                "x0": x, "y0": y, "x1": x + chip, "y1": y + 22,
+                "kind": "day", "key": day["day"],
+            })
+            x += chip + 6
+        chosen = next(day for day in days if day["day"] == self._trail_day)
+        y += 36
+        rail_x = 24
+        blocks = []
+        for sess in chosen["sessions"]:
+            lines = []
+            if sess["key"] in self._trail_open:
+                for clock, text, tone in self._story(sess["events"], colors):
+                    lines.append((clock, text, tone))
+            block_h = 46 + ((len(lines) * 20 + 8) if lines else 0)
+            blocks.append((sess, lines, y, block_h))
+            y += block_h + 8
+        if blocks:
+            y0 = blocks[0][2] + 22
+            last_sess, last_lines, last_y, _last_h = blocks[-1]
+            y1 = last_y + 22
+            if last_lines:
+                y1 = last_y + 46 + (len(last_lines) - 1) * 20 + 8
+            box.create_line(rail_x, y0, rail_x, max(y0, y1), fill=colors["line"], width=1)
+            self._trail_rail = (rail_x, y0, max(y0 + 24, y1))
+        room = max(80, width - 120)
+        for sess, lines, top, _block_h in blocks:
+            live = sess is chosen["sessions"][-1]
+            bottom = top + 46 + ((len(lines) * 20 + 8) if lines else 0)
+            box.create_rectangle(
+                8, top, max(width - 10, 48), bottom,
+                outline=colors["accent"] if live else colors["line"], width=1,
+            )
+            box.create_polygon(
+                rail_x, top + 16, rail_x + 5, top + 22, rail_x, top + 28, rail_x - 5, top + 22,
+                fill=colors["accent"], outline="",
+            )
+            start = self._trail_clock(sess["start"])
+            end = self._trail_clock(sess["end"])
+            span = tr(self.lang, "trail_span", start=start, end=end) if start and end and start != end else (start or end or "—")
+            mark = "▾" if lines or sess["key"] in self._trail_open else "▸"
+            box.create_text(40, top + 10, text=mark + "  " + span, anchor="w", font=FONT, fill=colors["ink"])
+            box.create_text(40, top + 28, text=self._trail_summary(sess), anchor="w", font=FONT, fill=colors["muted"])
+            self._trail_hits.append({
+                "x0": 8, "y0": top, "x1": max(width - 10, 48), "y1": top + 46,
+                "kind": "session", "key": sess["key"],
+            })
+            step_y = top + 46
+            for clock, text, tone in lines:
+                shown = text
+                while shown and measure.measure(clock + "   " + shown) > room and len(shown) > 12:
+                    shown = shown[:-2].rstrip() + "…"
+                box.create_oval(rail_x - 3, step_y + 5, rail_x + 3, step_y + 11, fill=tone, outline="")
+                box.create_text(40, step_y + 7, text=clock + "   " + shown, anchor="w", font=FONT, fill=colors["ink"])
+                step_y += 20
+        total = max(y + 16, box.winfo_height())
+        box.configure(scrollregion=(0, 0, width, total))
+        box.yview_moveto(held)
+
+    def _trail_comet(self, now):
+        box = self.trail
+        try:
+            if not box.winfo_exists():
+                return
+        except tk.TclError:
+            return
+        box.delete("comet")
+        colors = self._colors()
+        width = max(box.winfo_width(), 2)
+        span = max(42, width // 5)
+        sweep = int(((now % 4.8) / 4.8) * (width + span)) - span
+        box.create_rectangle(sweep, 0, sweep + span, 2, fill=colors["accent"], width=0, tags="comet")
+        rail = self._trail_rail
+        if not rail:
+            return
+        x, y0, y1 = rail
+        if y1 - y0 < 8:
+            return
+        length = max(22, int((y1 - y0) * 0.16))
+        travel = max(0, y1 - y0 - length)
+        head = y0 + travel * ((now % 3.2) / 3.2)
+        box.create_line(x, head, x, head + length, fill=colors["accent"], width=3, tags="comet")
+
     def _tick(self):
         if not self.root.winfo_exists():
             return
         self._fill(self.core.public_state())
+        self._trail_refresh()
         self.root.after(400, self._tick)
 
     def _animate(self):
@@ -1136,6 +2573,7 @@ class Desktop:
         else:
             self.linked.configure(fg=c["on"], bg=c["accent"])
         self._draw_feed(now)
+        self._trail_comet(now)
         self.root.after(32, self._animate)
 
     def _draw_feed(self, now):
@@ -1501,6 +2939,9 @@ class Desktop:
         self._user_background = True
         try:
             self.root.withdraw()
+            for pane in self._panes:
+                if pane._out:
+                    self.root.tk.call("wm", "withdraw", pane)
         except tk.TclError:
             self._user_background = False
             self._tray_remove()
@@ -1514,6 +2955,9 @@ class Desktop:
             self.root.lift()
             self.root.focus_force()
             self._mark_appwindow()
+            for pane in self._panes:
+                if pane._out:
+                    self.root.tk.call("wm", "deiconify", pane)
         except tk.TclError:
             return
         force_foreground(self.root)
@@ -1529,6 +2973,12 @@ class Desktop:
         except Exception:
             pass
         self.core.request_stop()
+        for pane in list(self._panes):
+            if pane._out:
+                try:
+                    self.root.tk.call("wm", "forget", pane)
+                except tk.TclError:
+                    pass
         self.root.destroy()
 
     def run(self):
