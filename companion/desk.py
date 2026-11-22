@@ -41,6 +41,20 @@ THEME_NAMES = (
     ("scifi", "科幻"),
 )
 FONT = ("Microsoft YaHei UI", 9)
+# Rows the session list can narrow to. Each set is a kind the log reader stores.
+TRAIL_FILTERS = (
+    ("all", None),
+    ("login", frozenset({"online", "universe", "leave"})),
+    ("trip", frozenset({"place", "ship", "unseat", "aim", "jump", "arrive"})),
+    ("pact", frozenset({"pact", "contract", "mission"})),
+    ("shop", frozenset({"buy", "sell"})),
+    ("zone", frozenset({"law", "watch", "armistice", "hangar"})),
+    ("body", frozenset({"hurt", "heal"})),
+    ("crime", frozenset({"crime"})),
+    ("down", frozenset({"down", "strike"})),
+    ("wreck", frozenset({"wreck"})),
+    ("crash", frozenset({"crash"})),
+)
 MISSION_NOISE = ("已接受合约", "新任务", "新的任务", "任务完成", "合约完成", "合约失败", "任务撤销", "合约共享", "Contract Accepted", "Contract Complete", "Contract Failed", "Contract Shared", "New Objective", "Objective Complete", "Objective Withdrawn")
 FONT_PLACE = ("Microsoft YaHei UI", 9)
 LANGS = (
@@ -87,6 +101,18 @@ TEXT = {
         "trail_sell": "卖 {n}",
         "trail_mission": "任务 {n}",
         "trail_steps": "{n} 步",
+        "trail_none": "这一类里还没有记录。",
+        "filter.all": "全部",
+        "filter.login": "登入",
+        "filter.trip": "行程",
+        "filter.pact": "合约",
+        "filter.shop": "交易",
+        "filter.zone": "区域",
+        "filter.body": "身体",
+        "filter.crime": "犯罪",
+        "filter.down": "击倒",
+        "filter.wreck": "损毁",
+        "filter.crash": "故障",
         "kind.online": "上线",
         "kind.place": "进入 {code}",
         "kind.done": "合约完成",
@@ -169,6 +195,18 @@ TEXT = {
         "trail_sell": "賣 {n}",
         "trail_mission": "任務 {n}",
         "trail_steps": "{n} 步",
+        "trail_none": "這一類裡還沒有記錄。",
+        "filter.all": "全部",
+        "filter.login": "登入",
+        "filter.trip": "行程",
+        "filter.pact": "合約",
+        "filter.shop": "交易",
+        "filter.zone": "區域",
+        "filter.body": "身體",
+        "filter.crime": "犯罪",
+        "filter.down": "擊倒",
+        "filter.wreck": "損毀",
+        "filter.crash": "故障",
         "kind.online": "上線",
         "kind.place": "進入 {code}",
         "kind.done": "合約完成",
@@ -251,6 +289,18 @@ TEXT = {
         "trail_sell": "sold {n}",
         "trail_mission": "tasks {n}",
         "trail_steps": "{n} steps",
+        "trail_none": "Nothing in this group yet.",
+        "filter.all": "All",
+        "filter.login": "Sign-in",
+        "filter.trip": "Travel",
+        "filter.pact": "Contracts",
+        "filter.shop": "Trade",
+        "filter.zone": "Zones",
+        "filter.body": "Body",
+        "filter.crime": "Crime",
+        "filter.down": "Downed",
+        "filter.wreck": "Wreck",
+        "filter.crash": "Fault",
         "kind.online": "Signed in",
         "kind.place": "Entered {code}",
         "kind.done": "Contract complete",
@@ -333,6 +383,18 @@ TEXT = {
         "trail_sell": "verkauft {n}",
         "trail_mission": "Aufgaben {n}",
         "trail_steps": "{n} Schritte",
+        "trail_none": "In dieser Gruppe ist noch nichts.",
+        "filter.all": "Alle",
+        "filter.login": "Anmeldung",
+        "filter.trip": "Reise",
+        "filter.pact": "Aufträge",
+        "filter.shop": "Handel",
+        "filter.zone": "Zonen",
+        "filter.body": "Körper",
+        "filter.crime": "Verbrechen",
+        "filter.down": "Ausfall",
+        "filter.wreck": "Wrack",
+        "filter.crash": "Fehler",
         "kind.online": "Angemeldet",
         "kind.place": "Zone {code}",
         "kind.done": "Auftrag abgeschlossen",
@@ -689,6 +751,7 @@ class Desktop:
         self._trail_hits = []
         self._trail_rail = None
         self._trail_width = 0
+        self._trail_filter = "all"
         _dpi()
         self.root = tk.Tk()
         self.root.after(50, self._tray_pump)
@@ -834,6 +897,14 @@ class Desktop:
         self.trail_hint.pack(fill="x")
         self.trail_box = tk.Frame(trail_body)
         self.trail_box.pack(fill="both", expand=True, pady=(6, 0))
+        self.trail_side = tk.Frame(self.trail_box)
+        self.trail_side.pack(side="left", fill="y", padx=(0, 8))
+        self.filter_buttons = {}
+        for key, _kinds in TRAIL_FILTERS:
+            btn = self._button(self.trail_side, "", lambda name=key: self._pick_filter(name), padx=8, pady=2)
+            btn._filter = key
+            btn.pack(fill="x", pady=1)
+            self.filter_buttons[key] = btn
         self.trail = tk.Canvas(self.trail_box, height=220, highlightthickness=0, bd=0)
         self.trail.pack(side="left", fill="both", expand=True)
         self.trail_scroll = theme_scroll(self.trail_box, self.trail, self._colors())
@@ -891,64 +962,87 @@ class Desktop:
         self.root.after(30, self._seat_taskbar)
         self._ready = True
 
-    def _hwnd(self):
+    def _widget_hwnd(self, widget):
         import ctypes
-        self.root.update_idletasks()
-        hwnd = ctypes.windll.user32.GetParent(self.root.winfo_id())
-        return hwnd or self.root.winfo_id()
+        from ctypes import wintypes
+        widget.update_idletasks()
+        user32 = ctypes.WinDLL("user32", use_last_error=True)
+        user32.GetParent.argtypes = [wintypes.HWND]
+        user32.GetParent.restype = wintypes.HWND
+        return user32.GetParent(widget.winfo_id()) or widget.winfo_id()
 
-    def _taskbar_add(self):
-        if sys.platform != "win32":
+    def _hwnd(self):
+        return self._widget_hwnd(self.root)
+
+    def _ensure_taskbar(self):
+        if getattr(self, "_taskbar_vtbl", None):
+            return True
+        import ctypes
+        try:
+            class GUID(ctypes.Structure):
+                _fields_ = [
+                    ("Data1", ctypes.c_ulong),
+                    ("Data2", ctypes.c_ushort),
+                    ("Data3", ctypes.c_ushort),
+                    ("Data4", ctypes.c_ubyte * 8),
+                ]
+
+            def guid(text):
+                flat = text.replace("-", "")
+                item = GUID()
+                item.Data1 = int(flat[0:8], 16)
+                item.Data2 = int(flat[8:12], 16)
+                item.Data3 = int(flat[12:16], 16)
+                raw = bytes.fromhex(flat[16:])
+                for index, value in enumerate(raw):
+                    item.Data4[index] = value
+                return item
+
+            ole32 = ctypes.WinDLL("ole32")
+            ole32.CoInitialize.argtypes = [ctypes.c_void_p]
+            ole32.CoInitialize.restype = ctypes.c_long
+            ole32.CoInitialize(None)
+            ole32.CoCreateInstance.argtypes = [
+                ctypes.POINTER(GUID), ctypes.c_void_p, ctypes.c_ulong,
+                ctypes.POINTER(GUID), ctypes.POINTER(ctypes.c_void_p),
+            ]
+            ole32.CoCreateInstance.restype = ctypes.c_long
+            clsid = guid("56FDF344-FD6D-11d0-958A-006097C9A090")
+            iid = guid("56FDF342-FD6D-11d0-958A-006097C9A090")
+            ptr = ctypes.c_void_p()
+            if ole32.CoCreateInstance(ctypes.byref(clsid), None, 1, ctypes.byref(iid), ctypes.byref(ptr)) < 0 or not ptr.value:
+                return False
+            vtbl = ctypes.cast(ptr, ctypes.POINTER(ctypes.POINTER(ctypes.c_void_p))).contents
+            init = ctypes.WINFUNCTYPE(ctypes.c_long, ctypes.c_void_p)(vtbl[3])
+            if init(ptr) < 0:
+                return False
+            self._taskbar_ptr = ptr
+            self._taskbar_vtbl = vtbl
+            return True
+        except (AttributeError, OSError, tk.TclError, ValueError):
+            return False
+
+    def _taskbar_change(self, hwnd, present):
+        if sys.platform != "win32" or not hwnd or not self._ensure_taskbar():
             return
         try:
             import ctypes
             from ctypes import wintypes
-            if not getattr(self, "_taskbar_vtbl", None):
-                class GUID(ctypes.Structure):
-                    _fields_ = [
-                        ("Data1", ctypes.c_ulong),
-                        ("Data2", ctypes.c_ushort),
-                        ("Data3", ctypes.c_ushort),
-                        ("Data4", ctypes.c_ubyte * 8),
-                    ]
-
-                def guid(text):
-                    flat = text.replace("-", "")
-                    item = GUID()
-                    item.Data1 = int(flat[0:8], 16)
-                    item.Data2 = int(flat[8:12], 16)
-                    item.Data3 = int(flat[12:16], 16)
-                    raw = bytes.fromhex(flat[16:])
-                    for index, value in enumerate(raw):
-                        item.Data4[index] = value
-                    return item
-
-                ole32 = ctypes.WinDLL("ole32")
-                ole32.CoInitialize.argtypes = [ctypes.c_void_p]
-                ole32.CoInitialize.restype = ctypes.c_long
-                ole32.CoInitialize(None)
-                ole32.CoCreateInstance.argtypes = [
-                    ctypes.POINTER(GUID), ctypes.c_void_p, ctypes.c_ulong,
-                    ctypes.POINTER(GUID), ctypes.POINTER(ctypes.c_void_p),
-                ]
-                ole32.CoCreateInstance.restype = ctypes.c_long
-                clsid = guid("56FDF344-FD6D-11d0-958A-006097C9A090")
-                iid = guid("56FDF342-FD6D-11d0-958A-006097C9A090")
-                ptr = ctypes.c_void_p()
-                if ole32.CoCreateInstance(ctypes.byref(clsid), None, 1, ctypes.byref(iid), ctypes.byref(ptr)) < 0 or not ptr.value:
-                    return
-                vtbl = ctypes.cast(ptr, ctypes.POINTER(ctypes.POINTER(ctypes.c_void_p))).contents
-                init = ctypes.WINFUNCTYPE(ctypes.c_long, ctypes.c_void_p)(vtbl[3])
-                if init(ptr) < 0:
-                    return
-                self._taskbar_ptr = ptr
-                self._taskbar_vtbl = vtbl
-            add = ctypes.WINFUNCTYPE(ctypes.c_long, ctypes.c_void_p, wintypes.HWND)(self._taskbar_vtbl[4])
-            add(self._taskbar_ptr, self._hwnd())
+            index = 4 if present else 5
+            change = ctypes.WINFUNCTYPE(ctypes.c_long, ctypes.c_void_p, wintypes.HWND)(self._taskbar_vtbl[index])
+            change(self._taskbar_ptr, hwnd)
         except (AttributeError, OSError, tk.TclError, ValueError):
             return
 
+    def _taskbar_add(self):
+        self._taskbar_change(self._hwnd(), True)
+
     def _mark_appwindow(self):
+        self._mark_widget_window(self.root, "GuguguBear.Starfix", owned=True)
+
+    def _mark_widget_window(self, widget, app_id, owned=True):
+        if sys.platform != "win32":
+            return
         import ctypes
         from ctypes import wintypes
         user32 = ctypes.WinDLL("user32", use_last_error=True)
@@ -962,15 +1056,22 @@ class Desktop:
             wintypes.HWND, wintypes.HWND, ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.c_int, wintypes.UINT,
         ]
         user32.SetWindowPos.restype = wintypes.BOOL
-        hwnd = self._hwnd()
-        frame = get_long(hwnd, -16) | 0x00020000 | 0x00080000
+        hwnd = self._widget_hwnd(widget)
+        frame = (get_long(hwnd, -16) | 0x00020000 | 0x00080000) & ~0x40000000
         set_long(hwnd, -16, frame)
         extra = (get_long(hwnd, -20) & ~0x00000080) | 0x00040000
         set_long(hwnd, -20, extra)
+        if not owned:
+            # An owned window stays behind its owner and shares one taskbar button.
+            set_long(hwnd, -8, 0)
         user32.SetWindowPos(hwnd, None, 0, 0, 0, 0, 0x0001 | 0x0002 | 0x0004 | 0x0010 | 0x0020)
-        hide_window_border(self.root, self._colors()["panel"])
-        self._apply_window_icon()
-        self._taskbar_add()
+        hide_window_border(widget, self._colors()["panel"])
+        if widget is self.root:
+            self._apply_window_icon()
+        else:
+            self._paint_hwnd_icon(hwnd)
+            self._window_identity(hwnd, app_id)
+        self._taskbar_change(hwnd, True)
 
     def _seat_taskbar(self):
         # withdraw() drops the frameless flag. Put it back before the window
@@ -1425,7 +1526,7 @@ class Desktop:
         pane._bar.pack(side="top", fill="x", before=pane._body)
         self.root.tk.call("wm", "manage", pane)
         self.root.tk.call("wm", "overrideredirect", pane, True)
-        self.root.tk.call("wm", "title", pane, tr(self.lang, pane._title_key))
+        self.root.tk.call("wm", "title", pane, "Starfix · " + tr(self.lang, pane._title_key))
         self.root.tk.call("wm", "geometry", pane, "%dx%d+%d+%d" % (int(width), int(height), int(x), int(y)))
         pane._normal = "%dx%d+%d+%d" % (int(width), int(height), int(x), int(y))
         pane._out = True
@@ -1435,11 +1536,27 @@ class Desktop:
         self._mount_pane_grips(pane)
         hide_window_border(pane, self._colors()["panel"])
         self._trail_sig = None
+        self.root.after(120, lambda p=pane: self._seat_pane(p))
+
+    def _seat_pane(self, pane):
+        if not getattr(pane, "_out", False):
+            return
+        try:
+            if not pane.winfo_exists():
+                return
+        except tk.TclError:
+            return
+        self._mark_widget_window(pane, "GuguguBear.Starfix." + pane._key, owned=False)
 
     def _dock_pane(self, pane):
         if pane is None or not pane._out:
             return
         self._hide_ghost()
+        if sys.platform == "win32":
+            try:
+                self._taskbar_change(self._widget_hwnd(pane), False)
+            except (AttributeError, OSError, tk.TclError, ValueError):
+                pass
         try:
             pane._bar.grab_release()
         except tk.TclError:
@@ -1490,7 +1607,7 @@ class Desktop:
             pane._dock_btn.configure(text=tr(self.lang, "dock"))
             if pane._out:
                 try:
-                    self.root.tk.call("wm", "title", pane, tr(self.lang, pane._title_key))
+                    self.root.tk.call("wm", "title", pane, "Starfix · " + tr(self.lang, pane._title_key))
                 except tk.TclError:
                     pass
 
@@ -1706,6 +1823,12 @@ class Desktop:
                 pass
         if sys.platform != "win32":
             return
+        self._paint_hwnd_icon(self._hwnd())
+        self._window_identity(self._hwnd())
+
+    def _paint_hwnd_icon(self, hwnd):
+        if sys.platform != "win32" or not hwnd:
+            return
         try:
             import ctypes
             from ctypes import wintypes
@@ -1718,7 +1841,6 @@ class Desktop:
             set_class = getattr(user32, "SetClassLongPtrW", user32.SetClassLongW)
             set_class.argtypes = [wintypes.HWND, ctypes.c_int, ctypes.c_ssize_t]
             set_class.restype = ctypes.c_ssize_t
-            hwnd = self._hwnd()
 
             def handle(icon):
                 return int(getattr(icon, "value", icon) or 0)
@@ -1729,11 +1851,10 @@ class Desktop:
             if small:
                 user32.SendMessageW(hwnd, 0x0080, 0, handle(small))
                 set_class(hwnd, -34, handle(small))
-            self._window_identity(hwnd)
         except (AttributeError, OSError, tk.TclError, ValueError):
             return
 
-    def _window_identity(self, hwnd):
+    def _window_identity(self, hwnd, app_id="GuguguBear.Starfix"):
         # Without its own identity, Windows paints this window with the
         # Python icon because that is the program that opened it.
         import ctypes
@@ -1790,7 +1911,7 @@ class Desktop:
         key.pid = 5
         value = PROPVARIANT()
         value.vt = 31
-        value.psz = "GuguguBear.Starfix"
+        value.psz = app_id
         try:
             if set_value(store, ctypes.byref(key), ctypes.byref(value)) >= 0:
                 commit(store)
@@ -1859,6 +1980,7 @@ class Desktop:
             widget.configure(bg=c["panel"], fg=c["muted"])
         self.trail_title.configure(bg=c["panel"], fg=c["accent"])
         self.trail_box.configure(bg=c["panel"])
+        self.trail_side.configure(bg=c["panel"])
         self.trail.configure(bg=c["bg"])
         self.trail_scroll._colors = c
         self.linked.configure(fg=c["ink"])
@@ -1898,7 +2020,12 @@ class Desktop:
                 highlightbackground=c["line"], highlightcolor=c["accent"],
             )
         for label in self.buttons:
-            active = bool(label._primary or getattr(label, "_theme", None) == self.theme or getattr(label, "_lang", None) == self.lang)
+            active = bool(
+                label._primary
+                or getattr(label, "_theme", None) == self.theme
+                or getattr(label, "_lang", None) == self.lang
+                or getattr(label, "_filter", None) == self._trail_filter
+            )
             if active:
                 label.configure(bg=c["accent"], fg=c["on"])
             else:
@@ -2003,6 +2130,8 @@ class Desktop:
         self.pair_no.configure(text=tr(self.lang, "pair_no"))
         self.trail_title.configure(text=tr(self.lang, "trail_title"))
         self.trail_hint.configure(text=tr(self.lang, "trail_hint"))
+        for key, btn in self.filter_buttons.items():
+            btn.configure(text=tr(self.lang, "filter." + key))
         self._split_label()
         self._trail_sig = None
         for key, btn in self.theme_buttons.items():
@@ -2181,6 +2310,32 @@ class Desktop:
     def _decline(self):
         self.core.decline_pair()
         self._fill(self.core.public_state())
+
+    def _pick_filter(self, key):
+        if key == self._trail_filter or not any(name == key for name, _kinds in TRAIL_FILTERS):
+            return
+        self._trail_filter = key
+        self._trail_sig = None
+        self._paint()
+
+    def _event_kept(self, ev):
+        allowed = None
+        for name, kinds in TRAIL_FILTERS:
+            if name == self._trail_filter:
+                allowed = kinds
+                break
+        if not allowed:
+            return True
+        return (ev.get("kind") or "") in allowed
+
+    def _day_has(self, day):
+        if self._trail_filter == "all":
+            return True
+        for sess in day.get("sessions") or []:
+            for ev in sess.get("events") or []:
+                if self._event_kept(ev):
+                    return True
+        return False
 
     def _trail_wheel(self, event):
         step = int(-event.delta / 120) if event.delta else 0
@@ -2397,7 +2552,7 @@ class Desktop:
                 self._trail_open.add(chosen["sessions"][-1]["key"])
                 self._trail_seed = self._trail_day
         width = max(self.trail.winfo_width(), 2)
-        sig = (rev, self._trail_day, tuple(sorted(self._trail_open)), self.theme, self.lang, width)
+        sig = (rev, self._trail_day, tuple(sorted(self._trail_open)), self.theme, self.lang, width, self._trail_filter)
         if sig == self._trail_sig:
             return
         self._trail_days = days
@@ -2431,22 +2586,24 @@ class Desktop:
         self._trail_rail = None
         colors = self._colors()
         box.configure(bg=colors["bg"])
-        if not days:
+        visible = [day for day in days if self._day_has(day)]
+        if not days or not visible:
             box.create_text(
-                16, 36, text=tr(self.lang, "trail_empty"), anchor="w", font=FONT,
-                fill=colors["muted"], width=max(120, width - 32),
+                16, 36,
+                text=tr(self.lang, "trail_empty" if not days else "trail_none"),
+                anchor="w", font=FONT, fill=colors["muted"], width=max(120, width - 32),
             )
             box.configure(scrollregion=(0, 0, width, max(80, box.winfo_height())))
             return
-        known = {day["day"] for day in days}
-        if self._trail_day not in known:
-            self._trail_day = days[0]["day"]
+        shown_days = visible[:18]
+        if self._trail_day not in {day["day"] for day in visible}:
+            self._trail_day = shown_days[0]["day"]
             held = 0
         measure = tkfont.Font(font=FONT)
         x = 12
         y = 14
         limit = max(120, width - 16)
-        for day in days[:18]:
+        for day in shown_days:
             label = day["day"]
             chip = measure.measure(label) + 18
             if x + chip > limit and x > 12:
@@ -2472,9 +2629,12 @@ class Desktop:
         rail_x = 24
         blocks = []
         for sess in chosen["sessions"]:
+            kept = [ev for ev in (sess.get("events") or []) if self._event_kept(ev)]
+            if self._trail_filter != "all" and not kept:
+                continue
             lines = []
             if sess["key"] in self._trail_open:
-                for clock, text, tone in self._story(sess["events"], colors):
+                for clock, text, tone in self._story(kept, colors):
                     lines.append((clock, text, tone))
             block_h = 46 + ((len(lines) * 20 + 8) if lines else 0)
             blocks.append((sess, lines, y, block_h))
@@ -2941,6 +3101,10 @@ class Desktop:
             self.root.withdraw()
             for pane in self._panes:
                 if pane._out:
+                    try:
+                        self._taskbar_change(self._widget_hwnd(pane), False)
+                    except (AttributeError, OSError, tk.TclError, ValueError):
+                        pass
                     self.root.tk.call("wm", "withdraw", pane)
         except tk.TclError:
             self._user_background = False
@@ -2958,6 +3122,7 @@ class Desktop:
             for pane in self._panes:
                 if pane._out:
                     self.root.tk.call("wm", "deiconify", pane)
+                    self._seat_pane(pane)
         except tk.TclError:
             return
         force_foreground(self.root)

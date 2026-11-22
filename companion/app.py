@@ -2101,6 +2101,20 @@ if __name__ == "__main__":
         assert grouped[0]["day"] != grouped[1]["day"]
         assert grouped[0]["sessions"][0]["ships"] == ["Aegis Cutter"]
         assert grouped[1]["sessions"][0]["places"] == ["RR_HUR_L1"]
+        stamps = [
+            "2026-11-16T12:00:00.000Z",
+            "2026-11-20T12:00:00.000Z",
+            "2026-10-30T12:00:00.000Z",
+            "2026-11-17T12:00:00.000Z",
+        ]
+        scrambled = history.group_days([{"t": stamp, "kind": "online"} for stamp in stamps])
+        want = sorted({history.local_day(stamp) for stamp in stamps}, reverse=True)
+        assert [day["day"] for day in scrambled] == want, [day["day"] for day in scrambled]
+        same = history.group_days([
+            {"t": "2026-11-20T13:00:00.000Z", "kind": "online"},
+            {"t": "2026-11-20T12:00:00.000Z", "kind": "online"},
+        ])
+        assert len(same) == 1 and same[0]["sessions"][0]["start"] < same[0]["sessions"][1]["start"]
         rated = history.parse(
             '<2026-01-03T05:00:00.000Z> Added notification "犯罪等级 2" [9] to queue.',
             trail,

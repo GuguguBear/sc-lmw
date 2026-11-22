@@ -476,7 +476,14 @@ def group_days(rows):
             buckets[day] = []
             order.append(day)
         buckets[day].append(packed)
-    order.reverse()
+    def day_key(day):
+        text = str(day or "")
+        if len(text) == 10 and text[4] == "-" and text[7] == "-":
+            return text
+        return ""
+    order.sort(key=day_key, reverse=True)
+    for day in order:
+        buckets[day].sort(key=lambda sess: sess.get("start") or "")
     return [{"day": day, "sessions": buckets[day]} for day in order]
 
 
